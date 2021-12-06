@@ -65,7 +65,7 @@ namespace CoreSystems.Platform
 
         internal void QueueAmmoChange(int newAmmoId)
         {
-            var serverAccept = System.Session.IsServer && newAmmoId != ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos && (!Loading || DelayedCycleId < 0);
+            var serverAccept = System.Session.IsServer && (!Loading || DelayedCycleId < 0);
             var clientAccept = System.Session.IsClient && ClientMakeUpShots == 0 && !ServerQueuedAmmo && (!ClientReloading || ProtoWeaponAmmo.CurrentAmmo == 0);
             if (clientAccept || serverAccept)
             {
@@ -81,6 +81,7 @@ namespace CoreSystems.Platform
         {
             if (System.Session.IsServer)
             {
+                DelayedCycleId = -1;
                 ProposedAmmoId = newAmmoId;
                 var instantChange = System.Session.IsCreative || !ActiveAmmoDef.AmmoDef.Const.Reloadable;
                 var canReload = ProtoWeaponAmmo.CurrentAmmo == 0;
@@ -334,6 +335,13 @@ namespace CoreSystems.Platform
                     ClientMakeUpShots = 0;
                     ClientEndId = Reload.EndId;
                     ServerQueuedAmmo = false;
+
+                    if (DelayedCycleId == ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos)
+                    {
+                        AmmoName = ActiveAmmoDef.AmmoName;
+                        DelayedCycleId = -1;
+                    }
+
                     if (ActiveAmmoDef.AmmoDef.Const.SlowFireFixedWeapon && System.Session.PlayerId == Comp.Data.Repo.Values.State.PlayerId)
                         System.Session.SendClientReady(this);
                 }
@@ -347,13 +355,6 @@ namespace CoreSystems.Platform
                 }
                 else if (!ActiveAmmoDef.AmmoDef.Const.HasShotReloadDelay)
                     ShotsFired = 0;
-
-
-                if (DelayedCycleId == ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos)
-                {
-                    AmmoName = ActiveAmmoDef.AmmoName;
-                    DelayedCycleId = -1;
-                }
 
                 Loading = false;
                 ReloadEndTick = uint.MaxValue;

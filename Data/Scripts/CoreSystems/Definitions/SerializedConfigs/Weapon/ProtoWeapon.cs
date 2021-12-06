@@ -199,7 +199,10 @@ namespace CoreSystems
                     w.ServerQueuedAmmo = newReload;
 
                     if (newReload)
+                    {
                         w.AmmoName = w.System.AmmoTypes[AmmoTypeId].AmmoName;
+                        w.DelayedCycleId = -1;
+                    }
 
                     w.ChangeActiveAmmoClient();
                 }
