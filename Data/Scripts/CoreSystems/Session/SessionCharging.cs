@@ -118,23 +118,25 @@ namespace CoreSystems
 
             var allCharged = w.ProtoWeaponAmmo.CurrentCharge >= w.MaxCharge * comp.Data.Repo.Values.Set.DpsModifier;
             var clientAllDone = IsClient && w.Reload.EndId > w.ClientEndId;
-            var clientCharged = IsClient && allCharged;
             var complete = allCharged || clientAllDone || w.ExitCharger;
             var weaponFailure = !ai.HasPower || !comp.IsWorking;
             var invalidStates = ai != comp.Ai || comp.Ai.MarkedForClose || comp.Ai.TopEntity.MarkedForClose || comp.Ai.Concealed || comp.CoreEntity.MarkedForClose || comp.Platform.State != CorePlatform.PlatformState.Ready;
-            
-            if (complete || weaponFailure || invalidStates) {
+
+            if (complete || weaponFailure || invalidStates)
+            {
                 var serverFullyLoaded = IsServer && w.ProtoWeaponAmmo.CurrentAmmo == w.Reload.MagsLoaded * w.ActiveAmmoDef.AmmoDef.Const.MagazineSize;
-                var fullyCharged = serverFullyLoaded || IsClient && allCharged;
 
-                if (complete && (IsServer && !serverFullyLoaded || clientCharged) && w.Loading)
-                    w.Reloaded(IsClient && clientAllDone ? 2 : 0);
+                var clientCharged = IsClient && allCharged && w.ActiveAmmoDef.AmmoDef.HybridRound;
 
-                if (!complete || fullyCharged) {
+                if (complete && (IsServer && !serverFullyLoaded || IsClient && (allCharged || clientAllDone)) && w.Loading)
+                    w.Reloaded(IsClient && clientAllDone ? 2 : IsClient && !clientCharged ? 4 : 0);
+
+                if (!complete || allCharged || clientAllDone)
+                {
                     w.StopPowerDraw(weaponFailure || invalidStates, ai);
                     return true;
                 }
-                w.Loading = true; 
+                w.Loading = true;
             }
 
             if (Tick60) {

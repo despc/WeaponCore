@@ -65,7 +65,7 @@ namespace CoreSystems.Platform
 
         internal void QueueAmmoChange(int newAmmoId)
         {
-            var serverAccept = System.Session.IsServer && (!Loading || DelayedCycleId < 0);
+            var serverAccept = System.Session.IsServer && newAmmoId != ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos && (!Loading || DelayedCycleId < 0);
             var clientAccept = System.Session.IsClient && ClientMakeUpShots == 0 && !ServerQueuedAmmo && (!ClientReloading || ProtoWeaponAmmo.CurrentAmmo == 0);
             if (clientAccept || serverAccept)
             {
@@ -273,7 +273,7 @@ namespace CoreSystems.Platform
                 {
                     ReloadEndTick = (uint)(Comp.Session.Tick + (!delay || System.WConst.ReloadTime > delayTime ? System.WConst.ReloadTime : delayTime));
                 }
-                else Reloaded();
+                else Reloaded(3);
             }
 
             if (System.Session.MpActive && System.Session.IsServer)
@@ -300,6 +300,9 @@ namespace CoreSystems.Platform
                     CancelReload();
                     return;
                 }
+
+                if (input == 4)
+                    return;
 
                 if (ActiveAmmoDef.AmmoDef.Const.MustCharge && !callBack && !earlyExit) {
 
@@ -345,14 +348,16 @@ namespace CoreSystems.Platform
                 else if (!ActiveAmmoDef.AmmoDef.Const.HasShotReloadDelay)
                     ShotsFired = 0;
 
-                Loading = false;
-                ReloadEndTick = uint.MaxValue;
-                ProjectileCounter = 0;
+
                 if (DelayedCycleId == ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos)
                 {
                     AmmoName = ActiveAmmoDef.AmmoName;
                     DelayedCycleId = -1;
                 }
+
+                Loading = false;
+                ReloadEndTick = uint.MaxValue;
+                ProjectileCounter = 0;
             }
         }
 

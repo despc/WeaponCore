@@ -277,7 +277,7 @@ namespace CoreSystems
                             else if (IsClient) {
 
                                 if (w.ClientReloading && w.Reload.EndId > w.ClientEndId && w.Reload.StartId == w.ClientStartId)
-                                    w.Reloaded();
+                                    w.Reloaded(5);
                                 else 
                                     w.ClientReload();
                             }

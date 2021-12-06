@@ -180,6 +180,10 @@ namespace CoreSystems
             {
                 Revision = sync.Revision;
                 var newReload = StartId != sync.StartId && EndId == sync.EndId;
+
+                if (newReload && w.ClientReloading && !w.Charging)
+                    w.Reloaded(6);
+
                 StartId = sync.StartId;
                 EndId = sync.EndId;
 
