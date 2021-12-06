@@ -348,7 +348,7 @@ namespace CoreSystems.Platform
                 Loading = false;
                 ReloadEndTick = uint.MaxValue;
                 ProjectileCounter = 0;
-                if (DelayedCycleId >= 0)
+                if (DelayedCycleId == ActiveAmmoDef.AmmoDef.Const.AmmoIdxPos)
                 {
                     AmmoName = ActiveAmmoDef.AmmoName;
                     DelayedCycleId = -1;
