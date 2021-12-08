@@ -130,7 +130,6 @@ namespace CoreSystems.Support
         public readonly int WeaponIdHash;
         public readonly int WeaponId;
         public readonly int BarrelsPerShot;
-        public readonly int HeatPerShot;
         public readonly int BarrelSpinRate;
         public readonly int ShotsPerBurst;
 
@@ -241,7 +240,7 @@ namespace CoreSystems.Support
             HasScope = !string.IsNullOrEmpty(Values.Assignments.Scope);
             AltScopeName = HasScope ? "subpart_" + Values.Assignments.Scope : string.Empty;
             TurretMovements(out AzStep, out ElStep, out MinAzimuth, out MaxAzimuth, out MinElevation, out MaxElevation, out HomeAzimuth, out HomeElevation, out TurretMovement);
-            Heat(out DegRof, out MaxHeat, out WepCoolDown, out HeatPerShot);
+            Heat(out DegRof, out MaxHeat, out WepCoolDown);
             BarrelValues(out BarrelsPerShot, out ShotsPerBurst);
             BarrelsAv(out BarrelEffect1, out BarrelEffect2, out Barrel1AvTicks, out Barrel2AvTicks, out BarrelSpinRate, out HasBarrelRotation);
             Track(out TrackProjectile, out TrackGrids, out TrackCharacters, out TrackMeteors, out TrackNeutrals, out TrackTopMostEntities);
@@ -299,12 +298,11 @@ namespace CoreSystems.Support
                 Log.Line(message2);
             }
         }
-        private void Heat(out bool degRof, out int maxHeat, out float wepCoolDown, out int heatPerShot)
+        private void Heat(out bool degRof, out int maxHeat, out float wepCoolDown)
         {
             degRof = Values.HardPoint.Loading.DegradeRof;
             maxHeat = Values.HardPoint.Loading.MaxHeat;
             wepCoolDown = Values.HardPoint.Loading.Cooldown;
-            heatPerShot = Values.HardPoint.Loading.HeatPerShot;
             if (wepCoolDown < 0) wepCoolDown = 0;
             if (wepCoolDown > .95f) wepCoolDown = .95f;
         }
@@ -550,13 +548,14 @@ namespace CoreSystems.Support
         internal readonly float HeatSinkRate;
         internal readonly int ReloadTime;
         internal readonly int RateOfFire;
+        internal readonly int HeatPerShot;
 
         internal bool HasServerOverrides;
 
         internal WeaponConstants(Session session, WeaponDefinition values)
         {
             LoadModifiers(session, values, out HasServerOverrides);
-            GetModifiableValues(values, out MaxTargetDistance, out MinTargetDistance, out RateOfFire, out ReloadTime, out DeviateShotAngleRads, out AimingToleranceRads, out IdlePower, out HeatSinkRate);
+            GetModifiableValues(values, out MaxTargetDistance, out MinTargetDistance, out RateOfFire, out ReloadTime, out DeviateShotAngleRads, out AimingToleranceRads, out IdlePower, out HeatSinkRate, out HeatPerShot);
         }
 
         private void LoadModifiers(Session session, WeaponDefinition weaponDef, out bool modsFound)
@@ -575,7 +574,7 @@ namespace CoreSystems.Support
             }
         }
 
-        private void GetModifiableValues(WeaponDefinition weaponDef, out double maxTargetDistance, out float minTargetDistance, out int rateOfFire, out int reloadTime, out float deviateShotAngleRads, out double aimingToleranceRads, out float idlePower, out float heatSinkRate)
+        private void GetModifiableValues(WeaponDefinition weaponDef, out double maxTargetDistance, out float minTargetDistance, out int rateOfFire, out int reloadTime, out float deviateShotAngleRads, out double aimingToleranceRads, out float idlePower, out float heatSinkRate, out int heatPerShot)
         {
             var givenMaxDist = HasServerOverrides && modifierMap[MaxTargetStr].HasData() ? modifierMap[MaxTargetStr].GetAsFloat : weaponDef.Targeting.MaxTargetDistance;
             maxTargetDistance = givenMaxDist > 0 ? givenMaxDist : double.MaxValue;
@@ -596,6 +595,8 @@ namespace CoreSystems.Support
             idlePower = givenIdlePower > 0 ? givenIdlePower : 0.001f;
 
             heatSinkRate = HasServerOverrides && modifierMap[HeatSinkStr].HasData() ? modifierMap[HeatSinkStr].GetAsFloat : weaponDef.HardPoint.Loading.HeatSinkRate;
+
+            heatPerShot = HasServerOverrides && modifierMap[HeatPerStr].HasData() ? modifierMap[HeatPerStr].GetAsInt : weaponDef.HardPoint.Loading.HeatPerShot;
         }
     }
 }

@@ -316,7 +316,7 @@ namespace CoreSystems.Platform
             if (BaseDamage > ActiveAmmoDef.AmmoDef.Const.BaseDamage)
                 multiplier *= multiplier;
 
-            HeatPShot = System.HeatPerShot * multiplier;
+            HeatPShot = System.WConst.HeatPerShot * multiplier;
 
             DesiredPower *= multiplier;
             
