@@ -243,9 +243,6 @@ namespace CoreSystems.Support
             else if (ammo.AmmoDef.Ejection.Type == AmmoDef.EjectionDef.SpawnType.Particle && !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Eject.Name))
                 HasEjectEffect = true;
 
-            if (AmmoItem.Content != null && !session.AmmoItems.ContainsKey(AmmoItem.ItemId))
-                session.AmmoItems[AmmoItem.ItemId] = AmmoItem;
-
             var guidedAmmo = false;
             for (int i = 0; i < wDef.Ammos.Length; i++)
             {

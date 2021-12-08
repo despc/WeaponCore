@@ -234,16 +234,18 @@ namespace CoreSystems.Platform
             ++Reload.StartId;
             ++ClientStartId;
 
-            if (!ActiveAmmoDef.AmmoDef.Const.EnergyAmmo) {
+            if (!ActiveAmmoDef.AmmoDef.Const.EnergyAmmo && !Comp.Session.IsCreative) {
 
                 var isPhantom = Comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
                 Reload.MagsLoaded = ActiveAmmoDef.AmmoDef.Const.MagsToLoad <= Reload.CurrentMags || Comp.Session.IsCreative ? ActiveAmmoDef.AmmoDef.Const.MagsToLoad : Reload.CurrentMags;
                 if (!isPhantom && Comp.CoreInventory.ItemsCanBeRemoved(Reload.MagsLoaded, ActiveAmmoDef.AmmoDef.Const.AmmoItem))
-                    Comp.CoreInventory.RemoveItems(ActiveAmmoDef.AmmoDef.Const.AmmoItem.ItemId, Reload.MagsLoaded);
+                {
+                    var magItem = Comp.CoreInventory.FindItem(ActiveAmmoDef.AmmoDefinitionId) ?? ActiveAmmoDef.AmmoDef.Const.AmmoItem;
+                    Comp.CoreInventory.RemoveItems(magItem.ItemId, Reload.MagsLoaded);
+                }
                 else if (!isPhantom && Comp.CoreInventory.ItemCount > 0 && Comp.CoreInventory.ContainItems(Reload.MagsLoaded, ActiveAmmoDef.AmmoDef.Const.AmmoItem.Content)) {
                     Comp.CoreInventory.Remove(ActiveAmmoDef.AmmoDef.Const.AmmoItem, Reload.MagsLoaded);
                 }
-
                 Reload.CurrentMags = !isPhantom ? Comp.CoreInventory.GetItemAmount(ActiveAmmoDef.AmmoDefinitionId).ToIntSafe() : Reload.CurrentMags - Reload.MagsLoaded;
                 if (Reload.CurrentMags == 0)
                     CheckInventorySystem = true;
