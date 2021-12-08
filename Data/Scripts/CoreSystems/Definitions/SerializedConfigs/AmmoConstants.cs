@@ -50,6 +50,7 @@ namespace CoreSystems.Support
         private const string EnergyShieldDmgStr = "EnergyShieldDamage";
         private const string ClientPredAmmoStr = "DisableClientPredictedAmmo";
         private const string FallOffDistanceStr = "FallOffDistance";
+        private const string FallOffMinMultStr = "FallOffMinMultipler";
 
         private readonly Dictionary<string, BaseProcessor> _modifierMap = new Dictionary<string, BaseProcessor>()
         {
@@ -70,6 +71,7 @@ namespace CoreSystems.Support
             {EnergyShieldDmgStr, new BoolProcessor() },
             {ClientPredAmmoStr, new BoolProcessor() },
             {FallOffDistanceStr, new FloatProcessor() },
+            {FallOffMinMultStr, new FloatProcessor() },
         };
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
@@ -176,6 +178,7 @@ namespace CoreSystems.Support
         public readonly bool EnergyShieldDmg;
         public readonly bool SlowFireFixedWeapon;
         public readonly float FallOffDistance;
+        public readonly float FallOffMinMultiplier;
         public readonly float EnergyCost;
         public readonly float ChargSize;
         public readonly float RealShotsPerMin;
@@ -255,7 +258,7 @@ namespace CoreSystems.Support
             }
 
             LoadModifiers(session, ammo, out AmmoModsFound);
-            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier);
+            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier, out FallOffDistance, out FallOffMinMultiplier);
 
             FixedFireAmmo = system.TurretMovement == WeaponSystem.TurretType.Fixed && ammo.AmmoDef.Trajectory.Guidance == None;
             IsMine = ammo.AmmoDef.Trajectory.Guidance == DetectFixed || ammo.AmmoDef.Trajectory.Guidance == DetectSmart || ammo.AmmoDef.Trajectory.Guidance == DetectTravelTo;
@@ -291,8 +294,6 @@ namespace CoreSystems.Support
 
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
-
-            FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
             ArmorCoreActive = session.ArmorCoreActive;
 
@@ -582,11 +583,11 @@ namespace CoreSystems.Support
             }
             var shotsPerSecPower = shotsPerSec; //save for power calc
 
-            if (s.HeatPerShot > 0)
+            if (s.WConst.HeatPerShot > 0)
             {
 
 
-                var heatGenPerSec = (l.HeatPerShot * shotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
+                var heatGenPerSec = (s.WConst.HeatPerShot * shotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
 
 
 
@@ -604,7 +605,7 @@ namespace CoreSystems.Support
                     if ((mexLogLevel >= 1))
                     {
                         Log.Line($"Name = {s.PartName}");
-                        Log.Line($"HeatPerShot = {l.HeatPerShot}");
+                        Log.Line($"HeatPerShot = {s.WConst.HeatPerShot}");
                         Log.Line($"HeatGenPerSec = {heatGenPerSec}");
 
                         Log.Line($"WepCoolDown = {l.Cooldown}");
@@ -784,16 +785,16 @@ namespace CoreSystems.Support
                             customDamageScales = customBlockDef.Count > 0;
                         }
             }
-            damageScaling = d.FallOff.MinMultipler > 0 && !MyUtils.IsZero(d.FallOff.MinMultipler - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;
+            damageScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;
             if (damageScaling)
             {
                 armorScaling = d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0;
-                fallOffScaling = d.FallOff.MinMultipler > 0 && !MyUtils.IsZero(d.FallOff.MinMultipler - 1);
+                fallOffScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1);
             }
-            selfDamage = ammoDef.DamageScales.SelfDamage && !IsBeamWeapon;
-            voxelDamage = ammoDef.DamageScales.DamageVoxels;
-            healthHitModifer = ammoDef.DamageScales.HealthHitModifier > 0 ? ammoDef.DamageScales.HealthHitModifier : 1;
-            voxelHitModifer = ammoDef.DamageScales.VoxelHitModifier > 0 ? ammoDef.DamageScales.VoxelHitModifier : 1;
+            selfDamage = d.SelfDamage && !IsBeamWeapon;
+            voxelDamage = d.DamageVoxels;
+            healthHitModifer = d.HealthHitModifier > 0 ? d.HealthHitModifier : 1;
+            voxelHitModifer = d.VoxelHitModifier > 0 ? d.VoxelHitModifier : 1;
         }
 
         private void Energy(WeaponSystem.AmmoType ammoPair, WeaponSystem system, WeaponDefinition wDef, out bool energyAmmo, out bool mustCharge, out bool reloadable, out float energyCost, out int energyMagSize, out float chargeSize, out bool burstMode, out bool shotReload)
@@ -900,7 +901,7 @@ namespace CoreSystems.Support
             }
         }
 
-        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier)
+        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier, out float fallOffDistance, out float fallOffMinMult)
         {
             baseDamage = AmmoModsFound && _modifierMap[BaseDmgStr].HasData() ? _modifierMap[BaseDmgStr].GetAsFloat : ammoDef.BaseDamage;
             health = AmmoModsFound && _modifierMap[HealthStr].HasData() ? _modifierMap[HealthStr].GetAsFloat : ammoDef.Health;
@@ -914,6 +915,9 @@ namespace CoreSystems.Support
 
             var givenShieldModifier = AmmoModsFound && _modifierMap[ShieldModStr].HasData() ? _modifierMap[ShieldModStr].GetAsDouble : ammoDef.DamageScales.Shields.Modifier;
             shieldModifier = givenShieldModifier < 0 ? 1 : givenShieldModifier;
+
+            fallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammoDef.DamageScales.FallOff.Distance;
+            fallOffMinMult = AmmoModsFound && _modifierMap[FallOffMinMultStr].HasData() ? _modifierMap[FallOffMinMultStr].GetAsFloat : ammoDef.DamageScales.FallOff.MinMultipler;
         }
 
     }
