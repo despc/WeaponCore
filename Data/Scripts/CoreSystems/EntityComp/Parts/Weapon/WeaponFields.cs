@@ -83,7 +83,7 @@ namespace CoreSystems.Platform
         internal int ShotsFired;
         internal int LastMuzzle;
         internal int MiddleMuzzleIndex;
-        internal int DelayedCycleId;
+        internal int DelayedCycleId = -1;
         internal List<MyEntity> HeatingParts;
         internal Vector3D GravityPoint;
         internal Vector3D MyPivotPos;
