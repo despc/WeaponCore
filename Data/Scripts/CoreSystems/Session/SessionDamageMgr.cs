@@ -43,7 +43,6 @@ namespace CoreSystems
                 var tInvalid = info.Target.IsProjectile && (int)info.Target.Projectile.State > 1;
                 if (tInvalid) info.Target.Reset(Tick, Target.States.ProjectileClosed);
                 var skip = pInvalid || tInvalid;
-                var canDamage = IsServer && (p.Info.ClientSent || !p.Info.AmmoDef.Const.ClientPredictedAmmo);
                 for (int i = 0; i < info.HitList.Count; i++)
                 {
                     var hitEnt = info.HitList[i];
@@ -70,13 +69,13 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info, canDamage);
+                            DamageGrid(hitEnt, info);
                             continue;
                         case HitEntity.Type.Destroyable:
-                            DamageDestObj(hitEnt, info, canDamage);
+                            DamageDestObj(hitEnt, info);
                             continue;
                         case HitEntity.Type.Voxel:
-                            DamageVoxel(hitEnt, info, canDamage);
+                            DamageVoxel(hitEnt, info);
                             continue;
                         case HitEntity.Type.Projectile:
                             DamageProjectile(hitEnt, info);
@@ -199,7 +198,7 @@ namespace CoreSystems
             }
         }
 
-        private void DamageGrid(HitEntity hitEnt, ProInfo t, bool canDamage)
+        private void DamageGrid(HitEntity hitEnt, ProInfo t)
         {
             try
             {
@@ -216,6 +215,8 @@ namespace CoreSystems
                     t.BaseDamagePool = 0;
                     return;
                 }
+
+                var canDamage = t.DoDamage;
 
                 _destroyedSlims.Clear();
                 _destroyedSlimsClient.Clear();
@@ -1024,12 +1025,15 @@ namespace CoreSystems
             remainingScaler = (float)Math.Pow((2 * blockTravelDist) + 1, 3);
         }
 
-        private void DamageDestObj(HitEntity hitEnt, ProInfo info, bool canDamage)
+        private void DamageDestObj(HitEntity hitEnt, ProInfo info)
         {
             var entity = hitEnt.Entity;
             var destObj = hitEnt.Entity as IMyDestroyableObject;
 
             if (destObj == null || entity == null) return;
+
+            var canDamage = info.DoDamage;
+
 
             var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
             var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer;
@@ -1156,7 +1160,7 @@ namespace CoreSystems
             }
         }
 
-        private void DamageVoxel(HitEntity hitEnt, ProInfo info, bool canDamage)
+        private void DamageVoxel(HitEntity hitEnt, ProInfo info)
         {
             var entity = hitEnt.Entity;
             var destObj = hitEnt.Entity as MyVoxelBase;
@@ -1167,6 +1171,8 @@ namespace CoreSystems
                 info.BaseDamagePool = 0;
                 return;
             }
+
+            var canDamage = info.DoDamage;
 
             var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
             var detDmgGlobal = Settings.Enforcement.AreaDamageModifer;

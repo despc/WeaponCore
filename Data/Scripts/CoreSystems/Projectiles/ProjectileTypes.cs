@@ -66,8 +66,8 @@ namespace CoreSystems.Support
         internal bool EwarActive;
         internal bool ModelOnly;
         internal bool LockOnFireState;
-        internal bool IsFiringPlayer;
-        internal bool ClientSent;
+        internal bool AimedShot;
+        internal bool DoDamage;
         internal bool IsVirtual;
         internal bool InPlanetGravity;
         internal bool ShieldBypassed;
@@ -148,8 +148,8 @@ namespace CoreSystems.Support
             EwarActive = false;
             ModelOnly = false;
             LockOnFireState = false;
-            IsFiringPlayer = false;
-            ClientSent = false;
+            AimedShot = false;
+            DoDamage = false;
             InPlanetGravity = false;
             ShieldBypassed = false;
             ShieldInLine = false;
@@ -418,8 +418,7 @@ namespace CoreSystems.Support
                 frag.Origin = !Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position;
                 frag.OriginUp = p.Info.OriginUp;
                 frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
-                frag.IsFiringPlayer = p.Info.IsFiringPlayer;
-                frag.ClientSent = p.Info.ClientSent;
+                frag.DoDamage = p.Info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
                 frag.Velocity = p.Velocity;
                 frag.DeadSphere = p.DeadSphere;
@@ -482,8 +481,7 @@ namespace CoreSystems.Support
                 p.Info.Origin = frag.Origin;
                 p.Info.OriginUp = frag.OriginUp;
                 p.Info.Random = frag.Random;
-                p.Info.ClientSent = frag.ClientSent;
-                p.Info.IsFiringPlayer = frag.IsFiringPlayer;
+                p.Info.DoDamage = frag.DoDamage;
                 p.Info.BaseDamagePool = frag.AmmoDef.Const.BaseDamage;
                 p.PredictedTargetPos = frag.PredictedTargetPos;
                 p.Info.Direction = frag.Direction;
@@ -532,8 +530,7 @@ namespace CoreSystems.Support
         public int MuzzleId;
         public XorShiftRandomStruct Random;
         public bool Guidance;
-        public bool ClientSent;
-        public bool IsFiringPlayer;
+        public bool DoDamage;
         public bool LockOnFireState;
         public bool IgnoreShield;
         public bool CoreIsCube;

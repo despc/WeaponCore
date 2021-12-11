@@ -17,7 +17,7 @@ namespace CoreSystems.Projectiles
                 var t = gen.Type;
                 var virts = gen.NewVirts;
                 var muzzle = gen.Muzzle;
-                var firingPlayer = w.Comp.Data.Repo.Values.State.PlayerId == w.Comp.Session.PlayerId || w.Comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
+                var aimed = w.Comp.Data.Repo.Values.State.PlayerId == w.Comp.Session.PlayerId || w.Comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
 
                 var patternCycle = gen.PatternCycle;
                 var targetable = w.ActiveAmmoDef.AmmoDef.Const.Health > 0 && !w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon;
@@ -25,9 +25,10 @@ namespace CoreSystems.Projectiles
                 p.Info.Id = Session.Projectiles.CurrentProjectileId++;
                 p.Info.System = w.System;
                 p.Info.Ai = w.Comp.Ai;
-                p.Info.IsFiringPlayer = firingPlayer;
-                p.Info.ClientSent = t == Kind.Client || (firingPlayer || w.Comp.Data.Repo.Values.State.PlayerId < 0) && w.System.Session.IsServer;
+                p.Info.AimedShot = aimed;
                 p.Info.AmmoDef = a;
+                p.Info.DoDamage = w.System.Session.IsServer && (!a.Const.ClientPredictedAmmo || t == Kind.Client || w.Comp.Data.Repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
+
                 p.Info.Overrides = w.Comp.Data.Repo.Values.Set.Overrides;
                 p.Info.Target.TargetEntity = t != Kind.Client ? w.Target.TargetEntity : gen.TargetEnt;
                 p.Info.Target.Projectile = w.Target.Projectile;
