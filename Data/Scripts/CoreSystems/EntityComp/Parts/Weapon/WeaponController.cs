@@ -161,20 +161,11 @@ namespace CoreSystems.Platform
             {
                 Vector3D barrelUp;
                 Vector3D.Cross(ref MyPivotFwd, ref pivotLeft, out barrelUp);
-                var azToMuzzleOrigin = weaponCenter - centerTestPos;
-
-                double azToMuzzleDot;
-                Vector3D.Dot(ref azToMuzzleOrigin, ref barrelUp, out azToMuzzleDot);
-
-                double myPivotUpDot;
-                Vector3D.Dot(ref MyPivotUp, ref barrelUp, out myPivotUpDot);
-
-                var muzzleRadius = MuzzlePart.Entity.PositionComp.LocalVolume.Radius;
-                var pivotOffsetMagnitude = MathHelperD.Clamp(azToMuzzleDot / myPivotUpDot, -muzzleRadius, muzzleRadius);
                 
-                var pivotOffset = pivotOffsetMagnitude * MyPivotUp - (pivotOffsetMagnitude * MyPivotFwd);
+                var elToMuzzleOrigin = weaponCenter - elevationMatrix.Translation;
+                var offset = Vector3D.ProjectOnVector(ref elToMuzzleOrigin, ref barrelUp);
 
-                MyPivotPos = centerTestPos + pivotOffset;
+                MyPivotPos = elevationMatrix.Translation + offset;
             }
             if (!Vector3D.IsZero(AimOffset))
             {
@@ -186,6 +177,7 @@ namespace CoreSystems.Platform
             }
             
             if (!Comp.Debug) return;
+
             MyCenterTestLine = new LineD(centerTestPos, centerTestPos + (MyPivotUp * 20));
             MyPivotTestLine = new LineD(MyPivotPos, MyPivotPos - (WeaponConstMatrix.Left * 10));
             MyBarrelTestLine = new LineD(weaponCenter, weaponCenter + (MyPivotFwd * 16));
