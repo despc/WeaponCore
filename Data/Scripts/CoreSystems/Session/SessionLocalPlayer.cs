@@ -35,7 +35,8 @@ namespace CoreSystems
 
             long oldControlId;
             var controlledEntity = ActiveCockPit ?? ActiveControlBlock ?? PlayerHandWeapon?.Owner;
-            if (controlledEntity != null && EntityToMasterAi.TryGetValue(ActiveControlBlock != null ? controlledEntity.GetTopMostParent() : controlledEntity, out TrackingAi))
+            if (controlledEntity != null && EntityToMasterAi.TryGetValue(ActiveControlBlock != null ? controlledEntity.GetTopMostParent() : controlledEntity, out TrackingAi)
+                && (TrackingAi.IsGrid || TrackingAi.WeaponComps.Count > 0 && TrackingAi.WeaponComps[0].TrackingWeapon.System.HasGuidedAmmo))
             {
                 var camera = Session.CameraController?.Entity as MyCameraBlock;
                 if (camera == null || !GroupedCamera(camera))

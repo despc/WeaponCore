@@ -649,7 +649,7 @@ namespace CoreSystems.Platform
             
             ResetTurret();
 
-            Comp.LastOnOffState = Comp.FunctionalBlock.Enabled;
+            if (Comp.IsBlock) Comp.LastOnOffState = Comp.FunctionalBlock.Enabled;
             Comp.Status = Started;
         }
 

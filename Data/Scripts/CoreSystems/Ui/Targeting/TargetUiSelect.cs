@@ -13,6 +13,11 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
     {
         internal bool ActivateSelector()
         {
+            if (!_session.TrackingAi.IsGrid)
+            {
+                if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.RightButton)) _handWeaponADS = !_handWeaponADS;
+                return _handWeaponADS && _session.UiInput.FirstPersonView;
+            }
             if (_session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return false;
             if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control)) _3RdPersonDraw = !_3RdPersonDraw;
 
@@ -22,12 +27,12 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
         internal bool ActivateDroneNotice()
         {
-            return _session.TrackingAi.Construct.DroneAlert;
+            return _session.TrackingAi.IsGrid && _session.TrackingAi.Construct.DroneAlert;
         }
 
         internal bool ActivateMarks()
         {
-            return _session.ActiveMarks.Count > 0;
+            return _session.TrackingAi.IsGrid && _session.ActiveMarks.Count > 0;
         }
 
         internal bool ActivateLeads()
@@ -85,7 +90,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             }
             else
             {
-                if (!_session.UiInput.AltPressed)
+                if (!s.UiInput.AltPressed && ai.IsGrid)
                 {
                     AimDirection = cockPit.PositionComp.WorldMatrixRef.Forward;
                     AimPosition = cockPit.PositionComp.WorldAABB.Center;
@@ -116,7 +121,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
                 var hitGrid = closestEnt as MyCubeGrid;
 
-                if (hitGrid != null && hitGrid.IsSameConstructAs(ai.GridEntity))
+                if (hitGrid != null && ai.IsGrid && hitGrid.IsSameConstructAs(ai.GridEntity))
                 {
                     rayHitSelf = true;
                     rayOnlyHitSelf = true;

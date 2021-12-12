@@ -297,8 +297,8 @@ namespace CoreSystems
                             HudUi.WeaponsToDisplay.Add(w);
                         }
 
-                        if (w.System.PartType != HardwareType.BlockWeapon)
-                            continue;
+                        //if (w.System.PartType != HardwareType.BlockWeapon)
+                            //continue;
 
                         if (w.CriticalReaction && !wComp.CloseCondition && (wComp.Data.Repo.Values.Set.Overrides.Armed || wComp.Data.Repo.Values.State.CountingDown || wComp.Data.Repo.Values.State.CriticalReaction))
                             w.CriticalMonitor();

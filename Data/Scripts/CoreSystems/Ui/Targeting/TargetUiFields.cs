@@ -95,6 +95,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private bool _cachedPointerPos;
         private bool _cachedTargetPos;
         private bool _3RdPersonDraw;
+        private bool _handWeaponADS;
 
         internal TargetUi(Session session)
         {
