@@ -788,7 +788,9 @@ namespace CoreSystems
                     {
                         expDamageFall = radiating ? areaEffectDmg : detonateDmg;
                     }
-  
+
+
+
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
                     {
@@ -975,6 +977,19 @@ namespace CoreSystems
             }
 
             //End of main loop
+
+
+            //Incorporated count increment with impact force nudge for primary-only damage.  Find better spot?
+            if (!novaing)
+            {
+                if (hitMass > 0 && blockIsRoot)
+                {
+                    var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
+                    if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), direction, (hitMass * speed));
+                    Log.Line($"Shoving {hitMass * speed}");
+                }
+                objectsHit++;
+            }
 
             //stuff I haven't looked at yet
             if (rootBlock != null && destroyed > 0)
@@ -1357,7 +1372,7 @@ namespace CoreSystems
                                     continue;
 
                               
-                                if (last != null && count > 1)  //Verify if this is still needed
+                                if (last != null && count > 1)  //Used for blocks> 1x1x1
                                 {
                                     //var result = list[index];
                                     //result.Hits = count - 1; 
@@ -1369,7 +1384,7 @@ namespace CoreSystems
                                 Log.Line($"Slim {slim.GetHashCode()} pos{slim.Position} Dist from root {hitdist}");
                                 list[hitdist].Add(new RadiatedBlock { Slim = slim, Distance = hitdist, Hits = count });
                                 if (hitdist >= maxDBC) maxDBC = hitdist;
-                                slim.Dithering = 50;//temp debug to make "hits" go clear, including the root block
+                                slim.Dithering = 50;//temp debug to make "hits" go clear, including the root block.  Enable as debug feature from weaponconfig?
                                 last = slim;
                                 ++index;
 
