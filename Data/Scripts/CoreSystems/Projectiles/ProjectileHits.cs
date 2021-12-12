@@ -563,12 +563,16 @@ namespace CoreSystems.Projectiles
 
                     if (Session.IsClient && p.Info.AimedShot && p.Info.AmmoDef.Const.ClientPredictedAmmo && !p.Info.IsShrapnel)
                     {
-                        var firstHitEntity = p.Info.HitList[0];
-                        var vel = p.Info.AmmoDef.Const.IsBeamWeapon ? Vector3D.Zero : !MyUtils.IsZero(p.Velocity) ? p.Velocity : p.PrevVelocity;
-                        var distToTarget = p.Info.AmmoDef.Const.IsBeamWeapon ? 0 : p.Info.MaxTrajectory - p.Info.DistanceTraveled;
-                        var intersectOrigin = p.Info.AmmoDef.Const.IsBeamWeapon ? new Vector3D(firstHitEntity.Intersection.From + (p.Info.Direction * distToTarget)) : p.LastPosition;
+                        var isBeam = p.Info.AmmoDef.Const.IsBeamWeapon;
+                        var vel = isBeam ? Vector3D.Zero : !MyUtils.IsZero(p.Velocity) ? p.Velocity : p.PrevVelocity;
 
-                        Session.SendFixedGunHitEvent(p.Info.Target.CoreEntity, p.Info.Hit.Entity, intersectOrigin, vel, p.Info.OriginUp, p.Info.MuzzleId, p.Info.System.WeaponIdHash, p.Info.AmmoDef.Const.AmmoIdxPos, (float)distToTarget);
+                        var firstHitEntity = p.Info.HitList[0];
+                        var hitDist = firstHitEntity.HitDist ?? p.Info.MaxTrajectory;
+                        var distToTarget = p.Info.AmmoDef.Const.IsBeamWeapon ? hitDist : p.Info.MaxTrajectory - p.Info.DistanceTraveled;
+
+                        var intersectOrigin = isBeam ? new Vector3D(firstHitEntity.Intersection.From + (p.Info.Direction * distToTarget)) : p.LastPosition;
+
+                        Session.SendFixedGunHitEvent(p.Info.Target.CoreEntity, p.Info.Hit.Entity, intersectOrigin, vel, p.Info.OriginUp, p.Info.MuzzleId, p.Info.System.WeaponIdHash, p.Info.AmmoDef.Const.AmmoIdxPos, (float)(isBeam ? p.Info.MaxTrajectory : distToTarget));
                         p.Info.AimedShot = false; //to prevent hits on another grid from triggering again
                     }
                     p.Info.System.Session.Hits.Add(p);

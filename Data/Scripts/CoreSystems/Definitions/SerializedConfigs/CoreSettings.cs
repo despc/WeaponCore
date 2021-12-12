@@ -117,12 +117,13 @@ namespace CoreSystems.Settings
             [ProtoMember(3)] public int MaxProjectiles = 3000;
             [ProtoMember(4)] public string MenuButton = MyMouseButtonsEnum.Middle.ToString();
             [ProtoMember(5)] public string ControlKey = MyKeys.R.ToString();
-            [ProtoMember(6)] public bool ShowHudTargetSizes;
+            [ProtoMember(6)] public bool ShowHudTargetSizes; // retired
             [ProtoMember(7)] public string ActionKey = MyKeys.NumPad0.ToString();
             [ProtoMember(8)] public Vector2 HudPos = new Vector2(0, 0);
             [ProtoMember(9)] public float HudScale = 1f;
             [ProtoMember(10)] public string InfoKey = MyKeys.Decimal.ToString();
             [ProtoMember(11)] public bool MinimalHud = false;
+            [ProtoMember(12)] public bool StikcyPainter = false;
         }
     }
 }

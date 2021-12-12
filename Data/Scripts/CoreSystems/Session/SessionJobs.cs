@@ -264,7 +264,7 @@ namespace CoreSystems
                     if (painted.EntityId != 0 && MyEntities.TryGetEntityById(painted.EntityId, out target))
                     {
                         var grid = target as MyCubeGrid;
-                        if (player.IdentityId == PlayerId && grid != null)
+                        if (player.IdentityId == PlayerId && grid != null && !Settings.ClientConfig.StikcyPainter)
                         {
 
                             var v3 = grid.LocalToGridInteger(painted.LocalPosition);
@@ -283,7 +283,6 @@ namespace CoreSystems
                                 }
                             }
                         }
-
                         var rep = MyIDModule.GetRelationPlayerPlayer(PlayerId, player.IdentityId);
                         var self = rep == MyRelationsBetweenPlayers.Self;
                         var friend = rep == MyRelationsBetweenPlayers.Allies;
