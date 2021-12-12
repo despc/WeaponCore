@@ -3,6 +3,7 @@ using CoreSystems.Support;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
+using VRageMath;
 
 namespace CoreSystems
 {
@@ -357,17 +358,20 @@ namespace CoreSystems
             var targetEnt = MyEntities.GetEntityByIdOrDefault(hitPacket.HitEnt);
 
             if (targetEnt == null) return Error(data, Msg("TargetEnt"));
+            var ammoDef = weapon.System.AmmoTypes[hitPacket.AmmoIndex].AmmoDef;
+            var muzzle = weapon.Muzzles[hitPacket.MuzzleId];
+            var isBeam = ammoDef.Const.IsBeamWeapon;
 
-            var origin = targetEnt.PositionComp.WorldMatrixRef.Translation - hitPacket.HitOffset;
-            var direction = hitPacket.Velocity;
+            var hitOrigin = targetEnt.PositionComp.WorldMatrixRef.Translation - hitPacket.HitOffset;
+            var direction = isBeam ? (Vector3)(hitOrigin - muzzle.Position) : hitPacket.Velocity;
             direction.Normalize();
 
             Projectiles.NewProjectiles.Add(new NewProjectile
             {
-                AmmoDef = weapon.System.AmmoTypes[hitPacket.AmmoIndex].AmmoDef,
-                Muzzle = weapon.Muzzles[hitPacket.MuzzleId],
+                AmmoDef = ammoDef,
+                Muzzle = muzzle,
                 TargetEnt = targetEnt,
-                Origin = origin,
+                Origin = isBeam ? muzzle.Position : hitOrigin,
                 OriginUp = hitPacket.Up,
                 Direction = direction,
                 Velocity = hitPacket.Velocity,
