@@ -58,6 +58,13 @@ namespace CoreSystems
             }
         }
 
+        public struct RadiatedBlock
+        {
+            public IMySlimBlock Slim;
+            public int Distance;
+        }
+
+
         internal struct LosDebug
         {
             internal Part Part;

@@ -568,7 +568,6 @@ namespace CoreSystems.Projectiles
                         var hitDist = firstHitEntity.HitDist ?? 0;
                         var distToTarget = p.Info.AmmoDef.Const.IsBeamWeapon ? hitDist : p.Info.MaxTrajectory - p.Info.DistanceTraveled;
                         var spawnPos = p.Info.AmmoDef.Const.IsBeamWeapon ? new Vector3D(firstHitEntity.Intersection.From + (p.Info.Direction * distToTarget)) : p.LastPosition;
-                        //Log.Line($"client sending predicted shot:{firstHitEntity.Intersection.From == p.LastPosition} - {p.Info.Origin == p.LastPosition} - distToTarget:{distToTarget} - distTraveled:{Vector3D.Distance(firstHitEntity.Intersection.From, firstHitEntity.Intersection.To)}");
 
                         Session.SendFixedGunHitEvent(p.Info.Target.CoreEntity, p.Info.Hit.Entity, spawnPos, vel, p.Info.OriginUp, p.Info.MuzzleId, p.Info.System.WeaponIdHash, p.Info.AmmoDef.Const.AmmoIdxPos, (float)distToTarget);
                         p.Info.AimedShot = false; //to prevent hits on another grid from triggering again
