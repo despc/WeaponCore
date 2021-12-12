@@ -134,6 +134,7 @@ namespace CoreSystems.Support
         internal bool Closed;
         internal bool ScanInProgress;
         internal bool TouchingWater;
+        internal bool IsGrid;
         internal uint TargetsUpdatedTick;
         internal uint VelocityUpdateTick;
         internal uint TargetResetTick;
@@ -202,6 +203,7 @@ namespace CoreSystems.Support
                 TopEntity = topEntity;
                 GridEntity = topEntity as MyCubeGrid;
                 AiType = GridEntity != null ? AiTypes.Grid : type == CoreComponent.CompTypeSpecific.Rifle ? AiTypes.Player : AiTypes.Phantom;
+                IsGrid = AiType == AiTypes.Grid;
                 DeadSphereRadius = GridEntity?.GridSizeHalf + 0.1 ?? 1.35;
 
                 TopEntity.Flags |= (EntityFlags)(1 << 31);
