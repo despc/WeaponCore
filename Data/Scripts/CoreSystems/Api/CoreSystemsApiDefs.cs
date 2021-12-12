@@ -831,6 +831,14 @@ namespace CoreSystems.Api
                         PullField,
                         TractorField,
                     }
+                    public enum Falloff //New
+                    {
+                        Legacy,
+                        None,
+                        Linear,
+                        Curve,
+                        Spall,
+                    }
 
                     [ProtoMember(1)] internal double AreaEffectRadius;
                     [ProtoMember(2)] internal float AreaEffectDamage;
@@ -840,6 +848,8 @@ namespace CoreSystems.Api
                     [ProtoMember(6)] internal ExplosionDef Explosions;
                     [ProtoMember(7)] internal EwarFieldsDef EwarFields;
                     [ProtoMember(8)] internal AreaInfluence Base;
+                    [ProtoMember(9)] internal Falloff RadiantFalloff; //New
+                    [ProtoMember(10)] internal float AreaEffectMaxDepth;//new
 
                     [ProtoContract]
                     public struct AreaInfluence
@@ -900,6 +910,8 @@ namespace CoreSystems.Api
                         [ProtoMember(3)] internal float DetonationRadius;
                         [ProtoMember(4)] internal float DetonationDamage;
                         [ProtoMember(5)] internal int MinArmingTime;
+                        [ProtoMember(6)] internal Falloff DetonationFalloff; //New
+                        [ProtoMember(7)] internal float DetonationMaxDepth;//new
                     }
 
                     [ProtoContract]

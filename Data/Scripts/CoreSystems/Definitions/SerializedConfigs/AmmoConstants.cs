@@ -50,7 +50,6 @@ namespace CoreSystems.Support
         private const string EnergyShieldDmgStr = "EnergyShieldDamage";
         private const string ClientPredAmmoStr = "DisableClientPredictedAmmo";
         private const string FallOffDistanceStr = "FallOffDistance";
-        private const string FallOffMinMultStr = "FallOffMinMultipler";
 
         private readonly Dictionary<string, BaseProcessor> _modifierMap = new Dictionary<string, BaseProcessor>()
         {
@@ -71,7 +70,6 @@ namespace CoreSystems.Support
             {EnergyShieldDmgStr, new BoolProcessor() },
             {ClientPredAmmoStr, new BoolProcessor() },
             {FallOffDistanceStr, new FloatProcessor() },
-            {FallOffMinMultStr, new FloatProcessor() },
         };
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
@@ -91,6 +89,11 @@ namespace CoreSystems.Support
         public readonly MyPhysicalInventoryItem AmmoItem;
         public readonly MyPhysicalInventoryItem EjectItem;
         public readonly AreaEffectType AreaEffect;
+
+        //BDC added
+        public readonly Falloff DetonationFalloff;
+        public readonly Falloff RadiantFalloff;
+
         public readonly Texture TracerMode;
         public readonly Texture TrailMode;
         public readonly string ModelPath;
@@ -178,7 +181,6 @@ namespace CoreSystems.Support
         public readonly bool EnergyShieldDmg;
         public readonly bool SlowFireFixedWeapon;
         public readonly float FallOffDistance;
-        public readonly float FallOffMinMultiplier;
         public readonly float EnergyCost;
         public readonly float ChargSize;
         public readonly float RealShotsPerMin;
@@ -189,6 +191,10 @@ namespace CoreSystems.Support
         public readonly float MagVolume;
         public readonly float Health;
         public readonly float BaseDamage;
+
+        public readonly float AreaAffectMaxDepth;//bdc addin
+        public readonly float DetonationMaxDepth;//bdc addin
+
         public readonly float AreaEffectDamage;
         public readonly float DetonationDamage;
         public readonly float DetonationRadius;
@@ -223,6 +229,7 @@ namespace CoreSystems.Support
 
         internal AmmoConstants(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session, WeaponSystem system, int ammoIndex)
         {
+
             AmmoIdxPos = ammoIndex;
             MyInventory.GetItemVolumeAndMass(ammo.AmmoDefinitionId, out MagMass, out MagVolume);
             MagazineDef = MyDefinitionManager.Static.GetAmmoMagazineDefinition(ammo.AmmoDefinitionId);
@@ -243,6 +250,9 @@ namespace CoreSystems.Support
             else if (ammo.AmmoDef.Ejection.Type == AmmoDef.EjectionDef.SpawnType.Particle && !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Eject.Name))
                 HasEjectEffect = true;
 
+            if (AmmoItem.Content != null && !session.AmmoItems.ContainsKey(AmmoItem.ItemId))
+                session.AmmoItems[AmmoItem.ItemId] = AmmoItem;
+
             var guidedAmmo = false;
             for (int i = 0; i < wDef.Ammos.Length; i++)
             {
@@ -255,7 +265,7 @@ namespace CoreSystems.Support
             }
 
             LoadModifiers(session, ammo, out AmmoModsFound);
-            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier, out FallOffDistance, out FallOffMinMultiplier);
+            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier);
 
             FixedFireAmmo = system.TurretMovement == WeaponSystem.TurretType.Fixed && ammo.AmmoDef.Trajectory.Guidance == None;
             IsMine = ammo.AmmoDef.Trajectory.Guidance == DetectFixed || ammo.AmmoDef.Trajectory.Guidance == DetectSmart || ammo.AmmoDef.Trajectory.Guidance == DetectTravelTo;
@@ -292,6 +302,8 @@ namespace CoreSystems.Support
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
+            FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
+
             ArmorCoreActive = session.ArmorCoreActive;
 
             AmmoSkipAccel = ammo.AmmoDef.Trajectory.AccelPerSec <= 0;
@@ -301,7 +313,9 @@ namespace CoreSystems.Support
             MaxLateralThrust = MathHelperD.Clamp(ammo.AmmoDef.Trajectory.Smarts.MaxLateralThrust, 0.000001, 1);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
-            AreaEffects(ammo.AmmoDef, out AreaEffect, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AmmoAreaEffect, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out EwarEffect, out EwarTriggerRange, out MinArmingTime);
+            
+            //BDC addin max depths
+            AreaEffects(ammo.AmmoDef, out AreaAffectMaxDepth, out DetonationMaxDepth, out AreaEffect, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AmmoAreaEffect, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out EwarEffect, out EwarTriggerRange, out MinArmingTime); ;
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -325,10 +339,10 @@ namespace CoreSystems.Support
             GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out ShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
 
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
-            ClientPredictedAmmo = FixedFireAmmo && !IsBeamWeapon && IsTurretSelectable && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
+            ClientPredictedAmmo = FixedFireAmmo && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
-                Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {ShrapnelId}");
+                Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction");
 
             SlowFireFixedWeapon = system.TurretMovement == WeaponSystem.TurretType.Fixed && (RealShotsPerMin <= 120 || Reloadable && system.WConst.ReloadTime >= 120);
 
@@ -580,11 +594,11 @@ namespace CoreSystems.Support
             }
             var shotsPerSecPower = shotsPerSec; //save for power calc
 
-            if (s.WConst.HeatPerShot > 0)
+            if (s.HeatPerShot > 0)
             {
 
 
-                var heatGenPerSec = (s.WConst.HeatPerShot * shotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
+                var heatGenPerSec = (l.HeatPerShot * shotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
 
 
 
@@ -602,7 +616,7 @@ namespace CoreSystems.Support
                     if ((mexLogLevel >= 1))
                     {
                         Log.Line($"Name = {s.PartName}");
-                        Log.Line($"HeatPerShot = {s.WConst.HeatPerShot}");
+                        Log.Line($"HeatPerShot = {l.HeatPerShot}");
                         Log.Line($"HeatGenPerSec = {heatGenPerSec}");
 
                         Log.Line($"WepCoolDown = {l.Cooldown}");
@@ -691,7 +705,7 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out AreaEffectType areaEffect, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out bool ammoAreaEffect, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool eWarEffect, out double eWarTriggerRange, out int minArmingTime)
+        private void AreaEffects(AmmoDef ammoDef, out float areaEffectMaxDepth, out float detonationMaxDepth, out AreaEffectType areaEffect, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out bool ammoAreaEffect, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool eWarEffect, out double eWarTriggerRange, out int minArmingTime)
         {
             areaEffect = ammoDef.AreaEffect.AreaEffect;
 
@@ -714,12 +728,16 @@ namespace CoreSystems.Support
                 detonationRadius = _modifierMap[DetRadStr].GetAsFloat;
             else
                 detonationRadius = ammoDef.AreaEffect.Detonation.DetonationRadius;
+            //BDC addin for depth & falloff
+            areaEffectMaxDepth = ammoDef.AreaEffect.AreaEffectMaxDepth == 0 ? (float)areaEffectSize : ammoDef.AreaEffect.AreaEffectMaxDepth ;
+            detonationMaxDepth = ammoDef.AreaEffect.Detonation.DetonationMaxDepth == 0 ? (float)detonationRadius : ammoDef.AreaEffect.Detonation.DetonationMaxDepth;
+
 
             ammoAreaEffect = ammoDef.AreaEffect.AreaEffect != AreaEffectType.Disabled;
-            areaRadiusSmall = Session.ModRadius(areaEffectSize / 5, false);
-            areaRadiusLarge = Session.ModRadius(areaEffectSize, true);
-            detonateRadiusSmall = Session.ModRadius(detonationRadius / 5, false);
-            detonateRadiusLarge = Session.ModRadius(detonationRadius, true);
+            areaRadiusSmall = Session.ModRadius(areaEffectSize / 5, false); //needed?
+            areaRadiusLarge = Session.ModRadius(areaEffectSize, true);//needed?
+            detonateRadiusSmall = Session.ModRadius(detonationRadius / 5, false);//needed?
+            detonateRadiusLarge = Session.ModRadius(detonationRadius, true);//needed?
             eWar = areaEffect > (AreaEffectType)2;
             eWarEffect = areaEffect > (AreaEffectType)3;
             eWarTriggerRange = eWar && Pulse && ammoDef.AreaEffect.EwarFields.TriggerRange > 0 ? ammoDef.AreaEffect.EwarFields.TriggerRange : 0;
@@ -782,16 +800,16 @@ namespace CoreSystems.Support
                             customDamageScales = customBlockDef.Count > 0;
                         }
             }
-            damageScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;
+            damageScaling = d.FallOff.MinMultipler > 0 && !MyUtils.IsZero(d.FallOff.MinMultipler - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;
             if (damageScaling)
             {
                 armorScaling = d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0;
-                fallOffScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1);
+                fallOffScaling = d.FallOff.MinMultipler > 0 && !MyUtils.IsZero(d.FallOff.MinMultipler - 1);
             }
-            selfDamage = d.SelfDamage && !IsBeamWeapon;
-            voxelDamage = d.DamageVoxels;
-            healthHitModifer = d.HealthHitModifier > 0 ? d.HealthHitModifier : 1;
-            voxelHitModifer = d.VoxelHitModifier > 0 ? d.VoxelHitModifier : 1;
+            selfDamage = ammoDef.DamageScales.SelfDamage && !IsBeamWeapon;
+            voxelDamage = ammoDef.DamageScales.DamageVoxels;
+            healthHitModifer = ammoDef.DamageScales.HealthHitModifier > 0 ? ammoDef.DamageScales.HealthHitModifier : 1;
+            voxelHitModifer = ammoDef.DamageScales.VoxelHitModifier > 0 ? ammoDef.DamageScales.VoxelHitModifier : 1;
         }
 
         private void Energy(WeaponSystem.AmmoType ammoPair, WeaponSystem system, WeaponDefinition wDef, out bool energyAmmo, out bool mustCharge, out bool reloadable, out float energyCost, out int energyMagSize, out float chargeSize, out bool burstMode, out bool shotReload)
@@ -898,7 +916,7 @@ namespace CoreSystems.Support
             }
         }
 
-        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier, out float fallOffDistance, out float fallOffMinMult)
+        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier)
         {
             baseDamage = AmmoModsFound && _modifierMap[BaseDmgStr].HasData() ? _modifierMap[BaseDmgStr].GetAsFloat : ammoDef.BaseDamage;
             health = AmmoModsFound && _modifierMap[HealthStr].HasData() ? _modifierMap[HealthStr].GetAsFloat : ammoDef.Health;
@@ -912,9 +930,6 @@ namespace CoreSystems.Support
 
             var givenShieldModifier = AmmoModsFound && _modifierMap[ShieldModStr].HasData() ? _modifierMap[ShieldModStr].GetAsDouble : ammoDef.DamageScales.Shields.Modifier;
             shieldModifier = givenShieldModifier < 0 ? 1 : givenShieldModifier;
-
-            fallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammoDef.DamageScales.FallOff.Distance;
-            fallOffMinMult = AmmoModsFound && _modifierMap[FallOffMinMultStr].HasData() ? _modifierMap[FallOffMinMultStr].GetAsFloat : ammoDef.DamageScales.FallOff.MinMultipler;
         }
 
     }

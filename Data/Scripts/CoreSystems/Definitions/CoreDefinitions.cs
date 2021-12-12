@@ -821,7 +821,7 @@ namespace CoreSystems.Support
                 public enum AreaEffectType
                 {
                     Disabled,
-                    Explosive,
+                    Explosive,//BDC retire?
                     Radiant,
                     AntiSmart,
                     JumpNullField,
@@ -835,6 +835,14 @@ namespace CoreSystems.Support
                     PullField,
                     TractorField,
                 }
+                public enum Falloff //New
+                {
+                    Legacy,
+                    None,
+                    Linear,
+                    Curve,
+                    Spall,
+                }
 
                 [ProtoMember(1)] internal double AreaEffectRadius;
                 [ProtoMember(2)] internal float AreaEffectDamage;
@@ -844,6 +852,8 @@ namespace CoreSystems.Support
                 [ProtoMember(6)] internal ExplosionDef Explosions;
                 [ProtoMember(7)] internal EwarFieldsDef EwarFields;
                 [ProtoMember(8)] internal AreaInfluence Base;
+                [ProtoMember(9)] internal Falloff RadiantFalloff; //New
+                [ProtoMember(10)] internal float AreaEffectMaxDepth;//new
 
                 [ProtoContract]
                 public struct AreaInfluence
@@ -899,11 +909,14 @@ namespace CoreSystems.Support
                 [ProtoContract]
                 public struct DetonateDef
                 {
+
                     [ProtoMember(1)] internal bool DetonateOnEnd;
                     [ProtoMember(2)] internal bool ArmOnlyOnHit;
                     [ProtoMember(3)] internal float DetonationRadius;
                     [ProtoMember(4)] internal float DetonationDamage;
                     [ProtoMember(5)] internal int MinArmingTime;
+                    [ProtoMember(6)] internal Falloff DetonationFalloff; //New
+                    [ProtoMember(7)] internal float DetonationMaxDepth;//new
                 }
 
                 [ProtoContract]
