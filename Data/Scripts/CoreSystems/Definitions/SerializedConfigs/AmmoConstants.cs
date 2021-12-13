@@ -342,7 +342,9 @@ namespace CoreSystems.Support
             GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out ShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
 
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
-           ClientPredictedAmmo = FixedFireAmmo && IsTurretSelectable && ShrapnelId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
+            var predictionEligible = session.IsClient || session.DedicatedServer;
+
+            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && ShrapnelId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
                  Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {ShrapnelId}");
