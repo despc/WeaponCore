@@ -31,9 +31,6 @@ namespace CoreSystems.Support
                                 return;
                             }
 
-                            if (comp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle)
-                                SmartHandheld = wComp.TrackingWeapon.System.HasGuidedAmmo;
-
                             WeaponIdx.Add(wComp, WeaponComps.Count);
                             WeaponComps.Add(wComp);
                         }

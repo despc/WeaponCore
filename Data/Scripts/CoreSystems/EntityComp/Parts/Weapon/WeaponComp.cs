@@ -100,7 +100,10 @@ namespace CoreSystems.Platform
                         w.EventTriggerStateChanged(WeaponDefinition.AnimationDef.PartAnimationSetDef.EventTriggers.EmptyOnGameLoad, true);
 
                     if (TypeSpecific == CompTypeSpecific.Rifle)
+                    {
                         Ai.AiOwner = GunBase.OwnerIdentityId;
+                        Ai.SmartHandheld = w.System.HasGuidedAmmo;
+                    }
 
                     if (w.IsTurret) {
                         w.Azimuth = w.System.HomeAzimuth;
