@@ -824,14 +824,57 @@ namespace CoreSystems
 
             var rootPos = root.Position; //local cube grid
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
-            int radiusCeil = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
-            int i, j, k;
-            int maxdepth = (int)Math.Floor(depth*grid.GridSizeR); //Meters to cube conversion.  Round up or down?
-            //Log.Line($"Max Depth: calc'd{maxdepth}  raw{depth}");
-            //Log.Line($"Hitent Intersection Dir: {direction}");
+            depth *= grid.GridSizeR;
 
-            Vector3I min2 = Vector3I.Max(rootPos - radiusCeil, grid.Min);
-            Vector3I max2 = Vector3I.Min(rootPos + radiusCeil, grid.Max);
+            int radiusCeil = (int)Math.Ceiling(radius);  //changed to floor, experiment for precision/rounding bias
+            int i, j, k;
+            int maxdepth = (int)Math.Ceiling(depth*grid.GridSizeR); //Meters to cube conversion.  Round up or down?
+            Vector3I min2 = rootPos - radiusCeil;
+            Vector3I max2 = rootPos + radiusCeil;
+            //Vector3I min2 = Vector3I.Max(rootPos - radiusCeil, grid.Min);
+            //Vector3I max2 = Vector3I.Min(rootPos + radiusCeil, grid.Max);
+            if (maxdepth < radiusCeil)
+            {
+                Log.Line($"Max Depth {maxdepth}  radceil {radiusCeil}   root {rootPos} abs max comp{direction.AbsMaxComponent()}  Dir{direction.Z <= 0f}");
+                Log.Line($"Minorig {min2}  maxorig {max2}");
+                switch (direction.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
+                {
+                    case 1://hit face perp to x
+                        if (direction.X <= 0f)
+                        { min2.X = rootPos.X - maxdepth + 1;
+                          max2.X = rootPos.X + maxdepth - 1;        
+                        }
+                        else
+                        { min2.X = rootPos.X + maxdepth -1;
+                          max2.X = rootPos.X - maxdepth +1;
+                        }
+                        break;
+
+                    case 0://hit face perp to y
+                        if (direction.Y <= 0f)
+                        { min2.Y = rootPos.Y - maxdepth + 1;
+                          max2.Y = rootPos.Y + maxdepth - 1;}
+                        else
+                        { min2.Y = rootPos.Y + maxdepth - 1;
+                          max2.Y = rootPos.Y - maxdepth + 1;
+                        }
+                        break;
+
+                    case 2://Hit face is perp to z
+                        if (direction.Z <= 0f)
+                        { min2.Z = rootPos.Z - maxdepth + 1;
+                          max2.Z = rootPos.Z + maxdepth - 1;
+                        }
+                        else
+                        { min2.Z = rootPos.Z + maxdepth - 1;
+                          max2.Z = rootPos.Z - maxdepth + 1;
+                        }
+                        break;
+                }
+                Log.Line($"Min {min2} max {max2}");
+            
+            }
+
 
             var damageBlockCache = DamageBlockCache;
 
@@ -852,12 +895,12 @@ namespace CoreSystems
                             { 
                                 if (slim.IsDestroyed)
                                     continue;
-                                //
+                               
 
 
                                 //multi hits on large objects?  slim.Min .Max, etc
                                 var distArray = damageBlockCache[hitdist];
-                                //Log.Line($"Slim {slim.GetHashCode()} pos{slim.Position} Dist from root {hitdist}");
+                               // Log.Line($"Slim {slim.GetHashCode()} pos{slim.Position} Dist from root {hitdist}");
                                 distArray.Add(new RadiatedBlock { Slim = slim, Distance = hitdist });
                                 if (hitdist >= maxDbc) maxDbc = hitdist;
                                 slim.Dithering = 50;//temp debug to make "hits" go clear, including the root block
