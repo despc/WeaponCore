@@ -504,12 +504,11 @@ namespace CoreSystems
 
                                     break;
                                 }
-                            case "shipsizes":
-                                Settings.ClientConfig.ShowHudTargetSizes = !Settings.ClientConfig.ShowHudTargetSizes;
+                            case "stickypainter":
+                                Settings.ClientConfig.StikcyPainter = !Settings.ClientConfig.StikcyPainter;
                                 somethingUpdated = true;
-                                MyAPIGateway.Utilities.ShowNotification($"Shipsize icons have been set to: {Settings.ClientConfig.ShowHudTargetSizes}", 10000);
+                                MyAPIGateway.Utilities.ShowNotification($"Sticky Painter set to: {Settings.ClientConfig.StikcyPainter}", 10000);
                                 Settings.VersionControl.UpdateClientCfgFile();
-                                FovChanged();
                                 break;
                             case "changehud":
                                 CanChangeHud = !CanChangeHud;
@@ -529,7 +528,7 @@ namespace CoreSystems
                 if (!somethingUpdated)
                 {
                     if (message.Length <= 3)
-                        MyAPIGateway.Utilities.ShowNotification("Valid WeaponCore Commands:\n'/wc remap -- Remap keys'\n'/wc drawlimit 1000' -- Limits total number of projectiles on screen (default unlimited)\n'/wc changehud' to enable moving/resizing of WC Hud\n'/wc setdefaults' -- Resets shield client configs to default values\n", 10000);
+                        MyAPIGateway.Utilities.ShowNotification("Valid WeaponCore Commands:\n'/wc remap -- Remap keys'\n'/wc drawlimit 1000' -- Limits total number of projectiles on screen (default unlimited)\n'/wc changehud' to enable moving/resizing of WC Hud\n'/wc setdefaults' -- Resets shield client configs to default values\n'/wc stickypainter' -- Disable Painter LoS checks\n", 10000);
                     else if (message.StartsWith("/wc remap"))
                         MyAPIGateway.Utilities.ShowNotification("'/wc remap keyboard' -- Remaps control key (default R)\n'/wc remap mouse' -- Remaps menu mouse key (default middle button)\n'/wc remap action' -- Remaps action key (default numpad0)\n'/wc remap info' -- Remaps info key (default decimal key, aka numpad period key)\n", 10000, "White");
                 }

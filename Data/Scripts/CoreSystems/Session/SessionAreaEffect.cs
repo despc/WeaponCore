@@ -231,7 +231,6 @@ namespace CoreSystems
 
                 var blockHp = block.Integrity;
                 float damageScale = 1;
-                var tmpDamagePool = damagePool;
                 if (ammoDef.Const.DamageScaling)
                 {
                     var d = ammoDef.DamageScales;
@@ -266,16 +265,8 @@ namespace CoreSystems
                     }
                 }
 
-                var scaledDamage = tmpDamagePool * damageScale;
-
-                var blockDisabled = false;
-                if (scaledDamage <= blockHp)
-                    tmpDamagePool = 0;
-                else
-                {
-                    blockDisabled = true;
-                    tmpDamagePool -= blockHp;
-                }
+                var scaledDamage = damagePool * damageScale;
+                healthPool -= 1;
 
                 if (fieldType == DotField && IsServer)
                 {
@@ -289,28 +280,35 @@ namespace CoreSystems
                     var cubeId = cubeBlock.EntityId;
                     if (EffectedCubes.TryGetValue(cubeId, out blockState))
                     {
-                        if (blockState.Health > 0) damagePool = tmpDamagePool;
-                        if (!blockDisabled && blockState.Health - scaledDamage > 0)
+                        if (blockState.Health - scaledDamage > 0)
                         {
+                            damagePool = 0;
                             blockState.Health -= scaledDamage;
                             blockState.Endtick = Tick + (duration + 1);
                         }
                         else if (blockState.Endtick + (duration + 1) < maxTick)
                         {
+                            damagePool -= (blockHp * damageScale);
                             blockState.Health = 0;
-                            healthPool -= 1;
                             blockState.Endtick += (duration + 1);
                         }
                         else
                         {
+                            if (blockState.Endtick != maxTick)
+                            {
+                                var size = (duration + 1);
+                                var diff = blockState.Endtick + size;
+                                var scaler = (maxTick - diff) + 1;
+                                if (scaler > 0)
+                                    damagePool -= ((blockHp * damageScale) / scaler);
+                            }
                             blockState.Health = 0;
-                            healthPool -= 1;
                             blockState.Endtick = maxTick;
                         }
                     }
                     else
                     {
-                        damagePool = tmpDamagePool;
+                        damagePool -= scaledDamage;
                         blockState.FunctBlock = funcBlock;
                         var originState = blockState.FunctBlock.Enabled;
                         blockState.FirstTick = Tick + 1;
@@ -320,13 +318,26 @@ namespace CoreSystems
                         blockState.Session = this;
                         blockState.AmmoDef = ammoDef;
                         blockState.SystemId = sysmteId;
-                        if (!blockDisabled) blockState.Health = blockHp - scaledDamage;
+
+                        if (scaledDamage <= blockHp)
+                        {
+                            damagePool = 0;
+                            blockState.Health = (blockHp - scaledDamage);
+                        }
                         else
                         {
+                            damagePool -= (blockHp * damageScale);
                             blockState.Health = 0;
                         }
                     }
                     EffectedCubes[cubeId] = blockState;
+                }
+                else
+                {
+                    if (scaledDamage <= blockHp)
+                        damagePool = 0;
+                    else
+                        damagePool -= blockHp;
                 }
             }
 

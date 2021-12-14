@@ -149,7 +149,7 @@ namespace CoreSystems
         internal readonly Dictionary<MyDefinitionId, MyStringHash> VanillaIds = new Dictionary<MyDefinitionId, MyStringHash>(MyDefinitionId.Comparer);
         internal readonly Dictionary<MyStringHash, MyDefinitionId> VanillaCoreIds = new Dictionary<MyStringHash, MyDefinitionId>(MyStringHash.Comparer);
         internal readonly Dictionary<MyStringHash, AreaRestriction> AreaRestrictions = new Dictionary<MyStringHash, AreaRestriction>(MyStringHash.Comparer);
-        internal readonly Dictionary<long, InputStateData> PlayerMouseStates = new Dictionary<long, InputStateData> {[-1] = new InputStateData()};
+        internal readonly Dictionary<long, InputStateData> PlayerMouseStates = new Dictionary<long, InputStateData> { [-1] = new InputStateData() };
         internal readonly Dictionary<long, FakeTargets> PlayerDummyTargets = new Dictionary<long, FakeTargets> { [-1] = new FakeTargets() };
         internal readonly Dictionary<ulong, HashSet<long>> PlayerEntityIdInRange = new Dictionary<ulong, HashSet<long>>();
         internal readonly Dictionary<long, ulong> ConnectedAuthors = new Dictionary<long, ulong>();
@@ -219,6 +219,7 @@ namespace CoreSystems
 
         internal readonly int[] AuthorSettings = new int[6];
         internal readonly List<Weapon>[] LeadGroups = new List<Weapon>[4];
+
         ///
         ///
         ///
@@ -244,12 +245,13 @@ namespace CoreSystems
         private readonly Dictionary<string, List<WeaponDefinition>> _subTypeIdWeaponDefs = new Dictionary<string, List<WeaponDefinition>>();
         private readonly Dictionary<string, List<UpgradeDefinition>> _subTypeIdUpgradeDefs = new Dictionary<string, List<UpgradeDefinition>>();
         private readonly Dictionary<string, List<SupportDefinition>> _subTypeIdSupportDefs = new Dictionary<string, List<SupportDefinition>>();
-
         private readonly List<MyKeys> _pressedKeys = new List<MyKeys>();
         private readonly List<MyMouseButtonsEnum> _pressedButtons = new List<MyMouseButtonsEnum>();
         private readonly List<MyEntity> _tmpNearByBlocks = new List<MyEntity>();
         private readonly EwaredBlocksPacket _cachedEwarPacket = new EwaredBlocksPacket();
         private SpinLockRef _dityGridLock = new SpinLockRef();
+
+        internal readonly List<RadiatedBlock>[] DamageBlockCache = new List<RadiatedBlock>[128];
         internal List<RadiatedBlock> SlimsSortedList = new List<RadiatedBlock>(1024);
         internal MyConcurrentPool<MyEntity> TriggerEntityPool;
 
@@ -516,6 +518,9 @@ namespace CoreSystems
 
             for (int i = 0; i < LeadGroups.Length; i++)
                 LeadGroups[i] = new List<Weapon>();
+
+            for (int i = 0; i < 128; i++)
+               DamageBlockCache[i] = new List<RadiatedBlock>();
         }
     }
 }
