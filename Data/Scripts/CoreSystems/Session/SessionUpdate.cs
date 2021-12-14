@@ -205,6 +205,7 @@ namespace CoreSystems
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)
                         continue;
 
+                    var cMode = wComp.Data.Repo.Values.Set.Overrides.Control;
                     if (HandlesInput) {
 
                         if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wComp.Data.Repo.Values.State.Control != ControlMode.Toolbar)
@@ -213,7 +214,7 @@ namespace CoreSystems
                         var wasTrack = wComp.Data.Repo.Values.State.TrackingReticle;
 
                         var isControllingPlayer = wComp.Data.Repo.Values.State.PlayerId == PlayerId;
-                        var track = (isControllingPlayer && (wComp.Data.Repo.Values.Set.Overrides.Control != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && wComp.Ai.Construct.RootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
+                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && wComp.Ai.Construct.RootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
                         if (isControllingPlayer)
                         {
                             TargetUi.LastTrackTick = Tick;
@@ -224,16 +225,16 @@ namespace CoreSystems
                         }
                     }
 
-                    wComp.ManualMode = wComp.Data.Repo.Values.State.TrackingReticle && wComp.Data.Repo.Values.Set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Manual;
+                    wComp.ManualMode = wComp.Data.Repo.Values.State.TrackingReticle && cMode == ProtoWeaponOverrides.ControlModes.Manual;
 
                     Ai.FakeTargets fakeTargets = null;
-                    if (wComp.ManualMode || wComp.Data.Repo.Values.Set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Painter)
+                    if (wComp.ManualMode || cMode == ProtoWeaponOverrides.ControlModes.Painter)
                         PlayerDummyTargets.TryGetValue(wComp.Data.Repo.Values.State.PlayerId, out fakeTargets);
 
-                    wComp.PainterMode = fakeTargets != null && wComp.Data.Repo.Values.Set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Painter && fakeTargets.PaintedTarget.EntityId != 0;
+                    wComp.PainterMode = fakeTargets != null && cMode == ProtoWeaponOverrides.ControlModes.Painter && fakeTargets.PaintedTarget.EntityId != 0;
                     wComp.FakeMode = wComp.ManualMode || wComp.PainterMode;
                     wComp.WasControlled = wComp.UserControlled;
-                    wComp.UserControlled = wComp.Data.Repo.Values.State.Control != ControlMode.None;
+                    wComp.UserControlled = wComp.Data.Repo.Values.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Painter || fakeTargets == null || fakeTargets.PaintedTarget.EntityId != 0);
 
                     if (!PlayerMouseStates.TryGetValue(wComp.Data.Repo.Values.State.PlayerId, out wComp.InputState))
                         wComp.InputState = DefaultInputStateData;
@@ -359,7 +360,6 @@ namespace CoreSystems
                         ///
                         /// Queue for target acquire or set to tracking weapon.
                         /// 
-
                         var seek = comp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!comp.UserControlled && !Settings.Enforcement.DisableAi || w.PartState.Action == TriggerClick));
                         if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !Settings.Enforcement.DisableAi) && !w.AcquiringTarget && (comp.Data.Repo.Values.State.Control == ControlMode.None || comp.Data.Repo.Values.State.Control == ControlMode.Ui))
                         {
@@ -392,7 +392,7 @@ namespace CoreSystems
                         var shoot = (validShootStates || manualShot || w.FinishShots || delayedFire);
                         w.LockOnFireState = shoot && (w.System.LockOnFocus && !w.Comp.ModOverride) && ai.Construct.Data.Repo.FocusData.HasFocus && ai.Construct.Focus.FocusInRange(w);
                         var shotReady = canShoot && (shoot && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
-                        
+
                         if (shotReady && ai.CanShoot) {
 
                             if (MpActive && HandlesInput && !ManualShot)

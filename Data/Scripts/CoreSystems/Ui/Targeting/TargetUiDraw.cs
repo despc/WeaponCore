@@ -157,9 +157,12 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             for (int i = 0; i < s.ActiveMarks.Count; i++)
             {
                 var mark = s.ActiveMarks[i];
+
                 var player = mark.Item1;
                 var repColor = mark.Item2;
                 var fakeTarget = mark.Item3;
+                if (fakeTarget.EntityId == 0)
+                    continue;
 
                 var textColor = new Vector4(repColor.X, repColor.Y, repColor.Z, cMod1 * repColor.W);
 

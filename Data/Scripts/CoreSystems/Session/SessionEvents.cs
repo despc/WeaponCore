@@ -219,6 +219,7 @@ namespace CoreSystems
 
                     if (grid.Components.TryGet(out gridMap.Targeting))
                         gridMap.Targeting.AllowScanning = false;
+
                     gridMap.Trash = true;
 
                     gridMap.MyCubeBocks = allFat;
