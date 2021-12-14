@@ -901,7 +901,6 @@ namespace CoreSystems.Projectiles
                 {
                     foreach (var cube in map.MyCubeBocks)
                     {
-                        if (!(cube is IMyTerminalBlock)) continue;
                         switch (fieldType)
                         {
                             case JumpNullField:

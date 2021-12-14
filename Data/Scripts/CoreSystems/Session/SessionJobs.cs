@@ -340,7 +340,6 @@ namespace CoreSystems
                     for (int j = 0; j < allFat.Count; j++)
                     {
                         var fat = allFat[j];
-                        if (!(fat is IMyTerminalBlock)) continue;
                         terminals++;
                         using (fat.Pin())
                         {

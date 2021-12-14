@@ -212,7 +212,12 @@ namespace CoreSystems
                     var allFat = ConcurrentListPool.Get();
 
                     var gridFat = grid.GetFatBlocks();
-                    for (int i = 0; i < gridFat.Count; i++) allFat.Add(gridFat[i]);
+                    for (int i = 0; i < gridFat.Count; i++)
+                    {
+                        var term = gridFat[i] as IMyTerminalBlock;
+                        if (term != null)
+                            allFat.Add(gridFat[i]);
+                    }
                     allFat.ApplyAdditions();
 
                     var gridMap = GridMapPool.Get();
@@ -262,7 +267,7 @@ namespace CoreSystems
             try
             {
                 GridMap gridMap;
-                if (GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
+                if (myCubeBlock is IMyTerminalBlock && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Add(myCubeBlock);
                     using (_dityGridLock.Acquire())
@@ -279,7 +284,7 @@ namespace CoreSystems
             try
             {
                 GridMap gridMap;
-                if (GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
+                if (myCubeBlock is IMyTerminalBlock && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Remove(myCubeBlock);
                     using (_dityGridLock.Acquire())

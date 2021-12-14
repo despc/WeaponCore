@@ -107,7 +107,7 @@ namespace CoreSystems.Support
                             {
                                 var fat = allFat[j];
                                 var warhead = fat is IMyWarhead;
-                                if (warhead || fat is IMyTerminalBlock && fat.IsWorking)
+                                if (warhead || fat.IsWorking)
                                 {
                                     hostileDrone = warhead || gridMap.SuspectedDrone;
                                     loneWarhead = warhead && fatCount == 1;
