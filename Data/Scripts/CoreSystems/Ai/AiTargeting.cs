@@ -28,8 +28,8 @@ namespace CoreSystems.Support
             var targetType = TargetType.None;
             if (w.PosChangedTick != w.Comp.Session.Tick) w.UpdatePivotPos();
             FakeTarget.FakeWorldTargetInfo fakeInfo = null;
-
-            if (w.Comp.Data.Repo.Values.Set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto)
+            var cMode =  w.Comp.Data.Repo.Values.Set.Overrides.Control;
+            if (cMode == ProtoWeaponOverrides.ControlModes.Auto || cMode == ProtoWeaponOverrides.ControlModes.Painter && !w.Comp.PainterMode)
             {
                 w.AimCone.ConeDir = w.MyPivotFwd;
                 w.AimCone.ConeTip = w.BarrelOrigin + (w.MyPivotFwd * w.MuzzleDistToBarrelCenter);
@@ -303,7 +303,6 @@ namespace CoreSystems.Support
             var session = w.Comp.Session;
             var ai = comp.Ai;
             session.TargetRequests++;
-            var physics = session.Physics;
             var barrelPos = w.BarrelOrigin;
             var weaponPos = w.BarrelOrigin + (w.MyPivotFwd * w.MuzzleDistToBarrelCenter);
             var target = w.NewTarget;

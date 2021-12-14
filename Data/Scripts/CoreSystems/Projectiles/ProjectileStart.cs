@@ -56,7 +56,10 @@ namespace CoreSystems.Projectiles
                 p.Info.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : p.Info.WeaponCache.VirutalId;
                 p.Info.Origin = t != Kind.Client ? t != Kind.Virtual ? muzzle.Position : w.MyPivotPos : gen.Origin;
                 p.Info.Direction = t != Kind.Client ? t != Kind.Virtual ? gen.Direction : w.MyPivotFwd : gen.Direction;
-                if (t == Kind.Client) p.Velocity = gen.Velocity;
+                
+                if (t == Kind.Client && !a.Const.IsBeamWeapon) 
+                    p.Velocity = gen.Velocity;
+                
                 float shotFade;
                 if (a.Const.HasShotFade && !a.Const.VirtualBeams)
                 {
