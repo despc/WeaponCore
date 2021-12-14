@@ -837,6 +837,7 @@ namespace CoreSystems.Api
                         None,
                         Linear,
                         Curve,
+                        InvCurve,
                         Spall,
                     }
 

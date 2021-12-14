@@ -60,7 +60,7 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info);  //set to 2 for debug
+                            DamageGrid2(hitEnt, info);  //set to 2 for debug
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
@@ -247,7 +247,7 @@ namespace CoreSystems
             var damageType = t.ShieldBypassed ? ShieldBypassDamageType : radiant || hasDetDmg ? MyDamageType.Explosion : MyDamageType.Bullet;
             var distTraveled = t.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? t.DistanceTraveled : t.DistanceTraveled;
             var direction = hitEnt.Intersection.Direction;//BDC - Grab direction that proj was travelling
-            Log.Line($"Hitent Intersection Dir: {direction}");
+
             //overall falloff scaling
             var fallOff = t.AmmoDef.Const.FallOffScaling && distTraveled > t.AmmoDef.Const.FallOffDistance;
             var fallOffMultipler = 1f;
@@ -269,10 +269,8 @@ namespace CoreSystems
             var countBlocksAsObjects = t.AmmoDef.ObjectsHit.CountBlocks; //BDC - are any of these hit counts duplicates?
 
             //General damage data
-            float directDamageScale = directDmgGlobal;
-            float areaDamageScale = areaDmgGlobal;
-            float detDamageScale = areaDmgGlobal;
-            float damageScale = hits;
+
+
             var d = t.AmmoDef.DamageScales;
 
             //Switches and setup for damage types/event loops
@@ -286,7 +284,7 @@ namespace CoreSystems
             //Main loop (finally)
             for (int i = 0; i < blockCount; i++)
             {
-                if (earlyExit || (basePool <= 1 || objectsHit >= maxObjects) && !novaing) //are there other early bailout conditions?
+                if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !novaing) //are there other early bailout conditions?
                 {
                     Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects}  novaing{novaing}");
                     basePool = 0;
@@ -320,35 +318,30 @@ namespace CoreSystems
                 //radiant logic
                 if (hasAreaDmg)
                 {
-                    Log.Line($"get area blocks, we're radiant");
+                    //Log.Line($"get area blocks, we're radiant");
                     RadiantAoe(rootBlock, grid, areaRadius, areaDepth, direction, ref maxDbc); //Detonate depth & dir added
                     radiating = true;
                 }
 
                 //Nova logic
-                if (hasDetDmg && novaing)
+                if (hasDetDmg && novaing && !novacomplete)
                 {
-                    Log.Line($"get nova blocks, we're going boom");
+                    //Log.Line($"get nova blocks, we're going boom");
                     RadiantAoe(rootBlock, grid, detonateRadius, detonateDepth, direction, ref maxDbc);  //detonate depth & dir added
                     novacomplete = true;
+                    Log.Line($"Max: {maxDbc}   DBC0: {DamageBlockCache[0].Count}  DBC1: {DamageBlockCache[1].Count}   DBC2: {DamageBlockCache[2].Count}   DBC3: {DamageBlockCache[3].Count}   DBC4: {DamageBlockCache[4].Count}   DBC5: {DamageBlockCache[5].Count}");
+
                 }
-
-                //write rootBlock to DBC array so it'll trickle through everything below
-                //DamageBlockCache[0].Add(new RadiatedBlock { Slim = rootBlock, Distance = 0, Hits = 1 });
-                
-                Log.Line($"Max: {maxDbc}   DBC0: {DamageBlockCache[0].Count}  DBC1: {DamageBlockCache[1].Count}   DBC2: {DamageBlockCache[2].Count}");
-
-
-                //Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
-                for (int j = 0; j < maxDbc+1; j++)
+          
+                for (int j = 0; j < maxDbc+1; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
                     int dbCount = 1;
                     float expDamageFall = 0;
                     List<RadiatedBlock> dbc = null;
 
-                    if (hasAoe)
+                    if (hasAoe && novacomplete || radiating)
                     {
-                        Log.Line($"J? {j}");
+                        
                         dbc = DamageBlockCache[j];
                         dbCount = dbc.Count;
                         if (dbCount == 0)
@@ -359,42 +352,45 @@ namespace CoreSystems
 
 
                         //Falloff switches & calcs for type of explosion & expDamageFall as output (this will need to be run by damage scaling for world/etc)
-                        var maxfalldist = radiating ? areaRadius * grid.GridSizeR : detonateRadius * grid.GridSizeR;
-
+                        var maxfalldist = radiating ? areaRadius * grid.GridSizeR +1: detonateRadius * grid.GridSizeR+1;
+                        var fallNone = radiating ? areaEffectDmg : detonateDmg; //outside of switch case, as we can use it for "raw damage" in all falloff cases
                         switch (radiating ? radiantFall : detonatefalloff)
                         {
                             case Falloff.Legacy:
-                                //set defaults here for older damage styles
+                                if (radiating)//mimic InvCurve for legacy radiating
+                                {
+                                    expDamageFall= (float)((maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone);
+                                }
+                                else //mimic linear falloff for legacy detonations
+                                {
+                                    expDamageFall= (float)((maxfalldist - j) / maxfalldist * fallNone);
+                                }
                                 break;
-                            case Falloff.None:
-                                expDamageFall = radiating ? areaEffectDmg : detonateDmg;
+                            case Falloff.None:  //No falloff, damage stays the same regardless of distance
+                                expDamageFall = fallNone;
                                 break;
-                            case Falloff.Linear:  //Damage is evenly stretched from 1 to max dist, dropping in equal increments
-                                expDamageFall = (float)(((maxfalldist + 1 - j) / j) * (radiating ? areaEffectDmg : detonateDmg));
+                            case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
+                                expDamageFall = (float)((maxfalldist - j) / maxfalldist * fallNone);
                                 break;
-                            case Falloff.Curve:  //Approximate inv/square but account for max dist.  Needs work
-                                expDamageFall = (1f / j * (radiating ? areaEffectDmg : detonateDmg));
+                            case Falloff.Curve:  //Drops sharply closer to max range
+                                expDamageFall = (float)(100 - j / maxfalldist / (maxfalldist - j) * fallNone);
+                                break;
+                            case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
+                                expDamageFall = (float)((maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone);
                                 break;
                             case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
-                                expDamageFall = (float)(j / maxfalldist / (maxfalldist - j + 1) * (radiating ? areaEffectDmg : detonateDmg));
+                                expDamageFall = (float)((j + 1) / maxfalldist / (maxfalldist - j) * fallNone);
                                 break;
 
                         }
-
-                        //If we're exploding, we need the root block (the only one in j=0) to take damage
-                        if (j == 0 & (radiating || novaing))
-                        {
-                            expDamageFall = radiating ? areaEffectDmg : detonateDmg;
-                        }
+                        //Log.Line($"Base Dmg: {fallNone} Rng: {j} Det Falloff: {detonatefalloff}  Exp dmg: {expDamageFall}  Max dist: {maxfalldist}");
                     }
 
   
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
                     {
-                       // Log.Line($"starting K, or block, loop {k}  for index [{j}][{k}] count of J: {DamageBlockCache[j].Count}");
-                        var block = hasAoe ? dbc[k].Slim : rootBlock;
-                        //Log.Line($"Block hash for K loop {block.GetHashCode()}");
+                        var block = radiating || novaing && novacomplete ? dbc[k].Slim : rootBlock;
                         if (block.IsDestroyed)
                            continue;
 
@@ -408,12 +404,15 @@ namespace CoreSystems
                         float cachedIntegrity;
                         var blockHp = !IsClient ? block.Integrity - block.AccumulatedDamage : (_slimHealthClient.TryGetValue(block, out cachedIntegrity) ? cachedIntegrity : block.Integrity);
                         var blockDmgModifier = cubeBlockDef.GeneralDamageMultiplier;
-                        
+                        //Placed here to reset so we don't keep pecking away at these
+                        float damageScale = hits; 
+                        float directDamageScale = directDmgGlobal;
+                        float areaDamageScale = areaDmgGlobal;
+                        float detDamageScale = areaDmgGlobal;
 
                         //Damage scaling bullshit for blocktypes, needs review
                         if (t.AmmoDef.Const.DamageScaling || !MyUtils.IsEqual(blockDmgModifier, 1f) || !MyUtils.IsEqual(gridDamageModifier, 1f))
                         {
-
                             if (blockDmgModifier < 0.000000001f || gridDamageModifier < 0.000000001f)
                                 blockHp = float.MaxValue;
                             else
@@ -436,7 +435,6 @@ namespace CoreSystems
                                 var isArmor = AllArmorBaseDefinitions.Contains(blockDef) || CustomArmorSubtypes.Contains(blockDef.Id.SubtypeId);
                                 if (isArmor && d.Armor.Armor >= 0) damageScale *= d.Armor.Armor;
                                 else if (!isArmor && d.Armor.NonArmor >= 0) damageScale *= d.Armor.NonArmor;
-
                                 if (isArmor && (d.Armor.Light >= 0 || d.Armor.Heavy >= 0))
                                 {
                                     var isHeavy = HeavyArmorBaseDefinitions.Contains(blockDef) || CustomHeavyArmorSubtypes.Contains(blockDef.Id.SubtypeId);
@@ -449,7 +447,6 @@ namespace CoreSystems
                                 if (blockDef == null) blockDef = block.BlockDefinition;
                                 float modifier;
                                 var found = t.AmmoDef.Const.CustomBlockDefinitionBasesToScales.TryGetValue(blockDef, out modifier);
-
                                 if (found) damageScale *= modifier;
                                 else if (t.AmmoDef.DamageScales.Custom.IgnoreAllOthers) continue;
                             }
@@ -473,11 +470,8 @@ namespace CoreSystems
                                 if (ArmorCoreBlockMap.ContainsKey(subtype))
                                 {
                                     var resistances = ArmorCoreBlockMap[subtype];
-
                                     directDamageScale /= t.AmmoDef.Const.EnergyBaseDmg ? resistances.EnergeticResistance : resistances.KineticResistance;
-
                                     areaDamageScale /= t.AmmoDef.Const.EnergyAreaDmg ? resistances.EnergeticResistance : resistances.KineticResistance;
-
                                     detDamageScale /= t.AmmoDef.Const.EnergyDetDmg ? resistances.EnergeticResistance : resistances.KineticResistance;
                                 }
                             }
@@ -486,25 +480,33 @@ namespace CoreSystems
                                 damageScale *= fallOffMultipler;
                         }
 
-                        var blockIsRoot = block == rootBlock;
-                        var primaryDamage = blockIsRoot && !novaing;
+                        var primaryDamage = block == rootBlock && !novaing && !radiating && !novacomplete;
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = basePool * baseScale;
 
-                        //Radiant & nova specific damage scaling inject
+                        //Radiant & nova specific damage scaling
                         if (radiating)
                         {
-                           scaledDamage = (expDamageFall * damageScale * areaDamageScale);
+                           scaledDamage = (expDamageFall * areaDamageScale);
                         }
-                        else if (novaing)
+                        else if (novacomplete)
                         {
-                           scaledDamage = (expDamageFall * damageScale * detDamageScale);
+                           scaledDamage = (expDamageFall * detDamageScale);
                         }
-
                         //If dmg>block hp, log & kill block
                         if (scaledDamage <= blockHp && primaryDamage)
                         {
+                            var tempPool = t.BaseDamagePool;//Temp for log
                             basePool = 0;
+                            t.BaseDamagePool = basePool;
+                            //Log.Line($"Primary dmg depleted");
+                            if (hitMass > 0) //Does this hit too often with radiant?
+                            {
+                                var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
+                                if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
+                                //Log.Line($"Shoving {hitMass} * {speed} = {hitMass * speed}");
+                            }
+                            //Log.Line($"Final- {block.GetHashCode()} rootblock takes {scaledDamage} of {tempPool} primary dmg");
                         }
                         else
                         {
@@ -520,25 +522,26 @@ namespace CoreSystems
                             if (primaryDamage)
                             {
                                 basePool -= (blockHp / baseScale);
+                                objectsHit++; //Verify correct place to increment
                             }
                         }
 
                         //Add in a final death-check to pop the nova iteration
-                        if (basePool <= 1 && hasDetDmg && !novacomplete) novaing = true;
-                        var endCycle = (basePool <= 1) || objectsHit >= maxObjects; //var endCycle = (basePool <= 1 && j + 1 == dmgCount) || objectsHit >= maxObjects;
+                        if (basePool == 0 && hasDetDmg && !novacomplete) novaing = true;
+                        var endCycle = (basePool <= 0) || objectsHit >= maxObjects;
 
                         //we can likely wrap this up into bools for var endCycle, above
                         if (novacomplete) 
                         {
                             endCycle = true;
-                            novaing = false;
                         }
 
 
                         //Apply damage
                         if (canDamage)
                         {
-                            block.DoDamage(scaledDamage, damageType, sync, null, attackerId); //Ewww keen damage method
+                            block.DoDamage(scaledDamage, damageType, sync, null, attackerId); //can this keen dmg method be avoided?
+                            //Log.Line($"Keen dmg called {scaledDamage} pts of {damageType}");
                         }
                         else
                         {
@@ -553,21 +556,18 @@ namespace CoreSystems
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = blockHp - realDmg;
                         }
 
-                        if (primaryDamage && hitMass > 0)
-                        {
-                            var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
-                            if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
-                        }
 
-                        ///doneskies
+                        //doneskies
                         if (endCycle)
                         {
 
-                           // Log.Line($"this is the end, my only friend the end: {basePool} <= 0 - {objectsHit} >= {maxObjects} - radiantComplete:{radiating} - novaComplete:{novacomplete}");
+                            //if(!primaryDamage)Log.Line($"Final- {block.GetHashCode()} at dist {j} takes {scaledDamage} of {detonateDmg}dmg");
+ 
+                            //Log.Line($"this is the end, my only friend the end: {basePool} <= 0 - {objectsHit} >= {maxObjects} - radiantComplete:{radiating} - novaComplete:{novacomplete}");
                             if (novaing && !novacomplete)
                             {
                                 --i;
-                                dbc.Clear(); //removes root block before nova re-runs loop
+                                //dbc.Clear(); //removes root block before nova re-runs loop
                                 break;
                             }
                             if (primaryDamage)
@@ -582,8 +582,6 @@ namespace CoreSystems
                         dbc.Clear();
                 }
             }
-
-            //End of main loop
 
             //stuff I haven't looked at yet
             if (rootBlock != null && destroyed > 0)
@@ -825,15 +823,59 @@ namespace CoreSystems
             //TODO: Factor in maximum depth and angle of impact
 
             var rootPos = root.Position; //local cube grid
-            //Log.Line($"Root Pos:{rootPos} Root hash: {root.GetHashCode()}");
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
-            int radiusCeil = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
-            int i, j, k;
-            //int maxdepth = (int)Math.Floor(depth*grid.GridSizeR); //Meters to cube conversion.  Round up or down?
-            Vector3I min2 = Vector3I.Max(rootPos - radiusCeil, grid.Min);
-            Vector3I max2 = Vector3I.Min(rootPos + radiusCeil, grid.Max);
+            depth *= grid.GridSizeR;
 
+            int radiusCeil = (int)Math.Ceiling(radius);  //changed to floor, experiment for precision/rounding bias
+            int i, j, k;
+            int maxdepth = (int)Math.Ceiling(depth*grid.GridSizeR); //Meters to cube conversion.  Round up or down?
+            Vector3I min2 = rootPos - radiusCeil;
+            Vector3I max2 = rootPos + radiusCeil;
+            //Vector3I min2 = Vector3I.Max(rootPos - radiusCeil, grid.Min);
+            //Vector3I max2 = Vector3I.Min(rootPos + radiusCeil, grid.Max);
+            if (maxdepth < radiusCeil)
+            {
+                Log.Line($"Max Depth {maxdepth}  radceil {radiusCeil}   root {rootPos} abs max comp{direction.AbsMaxComponent()}  Dir{direction.Z <= 0f}");
+                Log.Line($"Minorig {min2}  maxorig {max2}");
+                switch (direction.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
+                {
+                    case 1://hit face perp to x
+                        if (direction.X <= 0f)
+                        { min2.X = rootPos.X - maxdepth + 1;
+                          max2.X = rootPos.X + maxdepth - 1;        
+                        }
+                        else
+                        { min2.X = rootPos.X + maxdepth -1;
+                          max2.X = rootPos.X - maxdepth +1;
+                        }
+                        break;
+
+                    case 0://hit face perp to y
+                        if (direction.Y <= 0f)
+                        { min2.Y = rootPos.Y - maxdepth + 1;
+                          max2.Y = rootPos.Y + maxdepth - 1;}
+                        else
+                        { min2.Y = rootPos.Y + maxdepth - 1;
+                          max2.Y = rootPos.Y - maxdepth + 1;
+                        }
+                        break;
+
+                    case 2://Hit face is perp to z
+                        if (direction.Z <= 0f)
+                        { min2.Z = rootPos.Z - maxdepth + 1;
+                          max2.Z = rootPos.Z + maxdepth - 1;
+                        }
+                        else
+                        { min2.Z = rootPos.Z + maxdepth - 1;
+                          max2.Z = rootPos.Z - maxdepth + 1;
+                        }
+                        break;
+                }
+                Log.Line($"Min {min2} max {max2}");
             
+            }
+
+
             var damageBlockCache = DamageBlockCache;
 
             for (i = min2.X; i <= max2.X; ++i)
@@ -853,10 +895,12 @@ namespace CoreSystems
                             { 
                                 if (slim.IsDestroyed)
                                     continue;
+                               
 
+
+                                //multi hits on large objects?  slim.Min .Max, etc
                                 var distArray = damageBlockCache[hitdist];
-
-                                Log.Line($"Slim {slim.GetHashCode()} pos{slim.Position} Dist from root {hitdist}");
+                               // Log.Line($"Slim {slim.GetHashCode()} pos{slim.Position} Dist from root {hitdist}");
                                 distArray.Add(new RadiatedBlock { Slim = slim, Distance = hitdist });
                                 if (hitdist >= maxDbc) maxDbc = hitdist;
                                 slim.Dithering = 50;//temp debug to make "hits" go clear, including the root block
