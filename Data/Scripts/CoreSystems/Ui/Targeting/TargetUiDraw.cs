@@ -736,14 +736,14 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 var targetDir = Vector3D.Normalize(targetVel);
                 var targetRevDir = -targetDir;
                 var targetPos = target.PositionComp.WorldAABB.Center;
-                var myPos = ai.GridEntity.PositionComp.WorldAABB.Center;
+                var myPos = ai.TopEntity.PositionComp.WorldAABB.Center;
                 var myHeading = Vector3D.Normalize(myPos - targetPos);
 
                 var intercept = MathFuncs.IsDotProductWithinTolerance(ref targetDir, ref myHeading, s.ApproachDegrees);
                 var retreat = MathFuncs.IsDotProductWithinTolerance(ref targetRevDir, ref myHeading, s.ApproachDegrees);
 
-                var distanceFromCenters = Vector3D.Distance(ai.GridEntity.PositionComp.WorldAABB.Center, target.PositionComp.WorldAABB.Center);
-                distanceFromCenters -= ai.GridEntity.PositionComp.LocalVolume.Radius;
+                var distanceFromCenters = Vector3D.Distance(ai.TopEntity.PositionComp.WorldAABB.Center, target.PositionComp.WorldAABB.Center);
+                distanceFromCenters -= ai.TopEntity.PositionComp.LocalVolume.Radius;
                 distanceFromCenters -= target.PositionComp.LocalVolume.Radius;
                 distanceFromCenters = distanceFromCenters <= 0 ? 0 : distanceFromCenters;
 
@@ -832,8 +832,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     }
                 }
             }
-            var tracking = targetAi.Targets.ContainsKey(ai.GridEntity);
-            var hasAggressed = targetAi.Construct.RootAi.Construct.PreviousTargets.Contains(ai.GridEntity);
+            var tracking = targetAi.Targets.ContainsKey(ai.TopEntity);
+            var hasAggressed = targetAi.Construct.RootAi.Construct.PreviousTargets.Contains(ai.TopEntity);
             var stalking = tracking && hasAggressed;
             var seeking = !tracking && hasAggressed;
 

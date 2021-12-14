@@ -135,6 +135,7 @@ namespace CoreSystems.Support
         internal bool ScanInProgress;
         internal bool TouchingWater;
         internal bool IsGrid;
+        internal bool SmartHandheld;
         internal uint TargetsUpdatedTick;
         internal uint VelocityUpdateTick;
         internal uint TargetResetTick;

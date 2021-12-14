@@ -100,7 +100,7 @@ namespace CoreSystems.Platform
                         w.EventTriggerStateChanged(WeaponDefinition.AnimationDef.PartAnimationSetDef.EventTriggers.EmptyOnGameLoad, true);
 
                     if (TypeSpecific == CompTypeSpecific.Rifle)
-                        Ai.AiOwner = GunBase.OwnerId;
+                        Ai.AiOwner = GunBase.OwnerIdentityId;
 
                     if (w.IsTurret) {
                         w.Azimuth = w.System.HomeAzimuth;

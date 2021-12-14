@@ -1261,12 +1261,13 @@ namespace CoreSystems
             var rayHit = ray.Intersects(box);
             if (rayHit != null)
             {
-                var hitPos = hitEnt.Intersection.From + (hitEnt.Intersection.Direction * (rayHit.Value + 0.1f));
+                var hitPos = hitEnt.Intersection.From + (hitEnt.Intersection.Direction * (rayHit.Value - 0.1f));
                 IHitInfo hitInfo;
                 if (Physics.CastRay(hitPos, hitEnt.Intersection.To, out hitInfo, 15))
                 {
                     var hit = (MyEntity)hitInfo.HitEntity;
-                    var rayHitTarget = box.Contains(hitInfo.Position) != ContainmentType.Disjoint && hit == block.CubeGrid;
+                    var hitPoint = hitInfo.Position + (hitEnt.Intersection.Direction * 0.1f);
+                    var rayHitTarget = box.Contains(hitPoint) != ContainmentType.Disjoint && hit == block.CubeGrid;
                     return rayHitTarget;
                 }
             }

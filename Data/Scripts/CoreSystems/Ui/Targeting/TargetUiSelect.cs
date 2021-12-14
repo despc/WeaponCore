@@ -4,6 +4,7 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.Input;
 using VRageMath;
 
@@ -13,10 +14,10 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
     {
         internal bool ActivateSelector()
         {
-            if (!_session.TrackingAi.IsGrid)
+            if (!_session.TrackingAi.IsGrid && _session.TrackingAi.WeaponComps.Count > 0)
             {
-                if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.RightButton)) _handWeaponADS = !_handWeaponADS;
-                return _handWeaponADS && _session.UiInput.FirstPersonView;
+                HandWeaponADS = _session.TrackingAi.WeaponComps[0].Rifle.GunBase.HasIronSightsActive;
+                return HandWeaponADS && _session.UiInput.FirstPersonView && _session.TrackingAi.SmartHandheld;
             }
             if (_session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return false;
             if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control)) _3RdPersonDraw = !_3RdPersonDraw;
@@ -249,7 +250,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 for (int j = 0; j < subTargets.Count; j++)
                 {
                     var tInfo = subTargets[j];
-                    if (tInfo.Target.MarkedForClose) continue;
+                    if (tInfo.Target.MarkedForClose || tInfo.Target is IMyCharacter) continue;
                     HashSet<long> playerSet;
                     var controlType = tInfo.Drone ? TargetControl.Drone : tInfo.IsGrid && _session.PlayerGrids.TryGetValue((MyCubeGrid)tInfo.Target, out playerSet) ? TargetControl.Player : tInfo.IsGrid && !_session.GridHasPower((MyCubeGrid)tInfo.Target) ? TargetControl.Trash : TargetControl.Other;
                     _masterTargets[tInfo.Target] = new MyTuple<float, TargetControl>(tInfo.OffenseRating, controlType);

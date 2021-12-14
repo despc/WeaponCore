@@ -379,11 +379,11 @@ namespace CoreSystems.Support
                 var effect = weapon.Effects1[muzzle.MuzzleId];
 
                 var effectExists = effect != null;
-                if (effectExists && avEffect.EndTick == 0 && weapon.StopBarrelAvTick >= Session.Tick)
+                if (effectExists && avEffect.EndTick == 0 && weapon.StopBarrelAvTick >= Session.Tick - 1)
                     avEffect.EndTick = weapon.StopBarrelAvTick;
 
                 var info = weapon.Dummies[muzzle.MuzzleId].Info;
-                var somethingEnded = avEffect.EndTick != 0 && avEffect.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
+                var somethingEnded = avEffect.EndTick != 0 && avEffect.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null && weapon.Comp.GunBase == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
 
                 var effectStale = effectExists && (effect.IsEmittingStopped || effect.IsStopped) || !effectExists && ticksAgo > 0;
                 if (effectStale || somethingEnded || !weapon.Comp.IsWorking) {
@@ -450,11 +450,11 @@ namespace CoreSystems.Support
 
                 var effect = weapon.Effects2[muzzle.MuzzleId];
                 var effectExists = effect != null;
-                if (effectExists && av.EndTick == 0 && weapon.StopBarrelAvTick >= Session.Tick)
+                if (effectExists && av.EndTick == 0 && weapon.StopBarrelAvTick >= Session.Tick - 1)
                     av.EndTick = weapon.StopBarrelAvTick;
                 
                 var info = weapon.Dummies[muzzle.MuzzleId].Info;
-                var somethingEnded = av.EndTick != 0 && av.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
+                var somethingEnded = av.EndTick != 0 && av.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null && weapon.Comp.GunBase == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
                 
                 var effectStale = effectExists && (effect.IsEmittingStopped || effect.IsStopped) || !effectExists && ticksAgo > 0;
 
