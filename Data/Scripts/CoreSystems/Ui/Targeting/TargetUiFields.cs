@@ -17,6 +17,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal double PointerAdjScale = 0.05f;
         internal double AdjScale;
         internal bool DrawReticle;
+        internal bool HandWeaponADS;
         internal uint ReticleOnSelfTick;
         internal uint MasterUpdateTick;
         internal uint LastTrackTick;
@@ -95,7 +96,6 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private bool _cachedPointerPos;
         private bool _cachedTargetPos;
         private bool _3RdPersonDraw;
-        private bool _handWeaponADS;
 
         internal TargetUi(Session session)
         {
