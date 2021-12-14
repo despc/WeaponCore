@@ -266,14 +266,15 @@ namespace CoreSystems
         {
             try
             {
+                var term = myCubeBlock as IMyTerminalBlock;
                 GridMap gridMap;
-                if (myCubeBlock is IMyTerminalBlock && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
+                if (term != null && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Add(myCubeBlock);
                     using (_dityGridLock.Acquire())
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
                 }
-                else Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
+                else if (term != null) Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
 
             }
             catch (Exception ex) { Log.Line($"Exception in ToGridMap: {ex} - marked:{myCubeBlock.MarkedForClose}"); }
@@ -283,14 +284,15 @@ namespace CoreSystems
         {
             try
             {
+                var term = myCubeBlock as IMyTerminalBlock;
                 GridMap gridMap;
-                if (myCubeBlock is IMyTerminalBlock && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
+                if (term != null && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Remove(myCubeBlock);
                     using (_dityGridLock.Acquire())
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
                 }
-                else Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
+                else if (term != null) Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
             }
             catch (Exception ex) { Log.Line($"Exception in FromGridMap: {ex} - marked:{myCubeBlock.MarkedForClose}"); }
         }
