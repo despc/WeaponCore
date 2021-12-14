@@ -1356,7 +1356,7 @@ namespace CoreSystems
                                 if ((areaEffectDmg * areaDamageScale) > 0) SUtils.CreateMissileExplosion(this, (areaEffectDmg * damageScale) * areaDamageScale, areaRadius, blastCenter, hitEnt.Intersection.Direction, attacker, grid, t.AmmoDef, true);
                                 if (detonateOnEnd && theEnd)
                                     SUtils.CreateMissileExplosion(this, (detonateDmg * damageScale) * detDamageScale, detonateRadius, blastCenter, hitEnt.Intersection.Direction, attacker, grid, t.AmmoDef, true);
-                                Log.Line($"Yucky keensplosion from damagegrid original");
+                                //Log.Line($"Yucky keensplosion from damagegrid original");
                             }
                             else if (!nova)
                             {
