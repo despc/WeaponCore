@@ -841,6 +841,7 @@ namespace CoreSystems.Support
                     None,
                     Linear,
                     Curve,
+                    InvCurve,
                     Spall,
                 }
 
