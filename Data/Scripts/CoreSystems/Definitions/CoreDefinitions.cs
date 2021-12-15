@@ -855,6 +855,7 @@ namespace CoreSystems.Support
                 [ProtoMember(8)] internal AreaInfluence Base;
                 [ProtoMember(9)] internal Falloff RadiantFalloff; //New
                 [ProtoMember(10)] internal float AreaEffectMaxDepth;//new
+                [ProtoMember(11)] internal float AreaEffectMaxAbsorb;
 
                 [ProtoContract]
                 public struct AreaInfluence

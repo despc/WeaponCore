@@ -197,6 +197,7 @@ namespace CoreSystems.Support
 
         public readonly float AreaAffectMaxDepth;//bdc addin
         public readonly float DetonationMaxDepth;//bdc addin
+        public readonly float AreaEffectMaxAbsorb;//bdc addin
 
         public readonly float AreaEffectDamage;
         public readonly float DetonationDamage;
@@ -317,8 +318,8 @@ namespace CoreSystems.Support
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
             
-            //BDC addin max depths
-            AreaEffects(ammo.AmmoDef, out AreaAffectMaxDepth, out DetonationMaxDepth, out AreaEffect, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AmmoAreaEffect, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out EwarEffect, out EwarTriggerRange, out MinArmingTime); ;
+            //BDC addin max depths & max absorb
+            AreaEffects(ammo.AmmoDef, out AreaEffectMaxAbsorb, out AreaAffectMaxDepth, out DetonationMaxDepth, out AreaEffect, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AmmoAreaEffect, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out EwarEffect, out EwarTriggerRange, out MinArmingTime); ;
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -710,7 +711,7 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out float areaEffectMaxDepth, out float detonationMaxDepth, out AreaEffectType areaEffect, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out bool ammoAreaEffect, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool eWarEffect, out double eWarTriggerRange, out int minArmingTime)
+        private void AreaEffects(AmmoDef ammoDef, out float areaEffectMaxAbsorb, out float areaEffectMaxDepth, out float detonationMaxDepth, out AreaEffectType areaEffect, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out bool ammoAreaEffect, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool eWarEffect, out double eWarTriggerRange, out int minArmingTime)
         {
             areaEffect = ammoDef.AreaEffect.AreaEffect;
 
@@ -733,12 +734,14 @@ namespace CoreSystems.Support
                 detonationRadius = _modifierMap[DetRadStr].GetAsFloat;
             else
                 detonationRadius = ammoDef.AreaEffect.Detonation.DetonationRadius;
-            //BDC addin for depth & falloff
-            areaEffectMaxDepth = ammoDef.AreaEffect.AreaEffectMaxDepth == 0 ? (float)areaEffectSize : ammoDef.AreaEffect.AreaEffectMaxDepth ;
-            detonationMaxDepth = ammoDef.AreaEffect.Detonation.DetonationMaxDepth == 0 ? (float)detonationRadius : ammoDef.AreaEffect.Detonation.DetonationMaxDepth;
+            //BDC addin for depth & falloff & max absorb
+            areaEffectMaxDepth = ammoDef.AreaEffect.AreaEffectMaxDepth <= 0 ? (float)areaEffectSize : ammoDef.AreaEffect.AreaEffectMaxDepth ;
+            detonationMaxDepth = ammoDef.AreaEffect.Detonation.DetonationMaxDepth <= 0 ? (float)detonationRadius : ammoDef.AreaEffect.Detonation.DetonationMaxDepth;
+            areaEffectMaxAbsorb = ammoDef.AreaEffect.AreaEffectMaxAbsorb <= 0 ? 1000000f : ammoDef.AreaEffect.AreaEffectMaxAbsorb; 
 
 
             ammoAreaEffect = ammoDef.AreaEffect.AreaEffect != AreaEffectType.Disabled;
+            if (areaEffect == AreaEffectType.Explosive) areaEffect = AreaEffectType.Radiant; 
             areaRadiusSmall = Session.ModRadius(areaEffectSize / 5, false); //needed?
             areaRadiusLarge = Session.ModRadius(areaEffectSize, true);//needed?
             detonateRadiusSmall = Session.ModRadius(detonationRadius / 5, false);//needed?
