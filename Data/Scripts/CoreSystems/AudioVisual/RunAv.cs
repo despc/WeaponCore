@@ -3,6 +3,7 @@ using CoreSystems.Platform;
 using Sandbox.Game.Entities;
 using VRage.Collections;
 using VRage.Game;
+using VRage.Game.Entity;
 using VRage.Utils;
 using VRageMath;
 
@@ -18,11 +19,11 @@ namespace CoreSystems.Support
         internal readonly Dictionary<ulong, MyParticleEffect> BeamEffects = new Dictionary<ulong, MyParticleEffect>();
 
         internal readonly List<AvShot> AvShots = new List<AvShot>(128);
-        internal readonly List<HitSound> HitSounds = new List<HitSound>(128);
+        internal readonly List<HitSounds> RunningSounds = new List<HitSounds>(128);
         internal readonly Stack<AfterGlow> Glows = new Stack<AfterGlow>();
         internal readonly Stack<MyEntity3DSoundEmitter> FireEmitters = new Stack<MyEntity3DSoundEmitter>();
         internal readonly Stack<MyEntity3DSoundEmitter> TravelEmitters = new Stack<MyEntity3DSoundEmitter>();
-        internal readonly Stack<MyEntity3DSoundEmitter> HitEmitters = new Stack<MyEntity3DSoundEmitter>();
+        internal readonly Stack<MyEntity3DSoundEmitter> PersistentEmitters = new Stack<MyEntity3DSoundEmitter>();
 
         internal Session Session;
 
@@ -56,7 +57,7 @@ namespace CoreSystems.Support
         {
             if (Effects1.Count > 0) RunAvEffects1();
             if (Effects2.Count > 0) RunAvEffects2();
-            if (HitSounds.Count > 0) RunHitSounds();
+            if (RunningSounds.Count > 0) PersistentSounds();
             if (ParticlesToProcess.Count > 0) Session.ProcessParticles();
 
             for (int i = AvShots.Count - 1; i >= 0; i--)
@@ -121,11 +122,8 @@ namespace CoreSystems.Support
                             MyParticleEffect hitEffect;
                             if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.AmmoGraphics.Particles.Hit.Name, ref matrix, ref pos, uint.MaxValue, out hitEffect)) {
 
-                                //hitEffect.UserColorMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Color;
                                 var scaler = 1;
                                 hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale * scaler;
-                                //var scale = av.AmmoDef.Const.HitParticleShrinks ? MathHelper.Clamp(MathHelper.Lerp(1, 0, av.DistanceToLine / av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.MaxDistance), 0.05f, 1) : 1;
-                                //hitEffect.UserScale = scale * scaler;
                                 hitEffect.Velocity = av.Hit.HitVelocity;
                             }
                         }
@@ -138,6 +136,38 @@ namespace CoreSystems.Support
                             var pos = !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
                             if (av.DetonateFakeExp) SUtils.CreateFakeExplosion(Session, av.AmmoDef.Const.DetonationRadius, pos, av.Direction, av.Hit.Entity, av.AmmoDef, av.Hit.HitVelocity);
                             else SUtils.CreateFakeExplosion(Session, av.AmmoDef.Const.AreaEffectSize, pos, av.Direction, av.Hit.Entity, av.AmmoDef, av.Hit.HitVelocity);
+                        }
+                    }
+
+                    if (av.DetonateFakeExp && false)
+                    {
+                        var a = av.AmmoDef;
+                        var c = a.Const;
+                        
+                        if (c.CustomExplosionSound)
+                        {
+                            var pool = c.HitDefaultSoundPairs;
+                            var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.AreaEffect.Explosions.CustomSound, false);
+
+                            var hitEmitter = Session.Av.PersistentEmitters.Count > 0 ? Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+
+                            hitEmitter.Entity = av.Hit.Entity;
+                            Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = av.Hit.SurfaceHit });
+                            //HitSoundInitted = true;
+                        }
+                        if (av.OnScreen != AvShot.Screen.None)
+                        {
+                            var pos = av.Hit.HitTick == Session.Tick && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
+                            var matrix = MatrixD.CreateTranslation(pos);
+
+                            MyParticleEffect hitEffect;
+                            if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out hitEffect))
+                            {
+
+                                var scaler = 1;
+                                hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale * scaler;
+                                hitEffect.Velocity = av.Hit.HitVelocity;
+                            }
                         }
                     }
 
@@ -160,7 +190,6 @@ namespace CoreSystems.Support
                     av.AvClose();
             }
         }
-
 
         internal void Run()
         {
@@ -354,17 +383,17 @@ namespace CoreSystems.Support
             if (av.TracerShrinks.Count == 0) av.ResetHit();
         }
 
-        internal void RunHitSounds()
+        internal void PersistentSounds()
         {
-            for (int i = 0; i < HitSounds.Count; i++)
+            for (int i = 0; i < RunningSounds.Count; i++)
             {
-                var av = HitSounds[i];
+                var av = RunningSounds[i];
 
                 av.Emitter.SetPosition(av.Position);
                 av.Emitter.PlaySound(av.SoundPair);
-                Session.SoundsToClean.Add(new Session.CleanSound { Hit = av.Hit, Emitter = av.Emitter, EmitterPool = HitEmitters, SoundPair = av.SoundPair, SoundPairPool = av.Pool, SpawnTick = Session.Tick });
+                Session.SoundsToClean.Add(new Session.CleanSound { Hit = av.Hit, Emitter = av.Emitter, EmitterPool = PersistentEmitters, SoundPair = av.SoundPair, SoundPairPool = av.Pool, SpawnTick = Session.Tick });
             }
-            HitSounds.Clear();
+            RunningSounds.Clear();
         }
 
         internal void RunAvEffects1()
@@ -416,7 +445,6 @@ namespace CoreSystems.Support
                     MyParticleEffect newEffect;
                     if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect)) {
 
-                        //effect.UserColorMultiplier = particles.Color;
                         newEffect.UserRadiusMultiplier = particles.Extras.Scale;
                         if (newEffect.Loop)
                         {
@@ -434,7 +462,6 @@ namespace CoreSystems.Support
                 }
                 else if (effectExists) {
                     effect.WorldMatrix = matrix;
-                    //effect.SetTranslation(ref pos);
                 }
             }
         }
@@ -488,7 +515,6 @@ namespace CoreSystems.Support
                     MyParticleEffect newEffect;
                     if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))  {
                         
-                        //effect.UserColorMultiplier = particles.Color;
                         newEffect.UserRadiusMultiplier = particles.Extras.Scale;
                         if (newEffect.Loop)
                         {
@@ -507,12 +533,10 @@ namespace CoreSystems.Support
                 else if (effectExists)  {
 
                     effect.WorldMatrix = matrix;
-                    //effect.SetTranslation(ref pos);
-
                 }
             }
         }
-    }
+
 
     internal class AvEffect
     {
@@ -530,12 +554,19 @@ namespace CoreSystems.Support
         }
     }
 
-    internal struct HitSound
+    internal struct HitSounds
     {
         internal MyEntity3DSoundEmitter Emitter;
         internal MySoundPair SoundPair;
         internal Stack<MySoundPair> Pool;
         internal Vector3D Position;
         internal bool Hit;
+    }
+
+    internal struct DetonationRequest
+    {
+        internal WeaponDefinition.AmmoDef AmmoDef;
+        internal Vector3D Position;
+        internal MyEntity Entity;
     }
 }

@@ -277,9 +277,6 @@ namespace CoreSystems.Support
                     var rayTracer = new RayD(a.TracerBack, a.VisualDir);
                     var rayTrail = new RayD(a.TracerFront + (-a.VisualDir * a.ShortEstTravel), a.VisualDir);
 
-                    //DsDebugDraw.DrawRay(rayTracer, VRageMath.Color.White, 0.25f, (float) VisualLength);
-                    //DsDebugDraw.DrawRay(rayTrail, VRageMath.Color.Orange, 0.25f, (float)ShortEstTravel);
-
                     double? dist;
                     s.CameraFrustrum.Intersects(ref rayTracer, out dist);
 
@@ -395,10 +392,6 @@ namespace CoreSystems.Support
                 {
                     if (a.OnScreen != Screen.None)
                     {
-                        /*
-                        if (!a.AmmoDef.Const.IsBeamWeapon && !a.AmmoParticleStopped && a.AmmoEffect != null && a.AmmoDef.Const.AmmoParticleShrinks)
-                            a.AmmoEffect.UserScale = MathHelper.Clamp(MathHelper.Lerp(1f, 0, a.DistanceToLine / a.AmmoDef.AmmoGraphics.Particles.Hit.Extras.MaxDistance), 0.05f, 1f);
-                        */
                         if ((a.AmmoParticleStopped || !a.AmmoParticleInited))
                             a.PlayAmmoParticle();
                     }
@@ -410,10 +403,6 @@ namespace CoreSystems.Support
                 {
                     if (a.OnScreen != Screen.None)
                     {
-                        /*
-                        if (!a.AmmoDef.Const.IsBeamWeapon && !a.FieldParticleStopped && a.FieldEffect != null && a.AmmoDef.Const.FieldParticleShrinks)
-                            a.FieldEffect.UserScale = MathHelper.Clamp(MathHelper.Lerp(1f, 0, a.DistanceToLine / a.AmmoDef.AreaEffect.Pulse.Particle.Extras.MaxDistance), 0.05f, 1f);
-                        */
                         if ((a.FieldParticleStopped || !a.FieldParticleInited))
                             a.PlayFieldParticle();
                     }
@@ -836,11 +825,10 @@ namespace CoreSystems.Support
 
                     if (pool != null && pair != null) {
 
-                        var hitEmitter = System.Session.Av.HitEmitters.Count > 0 ? System.Session.Av.HitEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                        var hitEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                         hitEmitter.Entity = Hit.Entity;
-                        //hitEmitter.CanPlayLoopSounds = false;
-                        System.Session.Av.HitSounds.Add(new HitSound { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
+                        System.Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
 
                         HitSoundInitted = true;
                     }
@@ -909,10 +897,7 @@ namespace CoreSystems.Support
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AmmoGraphics.Particles.Ammo.Name, ref matrix, ref TracerFront, renderId, out AmmoEffect))
             {
 
-                //AmmoEffect.UserColorMultiplier = AmmoDef.AmmoGraphics.Particles.Ammo.Color;
                 AmmoEffect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
-                //AmmoEffect.UserScale = 1;
-
 
                 AmmoParticleStopped = false;
                 AmmoParticleInited = true;
@@ -927,9 +912,7 @@ namespace CoreSystems.Support
             var pos = TriggerEntity.PositionComp.WorldAABB.Center;
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AreaEffect.Pulse.Particle.Name, ref TriggerMatrix, ref pos, uint.MaxValue, out FieldEffect))
             {
-                //FieldEffect.UserColorMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Color;
                 FieldEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
-                //FieldEffect.UserScale = 1;
                 FieldParticleStopped = false;
                 FieldParticleInited = true;
             }

@@ -88,7 +88,7 @@ namespace CoreSystems
 
             foreach (var e in Emitters)
                 e.StopSound(true);
-            foreach (var e in Av.HitEmitters)
+            foreach (var e in Av.PersistentEmitters)
                 e.StopSound(true);
             foreach (var e in Av.FireEmitters)
                 e.StopSound(true);
@@ -96,7 +96,7 @@ namespace CoreSystems
                 e.StopSound(true);
 
             Emitters.Clear();
-            Av.HitEmitters.Clear();
+            Av.PersistentEmitters.Clear();
             Av.FireEmitters.Clear();
             Av.TravelEmitters.Clear();
 
@@ -233,7 +233,7 @@ namespace CoreSystems
             Av.Effects1.Clear();
             Av.Effects2.Clear();
             Av.AvShots.Clear();
-            Av.HitSounds.Clear();
+            Av.RunningSounds.Clear();
 
             foreach (var errorpkt in ClientSideErrorPkt)
                 errorpkt.Packet.CleanUp();

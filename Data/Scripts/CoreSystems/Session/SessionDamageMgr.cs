@@ -516,7 +516,9 @@ namespace CoreSystems
                             var tempPool = t.BaseDamagePool;//Temp for log
                             basePool = 0;
                             t.BaseDamagePool = basePool;
-                            if(hasDetDmg)novaing = true;
+                            
+                            novaing = hasDetDmg;
+                            
                             if (hitMass > 0) 
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
@@ -1456,7 +1458,6 @@ namespace CoreSystems
             }
             catch (Exception ex) { Log.Line($"Exception in DamageGrid main catch: {ex}", null, true); }
         }
-
 
     }
 }
