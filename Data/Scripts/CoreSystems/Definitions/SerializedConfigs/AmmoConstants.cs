@@ -816,7 +816,7 @@ namespace CoreSystems.Support
                 armorScaling = d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0;
                 fallOffScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1);
             }
-            selfDamage = d.SelfDamage && !IsBeamWeapon;
+            selfDamage = d.SelfDamage;
             voxelDamage = d.DamageVoxels;
             healthHitModifer = d.HealthHitModifier > 0 ? d.HealthHitModifier : 1;
             voxelHitModifer = d.VoxelHitModifier > 0 ? d.VoxelHitModifier : 1;

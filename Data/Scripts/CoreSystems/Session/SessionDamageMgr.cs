@@ -200,7 +200,8 @@ namespace CoreSystems
                 Log.Line($"DamageGrid first null check hit");
                 return;
             }
-            if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || !t.AmmoDef.Const.IsCriticalReaction && (!t.AmmoDef.Const.SelfDamage || !MyAPIGateway.Session.SessionSettings.EnableTurretsFriendlyFire) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
+
+            if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || (!t.AmmoDef.Const.SelfDamage && !t.AmmoDef.Const.IsCriticalReaction) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
             {
                 t.BaseDamagePool = 0;
                 return;
@@ -1038,12 +1039,13 @@ namespace CoreSystems
             var rayHit = ray.Intersects(box);
             if (rayHit != null)
             {
-                var hitPos = hitEnt.Intersection.From + (hitEnt.Intersection.Direction * (rayHit.Value + 0.1f));
+                var hitPos = hitEnt.Intersection.From + (hitEnt.Intersection.Direction * (rayHit.Value - 0.1f));
                 IHitInfo hitInfo;
                 if (Physics.CastRay(hitPos, hitEnt.Intersection.To, out hitInfo, 15))
                 {
                     var hit = (MyEntity)hitInfo.HitEntity;
-                    var rayHitTarget = box.Contains(hitInfo.Position) != ContainmentType.Disjoint && hit == block.CubeGrid;
+                    var hitPoint = hitInfo.Position + (hitEnt.Intersection.Direction * 0.1f);
+                    var rayHitTarget = box.Contains(hitPoint) != ContainmentType.Disjoint && hit == block.CubeGrid;
                     return rayHitTarget;
                 }
             }
@@ -1101,7 +1103,7 @@ namespace CoreSystems
                     return;
                 }
 
-                if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || !t.AmmoDef.Const.IsCriticalReaction && (!t.AmmoDef.Const.SelfDamage || !MyAPIGateway.Session.SessionSettings.EnableTurretsFriendlyFire) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
+                if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || (!t.AmmoDef.Const.SelfDamage && !t.AmmoDef.Const.IsCriticalReaction) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
                 {
                     t.BaseDamagePool = 0;
                     return;
