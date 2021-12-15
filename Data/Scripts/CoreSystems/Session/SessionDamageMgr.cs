@@ -61,7 +61,7 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info);  //set to 2 for debug
+                            DamageGrid2(hitEnt, info);  //set to 2 for debug
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
@@ -516,7 +516,7 @@ namespace CoreSystems
                             var tempPool = t.BaseDamagePool;//Temp for log
                             basePool = 0;
                             t.BaseDamagePool = basePool;
-                            novaing = true;
+                            if(hasDetDmg)novaing = true;
                             if (hitMass > 0) 
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
