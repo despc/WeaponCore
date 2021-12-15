@@ -159,7 +159,7 @@ namespace CoreSystems.Platform
                 var partHashId = Structure.PartHashes[index];
                 CoreSystem coreSystem;
                 if (!Structure.PartSystems.TryGetValue(partHashId, out coreSystem) || !(coreSystem is WeaponSystem))
-                    return PlatformCrash(Comp, true, true, $"Your block subTypeId ({Comp.SubtypeName}) Invalid weapon system - id:{partHashId} - isWeapon:{coreSystem is WeaponSystem}, I am crashing now Dave.");
+                    return PlatformCrash(Comp, true, true, $"Your block subTypeId ({Comp.SubtypeName}) Invalid weapon system - id:{partHashId}, I am crashing now Dave.");
 
                 var system = (WeaponSystem)coreSystem;
                 var muzzlePartName = system.MuzzlePartName.String != "Designator" ? system.MuzzlePartName.String : system.ElevationPartName.String;

@@ -24,7 +24,6 @@ namespace CoreSystems.Platform
 
                 if (PosChangedTick != Comp.Session.Tick)
                     UpdatePivotPos();
-
                 if (_ticksUntilShoot++ < System.DelayToFire) {
 
                     if (AvCapable && System.PreFireSound && !PreFiringEmitter.IsPlaying)
@@ -76,7 +75,6 @@ namespace CoreSystems.Platform
                 FireCounter++;
                 List<NewVirtual> vProList = null;
                 var selfDamage = 0f;
-
                 for (int i = 0; i < System.Values.HardPoint.Loading.BarrelsPerShot; i++) {
 
                     #region Update ProtoWeaponAmmo state
@@ -111,6 +109,7 @@ namespace CoreSystems.Platform
                                 SpawnEjection();
                         }
                     }
+
                     #endregion
 
                     #region Next muzzle
@@ -126,7 +125,7 @@ namespace CoreSystems.Platform
                     #endregion
 
                     if (ActiveAmmoDef.AmmoDef.Const.HasBackKickForce && !Comp.Ai.IsStatic && !Comp.Ai.ShieldFortified && s.IsServer)
-                        Comp.Ai.TopEntity.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, -muzzle.Direction * ActiveAmmoDef.AmmoDef.BackKickForce, muzzle.Position, Vector3D.Zero);
+                        Comp.Ai.TopEntity.Physics?.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, -muzzle.Direction * ActiveAmmoDef.AmmoDef.BackKickForce, muzzle.Position, Vector3D.Zero);
 
                     if (PlayTurretAv) {
                         if (System.BarrelEffect1 && muzzle.LastAv1Tick == 0 && !muzzle.Av1Looping) {
@@ -240,6 +239,7 @@ namespace CoreSystems.Platform
                         }
                         #endregion
                     }
+
                     _muzzlesToFire.Add(MuzzleIdToName[current]);
 
                     if (HeatPShot > 0) {
@@ -262,6 +262,7 @@ namespace CoreSystems.Platform
 
                     NextMuzzle = (NextMuzzle + (System.Values.HardPoint.Loading.SkipBarrels + 1)) % _numOfMuzzles;
                 }
+
                 #endregion
 
                 #region Reload and Animation

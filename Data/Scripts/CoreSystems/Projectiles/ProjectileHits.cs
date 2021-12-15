@@ -303,10 +303,10 @@ namespace CoreSystems.Projectiles
                         if (grid != null)
                         {
                             hitEntity = HitEntityPool.Get();
-                            if (entIsSelf)
+                            if (entIsSelf && !selfDamage)
                             {
 
-                                if (!p.Info.AmmoDef.Const.IsBeamWeapon && p.Beam.Length <= grid.GridSize * 2 && !goCritical && !selfDamage)
+                                if (!p.Info.AmmoDef.Const.IsBeamWeapon && p.Beam.Length <= grid.GridSize * 2 && !goCritical)
                                 {
                                     MyCube cube;
                                     if (!(grid.TryGetCube(grid.WorldToGridInteger(p.Position), out cube) && cube.CubeBlock != p.Info.Target.CoreCube.SlimBlock || grid.TryGetCube(grid.WorldToGridInteger(p.LastPosition), out cube) && cube.CubeBlock != p.Info.Target.CoreCube.SlimBlock))
@@ -333,7 +333,7 @@ namespace CoreSystems.Projectiles
                                             if (grid.TryGetCube(hitEntity.Vector3ICache[j], out myCube))
                                             {
 
-                                                if (goCritical  || selfDamage || ((IMySlimBlock)myCube.CubeBlock).Position != p.Info.Target.CoreCube.Position)
+                                                if (goCritical || ((IMySlimBlock)myCube.CubeBlock).Position != p.Info.Target.CoreCube.Position)
                                                 {
 
                                                     hitself = true;
@@ -348,7 +348,7 @@ namespace CoreSystems.Projectiles
                                             continue;
                                         }
                                         IHitInfo hitInfo = null;
-                                        if (!goCritical && !selfDamage)
+                                        if (!goCritical)
                                         {
                                             p.Info.System.Session.Physics.CastRay(forwardPos, p.Beam.To, out hitInfo, CollisionLayers.DefaultCollisionLayer);
                                             var hitGrid = hitInfo?.HitEntity?.GetTopMostParent() as MyCubeGrid;
