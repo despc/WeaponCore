@@ -514,7 +514,7 @@ namespace CoreSystems
                             var tempPool = t.BaseDamagePool;//Temp for log
                             basePool = 0;
                             t.BaseDamagePool = basePool;
-                            novaing = true;
+                            if(hasDetDmg)novaing = true;
                             if (hitMass > 0) 
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
