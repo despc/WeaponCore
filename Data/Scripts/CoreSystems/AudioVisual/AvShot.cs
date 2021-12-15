@@ -828,7 +828,7 @@ namespace CoreSystems.Support
                         var hitEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                         hitEmitter.Entity = Hit.Entity;
-                        System.Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
 
                         HitSoundInitted = true;
                     }

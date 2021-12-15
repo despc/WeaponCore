@@ -146,13 +146,13 @@ namespace CoreSystems.Support
                         
                         if (c.CustomExplosionSound)
                         {
-                            var pool = c.HitDefaultSoundPairs;
+                            var pool = c.DetSoundPairs;
                             var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.AreaEffect.Explosions.CustomSound, false);
 
-                            var hitEmitter = Session.Av.PersistentEmitters.Count > 0 ? Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                            var detEmitter = Session.Av.PersistentEmitters.Count > 0 ? Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
-                            hitEmitter.Entity = av.Hit.Entity;
-                            Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = av.Hit.SurfaceHit });
+                            detEmitter.Entity = av.Hit.Entity;
+                            Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = av.Hit.SurfaceHit });
                             //HitSoundInitted = true;
                         }
                         if (av.OnScreen != AvShot.Screen.None)
@@ -160,13 +160,12 @@ namespace CoreSystems.Support
                             var pos = av.Hit.HitTick == Session.Tick && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
                             var matrix = MatrixD.CreateTranslation(pos);
 
-                            MyParticleEffect hitEffect;
-                            if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out hitEffect))
+                            MyParticleEffect detEffect;
+                            if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out detEffect))
                             {
 
-                                var scaler = 1;
-                                hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale * scaler;
-                                hitEffect.Velocity = av.Hit.HitVelocity;
+                                detEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+                                detEffect.Velocity = av.Hit.HitVelocity;
                             }
                         }
                     }

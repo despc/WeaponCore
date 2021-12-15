@@ -76,6 +76,7 @@ namespace CoreSystems.Support
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
         public readonly Dictionary<MyDefinitionBase, float> CustomBlockDefinitionBasesToScales;
+        public readonly Stack<MySoundPair> DetSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitDefaultSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitShieldSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitVoxelSoundPairs = new Stack<MySoundPair>();
