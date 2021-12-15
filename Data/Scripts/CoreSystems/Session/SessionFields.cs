@@ -60,8 +60,6 @@ namespace CoreSystems
         internal volatile bool DecoyControls;
         internal volatile bool EarlyInitOver;
 
-        internal uint Tick;
-
         internal readonly TargetCompare TargetCompare = new TargetCompare();
         internal readonly WaterApi WApi = new WaterApi();
 
@@ -251,7 +249,7 @@ namespace CoreSystems
         private readonly EwaredBlocksPacket _cachedEwarPacket = new EwaredBlocksPacket();
         private SpinLockRef _dityGridLock = new SpinLockRef();
 
-        internal readonly List<RadiatedBlock>[] DamageBlockCache = new List<RadiatedBlock>[128];
+        internal readonly List<IMySlimBlock>[] DamageBlockCache = new List<IMySlimBlock>[128];
         internal List<RadiatedBlock> SlimsSortedList = new List<RadiatedBlock>(1024);
         internal MyConcurrentPool<MyEntity> TriggerEntityPool;
 
@@ -313,6 +311,9 @@ namespace CoreSystems
         internal string ServerVersion;
         internal string PlayerMessage;
         internal object InitObj = new object();
+
+        internal uint Tick;
+        internal uint LastDamageTick;
 
         internal int WeaponIdCounter;
         internal int PlayerEventId;
@@ -520,7 +521,7 @@ namespace CoreSystems
                 LeadGroups[i] = new List<Weapon>();
 
             for (int i = 0; i < 128; i++)
-               DamageBlockCache[i] = new List<RadiatedBlock>();
+               DamageBlockCache[i] = new List<IMySlimBlock>();
         }
     }
 }

@@ -64,6 +64,11 @@ namespace CoreSystems
 
                 if (IsClient)  {
 
+                    if (Tick - LastDamageTick == 600) {
+                        _slimHealthClient.Clear();
+                        _destroyedSlimsClient.Clear();
+                    }
+
                     if (ClientSideErrorPkt.Count > 0)
                         ReproccessClientErrorPackets();
 
