@@ -61,7 +61,7 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid2(hitEnt, info);  //set to 2 for debug
+                            DamageGrid(hitEnt, info);  //set to 2 for debug
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
