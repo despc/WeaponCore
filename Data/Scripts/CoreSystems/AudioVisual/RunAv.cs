@@ -32,7 +32,8 @@ namespace CoreSystems.Support
 
         internal bool ExplosionReady
         {
-            get {
+            get
+            {
                 if (ExplosionCounter + 1 <= MaxExplosions)
                 {
                     ExplosionCounter++;
@@ -46,7 +47,7 @@ namespace CoreSystems.Support
         {
             Session = session;
         }
-        
+
 
         private int _onScreens;
         private int _shrinks;
@@ -112,15 +113,17 @@ namespace CoreSystems.Support
                         else av.TravelEmitter.SetPosition(av.TracerFront);
                     }
 
-                    if (av.HitParticle == AvShot.ParticleState.Custom) 
+                    if (av.HitParticle == AvShot.ParticleState.Custom)
                     {
                         av.HitParticle = AvShot.ParticleState.Dirty;
-                        if (av.OnScreen != AvShot.Screen.None) {
+                        if (av.OnScreen != AvShot.Screen.None)
+                        {
                             var pos = av.Hit.HitTick == Session.Tick && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
                             var matrix = MatrixD.CreateTranslation(pos);
 
                             MyParticleEffect hitEffect;
-                            if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.AmmoGraphics.Particles.Hit.Name, ref matrix, ref pos, uint.MaxValue, out hitEffect)) {
+                            if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.AmmoGraphics.Particles.Hit.Name, ref matrix, ref pos, uint.MaxValue, out hitEffect))
+                            {
 
                                 var scaler = 1;
                                 hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale * scaler;
@@ -143,7 +146,7 @@ namespace CoreSystems.Support
                     {
                         var a = av.AmmoDef;
                         var c = a.Const;
-                        
+
                         if (c.CustomExplosionSound)
                         {
                             var pool = c.DetSoundPairs;
@@ -192,7 +195,8 @@ namespace CoreSystems.Support
 
         internal void Run()
         {
-            if (Session.Tick180) {
+            if (Session.Tick180)
+            {
 
                 Log.LineShortDate($"(DRAWS) --------------- AvShots:[{AvShots.Count}] OnScreen:[{_onScreens}] Shrinks:[{_shrinks}] Glows:[{_glows}] Models:[{_models}] P:[{Session.Projectiles.ActiveProjetiles.Count}] P-Pool:[{Session.Projectiles.ProjectilePool.Count}] AvPool:[{AvShotPool.Count}] (AvBarrels 1:[{Effects1.Count}] 2:[{Effects2.Count}])", "stats");
                 _glows = 0;
@@ -227,8 +231,9 @@ namespace CoreSystems.Support
                                 MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[0], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
                             else if (av.AmmoDef.Const.TracerMode != AmmoConstants.Texture.Resize)
                                 MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[av.TextureIdx], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
-                            else {
-                                
+                            else
+                            {
+
                                 var seg = av.AmmoDef.AmmoGraphics.Lines.Tracer.Segmentation;
                                 var stepPos = av.TracerBack;
                                 var segTextureCnt = av.AmmoDef.Const.SegmentTextures.Length;
@@ -238,7 +243,8 @@ namespace CoreSystems.Support
                                 var gapEnabled = gapStepLen > 0;
                                 int j = 0;
                                 double travel = 0;
-                                while (travel < av.VisualLength) {
+                                while (travel < av.VisualLength)
+                                {
 
                                     var mod = j++ % 2;
                                     var gap = gapEnabled && (av.SegmentGaped && mod == 0 || !av.SegmentGaped && mod == 1);
@@ -247,14 +253,16 @@ namespace CoreSystems.Support
                                     double width;
                                     double rawLen;
                                     Vector4 dyncColor;
-                                    if (!gap) {
+                                    if (!gap)
+                                    {
                                         rawLen = first ? av.SegmentLenTranserved : seg.SegmentLength;
                                         if (rawLen <= 0)
                                             break;
                                         width = av.SegmentWidth;
                                         dyncColor = segColor;
                                     }
-                                    else {
+                                    else
+                                    {
                                         rawLen = first ? av.SegmentLenTranserved : seg.SegmentGap;
                                         if (rawLen <= 0)
                                             break;
@@ -338,8 +346,8 @@ namespace CoreSystems.Support
 
                             if (!widthScaler)
                                 color *= MathHelper.Clamp(1f - reduction, 0.01f, 1f);
-                            
-                            MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TrailTextures[0], color, glow.Line.From, glow.Line.Direction, (float) glow.Line.Length, width);
+
+                            MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TrailTextures[0], color, glow.Line.From, glow.Line.Direction, (float)glow.Line.Length, width);
                         }
 
                         if (++glow.Step >= steps)
@@ -354,8 +362,9 @@ namespace CoreSystems.Support
 
                     if (remove) av.GlowSteps.Dequeue();
                 }
-                
-                if (glowCnt == 0 && shrinkCnt == 0 && av.MarkForClose) {
+
+                if (glowCnt == 0 && shrinkCnt == 0 && av.MarkForClose)
+                {
                     AvShotPool.Return(av);
                     AvShots.RemoveAtFast(i);
                 }
@@ -367,7 +376,8 @@ namespace CoreSystems.Support
             var s = av.TracerShrinks.Dequeue();
             if (av.LastTick != Session.Tick)
             {
-                if (!av.AmmoDef.Const.OffsetEffect) {
+                if (!av.AmmoDef.Const.OffsetEffect)
+                {
 
                     if (av.OnScreen != AvShot.Screen.None)
                         MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[0], s.Color, s.NewFront, av.VisualDir, s.Length, s.Thickness);
@@ -397,7 +407,8 @@ namespace CoreSystems.Support
 
         internal void RunAvEffects1()
         {
-            for (int i = Effects1.Count - 1; i >= 0; i--) {
+            for (int i = Effects1.Count - 1; i >= 0; i--)
+            {
 
                 var avEffect = Effects1[i];
                 var weapon = avEffect.Weapon;
@@ -414,8 +425,10 @@ namespace CoreSystems.Support
                 var somethingEnded = avEffect.EndTick != 0 && avEffect.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null && weapon.Comp.GunBase == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
 
                 var effectStale = effectExists && (effect.IsEmittingStopped || effect.IsStopped) || !effectExists && ticksAgo > 0;
-                if (effectStale || somethingEnded || !weapon.Comp.IsWorking) {
-                    if (effectExists) {
+                if (effectStale || somethingEnded || !weapon.Comp.IsWorking)
+                {
+                    if (effectExists)
+                    {
                         effect.Stop(bAv.Extras.Restart);
                         weapon.Effects1[muzzle.MuzzleId] = null;
                     }
@@ -426,7 +439,8 @@ namespace CoreSystems.Support
                     continue;
                 }
 
-                if (weapon.Comp.Ai.VelocityUpdateTick != weapon.Comp.Session.Tick) {
+                if (weapon.Comp.Ai.VelocityUpdateTick != weapon.Comp.Session.Tick)
+                {
 
                     weapon.Comp.Ai.GridVel = weapon.Comp.Ai.TopEntity.Physics?.LinearVelocity ?? Vector3D.Zero;
                     weapon.Comp.Ai.IsStatic = weapon.Comp.Ai.TopEntity.Physics?.IsStatic ?? false;
@@ -440,9 +454,11 @@ namespace CoreSystems.Support
                 var pos = info.Position;
                 matrix.Translation = info.LocalPosition + particles.Offset;
 
-                if (!effectExists && ticksAgo <= 0) {
+                if (!effectExists && ticksAgo <= 0)
+                {
                     MyParticleEffect newEffect;
-                    if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect)) {
+                    if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))
+                    {
 
                         newEffect.UserRadiusMultiplier = particles.Extras.Scale;
                         if (newEffect.Loop)
@@ -459,7 +475,8 @@ namespace CoreSystems.Support
                         }
                     }
                 }
-                else if (effectExists) {
+                else if (effectExists)
+                {
                     effect.WorldMatrix = matrix;
                 }
             }
@@ -467,7 +484,8 @@ namespace CoreSystems.Support
 
         internal void RunAvEffects2()
         {
-            for (int i = Effects2.Count - 1; i >= 0; i--) {
+            for (int i = Effects2.Count - 1; i >= 0; i--)
+            {
                 var av = Effects2[i];
                 var weapon = av.Weapon;
                 var muzzle = av.Muzzle;
@@ -478,15 +496,16 @@ namespace CoreSystems.Support
                 var effectExists = effect != null;
                 if (effectExists && av.EndTick == 0 && weapon.StopBarrelAvTick >= Session.Tick - 1)
                     av.EndTick = weapon.StopBarrelAvTick;
-                
+
                 var info = weapon.Dummies[muzzle.MuzzleId].Info;
                 var somethingEnded = av.EndTick != 0 && av.EndTick <= Session.Tick || !weapon.PlayTurretAv || info.Entity == null || info.Entity.MarkedForClose || weapon.Comp.Ai == null || weapon.MuzzlePart.Entity?.Parent == null && weapon.Comp.GunBase == null || weapon.Comp.CoreEntity.MarkedForClose || weapon.MuzzlePart.Entity.MarkedForClose;
-                
+
                 var effectStale = effectExists && (effect.IsEmittingStopped || effect.IsStopped) || !effectExists && ticksAgo > 0;
 
                 if (effectStale || somethingEnded || !weapon.Comp.IsWorking)
                 {
-                    if (effectExists) {
+                    if (effectExists)
+                    {
                         effect.Stop(bAv.Extras.Restart);
                         weapon.Effects2[muzzle.MuzzleId] = null;
                     }
@@ -497,7 +516,8 @@ namespace CoreSystems.Support
                     continue;
                 }
 
-                if (weapon.Comp.Ai.VelocityUpdateTick != weapon.Comp.Session.Tick)  {
+                if (weapon.Comp.Ai.VelocityUpdateTick != weapon.Comp.Session.Tick)
+                {
 
                     weapon.Comp.Ai.GridVel = weapon.Comp.Ai.TopEntity.Physics?.LinearVelocity ?? Vector3D.Zero;
                     weapon.Comp.Ai.IsStatic = weapon.Comp.Ai.TopEntity.Physics?.IsStatic ?? false;
@@ -510,10 +530,12 @@ namespace CoreSystems.Support
                 var pos = info.Position;
                 matrix.Translation = info.LocalPosition + particles.Offset;
 
-                if (!effectExists && ticksAgo <= 0)  {
+                if (!effectExists && ticksAgo <= 0)
+                {
                     MyParticleEffect newEffect;
-                    if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))  {
-                        
+                    if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))
+                    {
+
                         newEffect.UserRadiusMultiplier = particles.Extras.Scale;
                         if (newEffect.Loop)
                         {
@@ -529,7 +551,8 @@ namespace CoreSystems.Support
                         }
                     }
                 }
-                else if (effectExists)  {
+                else if (effectExists)
+                {
 
                     effect.WorldMatrix = matrix;
                 }
@@ -537,35 +560,36 @@ namespace CoreSystems.Support
         }
 
 
-    internal class AvEffect
-    {
-        internal Weapon Weapon;
-        internal Weapon.Muzzle Muzzle;
-        internal uint StartTick;
-        internal uint EndTick;
-
-        internal void Clean()
+        internal class AvEffect
         {
-            Weapon = null;
-            Muzzle = null;
-            StartTick = 0;
-            EndTick = 0;
+            internal Weapon Weapon;
+            internal Weapon.Muzzle Muzzle;
+            internal uint StartTick;
+            internal uint EndTick;
+
+            internal void Clean()
+            {
+                Weapon = null;
+                Muzzle = null;
+                StartTick = 0;
+                EndTick = 0;
+            }
         }
-    }
 
-    internal struct HitSounds
-    {
-        internal MyEntity3DSoundEmitter Emitter;
-        internal MySoundPair SoundPair;
-        internal Stack<MySoundPair> Pool;
-        internal Vector3D Position;
-        internal bool Hit;
-    }
+        internal struct HitSounds
+        {
+            internal MyEntity3DSoundEmitter Emitter;
+            internal MySoundPair SoundPair;
+            internal Stack<MySoundPair> Pool;
+            internal Vector3D Position;
+            internal bool Hit;
+        }
 
-    internal struct DetonationRequest
-    {
-        internal WeaponDefinition.AmmoDef AmmoDef;
-        internal Vector3D Position;
-        internal MyEntity Entity;
+        internal struct DetonationRequest
+        {
+            internal WeaponDefinition.AmmoDef AmmoDef;
+            internal Vector3D Position;
+            internal MyEntity Entity;
+        }
     }
 }
