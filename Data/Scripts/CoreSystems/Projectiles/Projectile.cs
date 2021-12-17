@@ -440,7 +440,7 @@ namespace CoreSystems.Projectiles
                 var gaveUpChase = !fake && Info.Age - ChaseAge > MaxChaseTime && HadTarget;
                 var validTarget = fake || Info.Target.IsProjectile || Info.Target.TargetEntity != null && !Info.Target.TargetEntity.MarkedForClose;
                 var isZombie = Info.AmmoDef.Const.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
-                var seekFirstTarget = !HadTarget && !validTarget && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
 
                 if ((PickTarget && (Info.Age + SmartSlot) % 30 == 0 || gaveUpChase && validTarget || isZombie || seekFirstTarget) && NewTarget() || validTarget)
                 {

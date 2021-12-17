@@ -25,6 +25,7 @@ namespace CoreSystems.Platform
             }
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
+            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed;
             if (string.IsNullOrEmpty(AmmoName)) 
                 AmmoName = ActiveAmmoDef.AmmoName;
             PrepAmmoShuffle();
@@ -47,6 +48,7 @@ namespace CoreSystems.Platform
                 return;
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
+            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed;
             PrepAmmoShuffle();
 
             UpdateRof();
@@ -268,6 +270,7 @@ namespace CoreSystems.Platform
         internal void StartReload()
         {
             Loading = true;
+            if (Comp.Rifle != null) Comp.Rifle.GunBase.HasIronSightsActive = false;
 
             if (!ActiveAmmoDef.AmmoDef.Const.BurstMode && !ActiveAmmoDef.AmmoDef.Const.HasShotReloadDelay && System.Values.HardPoint.Loading.GiveUpAfter)
                 GiveUpTarget();

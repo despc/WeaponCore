@@ -391,32 +391,35 @@ namespace CoreSystems
 
         internal void TargetSelection()
         {
-            if (InGridAiBlock && (UiInput.AltPressed && UiInput.ShiftReleased || TargetUi.DrawReticle && UiInput.ClientInputState.MouseButtonRight && PlayerDummyTargets[PlayerId].PaintedTarget.EntityId == 0))
-            {
-                TrackingAi.Construct.Focus.RequestReleaseActive(TrackingAi);
-            }
+            if (!InGridAiBlock) return;
 
-            if (UiInput.ActionKeyReleased && TrackingAi.Construct.Data.Repo.FocusData.HasFocus && InGridAiBlock)
+            if (UiInput.AltPressed && UiInput.ShiftReleased || TargetUi.DrawReticle && UiInput.ClientInputState.MouseButtonRight && PlayerDummyTargets[PlayerId].PaintedTarget.EntityId == 0)
+                TrackingAi.Construct.Focus.RequestReleaseActive(TrackingAi);
+
+            if (UiInput.ActionKeyReleased && TrackingAi.Construct.Data.Repo.FocusData.HasFocus)
                 TrackingAi.Construct.Focus.RequestAddLock(TrackingAi);
 
-            if (InGridAiBlock)
+            if (!TrackingAi.IsGrid)
             {
-                if (!TrackingAi.IsGrid)
-                {
-                    if (UiInput.ActionKeyPressed || UiInput.ActionKeyReleased && TargetUi.HandWeaponADS && UiInput.FirstPersonView && TrackingAi.SmartHandheld)
-                        TargetUi.SelectTarget(true, UiInput.ActionKeyPressed);
-                    return;
-                }
+                if (TrackingAi.WeaponComps.Count == 0) return;
 
-                if (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased && (TargetUi.DrawReticle || UiInput.FirstPersonView))
-                    TargetUi.SelectTarget(true, UiInput.MouseButtonLeftNewPressed);
-                else if (!UiInput.CameraBlockView)
-                {
-                    if (UiInput.CurrentWheel != UiInput.PreviousWheel)
-                        TargetUi.SelectNext();
-                    else if (UiInput.LongShift || UiInput.ShiftReleased && !UiInput.LongShift) 
-                        TrackingAi.Construct.Focus.RequestNextActive(UiInput.LongShift, TrackingAi);
-                }
+                if (UiInput.MouseButtonRightWasPressed && TrackingAi.SmartHandheld && !TrackingAi.WeaponComps[0].Rifle.GunBase.HasIronSightsActive)
+                    TrackingAi.Construct.Focus.RequestReleaseActive(TrackingAi);
+
+                if (UiInput.ActionKeyPressed || UiInput.ActionKeyReleased && UiInput.FirstPersonView && TrackingAi.SmartHandheld && TrackingAi.WeaponComps[0].Rifle.GunBase.HasIronSightsActive)
+                    TargetUi.SelectTarget(true, UiInput.ActionKeyPressed);
+
+                return;
+            }
+
+            if (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased && (TargetUi.DrawReticle || UiInput.FirstPersonView))
+                TargetUi.SelectTarget(true, UiInput.MouseButtonLeftNewPressed);
+            else if (!UiInput.CameraBlockView)
+            {
+                if (UiInput.CurrentWheel != UiInput.PreviousWheel)
+                    TargetUi.SelectNext();
+                else if (UiInput.LongShift || UiInput.ShiftReleased && !UiInput.LongShift)
+                    TrackingAi.Construct.Focus.RequestNextActive(UiInput.LongShift, TrackingAi);
             }
         }
 

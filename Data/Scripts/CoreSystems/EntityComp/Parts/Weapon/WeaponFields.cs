@@ -201,6 +201,7 @@ namespace CoreSystems.Platform
         internal bool ParentIsSubpart;
         internal bool CheckInventorySystem = true;
         internal bool PlayingHardPointSound;
+        internal bool SkipAimChecks;
         internal bool ShotReady
         {
             get
