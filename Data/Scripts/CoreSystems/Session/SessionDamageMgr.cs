@@ -62,10 +62,10 @@ namespace CoreSystems
                     switch (hitEnt.EventType)
                     {
                         case HitEntity.Type.Shield:
-                            DamageShield(hitEnt, info);
+                            DamageShield2(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info);  //set to 2 for new det/radiant
+                            DamageGrid2(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
@@ -193,7 +193,173 @@ namespace CoreSystems
                 _shieldNull = true;
             }
         }
+        private void DamageShield2(HitEntity hitEnt, ProInfo info)
+        {
+            var shield = hitEnt.Entity as IMyTerminalBlock;
+            if (shield == null || !hitEnt.HitPos.HasValue) return;
+            if (!info.ShieldBypassed)
+                info.ObjectsHit++;
 
+            var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
+            var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer;
+            var shieldDmgGlobal = Settings.Enforcement.ShieldDamageModifer;
+
+            var damageScale = 1 * directDmgGlobal;
+            var distTraveled = info.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? info.DistanceTraveled : info.DistanceTraveled;
+            var fallOff = info.AmmoDef.Const.FallOffScaling && distTraveled > info.AmmoDef.Const.FallOffDistance;
+            if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.WeaponCache.Hits;
+            var damageType = info.AmmoDef.DamageScales.Shields.Type;
+            var heal = damageType == ShieldDef.ShieldType.Heal;
+            var energy = info.AmmoDef.Const.EnergyShieldDmg;
+            var detonateOnEnd = info.AmmoDef.AreaEffect.Detonation.DetonateOnEnd && info.Age >= info.AmmoDef.AreaEffect.Detonation.MinArmingTime && !info.ShieldBypassed;
+            var areaDamage = info.AmmoDef.AreaEffect.AreaEffect == AreaEffectType.Radiant ? true:false ;
+            var scaledBaseDamage = info.BaseDamagePool * damageScale;
+            var scaledDamage = (scaledBaseDamage) * info.AmmoDef.Const.ShieldModifier * shieldDmgGlobal* info.ShieldResistMod* info.ShieldBypassMod;
+
+            //Radiant info
+            var areafalloff = info.AmmoDef.AreaEffect.RadiantFalloff;
+            var radmaxabsorb = info.AmmoDef.Const.AreaEffectMaxAbsorb;
+            var unscaledRadDmg = info.AmmoDef.Const.AreaEffectDamage;
+            var radradius = (float)info.AmmoDef.AreaEffect.AreaEffectRadius;
+
+            //Detonation info
+            var detfalloff = info.AmmoDef.AreaEffect.Detonation.DetonationFalloff;
+            var detmaxabsorb = info.AmmoDef.Const.DetonationMaxAbsorb;
+            var unscaledDetDmg = info.AmmoDef.Const.DetonationDamage;
+            var detradius = info.AmmoDef.Const.DetonationRadius;
+
+            if (fallOff)
+            {
+                var fallOffMultipler = MathHelperD.Clamp(1.0 - ((distTraveled - info.AmmoDef.Const.FallOffDistance) / (info.AmmoDef.Const.MaxTrajectory - info.AmmoDef.Const.FallOffDistance)), info.AmmoDef.DamageScales.FallOff.MinMultipler, 1);
+                scaledDamage *= fallOffMultipler;
+            }
+
+            //detonation falloff scaling and capping by maxabsorb
+            if (detonateOnEnd)
+            {
+                switch (detfalloff)
+                {
+                    case Falloff.Legacy:  //mimic linear
+                        unscaledDetDmg *= detradius*0.55f;
+                        break;
+                    case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
+                        unscaledDetDmg *= detradius;
+                        break;
+                    case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
+                        unscaledDetDmg *= detradius * 0.55f;
+                        break;
+                    case Falloff.Curve:  //Drops sharply closer to max range
+                        unscaledDetDmg *= detradius * 0.81f;
+                        break;
+                    case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
+                        unscaledDetDmg *= detradius * 0.39f;
+                        break;
+                    case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
+                        unscaledDetDmg *= detradius * 0.22f;
+                        break;
+                }
+            
+            }
+            var detonateDamage = detonateOnEnd && info.ShieldBypassMod >= 1 ? (unscaledDetDmg * info.AmmoDef.Const.ShieldModifier * areaDmgGlobal * shieldDmgGlobal) * info.ShieldResistMod : 0;
+            if (detonateDamage >= detmaxabsorb) detonateDamage = detmaxabsorb;
+            //end of new detonation stuffs
+
+            //radiant falloff scaling and capping by maxabsorb
+            if (areaDamage)
+            {
+                switch (areafalloff)
+                {
+                    case Falloff.Legacy:  //mimic linear
+                        unscaledRadDmg *= radradius * 0.55f;
+                        break;
+                    case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
+                        unscaledRadDmg *= radradius;
+                        break;
+                    case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
+                        unscaledRadDmg *= radradius * 0.55f;
+                        break;
+                    case Falloff.Curve:  //Drops sharply closer to max range
+                        unscaledRadDmg *= radradius * 0.81f;
+                        break;
+                    case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
+                        unscaledRadDmg *= radradius * 0.39f;
+                        break;
+                    case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
+                        unscaledRadDmg *= radradius * 0.22f;
+                        break;
+                }
+
+            }
+            var radiantDamage = areaDamage && info.ShieldBypassMod >= 1 ? (unscaledRadDmg * info.AmmoDef.Const.ShieldModifier * areaDmgGlobal * shieldDmgGlobal) * info.ShieldResistMod : 0;
+            if (radiantDamage >= radmaxabsorb) radiantDamage = radmaxabsorb;
+            //end of new radiant stuffs
+
+            scaledDamage += radiantDamage;
+
+            if (heal)
+            {
+                var heat = SApi.GetShieldHeat(shield);
+
+                switch (heat)
+                {
+                    case 0:
+                        scaledDamage *= -1;
+                        detonateDamage *= -1;
+                        break;
+                    case 100:
+                        scaledDamage = -0.01f;
+                        detonateDamage = -0.01f;
+                        break;
+                    default:
+                        {
+                            var dec = heat / 100f;
+                            var healFactor = 1 - dec;
+                            scaledDamage *= healFactor;
+                            scaledDamage *= -1;
+                            detonateDamage *= healFactor;
+                            detonateDamage *= -1;
+                            break;
+                        }
+                }
+            }
+            var hitWave = info.AmmoDef.Const.RealShotsPerMin <= 120;
+            var hit = SApi.PointAttackShieldCon(shield, hitEnt.HitPos.Value, info.Target.CoreEntity.EntityId, (float)scaledDamage, (float)detonateDamage, energy, hitWave);
+            if (hit.HasValue)
+            {
+
+                if (heal)
+                {
+                    info.BaseDamagePool = 0;
+                    return;
+                }
+
+                var objHp = hit.Value;
+
+
+                if (info.EwarActive)
+                    info.BaseDamagePool -= 1;
+                else if (objHp > 0)
+                {
+
+                    if (!info.ShieldBypassed)
+                        info.BaseDamagePool = 0;
+                    else
+                        info.BaseDamagePool -= (info.BaseDamagePool * info.ShieldResistMod) * info.ShieldBypassMod;
+                }
+                else info.BaseDamagePool = (objHp * -1);
+
+                if (info.AmmoDef.Mass <= 0) return;
+
+                var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
+                if (Session.IsServer && !shield.CubeGrid.IsStatic && !SApi.IsFortified(shield))
+                    ApplyProjectileForce((MyEntity)shield.CubeGrid, hitEnt.HitPos.Value, hitEnt.Intersection.Direction, info.AmmoDef.Mass * speed);
+            }
+            else if (!_shieldNull)
+            {
+                Log.Line($"DamageShield PointAttack returned null");
+                _shieldNull = true;
+            }
+        }
         private void DamageGrid2(HitEntity hitEnt, ProInfo t)
         {
             
@@ -231,7 +397,8 @@ namespace CoreSystems
             var detonateDmg = t.AmmoDef.Const.DetonationDamage;
             var hasDetDmg = detonateOnEnd && detonateDmg > 0 && detonateRadius > 0;
             var detonateDepth = t.AmmoDef.Const.DetonationMaxDepth; 
-            var detonatefalloff = t.AmmoDef.AreaEffect.Detonation.DetonationFalloff;         
+            var detonatefalloff = t.AmmoDef.AreaEffect.Detonation.DetonationFalloff;
+            var detmaxabsorb = t.AmmoDef.Const.DetonationMaxAbsorb;
             //Radiant/area info
             var areaRadius = t.AmmoDef.AreaEffect.AreaEffectRadius;
             var areaDepth = t.AmmoDef.Const.AreaAffectMaxDepth; 
@@ -250,6 +417,8 @@ namespace CoreSystems
             var damageType = t.ShieldBypassed ? ShieldBypassDamageType : radiant || hasDetDmg ? MyDamageType.Explosion : MyDamageType.Bullet;
             var distTraveled = t.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? t.DistanceTraveled : t.DistanceTraveled;
             var direction = hitEnt.Intersection.Direction;
+            var localpos = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * ((double)grid.GridSizeR) - 0.5);
+
             //overall falloff scaling
             var fallOff = t.AmmoDef.Const.FallOffScaling && distTraveled > t.AmmoDef.Const.FallOffDistance;
             var fallOffMultipler = 1f;
@@ -317,20 +486,22 @@ namespace CoreSystems
                 //radiant logic
                 if (hasAreaDmg && !novaing && !radiantcomplete)
                 {
-                    RadiantAoe(rootBlock, grid, areaRadius, areaDepth, direction, ref maxDbc, ref aoeHits);
+                    RadiantAoe(rootBlock, localpos, grid, areaRadius, areaDepth, direction, ref maxDbc, ref aoeHits);
                     radiating = true;
+                    //Log.Line($"Radiant- maxDBC {maxDbc} aoeHits {aoeHits}");
                 }
 
                 //Nova logic
                 if (hasDetDmg && novaing && !novacomplete)
                 {
-                    RadiantAoe(rootBlock, grid, detonateRadius, detonateDepth, direction, ref maxDbc, ref aoeHits);
+                    RadiantAoe(rootBlock, localpos, grid, detonateRadius, detonateDepth, direction, ref maxDbc, ref aoeHits);
                     novacomplete = true;
+                    //Log.Line($"Detonation- maxDBC {maxDbc} aoeHits {aoeHits}");
                 }
           
                 for (int j = 0; j < maxDbc+1; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
-                    if (totaldmg >= maxabsorb && !radiantcomplete)
+                    if (totaldmg >= maxabsorb && radiating && !radiantcomplete)
                     {
                         radiantcomplete = true;
                         radiating = false;
@@ -340,14 +511,29 @@ namespace CoreSystems
                         --i;
                         break;
                     }
+                    else if (totaldmg>=detmaxabsorb && novaing && !novacomplete)
+                    {
+                        novacomplete = true;
+                        aoeHits = 0;
+                        totaldmg = 0;
+                        break;
+                    }
+
 
                     int dbCount = 1;
                     float expDamageFall = 0;
                     List<IMySlimBlock> dbc = null;
                     if (hasAoe && novacomplete || radiating)
                     {
-                        
-                        dbc = DamageBlockCache[j];
+                        try
+                        {
+                            dbc = DamageBlockCache[j];
+                        }
+                        catch 
+                        { 
+                            Log.Line($"Index error on dbc= DamageBlockCache[j]");
+                            continue;
+                        }
                         dbCount = dbc.Count;
                         if (dbCount == 0)
                         {
@@ -391,8 +577,16 @@ namespace CoreSystems
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
                     {
-
-                        var block = radiating || novaing && novacomplete ? dbc[k] : rootBlock;
+                        var block = rootBlock;//temp for debug purposes
+                        try
+                        {
+                           block = radiating || novaing && novacomplete ? dbc[k] : rootBlock;
+                        }
+                        catch
+                        {
+                            Log.Line($"Index error on calling dbc[{k}] for block");
+                                continue;
+                        }
                         if (block.IsDestroyed)
                            continue;
 
@@ -497,7 +691,8 @@ namespace CoreSystems
                         }
                         else if (novacomplete)
                         {
-                           scaledDamage = (expDamageFall * detDamageScale);
+                            scaledDamage = (expDamageFall * detDamageScale);
+                            totaldmg += scaledDamage;
                         }
                         if (scaledDamage <= blockHp && primaryDamage)
                         {
@@ -832,11 +1027,12 @@ namespace CoreSystems
             }
         }
 
-        private readonly HashSet<IMySlimBlock> _tmpRootReject = new HashSet<IMySlimBlock>();
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int aoeHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int aoeHits) //added depth and angle
         {
-            _tmpRootReject.Clear();
+
             var rootPos = root.Position; //local cube grid
+            if (root.Min != root.Max) rootPos = localpos;
+
 
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
@@ -924,16 +1120,6 @@ namespace CoreSystems
                                 if (slimmax != slimmin)//Block larger than 1x1x1
                                 {
 
-                                    if (slim == root && _tmpRootReject.Add(slim))//Handle root block> 1x1x1
-                                    {
-                                        //¯\_(ツ)_/¯  temp stand-in of normal dmg handling
-                                        distArray.Add(slim);
-                                        if (hitdist >= maxDbc) maxDbc = hitdist;
-                                        aoeHits++;
-                                        //Log.Line($"Root block>1x1x1  {rootPos}   {vector3I}   hitdist{hitdist}     posdist{posdist}");
-                                    }
-                                    else//Handle >1x1x1 when not root
-                                    {
                                         var hitblkbound = new BoundingBoxI(slimmin, slimmax);
                                         var rootposbound = new BoundingBoxI(rootPos, rootPos);
                                         rootposbound.IntersectWith(ref hitblkbound);
@@ -946,14 +1132,14 @@ namespace CoreSystems
                                             //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                         }
    
-                                    }
+                                   
                                 }
                                 else//Happy normal 1x1x1
                                 {
                                     distArray.Add(slim);
                                     if (hitdist >= maxDbc) maxDbc = hitdist;
                                     aoeHits++;
-                                   // slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
+                                    //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
                             }
                         }
