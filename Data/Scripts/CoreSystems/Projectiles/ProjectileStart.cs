@@ -47,6 +47,7 @@ namespace CoreSystems.Projectiles
                 p.Info.WeaponCache = w.WeaponCache;
                 p.Info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
                 p.Info.LockOnFireState = w.LockOnFireState;
+                p.Info.ModOverride = w.Comp.ModOverride;
                 p.Info.ShooterVel = w.Comp.Ai.GridVel;
 
                 p.Info.OriginUp = t != Kind.Client ? w.MyPivotUp : gen.OriginUp;
