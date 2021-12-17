@@ -893,7 +893,8 @@ namespace CoreSystems.Support
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AmmoGraphics.Particles.Ammo.Name, ref matrix, ref TracerFront, renderId, out AmmoEffect))
             {
 
-                AmmoEffect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
+                //AmmoEffect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
+                AmmoEffect.UserScale = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
 
                 AmmoParticleStopped = false;
                 AmmoParticleInited = true;
@@ -908,7 +909,9 @@ namespace CoreSystems.Support
             var pos = TriggerEntity.PositionComp.WorldAABB.Center;
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AreaEffect.Pulse.Particle.Name, ref TriggerMatrix, ref pos, uint.MaxValue, out FieldEffect))
             {
-                FieldEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
+                //FieldEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
+                FieldEffect.UserScale = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
+
                 FieldParticleStopped = false;
                 FieldParticleInited = true;
             }
@@ -959,7 +962,9 @@ namespace CoreSystems.Support
                 if (effect.Loop || effect.DurationMax <= 0)
                     System.Session.Av.BeamEffects[UniqueMuzzleId] = effect;
 
-                effect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+                //effect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+                effect.UserScale = AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+
                 Vector3D.ClampToSphere(ref vel, (float)MaxSpeed);
             }
             else if (effect != null && !effect.IsEmittingStopped) {
@@ -1007,7 +1012,9 @@ namespace CoreSystems.Support
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
-                            detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
+                            //detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
+                            detEffect.UserScale = AmmoDef.AreaEffect.Explosions.Scale;
+
                             detEffect.Velocity = Hit.HitVelocity;
 
                             if (detEffect.Loop)

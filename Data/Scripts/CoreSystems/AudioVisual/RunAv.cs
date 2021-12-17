@@ -124,7 +124,8 @@ namespace CoreSystems.Support
                             MyParticleEffect hitEffect;
                             if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.Const.HitParticleStr, ref matrix, ref pos, uint.MaxValue, out hitEffect))
                             {
-                                hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+                                //hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
+                                hitEffect.UserScale = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
                                 hitEffect.Velocity = av.Hit.HitVelocity;
 
                                 if (hitEffect.Loop)
@@ -420,7 +421,9 @@ namespace CoreSystems.Support
                     if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))
                     {
 
-                        newEffect.UserRadiusMultiplier = particles.Extras.Scale;
+                        // newEffect.UserRadiusMultiplier = particles.Extras.Scale;
+                        newEffect.UserScale = particles.Extras.Scale;
+
                         if (newEffect.Loop)
                         {
                             weapon.Effects1[muzzle.MuzzleId] = newEffect;
@@ -496,7 +499,9 @@ namespace CoreSystems.Support
                     if (MyParticlesManager.TryCreateParticleEffect(particles.Name, ref matrix, ref pos, renderId, out newEffect))
                     {
 
-                        newEffect.UserRadiusMultiplier = particles.Extras.Scale;
+                        //newEffect.UserRadiusMultiplier = particles.Extras.Scale;
+                        newEffect.UserScale = particles.Extras.Scale;
+
                         if (newEffect.Loop)
                         {
                             weapon.Effects2[muzzle.MuzzleId] = newEffect;

@@ -415,8 +415,9 @@ namespace CoreSystems.Platform
                 
                 if (MyParticlesManager.TryCreateParticleEffect(particle.Name, ref matrix, ref eInfo.Position, uint.MaxValue, out ejectEffect)) {
                     //ejectEffect.UserColorMultiplier = particle.Color;
-                    var scaler = 1;
-                    ejectEffect.UserRadiusMultiplier = particle.Extras.Scale * scaler;
+                    //ejectEffect.UserRadiusMultiplier = particle.Extras.Scale;
+                    ejectEffect.UserScale = particle.Extras.Scale;
+
                     //var scale = particle.ShrinkByDistance ? MathHelper.Clamp(MathHelper.Lerp(1, 0, Vector3D.Distance(System.Session.CameraPos, eInfo.Position) / particle.Extras.MaxDistance), 0.05f, 1) : 1;
                     //ejectEffect.UserScale = (float)scale * scaler;
                     ejectEffect.Velocity = eInfo.Direction * ActiveAmmoDef.AmmoDef.Ejection.Speed;

@@ -1031,7 +1031,9 @@ namespace CoreSystems
                         }
                         particleEvent.Effect.WorldMatrix = matrix;
                         particleEvent.Effect.UserColorMultiplier = particleEvent.Color;
-                        particleEvent.Effect.UserRadiusMultiplier = particleEvent.Scale;
+                        //particleEvent.Effect.UserRadiusMultiplier = particleEvent.Scale;
+                        particleEvent.Effect.UserScale = particleEvent.Scale;
+
                     }
                     else if (particleEvent.Effect.IsStopped)
                     {
