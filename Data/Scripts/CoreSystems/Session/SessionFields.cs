@@ -410,6 +410,7 @@ namespace CoreSystems
         internal readonly HashSet<ulong> BlackListedPlayers = new HashSet<ulong>()
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.
+            //76561198058376283 Tino (WPG server)
         };
 
         internal readonly HashSet<ulong> JokePlayerList = new HashSet<ulong>()
