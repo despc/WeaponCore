@@ -113,7 +113,7 @@ namespace CoreSystems.Support
                         else av.TravelEmitter.SetPosition(av.TracerFront);
                     }
 
-                    if (av.HitParticle == AvShot.ParticleState.Custom || av.HitParticle == AvShot.ParticleState.Explosion && ExplosionReady)
+                    if (av.HitParticle == AvShot.ParticleState.Custom)
                     {
                         av.HitParticle = AvShot.ParticleState.Dirty;
                         if (av.OnScreen != AvShot.Screen.None)

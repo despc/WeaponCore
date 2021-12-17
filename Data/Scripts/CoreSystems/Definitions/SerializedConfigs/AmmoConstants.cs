@@ -282,7 +282,7 @@ namespace CoreSystems.Support
             CustomDetParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomParticle);
             AmmoParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Ammo.Name);
             HitParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name);
-            HitParticleStr = HitParticle ? ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name : "Explosion_Missile";
+            HitParticleStr = ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name;
             DetParticleStr = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomParticle) ? ammo.AmmoDef.AreaEffect.Explosions.CustomParticle : "Explosion_Missile";
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Pulse.Particle.Name);
             CustomExplosionSound = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomSound);

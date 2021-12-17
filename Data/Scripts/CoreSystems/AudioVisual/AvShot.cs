@@ -52,7 +52,6 @@ namespace CoreSystems.Support
         internal bool LastHitShield;
         internal bool ForceHitParticle;
         internal bool HitParticleActive;
-        internal bool FakeExplosion;
         internal bool MarkForClose;
         internal bool ProEnded;
         internal bool SmartOn;
@@ -122,7 +121,6 @@ namespace CoreSystems.Support
         internal enum ParticleState
         {
             None,
-            Explosion,
             Custom,
             Dirty,
         }
@@ -775,9 +773,7 @@ namespace CoreSystems.Support
                 Vector3D.DistanceSquared(ref Hit.SurfaceHit, ref System.Session.CameraPos, out distToCameraSqr);
 
                 if (OnScreen == Screen.Tracer || distToCameraSqr < 360000) {
-                    if (FakeExplosion)
-                        HitParticle = ParticleState.Explosion;
-                    else if (HitParticleActive && AmmoDef.Const.HitParticle && !(LastHitShield && !AmmoDef.AmmoGraphics.Particles.Hit.ApplyToShield))
+                    if (HitParticleActive && AmmoDef.Const.HitParticle && !(LastHitShield && !AmmoDef.AmmoGraphics.Particles.Hit.ApplyToShield))
                         HitParticle = ParticleState.Custom;
                 }
 
@@ -1122,7 +1118,6 @@ namespace CoreSystems.Support
             ModelOnly = false;
             ForceHitParticle = false;
             HitParticleActive = false;
-            FakeExplosion = false;
             MarkForClose = false;
             ProEnded = false;
             TracerShrinks.Clear();
