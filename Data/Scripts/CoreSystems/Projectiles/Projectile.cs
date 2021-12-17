@@ -356,8 +356,9 @@ namespace CoreSystems.Projectiles
             PickTarget = false;
             if (giveUp || !Ai.ReacquireTarget(this))
             {
-                if (!Info.AmmoDef.Trajectory.Smarts.NoTargetExpire)
+                if (!giveUp || !Info.AmmoDef.Trajectory.Smarts.NoTargetExpire || Info.Target.TargetEntity != null && Info.Target.TargetEntity.MarkedForClose)
                     Info.Target.TargetEntity = null;
+
                 if (Info.Target.IsProjectile) UnAssignProjectile(true);
                 return false;
             }
@@ -438,7 +439,8 @@ namespace CoreSystems.Projectiles
 
                 var fake = Info.Target.IsFakeTarget;
                 var gaveUpChase = !fake && Info.Age - ChaseAge > MaxChaseTime && HadTarget;
-                var validTarget = fake || Info.Target.IsProjectile || Info.Target.TargetEntity != null && !Info.Target.TargetEntity.MarkedForClose;
+                var overMaxTargets = HadTarget && NewTargets > Info.AmmoDef.Const.MaxTargets && Info.AmmoDef.Const.MaxTargets != 0;
+                var validTarget = fake || Info.Target.IsProjectile || Info.Target.TargetEntity != null && !overMaxTargets;
                 var isZombie = Info.AmmoDef.Const.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
                 var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
 

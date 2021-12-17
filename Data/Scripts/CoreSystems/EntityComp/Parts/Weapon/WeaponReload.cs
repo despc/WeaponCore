@@ -25,7 +25,7 @@ namespace CoreSystems.Platform
             }
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
-            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed;
+            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed && !Comp.ModOverride;
             if (string.IsNullOrEmpty(AmmoName)) 
                 AmmoName = ActiveAmmoDef.AmmoName;
             PrepAmmoShuffle();
@@ -48,7 +48,7 @@ namespace CoreSystems.Platform
                 return;
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
-            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed;
+            SkipAimChecks = ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart && System.TurretMovement == WeaponSystem.TurretType.Fixed && !Comp.ModOverride;
             PrepAmmoShuffle();
 
             UpdateRof();
