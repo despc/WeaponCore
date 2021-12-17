@@ -1009,7 +1009,7 @@ namespace CoreSystems.Support
                         var matrix = MatrixD.CreateTranslation(pos);
 
                         MyParticleEffect detEffect;
-                        if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out detEffect))
+                        if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
                             detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
                             detEffect.Velocity = Hit.HitVelocity;
