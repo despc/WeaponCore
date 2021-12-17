@@ -369,7 +369,7 @@ namespace CoreSystems
                                     expDamageFall= (float)((maxfalldist - j) / maxfalldist * fallNone);
                                 }
                                 break;
-                            case Falloff.None:  //No falloff, damage stays the same regardless of distance
+                            case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
                                 expDamageFall = fallNone;
                                 break;
                             case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
