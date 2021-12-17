@@ -1011,11 +1011,11 @@ namespace CoreSystems.Support
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
-                            if (detEffect.Loop)
-                                detEffect.Stop();
-
                             detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
                             detEffect.Velocity = Hit.HitVelocity;
+
+                            if (detEffect.Loop)
+                                detEffect.Stop();
                         }
                     }
                 }
