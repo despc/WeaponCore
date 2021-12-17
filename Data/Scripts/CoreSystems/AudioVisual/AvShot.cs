@@ -992,6 +992,31 @@ namespace CoreSystems.Support
                 if (OnScreen != Screen.None && (!string.IsNullOrEmpty(AmmoDef.AreaEffect.Explosions.CustomParticle) || System.Session.Av.ExplosionReady))
                 {
                     SUtils.CreateFakeExplosion(System.Session, AmmoDef.Const.DetonationRadius, TracerFront, Direction, Hit.Entity, AmmoDef, Hit.HitVelocity);
+
+                    var a = AmmoDef;
+                    var c = a.Const;
+
+                    if (c.CustomExplosionSound)
+                    {
+                        var pool = c.DetSoundPairs;
+                        var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.AreaEffect.Explosions.CustomSound, false);
+
+                        var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                        detEmitter.Entity = Hit.Entity;
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
+                    }
+                    if (OnScreen != Screen.None)
+                    {
+                        var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
+                        var matrix = MatrixD.CreateTranslation(pos);
+
+                        MyParticleEffect detEffect;
+                        if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out detEffect))
+                        {
+                            detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
+                            detEffect.Velocity = Hit.HitVelocity;
+                        }
+                    }
                 }
             }
 

@@ -113,7 +113,7 @@ namespace CoreSystems.Support
                         else av.TravelEmitter.SetPosition(av.TracerFront);
                     }
 
-                    if (av.HitParticle == AvShot.ParticleState.Custom)
+                    if (av.HitParticle == AvShot.ParticleState.Custom || av.HitParticle == AvShot.ParticleState.Explosion && ExplosionReady)
                     {
                         av.HitParticle = AvShot.ParticleState.Dirty;
                         if (av.OnScreen != AvShot.Screen.None)
@@ -144,33 +144,7 @@ namespace CoreSystems.Support
 
                     if (av.DetonateFakeExp && false)
                     {
-                        var a = av.AmmoDef;
-                        var c = a.Const;
 
-                        if (c.CustomExplosionSound)
-                        {
-                            var pool = c.DetSoundPairs;
-                            var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.AreaEffect.Explosions.CustomSound, false);
-
-                            var detEmitter = Session.Av.PersistentEmitters.Count > 0 ? Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
-
-                            detEmitter.Entity = av.Hit.Entity;
-                            Session.Av.RunningSounds.Add(new HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = av.Hit.SurfaceHit });
-                            //HitSoundInitted = true;
-                        }
-                        if (av.OnScreen != AvShot.Screen.None)
-                        {
-                            var pos = av.Hit.HitTick == Session.Tick && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
-                            var matrix = MatrixD.CreateTranslation(pos);
-
-                            MyParticleEffect detEffect;
-                            if (MyParticlesManager.TryCreateParticleEffect(a.AreaEffect.Explosions.CustomParticle, ref matrix, ref pos, uint.MaxValue, out detEffect))
-                            {
-
-                                detEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
-                                detEffect.Velocity = av.Hit.HitVelocity;
-                            }
-                        }
                     }
 
                     if (av.Model != AvShot.ModelState.None)

@@ -865,17 +865,16 @@ namespace CoreSystems.Support
             hitSoundDistSqr = 0;
             ammoTravelSoundDistSqr = 0;
             ammoSoundMaxDistSqr = 0;
-
             foreach (var def in session.SoundDefinitions)
             {
                 var id = def.Id.SubtypeId.String;
-                if (HitSound && id == hitSoundStr)
+                if (HitSound && (id == hitSoundStr || id == ammoDef.AmmoAudio.HitSound))
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
                     if (ob != null) hitSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
                     if (hitSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = hitSoundDistSqr;
                 }
-                else if (AmmoTravelSound && id == travelSoundStr)
+                else if (AmmoTravelSound && (id == travelSoundStr || id == ammoDef.AmmoAudio.TravelSound))
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
                     if (ob != null) ammoTravelSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
