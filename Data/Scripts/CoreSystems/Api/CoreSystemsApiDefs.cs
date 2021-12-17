@@ -834,7 +834,7 @@ namespace CoreSystems.Api
                     public enum Falloff //New
                     {
                         Legacy,
-                        None,
+                        NoFalloff,
                         Linear,
                         Curve,
                         InvCurve,
@@ -851,6 +851,8 @@ namespace CoreSystems.Api
                     [ProtoMember(8)] internal AreaInfluence Base;
                     [ProtoMember(9)] internal Falloff RadiantFalloff; //New
                     [ProtoMember(10)] internal float AreaEffectMaxDepth;//new
+                    [ProtoMember(11)] internal float AreaEffectMaxAbsorb;
+
 
                     [ProtoContract]
                     public struct AreaInfluence
@@ -913,6 +915,7 @@ namespace CoreSystems.Api
                         [ProtoMember(5)] internal int MinArmingTime;
                         [ProtoMember(6)] internal Falloff DetonationFalloff; //New
                         [ProtoMember(7)] internal float DetonationMaxDepth;//new
+                        [ProtoMember(8)] internal float DetonationMaxAbsorb;
                     }
 
                     [ProtoContract]

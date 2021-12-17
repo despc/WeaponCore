@@ -739,7 +739,7 @@ namespace CoreSystems.Support
             //BDC addin for depth & falloff & max absorb
             areaEffectMaxDepth = ammoDef.AreaEffect.AreaEffectMaxDepth <= 0 ? (float)areaEffectSize : ammoDef.AreaEffect.AreaEffectMaxDepth ;
             detonationMaxDepth = ammoDef.AreaEffect.Detonation.DetonationMaxDepth <= 0 ? (float)detonationRadius : ammoDef.AreaEffect.Detonation.DetonationMaxDepth;
-            areaEffectMaxAbsorb = ammoDef.AreaEffect.AreaEffectMaxAbsorb <= 0 ? 1000000f : ammoDef.AreaEffect.AreaEffectMaxAbsorb; 
+            areaEffectMaxAbsorb = ammoDef.AreaEffect.AreaEffectMaxAbsorb <= 0 ? float.MaxValue : ammoDef.AreaEffect.AreaEffectMaxAbsorb; 
 
 
             ammoAreaEffect = ammoDef.AreaEffect.AreaEffect != AreaEffectType.Disabled;
