@@ -387,7 +387,7 @@ namespace CoreSystems
             //Target/targeting Info
             var largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
             var attackerId = t.Target.CoreEntity.EntityId;
-            var maxObjects = t.AmmoDef.Const.MaxObjectsHit == 2147483647 ? 128 : t.AmmoDef.Const.MaxObjectsHit; //BDC - this adds a sensible max rather than int max
+            var maxObjects = t.AmmoDef.Const.MaxObjectsHit == 2147483647 ? 256 : t.AmmoDef.Const.MaxObjectsHit; //BDC - this adds a sensible max rather than int max
             var gridMatrix = grid.PositionComp.WorldMatrixRef;
             var playerAi = t.Ai.AiType == Ai.AiTypes.Player;
             //Ammo properties
@@ -406,6 +406,23 @@ namespace CoreSystems
             var radiant = areaEffect == AreaEffectType.Radiant;
             var areaEffectDmg = areaEffect != AreaEffectType.Disabled ? t.AmmoDef.Const.AreaEffectDamage : 0;
             var hasAreaDmg = areaEffectDmg > 0 && areaRadius > 0;
+
+            if(!hasAreaDmg && radiant)
+            {
+                //inherit legacy radiant or explosive values
+                areaEffectDmg = t.AmmoDef.AreaEffect.Base.EffectStrength==0? t.BaseDamagePool: t.AmmoDef.AreaEffect.Base.EffectStrength;
+                areaRadius = t.AmmoDef.AreaEffect.Base.Radius;
+                hasAreaDmg = true;
+            }
+            else if(!hasAreaDmg && areaEffect==AreaEffectType.Explosive)
+            {
+                areaEffectDmg = t.AmmoDef.AreaEffect.Base.EffectStrength == 0 ? t.BaseDamagePool : t.AmmoDef.AreaEffect.Base.EffectStrength;
+                areaRadius = t.AmmoDef.AreaEffect.Base.Radius;
+                hasAreaDmg = true;
+                radiant = true;
+            }
+
+
             var radiantFall = t.AmmoDef.AreaEffect.RadiantFalloff;
             var totaldmg = 0f;
             var maxabsorb = t.AmmoDef.Const.AreaEffectMaxAbsorb;
@@ -482,7 +499,7 @@ namespace CoreSystems
                         continue;
                 }
 
-
+                //Log.Line($"hasareadmg{hasAreaDmg}  !novaing{!novaing}  !radiantcomp{!radiantcomplete}  ||||  hasdetdmg{hasDetDmg}  novaing{novaing} novacomp{novacomplete}       ");
                 //radiant logic
                 if (hasAreaDmg && !novaing && !radiantcomplete)
                 {
