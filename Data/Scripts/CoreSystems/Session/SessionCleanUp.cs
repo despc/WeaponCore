@@ -154,7 +154,6 @@ namespace CoreSystems
                         {
                             ammo.AmmoDef.Const.PrimeEntityPool?.Clean();
                             ammo.AmmoDef.Const.HitDefaultSoundPairs.Clear();
-                            ammo.AmmoDef.Const.DetSoundPairs.Clear();
                             ammo.AmmoDef.Const.HitVoxelSoundPairs.Clear();
                             ammo.AmmoDef.Const.HitShieldSoundPairs.Clear();
                             ammo.AmmoDef.Const.HitFloatingSoundPairs.Clear();

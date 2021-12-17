@@ -76,7 +76,6 @@ namespace CoreSystems.Support
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
         public readonly Dictionary<MyDefinitionBase, float> CustomBlockDefinitionBasesToScales;
-        public readonly Stack<MySoundPair> DetSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitDefaultSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitShieldSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> HitVoxelSoundPairs = new Stack<MySoundPair>();
@@ -95,7 +94,9 @@ namespace CoreSystems.Support
         public readonly Texture TracerMode;
         public readonly Texture TrailMode;
         public readonly string ModelPath;
-
+        public readonly string HitParticleStr;
+        public readonly string DetParticleStr;
+        public readonly string DetSoundStr;
         public readonly int MaxObjectsHit;
         public readonly int TargetLossTime;
         public readonly int MaxLifeTime;
@@ -125,6 +126,7 @@ namespace CoreSystems.Support
         public readonly bool IsField;
         public readonly bool AmmoParticle;
         public readonly bool HitParticle;
+        public readonly bool CustomDetParticle;
         public readonly bool FieldParticle;
         public readonly bool AmmoAreaEffect;
         public readonly bool AmmoSkipAccel;
@@ -277,10 +279,14 @@ namespace CoreSystems.Support
             HitParticleShrinks = ammo.AmmoDef.AmmoGraphics.Particles.Hit.ShrinkByDistance;
             FieldParticleShrinks = ammo.AmmoDef.AreaEffect.Pulse.Particle.ShrinkByDistance;
 
+            CustomDetParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomParticle);
             AmmoParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Ammo.Name);
             HitParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name);
+            HitParticleStr = HitParticle ? ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name : "Explosion_Missile";
+            DetParticleStr = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomParticle) ? ammo.AmmoDef.AreaEffect.Explosions.CustomParticle : "Explosion_Missile";
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Pulse.Particle.Name);
             CustomExplosionSound = !string.IsNullOrEmpty(ammo.AmmoDef.AreaEffect.Explosions.CustomSound);
+            DetSoundStr = CustomExplosionSound ? ammo.AmmoDef.AreaEffect.Explosions.CustomSound : "WepSmallMissileExpl";
             DrawLine = ammo.AmmoDef.AmmoGraphics.Lines.Tracer.Enable;
             LineColorVariance = ammo.AmmoDef.AmmoGraphics.Lines.ColorVariance.Start > 0 && ammo.AmmoDef.AmmoGraphics.Lines.ColorVariance.End > 0;
             LineWidthVariance = ammo.AmmoDef.AmmoGraphics.Lines.WidthVariance.Start > 0 || ammo.AmmoDef.AmmoGraphics.Lines.WidthVariance.End > 0;

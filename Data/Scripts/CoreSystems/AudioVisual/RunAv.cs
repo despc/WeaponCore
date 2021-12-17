@@ -122,7 +122,7 @@ namespace CoreSystems.Support
                             var matrix = MatrixD.CreateTranslation(pos);
 
                             MyParticleEffect hitEffect;
-                            if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.AmmoGraphics.Particles.Hit.Name, ref matrix, ref pos, uint.MaxValue, out hitEffect))
+                            if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.Const.HitParticleStr, ref matrix, ref pos, uint.MaxValue, out hitEffect))
                             {
 
                                 var scaler = 1;
@@ -130,21 +130,6 @@ namespace CoreSystems.Support
                                 hitEffect.Velocity = av.Hit.HitVelocity;
                             }
                         }
-                    }
-                    else if (av.HitParticle == AvShot.ParticleState.Explosion)
-                    {
-                        av.HitParticle = AvShot.ParticleState.Dirty;
-                        if (ExplosionReady && av.OnScreen != AvShot.Screen.None)
-                        {
-                            var pos = !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
-                            if (av.DetonateFakeExp) SUtils.CreateFakeExplosion(Session, av.AmmoDef.Const.DetonationRadius, pos, av.Direction, av.Hit.Entity, av.AmmoDef, av.Hit.HitVelocity);
-                            else SUtils.CreateFakeExplosion(Session, av.AmmoDef.Const.AreaEffectSize, pos, av.Direction, av.Hit.Entity, av.AmmoDef, av.Hit.HitVelocity);
-                        }
-                    }
-
-                    if (av.DetonateFakeExp && false)
-                    {
-
                     }
 
                     if (av.Model != AvShot.ModelState.None)

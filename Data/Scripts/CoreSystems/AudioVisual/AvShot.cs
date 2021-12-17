@@ -985,27 +985,25 @@ namespace CoreSystems.Support
                 DisposeAmmoEffect(forceClose, false);
             }
 
-            if (EndState.DetonateFakeExp)
+            if (EndState.DetonateEffect)
             {
-
                 HitParticle = ParticleState.Dirty;
-                if (OnScreen != Screen.None && (!string.IsNullOrEmpty(AmmoDef.AreaEffect.Explosions.CustomParticle) || System.Session.Av.ExplosionReady))
+                if (OnScreen != Screen.None)
                 {
-                    SUtils.CreateFakeExplosion(System.Session, AmmoDef.Const.DetonationRadius, TracerFront, Direction, Hit.Entity, AmmoDef, Hit.HitVelocity);
-
                     var a = AmmoDef;
                     var c = a.Const;
 
-                    if (c.CustomExplosionSound)
+                    if (!a.AreaEffect.Explosions.NoSound)
                     {
-                        var pool = c.DetSoundPairs;
-                        var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.AreaEffect.Explosions.CustomSound, false);
+                        var pool = c.CustomSoundPairs;
+                        var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.Const.DetSoundStr, false);
 
                         var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
                         detEmitter.Entity = Hit.Entity;
                         System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
                     }
-                    if (OnScreen != Screen.None)
+
+                    if (AmmoDef.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
                     {
                         var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
                         var matrix = MatrixD.CreateTranslation(pos);
@@ -1179,7 +1177,7 @@ namespace CoreSystems.Support
     internal struct AvClose
     {
         internal bool Dirty;
-        internal bool DetonateFakeExp;
+        internal bool DetonateEffect;
         internal Vector3D EndPos;
     }
 
