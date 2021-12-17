@@ -4,6 +4,7 @@ using CoreSystems.Projectiles;
 using CoreSystems.Support;
 using Sandbox.Definitions;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Debris;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Components;
@@ -64,7 +65,7 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid2(hitEnt, info);  //set to 2 for new det/radiant
+                            DamageGrid(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
@@ -352,8 +353,6 @@ namespace CoreSystems
                         {
                            continue;
                         }
-
-
                         //Falloff switches & calcs for type of explosion & expDamageFall as output
                         var maxfalldist = radiating ? areaRadius * grid.GridSizeR +1: detonateRadius * grid.GridSizeR+1;
                         var fallNone = radiating ? areaEffectDmg : detonateDmg; //outside of switch case, as we can use it for "raw damage" in all falloff cases
@@ -834,7 +833,7 @@ namespace CoreSystems
         }
 
         private readonly HashSet<IMySlimBlock> _tmpRootReject = new HashSet<IMySlimBlock>();
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int AoeHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int aoeHits) //added depth and angle
         {
             _tmpRootReject.Clear();
             var rootPos = root.Position; //local cube grid
@@ -930,7 +929,7 @@ namespace CoreSystems
                                         //¯\_(ツ)_/¯  temp stand-in of normal dmg handling
                                         distArray.Add(slim);
                                         if (hitdist >= maxDbc) maxDbc = hitdist;
-                                        AoeHits++;
+                                        aoeHits++;
                                         //Log.Line($"Root block>1x1x1  {rootPos}   {vector3I}   hitdist{hitdist}     posdist{posdist}");
                                     }
                                     else//Handle >1x1x1 when not root
@@ -943,7 +942,7 @@ namespace CoreSystems
                                         {
                                             distArray.Add(slim);
                                             if (hitdist >= maxDbc) maxDbc = hitdist;
-                                            AoeHits++;
+                                            aoeHits++;
                                             //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                         }
    
@@ -953,7 +952,7 @@ namespace CoreSystems
                                 {
                                     distArray.Add(slim);
                                     if (hitdist >= maxDbc) maxDbc = hitdist;
-                                    AoeHits++;
+                                    aoeHits++;
                                    // slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
                             }

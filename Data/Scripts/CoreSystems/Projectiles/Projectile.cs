@@ -879,7 +879,9 @@ namespace CoreSystems.Projectiles
 
         internal void ProjectileClose()
         {
-            if (GenerateShrapnel && Info.Age >= Info.AmmoDef.Const.MinArmingTime)
+            var detInfo = Info.AmmoDef.AreaEffect.Detonation;
+            var detonate = detInfo.DetonateOnEnd && (!detInfo.ArmOnlyOnHit || Info.ObjectsHit > 0);
+            if (GenerateShrapnel && Info.Age >= Info.AmmoDef.Const.MinArmingTime && (!detInfo.DetonateOnEnd || detonate))
                 SpawnShrapnel();
 
             for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
@@ -893,9 +895,8 @@ namespace CoreSystems.Projectiles
 
             State = ProjectileState.Dead;
 
-            var detInfo = Info.AmmoDef.AreaEffect.Detonation;
             var afInfo = Info.AmmoDef.AreaEffect;
-            var detExp = !afInfo.Explosions.NoVisuals && detInfo.DetonateOnEnd && (!detInfo.ArmOnlyOnHit || Info.ObjectsHit > 0);
+            var detExp = !afInfo.Explosions.NoVisuals && detonate;
 
             if (EnableAv)
             {

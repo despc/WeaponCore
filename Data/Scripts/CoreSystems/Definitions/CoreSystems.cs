@@ -589,7 +589,7 @@ namespace CoreSystems.Support
             deviateShotAngleRads = MathHelper.ToRadians(givenShotAngle);
 
             var givenAimingTolerance = HasServerOverrides && modifierMap[AimTolStr].HasData() ? modifierMap[AimTolStr].GetAsDouble : weaponDef.HardPoint.AimingTolerance;
-            aimingToleranceRads = MathHelperD.ToRadians(givenAimingTolerance);
+            aimingToleranceRads = MathHelperD.ToRadians(givenAimingTolerance <= 0 ? 180 : givenAimingTolerance);
 
             var givenIdlePower = HasServerOverrides && modifierMap[IdlePowerStr].HasData() ? modifierMap[IdlePowerStr].GetAsFloat : weaponDef.HardPoint.HardWare.IdlePower;
             idlePower = givenIdlePower > 0 ? givenIdlePower : 0.001f;
