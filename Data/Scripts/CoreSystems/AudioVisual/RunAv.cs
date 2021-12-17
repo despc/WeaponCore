@@ -124,10 +124,11 @@ namespace CoreSystems.Support
                             MyParticleEffect hitEffect;
                             if (MyParticlesManager.TryCreateParticleEffect(av.AmmoDef.Const.HitParticleStr, ref matrix, ref pos, uint.MaxValue, out hitEffect))
                             {
-
-                                var scaler = 1;
-                                hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale * scaler;
+                                hitEffect.UserRadiusMultiplier = av.AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
                                 hitEffect.Velocity = av.Hit.HitVelocity;
+
+                                if (hitEffect.Loop)
+                                    hitEffect.Stop();
                             }
                         }
                     }

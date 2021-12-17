@@ -368,6 +368,7 @@ namespace CoreSystems
                     if (sound.Force || sound.Emitter.Loop) {
                         sound.Emitter.StopSound(sound.Emitter.Loop);
                     }
+                    Log.Line($"clean: {sound.SoundPair.SoundId.Hash.String}");
                     sound.Emitter.Entity = null;
                     sound.EmitterPool.Push(sound.Emitter);
                     sound.SoundPairPool.Push(sound.SoundPair);

@@ -304,7 +304,7 @@ namespace CoreSystems.Projectiles
                     var hitPlayChance = Info.AmmoDef.AmmoGraphics.Particles.Hit.Extras.HitPlayChance;
                     Info.AvShot.HitParticleActive = hitPlayChance >= 1 || hitPlayChance >= MyUtils.GetRandomDouble(0.0f, 1f);
                 }
-                Info.AvShot.FakeExplosion = Info.AvShot.HitParticleActive && Info.AmmoDef.Const.AreaEffect == AreaEffectType.Explosive && Info.AmmoDef.AmmoGraphics.Particles.Hit.Name == string.Empty;
+                Info.AvShot.FakeExplosion = Info.AvShot.HitParticleActive && Info.AmmoDef.Const.AreaEffect == AreaEffectType.Explosive && string.IsNullOrEmpty(Info.AmmoDef.AmmoGraphics.Particles.Hit.Name);
             }
 
             if (!Info.AmmoDef.Const.PrimeModel && !Info.AmmoDef.Const.TriggerModel) ModelState = EntityState.None;
