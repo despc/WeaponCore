@@ -92,11 +92,6 @@ namespace CoreSystems.Support
         public readonly MyPhysicalInventoryItem AmmoItem;
         public readonly MyPhysicalInventoryItem EjectItem;
         public readonly AreaEffectType AreaEffect;
-
-        //BDC added
-        public readonly Falloff DetonationFalloff;
-        public readonly Falloff RadiantFalloff;
-
         public readonly Texture TracerMode;
         public readonly Texture TrailMode;
         public readonly string ModelPath;
