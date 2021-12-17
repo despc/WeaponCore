@@ -66,6 +66,7 @@ namespace CoreSystems.Support
         internal bool EwarActive;
         internal bool ModelOnly;
         internal bool LockOnFireState;
+        internal bool ModOverride;
         internal bool AimedShot;
         internal bool DoDamage;
         internal bool IsVirtual;
