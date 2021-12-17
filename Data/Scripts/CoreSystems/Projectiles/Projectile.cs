@@ -356,7 +356,8 @@ namespace CoreSystems.Projectiles
             PickTarget = false;
             if (giveUp || !Ai.ReacquireTarget(this))
             {
-                Info.Target.TargetEntity = null;
+                if (!Info.AmmoDef.Trajectory.Smarts.NoTargetExpire)
+                    Info.Target.TargetEntity = null;
                 if (Info.Target.IsProjectile) UnAssignProjectile(true);
                 return false;
             }
