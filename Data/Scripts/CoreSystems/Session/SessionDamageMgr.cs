@@ -240,7 +240,7 @@ namespace CoreSystems
             var hasAreaDmg = areaEffectDmg > 0 && areaRadius > 0;
             var radiantFall = t.AmmoDef.AreaEffect.RadiantFalloff;
             var totaldmg = 0f;
-            var maxabsorb = t.AmmoDef.AreaEffect.AreaEffectMaxAbsorb;  //add to coreparts
+            var maxabsorb = t.AmmoDef.AreaEffect.AreaEffectMaxAbsorb;
             var radiantcomplete = false;
             var hasAoe = hasAreaDmg || hasDetDmg;
             var aoeHits = 0;  
@@ -834,7 +834,6 @@ namespace CoreSystems
 
         public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int AoeHits) //added depth and angle
         {
-            //TODO: Factor in maximum depth and angle of impact
             var rootPos = root.Position; //local cube grid
 
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
@@ -847,7 +846,7 @@ namespace CoreSystems
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, grid.Max);
 
 
-            Log.Line($"AOE: rootpos {rootPos}  blkrad {maxradius}  blkdepth {maxdepth}");
+            //Log.Line($"AOE: rootpos {rootPos}  blkrad {maxradius}  blkdepth {maxdepth}");
 
             if (maxdepth < maxradius)
             {
@@ -925,7 +924,10 @@ namespace CoreSystems
 
                                     if (slim == root)//Handle root block> 1x1x1
                                     {
-                                        //¯\_(ツ)_/¯
+                                        //¯\_(ツ)_/¯  temp stand-in of normal dmg handling
+                                        distArray.Add(slim);
+                                        if (hitdist >= maxDbc) maxDbc = hitdist;
+                                        AoeHits++;
                                         //Log.Line($"Root block>1x1x1  {rootPos}   {vector3I}   hitdist{hitdist}     posdist{posdist}");
                                     }
                                     else//Handle >1x1x1 when not root
@@ -939,7 +941,7 @@ namespace CoreSystems
                                             distArray.Add(slim);
                                             if (hitdist >= maxDbc) maxDbc = hitdist;
                                             AoeHits++;
-                                            slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
+                                            //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                         }
    
                                     }
@@ -951,7 +953,7 @@ namespace CoreSystems
                                     distArray.Add(slim);
                                     if (hitdist >= maxDbc) maxDbc = hitdist;
                                     AoeHits++;
-                                    slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
+                                   // slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
                             }
                         }
