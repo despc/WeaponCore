@@ -1204,16 +1204,18 @@ namespace CoreSystems
 
                     if (!nova)
                     {
-                        if (_destroyedSlims.Contains(rootBlock) || _destroyedSlimsClient.Contains(rootBlock)) continue;
+                        if (IsServer && _destroyedSlims.Contains(rootBlock) || IsClient && _destroyedSlimsClient.Contains(rootBlock)) continue;
                         if (rootBlock.IsDestroyed)
                         {
                             destroyed++;
-                            _destroyedSlims.Add(rootBlock);
                             if (IsClient)
                             {
                                 _destroyedSlimsClient.Add(rootBlock);
                                 _slimHealthClient.Remove(rootBlock);
                             }
+                            else
+                                _destroyedSlims.Add(rootBlock);
+
                             continue;
                         }
                     }
@@ -1353,13 +1355,15 @@ namespace CoreSystems
                                 else
                                 {
                                     destroyed++;
-                                    _destroyedSlims.Add(block);
                                     if (IsClient)
                                     {
                                         _destroyedSlimsClient.Add(block);
                                         if (_slimHealthClient.ContainsKey(block))
                                             _slimHealthClient.Remove(block);
                                     }
+                                    else
+                                        _destroyedSlims.Add(block);
+
                                     damagePool -= (blockHp / (damageScale * directDamageScale));
                                 }
                             }
@@ -1369,13 +1373,14 @@ namespace CoreSystems
                                 if (scaledDamage >= blockHp)
                                 {
                                     destroyed++;
-                                    _destroyedSlims.Add(block);
                                     if (IsClient)
                                     {
                                         _destroyedSlimsClient.Add(block);
                                         if (_slimHealthClient.ContainsKey(block))
                                             _slimHealthClient.Remove(block);
                                     }
+                                    else
+                                        _destroyedSlims.Add(block);
                                 }
                             }
 
