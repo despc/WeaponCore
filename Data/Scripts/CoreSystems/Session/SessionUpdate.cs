@@ -234,8 +234,8 @@ namespace CoreSystems
                     wComp.PainterMode = fakeTargets != null && cMode == ProtoWeaponOverrides.ControlModes.Painter && fakeTargets.PaintedTarget.EntityId != 0;
                     wComp.FakeMode = wComp.ManualMode || wComp.PainterMode;
                     wComp.WasControlled = wComp.UserControlled;
-                    wComp.UserControlled = wComp.Data.Repo.Values.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Painter || fakeTargets == null || fakeTargets.PaintedTarget.EntityId != 0);
-
+                    wComp.UserControlled = wComp.Data.Repo.Values.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Auto || wComp.Data.Repo.Values.State.Control == ControlMode.Camera || fakeTargets != null && fakeTargets.PaintedTarget.EntityId != 0);
+                    
                     if (!PlayerMouseStates.TryGetValue(wComp.Data.Repo.Values.State.PlayerId, out wComp.InputState))
                         wComp.InputState = DefaultInputStateData;
 
@@ -316,12 +316,14 @@ namespace CoreSystems
 
                             if (w.PosChangedTick != Tick)
                                 w.UpdatePivotPos();
-
+                            
                             if (!IsClient && noAmmo)
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !comp.FakeMode || comp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
                                 w.Target.Reset(Tick, States.Expired, !comp.ManualMode);
                             else if (!IsClient && w.Target.TargetEntity != null && (comp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose))
+                                w.Target.Reset(Tick, States.Expired);
+                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && w.SkipAimChecks && !ai.Construct.Focus.ValidTargetFocused(ai, w, w.Target.TargetEntity))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -361,7 +363,7 @@ namespace CoreSystems
                         /// Queue for target acquire or set to tracking weapon.
                         /// 
                         var seek = comp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!comp.UserControlled && !Settings.Enforcement.DisableAi || w.PartState.Action == TriggerClick));
-                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !Settings.Enforcement.DisableAi) && !w.AcquiringTarget && (comp.Data.Repo.Values.State.Control == ControlMode.None || comp.Data.Repo.Values.State.Control == ControlMode.Ui))
+                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !Settings.Enforcement.DisableAi) && !w.AcquiringTarget && comp.Data.Repo.Values.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;
                             AcquireTargets.Add(w);
@@ -437,7 +439,7 @@ namespace CoreSystems
             {
                 var w = AcquireTargets[i];
                 var comp = w.Comp;
-                if (w.BaseComp.IsAsleep || w.BaseComp.Ai == null || comp.Ai.TopEntity.MarkedForClose || !comp.Ai.HasPower || comp.Ai.Concealed || comp.CoreEntity.MarkedForClose || !comp.Ai.DbReady || !comp.IsWorking  || w.NoMagsToLoad && w.ProtoWeaponAmmo.CurrentAmmo == 0 && Tick - w.LastMagSeenTick > 600) {
+                if (w.BaseComp.IsAsleep || w.BaseComp.Ai == null || comp.Ai.TopEntity.MarkedForClose || comp.Ai.IsGrid && !comp.Ai.HasPower || comp.Ai.Concealed || comp.CoreEntity.MarkedForClose || !comp.Ai.DbReady || !comp.IsWorking || w.NoMagsToLoad && w.ProtoWeaponAmmo.CurrentAmmo == 0 && Tick - w.LastMagSeenTick > 600) {
                     
                     w.AcquiringTarget = false;
                     AcquireTargets.RemoveAtFast(i);

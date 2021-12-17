@@ -14,12 +14,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
     {
         internal bool ActivateSelector()
         {
-            if (!_session.TrackingAi.IsGrid && _session.TrackingAi.WeaponComps.Count > 0)
-            {
-                HandWeaponADS = _session.TrackingAi.WeaponComps[0].Rifle.GunBase.HasIronSightsActive;
-                return HandWeaponADS && _session.UiInput.FirstPersonView && _session.TrackingAi.SmartHandheld;
-            }
-            if (_session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return false;
+            if (!_session.TrackingAi.IsGrid || _session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return false;
             if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control)) _3RdPersonDraw = !_3RdPersonDraw;
 
             var enableActivator = _3RdPersonDraw || _session.UiInput.CtrlPressed || _session.UiInput.FirstPersonView && _session.UiInput.AltPressed || _session.UiInput.CameraBlockView;

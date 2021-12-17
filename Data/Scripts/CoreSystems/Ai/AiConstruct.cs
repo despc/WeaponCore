@@ -644,5 +644,36 @@ namespace CoreSystems.Support
             }
             return false;
         }
+
+        internal bool ValidTargetFocused(Ai ai, Weapon w, MyEntity targetEntity)
+        {
+            var targets = ai.Construct.Data.Repo.FocusData?.Target;
+
+            var block = targetEntity as MyCubeBlock;
+
+            if (targets != null && block != null)
+            {
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    var tId = targets[i];
+                    if (tId == 0) continue;
+
+                    MyEntity target;
+                    if (MyEntities.TryGetEntityById(tId, out target) && target == block.CubeGrid)
+                    {
+                        if (w.System.LockOnFocus)
+                        {
+                            var targetSphere = targetEntity.PositionComp.WorldVolume;
+                            targetSphere.Center = targetEntity.PositionComp.WorldAABB.Center;
+                            w.AimCone.ConeDir = w.MyPivotFwd;
+                            w.AimCone.ConeTip = w.BarrelOrigin;
+                            return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

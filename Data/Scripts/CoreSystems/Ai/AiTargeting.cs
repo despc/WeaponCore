@@ -150,7 +150,7 @@ namespace CoreSystems.Support
                         newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon && w.ActiveAmmoDef.AmmoDef.Const.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
                         var targetSphere = info.Target.PositionComp.WorldVolume;
                         targetSphere.Center = newCenter;
-                        if (!validEstimate || !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
+                        if (!validEstimate || !w.SkipAimChecks && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
                     }
                     else if (!Weapon.CanShootTargetObb(w, info.Target, targetLinVel, targetAccel, out newCenter)) continue;
 
@@ -351,7 +351,7 @@ namespace CoreSystems.Support
                 {
                     var focusTarget = hasOffset && x < offset;
                     var lastOffset = offset - 1;
-                    if (attemptReset && !focusTarget) break;
+                    if (!focusTarget && (attemptReset || w.SkipAimChecks)) break;
                     TargetInfo info = null;
                     if (forceTarget && !focusTarget) info = gridInfo;
                     else
@@ -365,19 +365,19 @@ namespace CoreSystems.Support
                         }
                         else info = ai.SortedTargets[deck[x - offset]];
                     }
-                    if (info?.Target == null || info.Target.MarkedForClose || hasOffset && x > lastOffset && (info.Target == alphaInfo?.Target || info.Target == betaInfo?.Target) || !attackNeutrals && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership) continue;
-
+                    if (info?.Target == null || info.Target.MarkedForClose || hasOffset && x > lastOffset && (info.Target == alphaInfo?.Target || info.Target == betaInfo?.Target) || !attackNeutrals && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership)
+                        continue;
                     if (movingMode && info.VelLenSqr < 1 || !fireOnStation && info.IsStatic || stationOnly && !info.IsStatic)
                         continue;
 
                     var character = info.Target as IMyCharacter;
                     var targetRadius = character != null ? info.TargetRadius * 5 : info.TargetRadius;
                     if (targetRadius < minTargetRadius || info.TargetRadius > maxTargetRadius && maxTargetRadius < 8192 || !focusTarget && info.OffenseRating <= 0) continue;
-
+                    
                     var targetCenter = info.Target.PositionComp.WorldAABB.Center;
                     var targetDistSqr = Vector3D.DistanceSquared(targetCenter, weaponPos);
                     if (targetDistSqr > (w.MaxTargetDistance + info.TargetRadius) * (w.MaxTargetDistance + info.TargetRadius) || targetDistSqr < w.MinTargetDistanceSqr) continue;
-
+                    
                     if (water != null)
                     {
                         if (new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius).Contains(new BoundingSphereD(targetCenter, targetRadius)) == ContainmentType.Contains)
@@ -386,7 +386,7 @@ namespace CoreSystems.Support
                     session.TargetChecks++;
                     Vector3D targetLinVel = info.Target.Physics?.LinearVelocity ?? Vector3D.Zero;
                     Vector3D targetAccel = accelPrediction ? info.Target.Physics?.LinearAcceleration ?? Vector3D.Zero : Vector3.Zero;
-
+                    
                     if (info.IsGrid)
                     {
 
@@ -400,7 +400,8 @@ namespace CoreSystems.Support
                             newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon && w.ActiveAmmoDef.AmmoDef.Const.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
                             var targetSphere = info.Target.PositionComp.WorldVolume;
                             targetSphere.Center = newCenter;
-                            if (!validEstimate || !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
+
+                            if (!validEstimate || (!w.SkipAimChecks || w.System.LockOnFocus) && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
                         }
                         else if (!Weapon.CanShootTargetObb(w, info.Target, targetLinVel, targetAccel, out newCenter)) continue;
 
@@ -520,7 +521,7 @@ namespace CoreSystems.Support
 
             var entSphere = topEnt.PositionComp.WorldVolume;
             var distToEnt = MyUtils.GetSmallestDistanceToSphere(ref weaponPos, ref entSphere);
-            var turretCheck = w != null;
+            var turretCheck = w != null && !w.SkipAimChecks;
             var topBlocks = system.Values.Targeting.TopBlocks;
             var lastBlocks = topBlocks > 10 && distToEnt < 1000 ? topBlocks : 10;
             var isPriroity = false;
@@ -679,7 +680,7 @@ namespace CoreSystems.Support
                     if (best)
                     {
 
-                        if (w != null && !(!w.IsTurret && w.ActiveAmmoDef.AmmoDef.Trajectory.Smarts.OverideTarget))
+                        if (w != null && !w.SkipAimChecks)
                         {
 
                             ai.Session.CanShoot++;
