@@ -64,7 +64,7 @@ namespace CoreSystems
                             DamageShield(hitEnt, info);
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info);  //set to 2 for new det/radiant
+                            DamageGrid2(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
@@ -284,7 +284,7 @@ namespace CoreSystems
             {
                 if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !novaing)
                 {
-                    Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects}  novaing{novaing}");
+                    //Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects}  novaing{novaing}");
                     basePool = 0;
                     break;
                 }
@@ -832,8 +832,10 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int AoeHits) //added depth and angle
+        private readonly HashSet<IMySlimBlock> _tmpRootReject = new HashSet<IMySlimBlock>();
+        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, ref int aoeHits) //added depth and angle
         {
+            _tmpRootReject.Clear();
             var rootPos = root.Position; //local cube grid
 
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
@@ -891,7 +893,7 @@ namespace CoreSystems
                         }
                         break;
                 }
-         
+
             }
 
 
@@ -907,27 +909,27 @@ namespace CoreSystems
                         MyCube cube;
                         if (grid.TryGetCube(vector3I, out cube))  
                         {
-                            var slim = (IMySlimBlock)cube.CubeBlock;
-                            int posdist = Vector3I.DistanceManhattan(rootPos, slim.Position);
+                            //int posdist = Vector3I.DistanceManhattan(rootPos, slim.Position);
                             int hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
-                            var slimmin = slim.Min;
-                            var slimmax = slim.Max;
+
                             if (hitdist <= maxradius)
                             {
-
+                                var slim = (IMySlimBlock)cube.CubeBlock;
                                 if (slim.IsDestroyed)
                                     continue;
                                 var distArray = damageBlockCache[hitdist];
 
+                                var slimmin = slim.Min;
+                                var slimmax = slim.Max;
                                 if (slimmax != slimmin)//Block larger than 1x1x1
                                 {
 
-                                    if (slim == root)//Handle root block> 1x1x1
+                                    if (slim == root && _tmpRootReject.Add(slim))//Handle root block> 1x1x1
                                     {
                                         //¯\_(ツ)_/¯  temp stand-in of normal dmg handling
                                         distArray.Add(slim);
                                         if (hitdist >= maxDbc) maxDbc = hitdist;
-                                        AoeHits++;
+                                        aoeHits++;
                                         //Log.Line($"Root block>1x1x1  {rootPos}   {vector3I}   hitdist{hitdist}     posdist{posdist}");
                                     }
                                     else//Handle >1x1x1 when not root
@@ -940,19 +942,17 @@ namespace CoreSystems
                                         {
                                             distArray.Add(slim);
                                             if (hitdist >= maxDbc) maxDbc = hitdist;
-                                            AoeHits++;
+                                            aoeHits++;
                                             //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                         }
    
                                     }
-
-
                                 }
                                 else//Happy normal 1x1x1
                                 {
                                     distArray.Add(slim);
                                     if (hitdist >= maxDbc) maxDbc = hitdist;
-                                    AoeHits++;
+                                    aoeHits++;
                                    // slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
                             }
