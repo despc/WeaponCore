@@ -38,6 +38,7 @@ namespace CoreSystems.Projectiles
                 p.FinalizeIntersection = false;
                 p.Info.ShieldInLine = false;
 
+                var isBeam = p.Info.AmmoDef.Const.IsBeamWeapon;
                 var lineCheck = p.Info.AmmoDef.Const.CollisionIsLine && !p.Info.EwarAreaPulse;
                 var ewarProjectile = (p.Info.EwarActive || p.Info.AmmoDef.Const.EwarEffect);
 
@@ -188,8 +189,9 @@ namespace CoreSystems.Projectiles
                     if (voxel != null && voxel == voxel?.RootVoxel)
                     {
 
-                        if (ent == p.Info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance || p.CachedPlanetHit))
+                        if ((ent == p.Info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance || p.CachedPlanetHit)) || !p.LinePlanetCheck && isBeam)
                             continue;
+
                         VoxelIntersectBranch voxelState = VoxelIntersectBranch.None;
                         Vector3D? voxelHit = null;
                         if (tick - p.Info.VoxelCache.HitRefreshed < 60)
@@ -306,7 +308,7 @@ namespace CoreSystems.Projectiles
                             if (entIsSelf && !selfDamage)
                             {
 
-                                if (!p.Info.AmmoDef.Const.IsBeamWeapon && p.Beam.Length <= grid.GridSize * 2 && !goCritical)
+                                if (!isBeam && p.Beam.Length <= grid.GridSize * 2 && !goCritical)
                                 {
                                     MyCube cube;
                                     if (!(grid.TryGetCube(grid.WorldToGridInteger(p.Position), out cube) && cube.CubeBlock != p.Info.Target.CoreCube.SlimBlock || grid.TryGetCube(grid.WorldToGridInteger(p.LastPosition), out cube) && cube.CubeBlock != p.Info.Target.CoreCube.SlimBlock))
@@ -411,7 +413,7 @@ namespace CoreSystems.Projectiles
                     if (useLine)
                     {
                         var dist = sphere.Intersects(new RayD(p.LastPosition, p.Info.Direction));
-                        if (dist <= hitTolerance || p.Info.AmmoDef.Const.IsBeamWeapon && dist <= p.Beam.Length)
+                        if (dist <= hitTolerance || isBeam && dist <= p.Beam.Length)
                             rayCheck = true;
                     }
 
