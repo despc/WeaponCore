@@ -65,7 +65,7 @@ namespace CoreSystems
                             DamageShield2(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Grid:
-                            DamageGrid(hitEnt, info);  //set to 2 for new det/radiant
+                            DamageGrid3(hitEnt, info);  //set to 2 for new det/radiant
                             continue;
                         case HitEntity.Type.Destroyable:
                             DamageDestObj(hitEnt, info);
