@@ -1081,7 +1081,7 @@ namespace CoreSystems
                             case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
                                 expDamageFall = (float)((j + 1) / maxfalldist / (maxfalldist - j) * fallNone);
                                 break;
-                            case Falloff.Pool:
+                            case Falloff.Pooled:
                                 //Do we need to do anything here?
                                 break;
 
@@ -1193,7 +1193,7 @@ namespace CoreSystems
                         var primaryDamage = block == rootBlock && !detonating;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = basePool * baseScale;
-                        var AOEscaleddmg = expDamageFall * areaDamageScale;
+                        var AOEscaleddmg = expDamageFall * (detonating ? detDamageScale : areaDamageScale);
                         bool deadblock = false;
 
                         //Check for end of primary life
