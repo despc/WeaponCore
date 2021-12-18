@@ -247,9 +247,9 @@ namespace CoreSystems
         private readonly List<MyMouseButtonsEnum> _pressedButtons = new List<MyMouseButtonsEnum>();
         private readonly List<MyEntity> _tmpNearByBlocks = new List<MyEntity>();
         private readonly EwaredBlocksPacket _cachedEwarPacket = new EwaredBlocksPacket();
-        private SpinLockRef _dityGridLock = new SpinLockRef();
+        private readonly SpinLockRef _dityGridLock = new SpinLockRef();
 
-        internal readonly List<IMySlimBlock>[] DamageBlockCache = new List<IMySlimBlock>[128];
+        internal readonly List<IMySlimBlock>[] DamageBlockCache = new List<IMySlimBlock>[512];
         internal List<RadiatedBlock> SlimsSortedList = new List<RadiatedBlock>(1024);
         internal MyConcurrentPool<MyEntity> TriggerEntityPool;
 
@@ -521,7 +521,7 @@ namespace CoreSystems
             for (int i = 0; i < LeadGroups.Length; i++)
                 LeadGroups[i] = new List<Weapon>();
 
-            for (int i = 0; i < 128; i++)
+            for (int i = 0; i < DamageBlockCache.Length; i++)
                DamageBlockCache[i] = new List<IMySlimBlock>();
         }
     }

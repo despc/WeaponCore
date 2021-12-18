@@ -843,6 +843,7 @@ namespace CoreSystems.Support
                     Curve,
                     InvCurve,
                     Spall,
+                    Pooled,
                 }
 
                 [ProtoMember(1)] internal double AreaEffectRadius;

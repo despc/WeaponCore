@@ -839,6 +839,7 @@ namespace CoreSystems.Api
                         Curve,
                         InvCurve,
                         Spall,
+                        Pooled,
                     }
 
                     [ProtoMember(1)] internal double AreaEffectRadius;
@@ -852,7 +853,6 @@ namespace CoreSystems.Api
                     [ProtoMember(9)] internal Falloff RadiantFalloff; //New
                     [ProtoMember(10)] internal float AreaEffectMaxDepth;//new
                     [ProtoMember(11)] internal float AreaEffectMaxAbsorb;
-
 
                     [ProtoContract]
                     public struct AreaInfluence

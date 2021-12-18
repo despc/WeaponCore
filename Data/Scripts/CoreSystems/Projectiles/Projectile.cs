@@ -251,7 +251,7 @@ namespace CoreSystems.Projectiles
             }
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
-            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget && !Info.Target.IsFakeTarget && !Info.LockOnFireState;
+            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget || Info.ModOverride) && !Info.Target.IsFakeTarget && !Info.LockOnFireState;
             if (PickTarget || LockedTarget) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
@@ -442,7 +442,7 @@ namespace CoreSystems.Projectiles
                 var overMaxTargets = HadTarget && NewTargets > Info.AmmoDef.Const.MaxTargets && Info.AmmoDef.Const.MaxTargets != 0;
                 var validTarget = fake || Info.Target.IsProjectile || Info.Target.TargetEntity != null && !overMaxTargets;
                 var isZombie = Info.AmmoDef.Const.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
-                var seekFirstTarget = !HadTarget && !validTarget && (PickTarget || Info.ModOverride) && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
 
                 if ((PickTarget && (Info.Age + SmartSlot) % 30 == 0 || gaveUpChase && validTarget || isZombie || seekFirstTarget) && NewTarget() || validTarget)
                 {

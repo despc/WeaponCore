@@ -387,7 +387,7 @@ namespace CoreSystems
             //Target/targeting Info
             var largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
             var attackerId = t.Target.CoreEntity.EntityId;
-            var maxObjects = t.AmmoDef.Const.MaxObjectsHit == 2147483647 ? 256 : t.AmmoDef.Const.MaxObjectsHit; //BDC - this adds a sensible max rather than int max
+            var maxObjects = t.AmmoDef.Const.MaxObjectsHit; //BDC - this adds a sensible max rather than int max
             var gridMatrix = grid.PositionComp.WorldMatrixRef;
             var playerAi = t.Ai.AiType == Ai.AiTypes.Player;
             //Ammo properties
@@ -423,7 +423,8 @@ namespace CoreSystems
             }
 
 
-            var radiantFall = t.AmmoDef.AreaEffect.RadiantFalloff;
+
+
             var totaldmg = 0f;
             var maxabsorb = t.AmmoDef.Const.AreaEffectMaxAbsorb;
             var radiantcomplete = false;
@@ -463,6 +464,12 @@ namespace CoreSystems
             var novacomplete = false;
             var earlyExit = false;
             var destroyed = 0;
+            var aoePool = areaEffectDmg;
+            var detPool = detonateDmg;
+            var aoeFall = t.AmmoDef.AreaEffect.RadiantFalloff;
+            var detFall = t.AmmoDef.AreaEffect.Detonation.DetonationFalloff;
+            var detIsPooled = detFall == Falloff.Pooled;
+            var aoeIsPooled = aoeFall == Falloff.Pooled;
             int maxDbc = 0;
             IMySlimBlock rootBlock = null;
             //Main loop (finally)
@@ -559,7 +566,8 @@ namespace CoreSystems
                         //Falloff switches & calcs for type of explosion & expDamageFall as output
                         var maxfalldist = radiating ? areaRadius * grid.GridSizeR +1: detonateRadius * grid.GridSizeR+1;
                         var fallNone = radiating ? areaEffectDmg : detonateDmg; //outside of switch case, as we can use it for "raw damage" in all falloff cases
-                        switch (radiating ? radiantFall : detonatefalloff)
+
+                        switch (radiating ? aoeFall : detonatefalloff)
                         {
                             case Falloff.Legacy:
                                 if (radiating)//mimic InvCurve for legacy radiating
@@ -572,6 +580,7 @@ namespace CoreSystems
                                 }
                                 break;
                             case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
+                            case Falloff.Pooled:
                                 expDamageFall = fallNone;
                                 break;
                             case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
@@ -696,7 +705,7 @@ namespace CoreSystems
                         var scaledDamage = basePool * baseScale;
 
                         //Radiant & nova specific damage scaling
-                        if (radiating&&j>0)//Give radiant dmg to all blocks except root
+                        if (radiating && j > 0)//Give radiant dmg to all blocks except root
                         {
                            scaledDamage = (expDamageFall * areaDamageScale);
                            totaldmg += scaledDamage;
@@ -711,20 +720,45 @@ namespace CoreSystems
                             scaledDamage = (expDamageFall * detDamageScale);
                             totaldmg += scaledDamage;
                         }
-                        if (scaledDamage <= blockHp && primaryDamage)
+
+                        if (scaledDamage <= blockHp)
                         {
-                            basePool = 0;
-                            t.BaseDamagePool = basePool;
-                            novaing = hasDetDmg;
-                            
-                            if (hitMass > 0) 
+                            if (primaryDamage)
                             {
-                                var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
-                                if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
+                                basePool = 0;
+                                t.BaseDamagePool = basePool;
+                                novaing = hasDetDmg;
+                                if (hitMass > 0)
+                                {
+                                    var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
+                                    if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
+                                }
                             }
+                            else if (radiating)
+                            {
+                                if (aoeIsPooled)
+                                {
+
+                                }
+                            }
+                            else // nova
+                            {
+                                if (detIsPooled)
+                                {
+
+                                }
+                            }
+
                         }
                         else
                         {
+
+                            if (primaryDamage)
+                            {
+                                basePool -= (blockHp / baseScale); // this needs fixing.
+                                objectsHit++;
+                            }
+
                             destroyed++;
                             if (IsClient)
                             {
@@ -734,15 +768,7 @@ namespace CoreSystems
                             }
                             else
                                 _destroyedSlims.Add(block);
-
-                            if (primaryDamage)
-                            {
-                                basePool -= (blockHp / baseScale);
-                                objectsHit++;
-                            }
                         }
-
-
 
                         aoeHits--;
                         //Add in a final death-check to pop the nova iteration
@@ -780,8 +806,6 @@ namespace CoreSystems
                         //doneskies
                         if (endCycle)
                         {
-
-
                             if (novaing && !novacomplete && radiantcomplete)
                             {
                                 --i;
