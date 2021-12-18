@@ -1059,27 +1059,27 @@ namespace CoreSystems
                             case Falloff.Legacy:
                                 if (!detonating)//mimic InvCurve for legacy radiating
                                 {
-                                    expDamageFall = (float)((maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone);
+                                    expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone;
                                 }
                                 else //mimic linear falloff for legacy detonations
                                 {
-                                    expDamageFall = (float)((maxfalldist - j) / maxfalldist * fallNone);
+                                    expDamageFall = (maxfalldist - j) / maxfalldist * fallNone;
                                 }
                                 break;
                             case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
                                 expDamageFall = fallNone;
                                 break;
                             case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
-                                expDamageFall = (float)((maxfalldist - j) / maxfalldist * fallNone);
+                                expDamageFall = (maxfalldist - j) / maxfalldist * fallNone;
                                 break;
                             case Falloff.Curve:  //Drops sharply closer to max range
-                                expDamageFall = (float)(100 - j / maxfalldist / (maxfalldist - j) * fallNone);
+                                expDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * fallNone;
                                 break;
                             case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
-                                expDamageFall = (float)((maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone);
+                                expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone;
                                 break;
                             case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
-                                expDamageFall = (float)((j + 1) / maxfalldist / (maxfalldist - j) * fallNone);
+                                expDamageFall = (j + 1) / maxfalldist / (maxfalldist - j) * fallNone;
                                 break;
                             case Falloff.Pooled:
                                 //Do we need to do anything here?

@@ -421,7 +421,7 @@ namespace CoreSystems.Support
                 frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
                 frag.DoDamage = p.Info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
-                frag.Velocity = p.Velocity;
+                frag.Velocity = !p.Info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;
                 frag.DeadSphere = p.DeadSphere;
                 frag.LockOnFireState = p.Info.LockOnFireState;
                 frag.IgnoreShield = p.Info.ShieldBypassed && p.Info.AmmoDef.Const.ShieldDamageBypassMod > 0;

@@ -778,6 +778,7 @@ namespace CoreSystems.Support
                 [ProtoMember(5)] internal float Degrees;
                 [ProtoMember(6)] internal bool Reverse;
                 [ProtoMember(7)] internal bool RandomizeDir;
+                [ProtoMember(8)] internal bool DropVelocity;
             }
 
             [ProtoContract]
