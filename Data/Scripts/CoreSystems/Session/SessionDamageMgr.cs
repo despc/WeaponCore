@@ -904,7 +904,7 @@ namespace CoreSystems
 
             //Ammo properties
             var hitMass = t.AmmoDef.Mass;
-            var AOEdmgtally = 0f;
+            var AoeDmgTally = 0f;
             var AOEHits = 0;
 
             //overall primary falloff scaling
@@ -929,19 +929,19 @@ namespace CoreSystems
             //General damage data
 
             //Generics used for both AOE and detonation
-            var AOEdamage = 0f;
-            var AOEradius = 0f;
-            var AOEfalloff = Falloff.NoFalloff;
-            var AOEabsorb = 0f;
-            var AOEdepth = 0f;
-            var AOEispool = false;
-            var hasAOE = t.AmmoDef.AreaEffect.AreaEffect == AreaEffectType.Explosive ? true : false; //treating old Explosive as future .Damage type
+            var aoeDamage = 0f;
+            var aoeRadius = 0f;
+            var aoeFalloff = Falloff.NoFalloff;
+            var aoeAbsorb = 0f;
+            var aoeDepth = 0f;
+            var aoeIsPool = false;
+            var hasAoe = t.AmmoDef.AreaEffect.AreaEffect == AreaEffectType.Explosive; //treating old Explosive as future .Damage type
             var hasDet = t.AmmoDef.AreaEffect.Detonation.DetonateOnEnd && t.Age >= t.AmmoDef.AreaEffect.Detonation.MinArmingTime;
-            var damageType = t.ShieldBypassed ? ShieldBypassDamageType : hasAOE || hasDet ? MyDamageType.Explosion : MyDamageType.Bullet;
+            var damageType = t.ShieldBypassed ? ShieldBypassDamageType : hasAoe || hasDet ? MyDamageType.Explosion : MyDamageType.Bullet;
             //Switches and setup for damage types/event loops
             var detonating = false;
-            var detcomplete = false;
-            var AOEcomplete = hasAOE ? false : true;
+            var detComplete = false;
+            var aoeComplete = !hasAoe;
             var earlyExit = false;
             var destroyed = 0;
             int maxDbc = 0;
@@ -959,23 +959,23 @@ namespace CoreSystems
                     break;
                 }
 
-                if (hasAOE && !detonating)//load in AOE vars
+                if (hasAoe && !detonating)//load in AOE vars
                 {
-                    AOEdamage = t.AmmoDef.Const.AreaEffectDamage;
-                    AOEradius = (float)t.AmmoDef.AreaEffect.AreaEffectRadius; //fix type in definitions to float?
-                    AOEfalloff = t.AmmoDef.AreaEffect.RadiantFalloff;
-                    AOEabsorb = t.AmmoDef.Const.AreaEffectMaxAbsorb;
-                    AOEdepth = t.AmmoDef.Const.AreaAffectMaxDepth;
-                    AOEispool = AOEfalloff == Falloff.Pooled;
+                    aoeDamage = t.AmmoDef.Const.AreaEffectDamage;
+                    aoeRadius = (float)t.AmmoDef.AreaEffect.AreaEffectRadius; //fix type in definitions to float?
+                    aoeFalloff = t.AmmoDef.AreaEffect.RadiantFalloff;
+                    aoeAbsorb = t.AmmoDef.Const.AreaEffectMaxAbsorb;
+                    aoeDepth = t.AmmoDef.Const.AreaAffectMaxDepth;
+                    aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
                 else if (hasDet && detonating)//load in Detonation vars
                 {
-                    AOEdamage = t.AmmoDef.Const.DetonationDamage;
-                    AOEradius = t.AmmoDef.AreaEffect.Detonation.DetonationRadius;
-                    AOEfalloff = t.AmmoDef.AreaEffect.Detonation.DetonationFalloff;
-                    AOEabsorb = t.AmmoDef.Const.DetonationMaxAbsorb;
-                    AOEdepth = t.AmmoDef.Const.DetonationMaxDepth;
-                    AOEispool = AOEfalloff == Falloff.Pooled;
+                    aoeDamage = t.AmmoDef.Const.DetonationDamage;
+                    aoeRadius = t.AmmoDef.AreaEffect.Detonation.DetonationRadius;
+                    aoeFalloff = t.AmmoDef.AreaEffect.Detonation.DetonationFalloff;
+                    aoeAbsorb = t.AmmoDef.Const.DetonationMaxAbsorb;
+                    aoeDepth = t.AmmoDef.Const.DetonationMaxDepth;
+                    aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
 
 
@@ -1004,30 +1004,30 @@ namespace CoreSystems
                 }
 
 
-                if (hasAOE || hasDet)
+                if (hasAoe || hasDet)
                 {
-                    RadiantAoe(rootBlock, localpos, grid, AOEradius, AOEdepth, direction, ref maxDbc, ref AOEHits);
-                    if (detonating) detcomplete = true;
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, ref AOEHits);
+                    if (detonating) detComplete = true;
                 }
 
 
 
                 for (int j = 0; j < maxDbc + 1; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
-                    if ((AOEdmgtally >= AOEabsorb || AOEdamage <= 0) && !detonating && !AOEcomplete)
+                    if ((AoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && !detonating && !aoeComplete)
                     {
-                        AOEcomplete = true;
+                        aoeComplete = true;
                         AOEHits = 0;
-                        AOEdmgtally = 0;
+                        AoeDmgTally = 0;
                         if (hasDet && basePool <= 0) detonating = true;
                         --i;
                         break;
                     }
-                    else if ((AOEdmgtally >= AOEabsorb || AOEdamage <= 0) && detonating && !detcomplete)
+                    else if ((AoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && detonating && !detComplete)
                     {
-                        detcomplete = true;
+                        detComplete = true;
                         AOEHits = 0;
-                        AOEdmgtally = 0;
+                        AoeDmgTally = 0;
                         break;
                     }
 
@@ -1035,7 +1035,7 @@ namespace CoreSystems
                     int dbCount = 1;
                     float expDamageFall = 0;
                     List<IMySlimBlock> dbc = null;
-                    if ((hasAOE && !AOEcomplete) || (hasDet && !detcomplete))
+                    if ((hasAoe && !aoeComplete) || (hasDet && !detComplete))
                     {
                         try
                         {
@@ -1052,9 +1052,9 @@ namespace CoreSystems
                             continue;
                         }
                         //Falloff switches & calcs for type of explosion & expDamageFall as output
-                        var maxfalldist = AOEradius * grid.GridSizeR + 1;
-                        var fallNone = AOEdamage; //outside of switch case, as we can use it for "raw damage" in all falloff cases
-                        switch (AOEfalloff)
+                        var maxfalldist = aoeRadius * grid.GridSizeR + 1;
+                        var fallNone = aoeDamage; //outside of switch case, as we can use it for "raw damage" in all falloff cases
+                        switch (aoeFalloff)
                         {
                             case Falloff.Legacy:
                                 if (!detonating)//mimic InvCurve for legacy radiating
@@ -1095,7 +1095,7 @@ namespace CoreSystems
                         var block = rootBlock;//temp for debug purposes in try below
                         try
                         {
-                            block = hasAOE || hasDet ? dbc[k] : rootBlock;
+                            block = hasAoe || hasDet ? dbc[k] : rootBlock;
                         }
                         catch
                         {
@@ -1193,7 +1193,7 @@ namespace CoreSystems
                         var primaryDamage = block == rootBlock && !detonating;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = basePool * baseScale;
-                        var AOEscaleddmg = expDamageFall * (detonating ? detDamageScale : areaDamageScale);
+                        var aoeScaledDmg = expDamageFall * (detonating ? detDamageScale : areaDamageScale);
                         bool deadblock = false;
 
                         //Check for end of primary life
@@ -1221,23 +1221,23 @@ namespace CoreSystems
 
 
                         //AOE damage logic
-                        if ((hasAOE || hasDet) && AOEdamage > 0 && !deadblock)
+                        if ((hasAoe || hasDet) && aoeDamage > 0 && !deadblock)
                         {
-                            if (AOEispool)
+                            if (aoeIsPool)
                             {
-                                if (AOEdamage < AOEscaleddmg && blockHp >= AOEdamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
+                                if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
                                 {
-                                    AOEscaleddmg = AOEdamage;
+                                    aoeScaledDmg = aoeDamage;
                                 }
-                                else if (blockHp <= AOEscaleddmg)
+                                else if (blockHp <= aoeScaledDmg)
                                 {
-                                    AOEscaleddmg = blockHp;
+                                    aoeScaledDmg = blockHp;
                                     deadblock = true;
                                 }
-                                AOEdamage -= AOEscaleddmg;
+                                aoeDamage -= aoeScaledDmg;
                             }
-                            scaledDamage += AOEscaleddmg;//pile in calc'd AOE dmg
-                            AOEdmgtally += AOEscaleddmg; //used for absorb
+                            scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
+                            AoeDmgTally += aoeScaledDmg; //used for absorb
                         }
 
 
@@ -1277,20 +1277,20 @@ namespace CoreSystems
 
 
                         //Decrement AOEhits and check for end conditions
-                        if (hasAOE && AOEHits <= 0 && !detonating)
+                        if (hasAoe && AOEHits <= 0 && !detonating)
                         {
-                            AOEcomplete = true;
+                            aoeComplete = true;
                         }
                         AOEHits--;
                         var endCycle = (basePool <= 0 || objectsHit >= maxObjects) || AOEHits <= 0;
-                        if (detcomplete) endCycle = true;
-                        if (AOEcomplete && !hasDet) endCycle = true;
+                        if (detComplete) endCycle = true;
+                        if (aoeComplete && !hasDet) endCycle = true;
 
                         //doneskies
                         if (endCycle)
                         {
 
-                            if (detonating && !detcomplete && AOEcomplete)
+                            if (detonating && !detComplete && aoeComplete)
                             {
                                 --i;
                                 if (dbc != null)
@@ -1311,8 +1311,6 @@ namespace CoreSystems
                     {
                         dbc.Clear();
                     }
-
-
                 }
 
             }
