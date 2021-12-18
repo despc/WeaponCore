@@ -864,6 +864,7 @@ namespace CoreSystems
 
             hitEnt.Blocks.Clear();
         }
+
         private void DamageGrid3(HitEntity hitEnt, ProInfo t)
         {
 
@@ -904,8 +905,8 @@ namespace CoreSystems
 
             //Ammo properties
             var hitMass = t.AmmoDef.Mass;
-            var AoeDmgTally = 0f;
-            var AOEHits = 0;
+            var aoeDmgTally = 0f;
+            var aoeHits = 0;
 
             //overall primary falloff scaling
             var fallOff = t.AmmoDef.Const.FallOffScaling && distTraveled > t.AmmoDef.Const.FallOffDistance;
@@ -916,7 +917,7 @@ namespace CoreSystems
             }
             //hit & damage loop info
             var basePool = t.BaseDamagePool;
-            int hits = 1;
+            var hits = 1;
             if (t.AmmoDef.Const.VirtualBeams)
             {
                 hits = t.WeaponCache.Hits;
@@ -945,7 +946,6 @@ namespace CoreSystems
             var earlyExit = false;
             var destroyed = 0;
             int maxDbc = 0;
-
 
             //Main loop (finally)
 
@@ -978,8 +978,6 @@ namespace CoreSystems
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
 
-
-
                 rootBlock = hitEnt.Blocks[i];
                 if (!detonating)
                 {
@@ -1006,7 +1004,7 @@ namespace CoreSystems
 
                 if (hasAoe || hasDet)
                 {
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, ref AOEHits);
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, ref aoeHits);
                     if (detonating) detComplete = true;
                 }
 
@@ -1014,20 +1012,21 @@ namespace CoreSystems
 
                 for (int j = 0; j < maxDbc + 1; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
-                    if ((AoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && !detonating && !aoeComplete)
+                    if ((aoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && !detonating && !aoeComplete)
                     {
                         aoeComplete = true;
-                        AOEHits = 0;
-                        AoeDmgTally = 0;
+                        aoeHits = 0;
+                        aoeDmgTally = 0;
                         if (hasDet && basePool <= 0) detonating = true;
                         --i;
                         break;
                     }
-                    else if ((AoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && detonating && !detComplete)
+
+                    if ((aoeDmgTally >= aoeAbsorb || aoeDamage <= 0) && detonating && !detComplete)
                     {
                         detComplete = true;
-                        AOEHits = 0;
-                        AoeDmgTally = 0;
+                        aoeHits = 0;
+                        aoeDmgTally = 0;
                         break;
                     }
 
@@ -1035,7 +1034,7 @@ namespace CoreSystems
                     int dbCount = 1;
                     float expDamageFall = 0;
                     List<IMySlimBlock> dbc = null;
-                    if ((hasAoe && !aoeComplete) || (hasDet && !detComplete))
+                    if (hasAoe && !aoeComplete || hasDet && !detComplete)
                     {
                         try
                         {
@@ -1053,33 +1052,32 @@ namespace CoreSystems
                         }
                         //Falloff switches & calcs for type of explosion & expDamageFall as output
                         var maxfalldist = aoeRadius * grid.GridSizeR + 1;
-                        var fallNone = aoeDamage; //outside of switch case, as we can use it for "raw damage" in all falloff cases
                         switch (aoeFalloff)
                         {
                             case Falloff.Legacy:
                                 if (!detonating)//mimic InvCurve for legacy radiating
                                 {
-                                    expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone;
+                                    expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
                                 }
                                 else //mimic linear falloff for legacy detonations
                                 {
-                                    expDamageFall = (maxfalldist - j) / maxfalldist * fallNone;
+                                    expDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
                                 }
                                 break;
                             case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
-                                expDamageFall = fallNone;
+                                expDamageFall = aoeDamage;
                                 break;
                             case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
-                                expDamageFall = (maxfalldist - j) / maxfalldist * fallNone;
+                                expDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
                                 break;
                             case Falloff.Curve:  //Drops sharply closer to max range
-                                expDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * fallNone;
+                                expDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * aoeDamage;
                                 break;
                             case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
-                                expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * fallNone;
+                                expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
                                 break;
                             case Falloff.Spall: //Damage is highest at furthest point from impact, to create a spall or crater
-                                expDamageFall = (j + 1) / maxfalldist / (maxfalldist - j) * fallNone;
+                                expDamageFall = (j + 1) / maxfalldist / (maxfalldist - j) * aoeDamage;
                                 break;
                             case Falloff.Pooled:
                                 //Do we need to do anything here?
@@ -1087,7 +1085,6 @@ namespace CoreSystems
 
                         }
                     }
-
 
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
@@ -1152,6 +1149,7 @@ namespace CoreSystems
                                     else if (!isHeavy && d.Armor.Light >= 0) damageScale *= d.Armor.Light;
                                 }
                             }
+
                             if (t.AmmoDef.Const.CustomDamageScales)
                             {
                                 if (blockDef == null) blockDef = block.BlockDefinition;
@@ -1174,6 +1172,7 @@ namespace CoreSystems
                                     detDamageScale *= modifier.AreaModifer;
                                 }
                             }
+
                             if (ArmorCoreActive)
                             {
                                 var subtype = block.BlockDefinition.Id.SubtypeId;
@@ -1237,9 +1236,8 @@ namespace CoreSystems
                                 aoeDamage -= aoeScaledDmg;
                             }
                             scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
-                            AoeDmgTally += aoeScaledDmg; //used for absorb
+                            aoeDmgTally += aoeScaledDmg; //used for absorb
                         }
-
 
 
                         //Kill block if needed, from any source
@@ -1259,9 +1257,7 @@ namespace CoreSystems
 
                         //Apply damage
                         if (canDamage)
-                        {
                             block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
-                        }
                         else
                         {
                             var realDmg = scaledDamage * gridDamageModifier * blockDmgModifier;
@@ -1277,26 +1273,20 @@ namespace CoreSystems
 
 
                         //Decrement AOEhits and check for end conditions
-                        if (hasAoe && AOEHits <= 0 && !detonating)
-                        {
+                        if (hasAoe && aoeHits <= 0 && !detonating)
                             aoeComplete = true;
-                        }
-                        AOEHits--;
-                        var endCycle = (basePool <= 0 || objectsHit >= maxObjects) || AOEHits <= 0;
-                        if (detComplete) endCycle = true;
-                        if (aoeComplete && !hasDet) endCycle = true;
+                        
+                        aoeHits--;
+
+                        var endCycle = (basePool <= 0 || objectsHit >= maxObjects) || aoeHits <= 0 || detComplete || aoeComplete && !hasDet;
 
                         //doneskies
                         if (endCycle)
                         {
-
                             if (detonating && !detComplete && aoeComplete)
                             {
                                 --i;
-                                if (dbc != null)
-                                {
-                                    dbc.Clear();
-                                }
+                                dbc?.Clear();
                                 break;
                             }
 
@@ -1307,10 +1297,8 @@ namespace CoreSystems
                             }
                         }
                     }
-                    if (dbc != null)
-                    {
-                        dbc.Clear();
-                    }
+
+                    dbc?.Clear();
                 }
 
             }
