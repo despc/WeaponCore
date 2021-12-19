@@ -994,6 +994,8 @@ namespace CoreSystems.Support
                     var a = AmmoDef;
                     var c = a.Const;
 
+                    var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
+
                     if (!a.AreaOfDamage.EndOfLife.NoSound)
                     {
                         var pool = c.CustomSoundPairs;
@@ -1001,13 +1003,14 @@ namespace CoreSystems.Support
 
                         var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
                         detEmitter.Entity = Hit.Entity;
-                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos});
+                        Log.Line($"[Sound] {a.AmmoRound} - {pos} - distFromCamera:{Vector3D.Distance(pos, System.Session.CameraPos)} - hitEnt:{detEmitter.Entity != null}");
                     }
 
                     if (AmmoDef.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
                     {
-                        var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
                         var matrix = MatrixD.CreateTranslation(pos);
+
 
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
@@ -1020,6 +1023,8 @@ namespace CoreSystems.Support
                             if (detEffect.Loop)
                                 detEffect.Stop();
                         }
+
+                        Log.Line($"[Particle] {a.AmmoRound} - {pos} - distFromCamera:{Vector3D.Distance(pos, System.Session.CameraPos)} - spawned:{detEffect != null} - {AmmoDef.AreaOfDamage.EndOfLife.ParticleScale}");
                     }
                 }
             }

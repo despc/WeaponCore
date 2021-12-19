@@ -881,7 +881,7 @@ namespace CoreSystems.Api
 
                     public enum EwarMode
                     {
-                        Normal,
+                        Effect,
                         Field,
                     }
 
