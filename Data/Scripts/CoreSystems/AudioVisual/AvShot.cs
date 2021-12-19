@@ -6,6 +6,7 @@ using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
 
@@ -824,7 +825,9 @@ namespace CoreSystems.Support
                         var hitEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                         hitEmitter.Entity = Hit.Entity;
-                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = Hit.SurfaceHit });
+                        var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
+
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = pos });
 
                         HitSoundInitted = true;
                     }
@@ -1003,8 +1006,8 @@ namespace CoreSystems.Support
 
                         var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
                         detEmitter.Entity = Hit.Entity;
+
                         System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos});
-                        Log.Line($"[Sound] {a.AmmoRound} - {pos} - distFromCamera:{Vector3D.Distance(pos, System.Session.CameraPos)} - hitEnt:{detEmitter.Entity != null}");
                     }
 
                     if (AmmoDef.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
@@ -1023,15 +1026,13 @@ namespace CoreSystems.Support
                             if (detEffect.Loop)
                                 detEffect.Stop();
                         }
-
-                        Log.Line($"[Particle] {a.AmmoRound} - {pos} - distFromCamera:{Vector3D.Distance(pos, System.Session.CameraPos)} - spawned:{detEffect != null} - {AmmoDef.AreaOfDamage.EndOfLife.ParticleScale}");
                     }
                 }
             }
 
             MarkForClose = true;
         }
-        
+
         public void AmmoInfoClean()
         {
             SegmentGaped = false;

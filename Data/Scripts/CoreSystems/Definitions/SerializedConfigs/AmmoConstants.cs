@@ -791,9 +791,9 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out EwarType areaEffect, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime)
+        private void AreaEffects(AmmoDef ammoDef, out EwarType ewarType, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime)
         {
-            areaEffect = ammoDef.Ewar.Type;
+            ewarType = ammoDef.Ewar.Type;
 
             if (AmmoModsFound && _modifierMap[AreaDmgStr].HasData())
                 areaEffectDamage = _modifierMap[AreaDmgStr].GetAsFloat;
@@ -819,7 +819,7 @@ namespace CoreSystems.Support
             detonateRadiusSmall = Session.ModRadius(detonationRadius / 5, false);//needed?
             detonateRadiusLarge = Session.ModRadius(detonationRadius, true);//needed?
             eWar = ammoDef.Ewar.Enable;
-            nonAntiSmart = areaEffect != EwarType.AntiSmart;
+            nonAntiSmart = ewarType != EwarType.AntiSmart;
             eWarTriggerRange = eWar && Pulse && ammoDef.Ewar.Field.TriggerRange > 0 ? ammoDef.Ewar.Field.TriggerRange : 0;
             minArmingTime = ammoDef.AreaOfDamage.EndOfLife.MinArmingTime;
         }

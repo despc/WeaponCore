@@ -4,6 +4,7 @@ using Sandbox.Game.Entities;
 using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
 
@@ -361,6 +362,7 @@ namespace CoreSystems.Support
 
                 av.Emitter.SetPosition(av.Position);
                 av.Emitter.PlaySound(av.SoundPair);
+
                 Session.SoundsToClean.Add(new Session.CleanSound { Hit = av.Hit, Emitter = av.Emitter, EmitterPool = PersistentEmitters, SoundPair = av.SoundPair, SoundPairPool = av.Pool, SpawnTick = Session.Tick });
             }
             RunningSounds.Clear();
@@ -523,7 +525,6 @@ namespace CoreSystems.Support
                 }
             }
         }
-
 
         internal class AvEffect
         {
