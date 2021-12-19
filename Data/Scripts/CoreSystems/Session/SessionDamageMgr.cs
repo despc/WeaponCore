@@ -341,7 +341,7 @@ namespace CoreSystems
             {
                 if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !detRequested)
                 {
-                    Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects} - detRequested:{detRequested}");
+                    //Log.Line($"Early exit:{earlyExit} - basePool:{basePool} - objhit:{objectsHit} - maxObj:{maxObjects} - detRequested:{detRequested}");
                     basePool = 0;
                     break;
                 }
@@ -400,7 +400,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, out foundAoeBlocks);
-                    Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
+                    //Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
                 }
                 var offset = !detActive && foundAoeBlocks ? 2 : 1;
                 maxDbc = !foundAoeBlocks ? 1 : maxDbc + offset;
@@ -411,7 +411,7 @@ namespace CoreSystems
                         break;
 
                     var rootStep = j == 0 && !detActive;
-                    Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - foundAoeBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
+                    //Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - foundAoeBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
 
                     int dbCount = 1;
                     var aoeDamageFall = 0d;
@@ -645,7 +645,7 @@ namespace CoreSystems
                         //Apply damage
                         if (canDamage)
                         {
-                            Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - foundAoeBlocks:{foundAoeBlocks}");
+                            //Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - foundAoeBlocks:{foundAoeBlocks}");
                             try
                             {
                                 block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
@@ -681,7 +681,7 @@ namespace CoreSystems
                         {
                             if (detRequested && !detActive)
                             {
-                                Log.Line($"start det phase: i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
+                                //Log.Line($"start det phase: i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
                                 detActive = true;
                                 --i;
                                 dbc?.Clear();
@@ -689,7 +689,7 @@ namespace CoreSystems
                             }
 
                             if (detRequested) {
-                                Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                //Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
