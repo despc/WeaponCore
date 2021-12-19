@@ -328,6 +328,7 @@ namespace CoreSystems
 
             var hasAoe = t.AmmoDef.AreaOfDamage.ByBlockHit.Enable; 
             var hasDet = t.AmmoDef.AreaOfDamage.EndOfLife.Enable && t.Age >= t.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime;
+
             Log.Line($"hasAoe:ammo:{t.AmmoDef.AmmoRound} - {hasAoe}({t.AmmoDef.Const.AreaEffectDamage})[{t.AmmoDef.AreaOfDamage.ByBlockHit.Falloff}] - hasDet:{hasDet}({t.AmmoDef.Const.DetonationDamage})[{t.AmmoDef.AreaOfDamage.EndOfLife.Falloff}]");
             var damageType = t.ShieldBypassed ? ShieldBypassDamageType : hasAoe || hasDet ? MyDamageType.Explosion : MyDamageType.Bullet;
             //Switches and setup for damage types/event loops
@@ -359,7 +360,7 @@ namespace CoreSystems
                     aoeDamage = t.AmmoDef.Const.AreaEffectDamage;
                     aoeRadius = t.AmmoDef.Const.AreaEffectSize; //fix type in definitions to float?
                     aoeFalloff = t.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
-                    aoeAbsorb = t.AmmoDef.AreaOfDamage.ByBlockHit.MaxAbsorb;
+                    aoeAbsorb = t.AmmoDef.Const.AoeMaxAbsorb;
                     aoeDepth = t.AmmoDef.AreaOfDamage.ByBlockHit.Depth;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
@@ -368,7 +369,7 @@ namespace CoreSystems
                     aoeDamage = t.AmmoDef.Const.DetonationDamage;
                     aoeRadius = t.AmmoDef.Const.DetonationRadius;
                     aoeFalloff = t.AmmoDef.AreaOfDamage.EndOfLife.Falloff;
-                    aoeAbsorb = t.AmmoDef.AreaOfDamage.EndOfLife.MaxAbsorb;
+                    aoeAbsorb = t.AmmoDef.Const.DetMaxAbsorb;
                     aoeDepth = t.AmmoDef.AreaOfDamage.EndOfLife.Depth;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
@@ -403,8 +404,9 @@ namespace CoreSystems
                     RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc);
                     Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
                 }
-                var rootOnly = maxDbc == 0;
-                maxDbc = rootOnly ? 1 : maxDbc + 2;
+                var rootOnly = maxDbc == 0 && !detActive;
+                var offset = !detActive ? 2 : 1;
+                maxDbc = rootOnly ? 1 : maxDbc + offset;
 
                 for (int j = 0; j < maxDbc; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
@@ -413,18 +415,16 @@ namespace CoreSystems
 
                     Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - root:{rootOnly} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
 
-                    var rootStep = j == 0;
-
                     int dbCount = 1;
                     var aoeDamageFall = 0d;
                     List<IMySlimBlock> dbc = null;
                     //Log.Line($"hasaoe {hasAoe} !aoecomp{!aoeComplete} OR  hasdet {hasDet} && det {detonating} && !detdone{!detComplete}");
 
-                    if (!rootStep)
+                    if (!rootOnly)
                     {
                         try
                         {
-                            dbc = DamageBlockCache[j - 1];
+                            dbc = DamageBlockCache[j - (offset - 1)];
                         }
                         catch
                         {
@@ -479,7 +479,7 @@ namespace CoreSystems
                         var block = rootBlock;//temp for debug purposes in try below
                         try
                         {
-                            block = !rootStep ? dbc[k] : rootBlock;
+                            block = !rootOnly ? dbc[k] : rootBlock;
 
                         }
                         catch
@@ -578,7 +578,7 @@ namespace CoreSystems
                                 damageScale *= fallOffMultipler;
                         }
 
-                        var primaryDamage = rootStep && block == rootBlock && !detRequested;//limits application to first run w/AOE, suppresses with detonation
+                        var primaryDamage = rootOnly && block == rootBlock;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
                         var aoeScaledDmg = (float)(aoeDamageFall * (detRequested ? detDamageScale : areaDamageScale));
@@ -612,7 +612,7 @@ namespace CoreSystems
                         //AOE damage logic applied to aoeDamageFall
                         //Log.Line($"Is pool? {aoeIsPool}  {aoeDamage}  {aoeScaledDmg}  {!deadblock}  ");
 
-                        if (!rootStep && (hasAoe || hasDet) && aoeDamage >= 0 && aoeDamageFall >= 0 && !deadBlock)
+                        if (!rootOnly && (hasAoe || hasDet) && aoeDamage >= 0 && aoeDamageFall >= 0 && !deadBlock)
                         {
                             if (aoeIsPool)
                             {
@@ -653,7 +653,7 @@ namespace CoreSystems
                         //Apply damage
                         if (canDamage)
                         {
-                            Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp}");
+                            Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - root:{rootOnly}");
                             block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
                             //Log.Line($"{scaledDamage} dmg done to {block}");
                         }
@@ -671,9 +671,8 @@ namespace CoreSystems
                             }
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = (float)(blockHp - realDmg);
                         }
-                        var outOfAoePew = !rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0);
 
-                        var endCycle = aoeDamage <= 0 || basePool <= 0 || objectsHit >= maxObjects || outOfAoePew;
+                        var endCycle = (rootOnly && basePool <= 0) || (!rootOnly && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0)) || objectsHit >= maxObjects;
 
                         //doneskies
                         if (endCycle)
@@ -688,7 +687,7 @@ namespace CoreSystems
                             }
 
                             if (detRequested) {
-                                Log.Line($"early exit by detActive");
+                                Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- rootOnly:{rootOnly} -- primaryExit:{rootOnly && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }

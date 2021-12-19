@@ -193,6 +193,8 @@ namespace CoreSystems.Support
         public readonly float Health;
         public readonly float BaseDamage;
 
+        public readonly float DetMaxAbsorb;
+        public readonly float AoeMaxAbsorb;
         public readonly float AreaEffectDamage;
         public readonly float DetonationDamage;
         public readonly float DetonationRadius;
@@ -320,7 +322,7 @@ namespace CoreSystems.Support
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.Ewar.Field.Particle.Name);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
-            AreaEffects(ammo.AmmoDef, out EwarType, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime); 
+            AreaEffects(ammo.AmmoDef, out EwarType, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb); 
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -796,7 +798,7 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out EwarType ewarType, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime)
+        private void AreaEffects(AmmoDef ammoDef, out EwarType ewarType, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb)
         {
             ewarType = ammoDef.Ewar.Type;
 
@@ -827,6 +829,10 @@ namespace CoreSystems.Support
             nonAntiSmart = ewarType != EwarType.AntiSmart;
             eWarTriggerRange = eWar && Pulse && ammoDef.Ewar.Field.TriggerRange > 0 ? ammoDef.Ewar.Field.TriggerRange : 0;
             minArmingTime = ammoDef.AreaOfDamage.EndOfLife.MinArmingTime;
+
+            aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : float.MaxValue;
+            detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : float.MaxValue;
+
         }
 
         private MyConcurrentPool<MyEntity> Models(AmmoDef ammoDef, WeaponDefinition wDef, out bool primeModel, out bool triggerModel, out string primeModelPath)
