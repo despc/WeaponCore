@@ -107,6 +107,10 @@ namespace CoreSystems.Platform
 
                             if (w.System.Values.HardPoint.HardWare.CriticalReaction.DefaultArmedTimer > Repo.Values.Set.Overrides.ArmedTimer)
                                 Repo.Values.Set.Overrides.ArmedTimer = w.System.Values.HardPoint.HardWare.CriticalReaction.DefaultArmedTimer;
+
+                            if (!Comp.Session.Settings.Enforcement.DisableLeads && (!Comp.HasTurret && !Comp.OverrideLeads || Comp.HasTurret && Comp.OverrideLeads))
+                                Repo.Values.Set.Overrides.LeadGroup = 1;
+
                         }
                     }
 

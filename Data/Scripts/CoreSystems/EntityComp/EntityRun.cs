@@ -90,9 +90,6 @@ namespace CoreSystems.Support
                             PowerInit();
                     }
 
-                    //if (Type == CompType.Weapon && Platform.PartState == CorePlatform.PlatformState.Inited)
-                        //Platform.ResetParts(this);
-
                     Entity.NeedsWorldMatrix = NeedsWorldMatrix;
                     WorldMatrixEnabled = NeedsWorldMatrix;
                     if (!Ai.AiInit) Session.CompReAdds.Add(new CompReAdd { Ai = Ai, AiVersion = Ai.Version, AddTick = Ai.Session.Tick, Comp = this });
