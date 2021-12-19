@@ -407,7 +407,7 @@ namespace CoreSystems
 
                 for (int j = 0; j < maxDbc; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
-                    if (earlyExit)
+                    if (earlyExit || i  < 0)
                         break;
 
                     var rootStep = j == 0 && !detActive;
@@ -472,6 +472,9 @@ namespace CoreSystems
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
                     {
+                        if (earlyExit || i < 0)
+                            break;
+
                         var block = rootBlock;//temp for debug purposes in try below
                         try
                         {
