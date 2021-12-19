@@ -655,7 +655,7 @@ namespace CoreSystems
                             }
                             catch
                             {
-                                Log.Line($"[DoDamage crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - offset:{offset} - index:{j - (offset - 1)} - maxDbc:{maxDbc} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})");
+                                Log.Line($"[DoDamage crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - offset:{offset} - index:{j - (offset - 1)} - maxDbc:{maxDbc} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
                                 foreach (var l in DamageBlockCache)
                                     l.Clear();
 
