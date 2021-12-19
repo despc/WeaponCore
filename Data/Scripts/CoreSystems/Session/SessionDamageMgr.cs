@@ -263,7 +263,7 @@ namespace CoreSystems
 
         private void DamageGrid(HitEntity hitEnt, ProInfo t)
         {
-
+            //Log.Line($"Starting dmg for count{hitEnt.Blocks.Count}");
             var grid = hitEnt.Entity as MyCubeGrid;
             if (grid == null || grid.MarkedForClose || !hitEnt.HitPos.HasValue || hitEnt.Blocks == null)
             {
@@ -275,6 +275,7 @@ namespace CoreSystems
             if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || (!t.AmmoDef.Const.SelfDamage && !t.AmmoDef.Const.IsCriticalReaction) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
             {
                 t.BaseDamagePool = 0;
+                Log.Line($"Shield heal");
                 return;
             }
 
@@ -347,7 +348,6 @@ namespace CoreSystems
 
             for (int i = 0; i < blockCount; i++)
             {
-
                 if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !detonating)
                 {
                     //Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects}  detonating{detonating}");
@@ -373,6 +373,7 @@ namespace CoreSystems
                     aoeDepth = t.AmmoDef.AreaOfDamage.EndOfLife.Depth;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
+                //Log.Line($"aoedmg {aoeDamage} aoerad {aoeRadius} fall {aoeFalloff} absorb {aoeAbsorb} depth {aoeDepth} ispool {aoeIsPool}");
 
                 rootBlock = hitEnt.Blocks[i];
                 if (!detonating)
@@ -398,7 +399,7 @@ namespace CoreSystems
                 }
 
 
-                if (hasAoe || hasDet)
+                if (hasAoe || (hasDet && detonating))
                 {
                     RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, ref aoeHits);
                     if (detonating) detComplete = true;
@@ -428,9 +429,11 @@ namespace CoreSystems
 
 
                     int dbCount = 1;
-                    var expDamageFall = 0d;
+                    var aoeDamageFall = 0d;
                     List<IMySlimBlock> dbc = null;
-                    if (hasAoe && !aoeComplete || hasDet && !detComplete)
+                    //Log.Line($"hasaoe {hasAoe} !aoecomp{!aoeComplete} OR  hasdet {hasDet} && det {detonating} && !detdone{!detComplete}");
+
+                    if ((hasAoe && !aoeComplete ) || (hasDet && detonating && detComplete))
                     {
                         try
                         {
@@ -438,7 +441,7 @@ namespace CoreSystems
                         }
                         catch
                         {
-                            Log.Line($"Index error on dbc= DamageBlockCache[j]");
+                            Log.Line($"Index error on dbc= DamageBlockCache[j] for j {j}");
                             continue;
                         }
                         dbCount = dbc.Count;
@@ -446,44 +449,57 @@ namespace CoreSystems
                         {
                             continue;
                         }
-                        //Falloff switches & calcs for type of explosion & expDamageFall as output
+                        //Falloff switches & calcs for type of explosion & aoeDamageFall as output
                         var maxfalldist = aoeRadius * grid.GridSizeR + 1;
                         switch (aoeFalloff)
                         {
                             
                             case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
-                                expDamageFall = aoeDamage;
+                                aoeDamageFall = aoeDamage;
                                 break;
                             case Falloff.Linear: //Damage is evenly stretched from 1 to max dist, dropping in equal increments
-                                expDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
+                                aoeDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
                                 break;
                             case Falloff.Curve:  //Drops sharply closer to max range
-                                expDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * aoeDamage;
+                                aoeDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * aoeDamage;
                                 break;
                             case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
-                                expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
+                                aoeDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
                                 break;
                             case Falloff.Squeeze: //Damage is highest at furthest point from impact, to create a spall or crater
-                                expDamageFall = (j + 1) / maxfalldist / (maxfalldist - j) * aoeDamage;
+                                aoeDamageFall = (j + 1) / maxfalldist / (maxfalldist - j) * aoeDamage;
                                 break;
                             case Falloff.Pooled:
-                                //Do we need to do anything here?
+                                aoeDamageFall = aoeDamage;
                                 break;
 
                         }
+                        //Log.Line($"{aoeDamageFall} calcd dmg for group J{j} raw dmg {aoeDamage} at {maxfalldist} type {aoeFalloff}");
+
                     }
 
                     //apply to blocks (k) in distance group (j)
                     for (int k = 0; k < dbCount; k++)
                     {
+                        //Log.Line($"Starting K {k} to {dbCount}");
+
+                        if (aoeDamage <= 0 && basePool <= 0)
+                        {
+                            //Log.Line($"All damage depleted");
+                            earlyExit = true;
+                            break;
+                        }
+
                         var block = rootBlock;//temp for debug purposes in try below
                         try
                         {
-                            block = hasAoe || hasDet ? dbc[k] : rootBlock;
+                            block = hasAoe || hasDet && aoeHits>0 ? dbc[k] : rootBlock;
+
                         }
                         catch
                         {
-                            Log.Line($"Index error on calling dbc[{k}] for block");
+                            Log.Line($"Index error on calling group DBC[J{j}][K{k}]" +
+                                $"hasaoe {hasAoe} or hasdet{hasDet} && aoehits {aoeHits}>0");
                             continue;
                         }
                         if (block.IsDestroyed)
@@ -579,7 +595,7 @@ namespace CoreSystems
                         var primaryDamage = block == rootBlock && !detonating;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
-                        var aoeScaledDmg = (float)(expDamageFall * (detonating ? detDamageScale : areaDamageScale));
+                        var aoeScaledDmg = (float)(aoeDamageFall * (detonating ? detDamageScale : areaDamageScale));
                         bool deadblock = false;
 
                         //Check for end of primary life
@@ -597,28 +613,34 @@ namespace CoreSystems
                         }
                         else
                         {
-                            deadblock = true;
                             if (primaryDamage)
-                            {
+                            {                       
+                                deadblock = true;
                                 basePool -= (float)(blockHp / baseScale);  //check for accuracy?
                                 objectsHit++;
                             }
                         }
 
 
-                        //AOE damage logic
-                        if ((hasAoe || hasDet) && aoeDamage > 0 && !deadblock)
+
+                        //AOE damage logic applied to aoeDamageFall
+                        //Log.Line($"Is pool? {aoeIsPool}  {aoeDamage}  {aoeScaledDmg}  {!deadblock}  ");
+
+                        if ((hasAoe || hasDet) && aoeDamage >= 0 && aoeDamageFall>=0 && !deadblock)
                         {
                             if (aoeIsPool)
                             {
                                 if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
                                 {
                                     aoeScaledDmg = aoeDamage;
+                                    //Log.Line($"AOE Scaled dmg {aoeScaledDmg}");
                                 }
                                 else if (blockHp <= aoeScaledDmg)
                                 {
                                     aoeScaledDmg = (float)blockHp;
                                     deadblock = true;
+                                    //Log.Line($"AOE Scaled dmg {aoeScaledDmg} & killed block");
+
                                 }
                                 aoeDamage -= aoeScaledDmg;
                             }
@@ -644,10 +666,15 @@ namespace CoreSystems
 
                         //Apply damage
                         if (canDamage)
+                        {
                             block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
+                            //Log.Line($"{scaledDamage} dmg done to {block}");
+                        }
                         else
                         {
                             var realDmg = scaledDamage * gridDamageModifier * blockDmgModifier;
+                            //Log.Line($"{realDmg} dmg done to {block}");
+
                             if (_slimHealthClient.ContainsKey(block))
                             {
                                 if (_slimHealthClient[block] - realDmg > 0)
@@ -665,7 +692,7 @@ namespace CoreSystems
                         
                         aoeHits--;
 
-                        var endCycle = (basePool <= 0 || objectsHit >= maxObjects) || aoeHits <= 0 || detComplete || aoeComplete && !hasDet;
+                        var endCycle = (aoeDamage<=0 || basePool <= 0 || objectsHit >= maxObjects) || aoeHits <= 0 || detComplete || aoeComplete && !hasDet;
 
                         //doneskies
                         if (endCycle)
@@ -931,7 +958,7 @@ namespace CoreSystems
 
             var rootPos = root.Position; //local cube grid
             if (root.Min != root.Max) rootPos = localpos;
-
+            aoeHits = 0;
 
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
@@ -1026,6 +1053,7 @@ namespace CoreSystems
                                         if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
                                         {
                                             distArray.Add(slim);
+                                        //Log.Line($"Hit {slim} at {slim.Position}");
                                             if (hitdist >= maxDbc) maxDbc = hitdist;
                                             aoeHits++;
                                             //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
@@ -1036,6 +1064,7 @@ namespace CoreSystems
                                 else//Happy normal 1x1x1
                                 {
                                     distArray.Add(slim);
+                                    //Log.Line($"Hit {slim} at {slim.Position}");
                                     if (hitdist >= maxDbc) maxDbc = hitdist;
                                     aoeHits++;
                                     //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
