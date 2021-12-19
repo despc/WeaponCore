@@ -371,11 +371,16 @@ namespace CoreSystems.Support
             var oldDamageType = oldType == AmmoDef.AreaDamageDef.AreaEffectType.Explosive || oldType == AmmoDef.AreaDamageDef.AreaEffectType.Radiant;
             if (oldDamageType)
             {
-                ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
-                ammoDef.AreaOfDamage.ByBlockHit.Damage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
-                ammoDef.AreaOfDamage.ByBlockHit.Radius = ammoDef.AreaEffect.Base.Radius;
-                ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)ammoDef.AreaEffect.Base.Radius;
-                ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
+                var currentDamage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength; 
+                var currentRadius = ammoDef.AreaEffect.Base.Radius;
+                if (currentDamage > 0 && currentRadius > 0)
+                {
+                    ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
+                    ammoDef.AreaOfDamage.ByBlockHit.Damage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
+                    ammoDef.AreaOfDamage.ByBlockHit.Radius = ammoDef.AreaEffect.Base.Radius;
+                    ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)ammoDef.AreaEffect.Base.Radius;
+                    ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
+                }
             }
 
             if (oldDetDetected)
