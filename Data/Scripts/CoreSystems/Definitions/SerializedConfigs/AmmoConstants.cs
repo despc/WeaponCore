@@ -366,29 +366,26 @@ namespace CoreSystems.Support
 
         private void RemapLegacyAoeAndEwar(AmmoDef ammoDef)
         {
-            if (ammoDef.AreaEffect.AreaEffect != AmmoDef.AreaDamageDef.AreaEffectType.Disabled)
-            {
-                var notEwar = ammoDef.AreaEffect.AreaEffect <= (AmmoDef.AreaDamageDef.AreaEffectType)2;
-                if (notEwar)
-                {
-                    var oldDetDetected = ammoDef.AreaEffect.Detonation.DetonateOnEnd;
-                    var oldAoeDetectetd = ammoDef.AreaEffect.AreaEffectDamage > 0 && ammoDef.AreaEffect.AreaEffectRadius > 0;
-
-                    if (oldDetDetected)
+            var oldDetDetected = ammoDef.AreaEffect.Detonation.DetonateOnEnd;
+            var oldAoeType = ammoDef.AreaEffect.AreaEffect;
+            if (oldAoeType==AmmoDef.AreaDamageDef.AreaEffectType.Explosive||oldAoeType== AmmoDef.AreaDamageDef.AreaEffectType.Radiant)
                     {
-
+                        ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
+                        ammoDef.AreaOfDamage.ByBlockHit.Damage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
+                        ammoDef.AreaOfDamage.ByBlockHit.Radius = ammoDef.AreaEffect.Base.Radius;
+                        ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)ammoDef.AreaEffect.Base.Radius;
+                        ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
                     }
-
-                    if (oldAoeDetectetd)
+                if (oldDetDetected)
                     {
-
+                        ammoDef.AreaOfDamage.EndOfLife.Enable = true;
+                        ammoDef.AreaOfDamage.EndOfLife.Damage = ammoDef.AreaEffect.Detonation.DetonationDamage;
+                        ammoDef.AreaOfDamage.EndOfLife.Radius = ammoDef.AreaEffect.Detonation.DetonationRadius;
+                        ammoDef.AreaOfDamage.EndOfLife.Depth = ammoDef.AreaEffect.Detonation.DetonationRadius;
+                        ammoDef.AreaOfDamage.EndOfLife.Falloff = Falloff.Pooled;
                     }
-                }
-                else
-                {
+                
 
-                }
-            }
         }
 
         internal void ComputeShieldBypass(WeaponSystem.AmmoType ammo, out float shieldDamageBypassMod)
@@ -709,7 +706,7 @@ namespace CoreSystems.Support
             {
                 return 0;
             }
-            return (float)(a.Const.DetonationDamage * (a.Const.DetonationRadius * 0.5d));
+            return (float)(DetonationDamage * (DetonationRadius * 0.5d));
         }
 
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)
