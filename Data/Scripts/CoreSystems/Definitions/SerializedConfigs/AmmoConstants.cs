@@ -376,8 +376,8 @@ namespace CoreSystems.Support
                 if (currentDamage > 0 && currentRadius > 0)
                 {
                     ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
-                    ammoDef.AreaOfDamage.ByBlockHit.Damage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
-                    ammoDef.AreaOfDamage.ByBlockHit.Radius = ammoDef.AreaEffect.Base.Radius;
+                    ammoDef.AreaOfDamage.ByBlockHit.Damage = currentDamage;
+                    ammoDef.AreaOfDamage.ByBlockHit.Radius = currentRadius;
                     ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)ammoDef.AreaEffect.Base.Radius;
                     ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
                 }
