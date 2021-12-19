@@ -263,7 +263,6 @@ namespace CoreSystems
 
         private void DamageGrid(HitEntity hitEnt, ProInfo t)
         {
-            //Log.Line($"Starting dmg for count{hitEnt.Blocks.Count}");
             var grid = hitEnt.Entity as MyCubeGrid;
             if (grid == null || grid.MarkedForClose || !hitEnt.HitPos.HasValue || hitEnt.Blocks == null)
             {
@@ -329,7 +328,6 @@ namespace CoreSystems
             var hasAoe = t.AmmoDef.AreaOfDamage.ByBlockHit.Enable; 
             var hasDet = t.AmmoDef.AreaOfDamage.EndOfLife.Enable && t.Age >= t.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime;
 
-            //Log.Line($"hasAoe:ammo:{t.AmmoDef.AmmoRound} - {hasAoe}({t.AmmoDef.Const.AreaEffectDamage})[{t.AmmoDef.AreaOfDamage.ByBlockHit.Falloff}] - hasDet:{hasDet}({t.AmmoDef.Const.DetonationDamage})[{t.AmmoDef.AreaOfDamage.EndOfLife.Falloff}]");
             var damageType = t.ShieldBypassed ? ShieldBypassDamageType : hasAoe || hasDet ? MyDamageType.Explosion : MyDamageType.Bullet;
             //Switches and setup for damage types/event loops
             var detRequested = false;
@@ -343,7 +341,7 @@ namespace CoreSystems
             {
                 if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !detRequested)
                 {
-                    //Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects}  detonating{detonating}");
+                    Log.Line($"Early exit {earlyExit} basePool {basePool} objhit {objectsHit} maxObj {maxObjects} - detRequested:{detRequested}");
                     basePool = 0;
                     break;
                 }
@@ -373,7 +371,6 @@ namespace CoreSystems
                     aoeDepth = t.AmmoDef.AreaOfDamage.EndOfLife.Depth;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
-                //Log.Line($"aoedmg {aoeDamage} aoerad {aoeRadius} fall {aoeFalloff} absorb {aoeAbsorb} depth {aoeDepth} ispool {aoeIsPool}");
 
                 rootBlock = hitEnt.Blocks[i];
                 if (!detRequested)
@@ -399,14 +396,14 @@ namespace CoreSystems
                 }
 
                 var maxDbc = 0;
+                var foundAoeBlocks = false;
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc);
-                    //Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, out foundAoeBlocks);
+                    Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
                 }
-                var rootOnly = maxDbc == 0 && !detActive;
-                var offset = !detActive ? 2 : 1;
-                maxDbc = rootOnly ? 1 : maxDbc + offset;
+                var offset = !detActive && foundAoeBlocks ? 2 : 1;
+                maxDbc = !foundAoeBlocks ? 1 : maxDbc + offset;
 
                 for (int j = 0; j < maxDbc; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
@@ -414,7 +411,7 @@ namespace CoreSystems
                         break;
 
                     var rootStep = j == 0 && !detActive;
-                    //Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - root:{rootOnly} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
+                    Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - foundAoeBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
 
                     int dbCount = 1;
                     var aoeDamageFall = 0d;
@@ -648,7 +645,7 @@ namespace CoreSystems
                         //Apply damage
                         if (canDamage)
                         {
-                            //Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - root:{rootOnly}");
+                            Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - foundAoeBlocks:{foundAoeBlocks}");
                             try
                             {
                                 block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
@@ -677,14 +674,14 @@ namespace CoreSystems
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = (float)(blockHp - realDmg);
                         }
 
-                        var endCycle = (rootOnly && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0)) || objectsHit >= maxObjects;
+                        var endCycle = (!foundAoeBlocks && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0)) || objectsHit >= maxObjects;
 
                         //doneskies
                         if (endCycle)
                         {
                             if (detRequested && !detActive)
                             {
-                                //Log.Line($"start det phase: i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
+                                Log.Line($"start det phase: i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
                                 detActive = true;
                                 --i;
                                 dbc?.Clear();
@@ -692,7 +689,7 @@ namespace CoreSystems
                             }
 
                             if (detRequested) {
-                                //Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- rootOnly:{rootOnly} -- primaryExit:{rootOnly && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
@@ -945,7 +942,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething) //added depth and angle
         {
 
             var rootPos = root.Position; //local cube grid
@@ -960,8 +957,7 @@ namespace CoreSystems
             Vector3I min2 = Vector3I.Max(rootPos - maxradius, grid.Min);
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, grid.Max);
 
-
-            //Log.Line($"AOE: rootpos {rootPos}  blkrad {maxradius}  blkdepth {maxdepth}");
+            foundSomething = false;
 
             if (maxdepth < maxradius)
             {
@@ -1023,7 +1019,6 @@ namespace CoreSystems
                         if (grid.TryGetCube(vector3I, out cube))  
                         {
 
-
                             int hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
 
                             if (hitdist <= maxradius)
@@ -1038,25 +1033,24 @@ namespace CoreSystems
                                 var slimmax = slim.Max;
                                 if (slimmax != slimmin)//Block larger than 1x1x1
                                 {
-
-                                        var hitblkbound = new BoundingBoxI(slimmin, slimmax);
-                                        var rootposbound = new BoundingBoxI(rootPos, rootPos);
-                                        rootposbound.IntersectWith(ref hitblkbound);
-                                        rootposbound.Inflate(1);
-                                        if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
-                                        {
-                                            distArray.Add(slim);
-                                        //Log.Line($"Hit {slim} at {slim.Position}");
-                                            if (hitdist > maxDbc) maxDbc = hitdist;
-                                            //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
-                                        }
+                                    var hitblkbound = new BoundingBoxI(slimmin, slimmax);
+                                    var rootposbound = new BoundingBoxI(rootPos, rootPos);
+                                    rootposbound.IntersectWith(ref hitblkbound);
+                                    rootposbound.Inflate(1);
+                                    if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
+                                    {
+                                        distArray.Add(slim);
+                                        foundSomething = true;
+                                        if (hitdist > maxDbc) maxDbc = hitdist;
+                                        //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
+                                    }
    
                                    
                                 }
                                 else//Happy normal 1x1x1
                                 {
                                     distArray.Add(slim);
-                                    //Log.Line($"Hit {slim} at {slim.Position}");
+                                    foundSomething = true;
                                     if (hitdist > maxDbc) maxDbc = hitdist;
                                     //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
