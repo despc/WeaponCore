@@ -10,13 +10,13 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Game.ObjectBuilders;
-using VRage.Utils;
 using VRageMath;
 using static CoreSystems.Support.WeaponDefinition;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaDamageDef;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaDamageDef.EwarFieldsDef.PushPullDef;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaDamageDef.AreaEffectType;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.FieldDef;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.PushPullDef;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.EwarType;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.EwarMode;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.DamageScaleDef;
 using static CoreSystems.Projectiles.Projectiles;
 
@@ -24,8 +24,8 @@ namespace CoreSystems
 {
     public partial class Session
     {
-        private readonly Dictionary<MyCubeGrid, Dictionary<AreaEffectType, GridEffect>> _gridEffects = new Dictionary<MyCubeGrid, Dictionary<AreaEffectType, GridEffect>>(128);
-        internal readonly MyConcurrentPool<Dictionary<AreaEffectType, GridEffect>> GridEffectsPool = new MyConcurrentPool<Dictionary<AreaEffectType, GridEffect>>(128, effect => effect.Clear());
+        private readonly Dictionary<MyCubeGrid, Dictionary<EwarType, GridEffect>> _gridEffects = new Dictionary<MyCubeGrid, Dictionary<EwarType, GridEffect>>(128);
+        internal readonly MyConcurrentPool<Dictionary<EwarType, GridEffect>> GridEffectsPool = new MyConcurrentPool<Dictionary<EwarType, GridEffect>>(128, effect => effect.Clear());
         internal readonly MyConcurrentPool<GridEffect> GridEffectPool = new MyConcurrentPool<GridEffect>(128, effect => effect.Clean());
         internal readonly Dictionary<long, BlockState> EffectedCubes = new Dictionary<long, BlockState>();
         internal readonly Dictionary<long, EwarValues> CurrentClientEwaredCubes = new Dictionary<long, EwarValues>();
@@ -36,7 +36,7 @@ namespace CoreSystems
 
         private static void ForceFields(HitEntity hitEnt, ProInfo info)
         {
-            var depletable = info.AmmoDef.AreaEffect.EwarFields.Depletable;
+            var depletable = info.AmmoDef.Ewar.Depletable;
             var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : float.MaxValue;
             if (healthPool <= 0) return;
 
@@ -51,7 +51,7 @@ namespace CoreSystems
                 if (info.Ai.Targets.TryGetValue(hitEnt.Entity, out tInfo) && tInfo.TargetAi?.ShieldBlock != null && info.System.Session.SApi.IsFortified(tInfo.TargetAi.ShieldBlock))
                     massMulti = 10f;
 
-                var forceDef = info.AmmoDef.AreaEffect.EwarFields.Force;
+                var forceDef = info.AmmoDef.Ewar.Force;
 
                 Vector3D forceFrom = Vector3D.Zero;
                 Vector3D forceTo = Vector3D.Zero;
@@ -82,17 +82,17 @@ namespace CoreSystems
                 Vector3D.Normalize(ref hitDir, out normHitDir);
 
                 double force;
-                if (info.AmmoDef.Const.AreaEffect != TractorField)
+                if (info.AmmoDef.Const.EwarType != Tractor)
                 {
-                    normHitDir = info.AmmoDef.Const.AreaEffect == PushField ? normHitDir : -normHitDir;
-                    force = info.AmmoDef.Const.AreaEffectDamage;
+                    normHitDir = info.AmmoDef.Const.EwarType == Push ? normHitDir : -normHitDir;
+                    force = info.AmmoDef.Ewar.Strength;
                 }
                 else
                 {
                     var distFromFocalPoint = forceDef.TractorRange - hitEnt.HitDist ?? info.ProjectileDisplacement;
                     var positive = distFromFocalPoint > 0;
                     normHitDir = positive ? normHitDir : -normHitDir;
-                    force = positive ?MathHelper.Lerp(distFromFocalPoint, forceDef.TractorRange, info.AmmoDef.Const.AreaEffectDamage) : MathHelper.Lerp(Math.Abs(distFromFocalPoint), forceDef.TractorRange, info.AmmoDef.Const.AreaEffectDamage);
+                    force = positive ?MathHelper.Lerp(distFromFocalPoint, forceDef.TractorRange, info.AmmoDef.Ewar.Strength) : MathHelper.Lerp(Math.Abs(distFromFocalPoint), forceDef.TractorRange, info.AmmoDef.Ewar.Strength);
                 }
                 var massMod = !forceDef.DisableRelativeMass ? hitEnt.Entity.Physics.Mass : 1;
                 
@@ -107,8 +107,8 @@ namespace CoreSystems
                     hitDir = forceFrom - forceTo;
                     Vector3D.Normalize(ref hitDir, out normHitDir);
 
-                    if (info.AmmoDef.Const.AreaEffect != TractorField)
-                        normHitDir = info.AmmoDef.Const.AreaEffect == PushField ? normHitDir : -normHitDir;
+                    if (info.AmmoDef.Const.EwarType != Tractor)
+                        normHitDir = info.AmmoDef.Const.EwarType == Push ? normHitDir : -normHitDir;
                     else {
                         var distFromFocalPoint = forceDef.TractorRange - info.ProjectileDisplacement;
                         var positive = distFromFocalPoint > 0;
@@ -126,7 +126,7 @@ namespace CoreSystems
 
         private void UpdateField(HitEntity hitEnt, ProInfo info)
         {
-            if (info.AmmoDef.Const.AreaEffect == PullField || info.AmmoDef.Const.AreaEffect == PushField || info.AmmoDef.Const.AreaEffect == TractorField)
+            if (info.AmmoDef.Const.EwarType == Pull || info.AmmoDef.Const.EwarType == Push || info.AmmoDef.Const.EwarType == Tractor)
             {
                 ForceFields(hitEnt, info);
                 return;
@@ -138,9 +138,9 @@ namespace CoreSystems
             var attackerId = info.Target.CoreEntity.EntityId;
             GetAndSortBlocksInSphere(info.AmmoDef, hitEnt.Info.System, grid, hitEnt.PruneSphere, !hitEnt.DamageOverTime, hitEnt.Blocks);
 
-            var depletable = info.AmmoDef.AreaEffect.EwarFields.Depletable;
+            var depletable = info.AmmoDef.Ewar.Depletable;
             var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : float.MaxValue;
-            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Const.AreaEffectDamage, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
+            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Ewar.Strength, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
 
             if (depletable)
                 info.BaseHealthPool -= healthPool;
@@ -148,7 +148,7 @@ namespace CoreSystems
 
         private void UpdateEffect(HitEntity hitEnt, ProInfo info)
         {
-            if (info.AmmoDef.Const.AreaEffect == PullField || info.AmmoDef.Const.AreaEffect == PushField || info.AmmoDef.Const.AreaEffect == TractorField)
+            if (info.AmmoDef.Const.EwarType == Pull || info.AmmoDef.Const.EwarType == Push || info.AmmoDef.Const.EwarType == Tractor)
             {
                 ForceFields(hitEnt, info);
                 return;
@@ -160,14 +160,14 @@ namespace CoreSystems
             if (IsServer)
             {
 
-                Dictionary<AreaEffectType, GridEffect> effects;
+                Dictionary<EwarType, GridEffect> effects;
                 var attackerId = info.Target.CoreEntity.EntityId;
                 if (_gridEffects.TryGetValue(grid, out effects))
                 {
                     GridEffect gridEffect;
-                    if (effects.TryGetValue(info.AmmoDef.AreaEffect.AreaEffect, out gridEffect))
+                    if (effects.TryGetValue(info.AmmoDef.Ewar.Type, out gridEffect))
                     {
-                        gridEffect.Damage += info.AmmoDef.Const.AreaEffectDamage;
+                        gridEffect.Damage += info.AmmoDef.Ewar.Strength;
                         gridEffect.Ai = info.Ai;
                         gridEffect.AttackerId = attackerId;
                         gridEffect.Hits++;
@@ -182,7 +182,7 @@ namespace CoreSystems
                     effects = GridEffectsPool.Get();
                     var gridEffect = GridEffectPool.Get();
                     gridEffect.System = info.System;
-                    gridEffect.Damage = info.AmmoDef.Const.AreaEffectDamage;
+                    gridEffect.Damage = info.AmmoDef.Ewar.Strength;
                     gridEffect.Ai = info.Ai;
                     gridEffect.AmmoDef = info.AmmoDef;
                     gridEffect.AttackerId = attackerId;
@@ -190,7 +190,7 @@ namespace CoreSystems
                     var hitPos = hitEnt.HitPos ?? info.Hit.SurfaceHit;
 
                     gridEffect.HitPos = hitPos;
-                    effects.Add(info.AmmoDef.AreaEffect.AreaEffect, gridEffect);
+                    effects.Add(info.AmmoDef.Ewar.Type, gridEffect);
                     _gridEffects.Add(grid, effects);
                 }
             }
@@ -203,20 +203,20 @@ namespace CoreSystems
         private void ComputeEffects(MyCubeGrid grid, AmmoDef ammoDef, float damagePool, ref float healthPool, long attackerId, int sysmteId, List<IMySlimBlock> blocks)
         {
             var largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
-            var eWarInfo = ammoDef.AreaEffect.EwarFields;
+            var eWarInfo = ammoDef.Ewar;
             var duration = (uint)eWarInfo.Duration;
             var stack = eWarInfo.StackDuration;
             var maxStack = eWarInfo.MaxStacks;
             var nextTick = Tick + 1;
             var maxTick = stack ? (uint)(nextTick + (duration * maxStack)) : nextTick + duration;
-            var fieldType = ammoDef.AreaEffect.AreaEffect;
+            var fieldType = ammoDef.Ewar.Type;
             var sync = MpActive && (DedicatedServer || IsServer);
             foreach (var block in blocks)
             {
                 var cubeBlock = block.FatBlock;
                 if (damagePool <= 0 || healthPool <= 0) break;
                 IMyFunctionalBlock funcBlock = null;
-                if (fieldType != DotField)
+                if (fieldType != Dot)
                 {
 
                     if (cubeBlock == null || cubeBlock is IMyConveyor || cubeBlock.MarkedForClose)
@@ -268,7 +268,7 @@ namespace CoreSystems
                 var scaledDamage = damagePool * damageScale;
                 healthPool -= 1;
 
-                if (fieldType == DotField && IsServer)
+                if (fieldType == Dot && IsServer)
                 {
                     block.DoDamage(scaledDamage, MyDamageType.Explosion, sync, null, attackerId);
                     continue;
@@ -403,7 +403,7 @@ namespace CoreSystems
                             functBlock.AppendingCustomInfo += blockInfo.AppendCustomInfo;
                             functBlock.RefreshCustomInfo();
 
-                            if (!blockInfo.AmmoDef.AreaEffect.EwarFields.DisableParticleEffect)
+                            if (blockInfo.AmmoDef.Ewar.Field.ShowParticle)
                                 functBlock.SetDamageEffect(true);
                         }
                     }
@@ -423,7 +423,7 @@ namespace CoreSystems
                         functBlock.AppendingCustomInfo -= blockInfo.AppendCustomInfo;
                         functBlock.RefreshCustomInfo();
 
-                        if (!blockInfo.AmmoDef.AreaEffect.EwarFields.DisableParticleEffect)
+                        if (blockInfo.AmmoDef.Ewar.Field.ShowParticle)
                             functBlock.SetDamageEffect(false);
                     }
 
@@ -543,7 +543,7 @@ namespace CoreSystems
         }
 
         private readonly List<IMySlimBlock> _tmpEffectCubes = new List<IMySlimBlock>();
-        internal static void GetCubesForEffect(Ai ai, MyCubeGrid grid, Vector3D hitPos, AreaEffectType effectType, List<IMySlimBlock> cubes)
+        internal static void GetCubesForEffect(Ai ai, MyCubeGrid grid, Vector3D hitPos, EwarType effectType, List<IMySlimBlock> cubes)
         {
             var fats = QueryBlockCaches(ai, grid, effectType);
             if (fats == null) return;
@@ -558,7 +558,7 @@ namespace CoreSystems
             });
         }
 
-        private static ConcurrentCachingList<MyCubeBlock> QueryBlockCaches(Ai ai, MyCubeGrid targetGrid, AreaEffectType effectType)
+        private static ConcurrentCachingList<MyCubeBlock> QueryBlockCaches(Ai ai, MyCubeGrid targetGrid, EwarType effectType)
         {
             ConcurrentDictionary<TargetingDef.BlockTypes, ConcurrentCachingList<MyCubeBlock>> blockTypeMap;
             if (!ai.Session.GridToBlockTypeMap.TryGetValue(targetGrid, out blockTypeMap)) return null;
@@ -566,28 +566,28 @@ namespace CoreSystems
             ConcurrentCachingList<MyCubeBlock> cubes;
             switch (effectType)
             {
-                case JumpNullField:
+                case JumpNull:
                     if (blockTypeMap.TryGetValue(TargetingDef.BlockTypes.Jumping, out cubes))
                         return cubes;
                     break;
-                case EnergySinkField:
+                case EnergySink:
                     if (blockTypeMap.TryGetValue(TargetingDef.BlockTypes.Power, out cubes))
                         return cubes;
                     break;
-                case AnchorField:
+                case Anchor:
                     if (blockTypeMap.TryGetValue(TargetingDef.BlockTypes.Thrust, out cubes))
                         return cubes;
                     break;
-                case NavField:
+                case Nav:
                     if (blockTypeMap.TryGetValue(TargetingDef.BlockTypes.Steering, out cubes))
                         return cubes;
                     break;
-                case OffenseField:
+                case Offense:
                     if (blockTypeMap.TryGetValue(TargetingDef.BlockTypes.Offense, out cubes))
                         return cubes;
                     break;
-                case EmpField:
-                case DotField:
+                case Emp:
+                case Dot:
                     GridMap gridMap;
                     if (ai.Session.GridToInfoMap.TryGetValue(targetGrid, out gridMap))
                         return gridMap.MyCubeBocks;

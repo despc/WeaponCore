@@ -315,8 +315,8 @@ namespace CoreSystems.Projectiles
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = p.Info.AmmoDef.Const.DetonationRadius;
 
-                    var dInfo = p.Info.AmmoDef.AreaEffect.Detonation;
-                    if (p.MoveToAndActivate || dInfo.DetonateOnEnd && p.Info.Age >= dInfo.MinArmingTime && (!dInfo.ArmOnlyOnHit || p.Info.ObjectsHit > 0)) {
+                    var dInfo = p.Info.AmmoDef.AreaOfDamage.EndOfLife;
+                    if (p.MoveToAndActivate || dInfo.Enable && p.Info.Age >= dInfo.MinArmingTime && (!dInfo.ArmOnlyOnHit || p.Info.ObjectsHit > 0)) {
 
                         if (!p.UseEntityCache)
                             MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);

@@ -84,8 +84,7 @@ namespace CoreSystems.Platform
 
         internal void UpdateShotEnergy()
         {
-            var ewar = (int)ActiveAmmoDef.AmmoDef.AreaEffect.AreaEffect > 3;
-            ShotEnergyCost = ewar ? ActiveAmmoDef.AmmoDef.Const.EnergyCost * ActiveAmmoDef.AmmoDef.Const.AreaEffectDamage : ActiveAmmoDef.AmmoDef.Const.EnergyCost * BaseDamage;
+            ShotEnergyCost = ActiveAmmoDef.AmmoDef.Ewar.Enable ? ActiveAmmoDef.AmmoDef.Const.EnergyCost * ActiveAmmoDef.AmmoDef.Ewar.Strength : ActiveAmmoDef.AmmoDef.Const.EnergyCost * BaseDamage;
         }
 
         internal void UpdateBarrelRotation()

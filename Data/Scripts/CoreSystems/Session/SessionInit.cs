@@ -220,47 +220,6 @@ namespace CoreSystems
 
             foreach (var x in WeaponDefinitions)
             {
-                if (x.HardPoint.HardWare.Type == BlockWeapon || x.HardPoint.HardWare.Type == HandWeapon)
-                {
-                    foreach (var ammo in x.Ammos)
-                    {
-                        var ae = ammo.AreaEffect;
-                        var areaRadius = ae.Base.Radius > 0 ? ae.Base.Radius : ae.AreaEffectRadius;
-                        var smallAreaRadius = areaRadius / 5;
-                        var detonateRadius = ae.Detonation.DetonationRadius;
-                        var smallDetonateRadius = detonateRadius / 5;
-                        var fragments = ammo.Fragment.Fragments > 0 ? ammo.Fragment.Fragments : 1;
-                        if (areaRadius > 0)
-                        {
-                            if (!LargeBlockSphereDb.ContainsKey(ModRadius(areaRadius, true)))
-                                GenerateBlockSphere(MyCubeSize.Large, ModRadius(areaRadius, true));
-                            if (!LargeBlockSphereDb.ContainsKey(ModRadius(areaRadius / fragments, true)))
-                                GenerateBlockSphere(MyCubeSize.Large, ModRadius(areaRadius / fragments, true));
-
-                            if (!SmallBlockSphereDb.ContainsKey(ModRadius(smallAreaRadius, false)))
-                                GenerateBlockSphere(MyCubeSize.Small, ModRadius(smallAreaRadius, false));
-                            if (!SmallBlockSphereDb.ContainsKey(ModRadius(smallAreaRadius / fragments, false)))
-                                GenerateBlockSphere(MyCubeSize.Small, ModRadius(smallAreaRadius / fragments, false));
-
-                        }
-                        if (detonateRadius > 0)
-                        {
-                            if (!LargeBlockSphereDb.ContainsKey(ModRadius(detonateRadius, true)))
-                                GenerateBlockSphere(MyCubeSize.Large, ModRadius(detonateRadius, true));
-                            if (!LargeBlockSphereDb.ContainsKey(ModRadius(detonateRadius / fragments, true)))
-                                GenerateBlockSphere(MyCubeSize.Large, ModRadius(detonateRadius / fragments, true));
-
-                            if (!SmallBlockSphereDb.ContainsKey(ModRadius(smallDetonateRadius, false)))
-                                GenerateBlockSphere(MyCubeSize.Small, ModRadius(smallDetonateRadius, false));
-                            if (!SmallBlockSphereDb.ContainsKey(ModRadius(smallDetonateRadius / fragments, false)))
-                                GenerateBlockSphere(MyCubeSize.Small, ModRadius(smallDetonateRadius / fragments, false));
-                        }
-                    }
-                }
-            }
-
-            foreach (var x in WeaponDefinitions)
-            {
                 for (int i = 0; i < x.Assignments.MountPoints.Length; i++)
                 {
                     var mount = x.Assignments.MountPoints[i];

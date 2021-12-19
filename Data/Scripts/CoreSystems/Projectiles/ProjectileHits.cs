@@ -15,7 +15,7 @@ using VRage.Game.ModAPI.Interfaces;
 using VRage.Utils;
 using VRageMath;
 using static CoreSystems.Support.HitEntity.Type;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaDamageDef.AreaEffectType;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.EwarType;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.DamageScaleDef;
 using static CoreSystems.Support.DeferedVoxels;
 using CollisionLayers = Sandbox.Engine.Physics.MyPhysics.CollisionLayers;
@@ -33,14 +33,14 @@ namespace CoreSystems.Projectiles
 
                 var p = ValidateHits[x];
                 var shieldByPass = p.Info.AmmoDef.Const.ShieldDamageBypassMod > 0;
-                var genericFields = p.Info.EwarActive && (p.Info.AmmoDef.Const.AreaEffect == DotField || p.Info.AmmoDef.Const.AreaEffect == PushField || p.Info.AmmoDef.Const.AreaEffect == PullField || p.Info.AmmoDef.Const.AreaEffect == TractorField);
+                var genericFields = p.Info.EwarActive && (p.Info.AmmoDef.Const.EwarType == Dot || p.Info.AmmoDef.Const.EwarType == Push || p.Info.AmmoDef.Const.EwarType == Pull || p.Info.AmmoDef.Const.EwarType == Tractor);
 
                 p.FinalizeIntersection = false;
                 p.Info.ShieldInLine = false;
 
                 var isBeam = p.Info.AmmoDef.Const.IsBeamWeapon;
                 var lineCheck = p.Info.AmmoDef.Const.CollisionIsLine && !p.Info.EwarAreaPulse;
-                var ewarProjectile = (p.Info.EwarActive || p.Info.AmmoDef.Const.EwarEffect);
+                var offensiveEwar = (p.Info.EwarActive && p.Info.AmmoDef.Const.NonAntiSmartEwar);
 
                 bool projetileInShield = false;
                 var tick = p.Info.System.Session.Tick;
@@ -129,7 +129,7 @@ namespace CoreSystems.Projectiles
                     var checkShield = Session.ShieldApiLoaded && Session.ShieldHash == ent.DefinitionId?.SubtypeId && ent.Render.Visible;
                     MyTuple<IMyTerminalBlock, MyTuple<bool, bool, float, float, float, int>, MyTuple<MatrixD, MatrixD>>? shieldInfo = null;
 
-                    if (checkShield && !p.Info.ShieldBypassed && !p.Info.EwarActive || p.Info.EwarActive && (p.Info.AmmoDef.Const.AreaEffect == DotField || p.Info.AmmoDef.Const.AreaEffect == EmpField))
+                    if (checkShield && !p.Info.ShieldBypassed && !p.Info.EwarActive || p.Info.EwarActive && (p.Info.AmmoDef.Const.EwarType == Dot || p.Info.AmmoDef.Const.EwarType == Emp))
                     {
                         shieldInfo = Session.SApi.MatchEntToShieldFastExt(ent, true);
                         if (shieldInfo != null && (firingCube == null || !firingCube.CubeGrid.IsSameConstructAs(shieldInfo.Value.Item1.CubeGrid) && !goCritical))
@@ -369,7 +369,7 @@ namespace CoreSystems.Projectiles
                             else
                                 grid.RayCastCells(p.Beam.From, p.Beam.To, hitEntity.Vector3ICache, null, true, true);
 
-                            if (!ewarProjectile)
+                            if (!offensiveEwar)
                                 hitEntity.EventType = Grid;
                             else if (!p.Info.EwarAreaPulse)
                                 hitEntity.EventType = Effect;
@@ -395,12 +395,12 @@ namespace CoreSystems.Projectiles
                         hitEntity.SphereCheck = !lineCheck;
                         hitEntity.PruneSphere = p.PruneSphere;
                         hitEntity.SelfHit = entIsSelf;
-                        hitEntity.DamageOverTime = p.Info.AmmoDef.Const.AreaEffect == DotField;
+                        hitEntity.DamageOverTime = p.Info.AmmoDef.Const.EwarType == Dot;
                         p.Info.HitList.Add(hitEntity);
                     }
                 }
 
-                if (p.Info.Target.IsProjectile && !p.Info.AmmoDef.Const.EwarEffect && !projetileInShield)
+                if (p.Info.Target.IsProjectile && !p.Info.AmmoDef.Const.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;
                     var hitTolerance = detonate ? p.Info.AmmoDef.Const.DetonationRadius : p.Info.AmmoDef.Const.AreaEffectSize > p.Info.AmmoDef.Const.CollisionSize ? p.Info.AmmoDef.Const.AreaEffectSize : p.Info.AmmoDef.Const.CollisionSize;
@@ -527,7 +527,7 @@ namespace CoreSystems.Projectiles
                 hitEntity.Intersection = p.Beam;
                 hitEntity.SphereCheck = !lineCheck;
                 hitEntity.PruneSphere = p.PruneSphere;
-                hitEntity.DamageOverTime = p.Info.AmmoDef.Const.AreaEffect == DotField;
+                hitEntity.DamageOverTime = p.Info.AmmoDef.Const.EwarType == Dot;
 
                 var hitPos = voxelHit.Value;
                 hitEntity.HitPos = hitPos;
@@ -896,7 +896,7 @@ namespace CoreSystems.Projectiles
             Vector3D result;
             Vector3D.Transform(ref sphere.Center, ref matrixNormalizedInv, out result);
             var localSphere = new BoundingSphere(result, (float)sphere.Radius);
-            var fieldType = ammoDef.AreaEffect.AreaEffect;
+            var fieldType = ammoDef.Ewar.Type;
             var hitPos = sphere.Center;
             if (fatOnly)
             {
@@ -907,24 +907,24 @@ namespace CoreSystems.Projectiles
                     {
                         switch (fieldType)
                         {
-                            case JumpNullField:
+                            case WeaponDefinition.AmmoDef.EwarDef.EwarType.JumpNull:
                                 if (!(cube is MyJumpDrive)) continue;
                                 break;
-                            case EnergySinkField:
+                            case EnergySink:
                                 if (!(cube is IMyPowerProducer)) continue;
                                 break;
-                            case AnchorField:
+                            case Anchor:
                                 if (!(cube is MyThrust)) continue;
                                 break;
-                            case NavField:
+                            case Nav:
                                 if (!(cube is MyGyro)) continue;
                                 break;
-                            case OffenseField:
+                            case Offense:
                                 if (!(cube is IMyGunBaseUser)) continue;
                                 break;
-                            case EmpField:
-                            case DotField:
-                                if (fieldType == EmpField && cube is IMyUpgradeModule && system.Session.CoreShieldBlockTypes.Contains(cube.BlockDefinition))
+                            case Emp:
+                            case Dot:
+                                if (fieldType == Emp && cube is IMyUpgradeModule && system.Session.CoreShieldBlockTypes.Contains(cube.BlockDefinition))
                                     continue;
                                 break;
                             default: continue;

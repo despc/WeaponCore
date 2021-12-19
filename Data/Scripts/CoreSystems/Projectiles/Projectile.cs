@@ -9,7 +9,7 @@ using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRageMath;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.TrajectoryDef;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaDamageDef;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.EwarType;
 
 namespace CoreSystems.Projectiles
 {
@@ -299,7 +299,7 @@ namespace CoreSystems.Projectiles
                 Info.AvShot = Info.System.Session.Av.AvShotPool.Get();
                 Info.AvShot.Init(Info, SmartsOn, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
                 Info.AvShot.SetupSounds(DistanceFromCameraSqr); //Pool initted sounds per Projectile type... this is expensive
-                if (Info.AmmoDef.Const.HitParticle && !Info.AmmoDef.Const.IsBeamWeapon || Info.AmmoDef.Const.AreaEffect == AreaEffectType.Explosive && !Info.AmmoDef.AreaEffect.Explosions.NoVisuals && Info.AmmoDef.Const.AreaEffectSize > 0 && Info.AmmoDef.Const.AreaEffectDamage > 0)
+                if (Info.AmmoDef.Const.HitParticle && !Info.AmmoDef.Const.IsBeamWeapon || Info.AmmoDef.AreaOfDamage.EndOfLife.Enable && !Info.AmmoDef.AreaOfDamage.EndOfLife.NoVisuals)
                 {
                     var hitPlayChance = Info.AmmoDef.AmmoGraphics.Particles.Hit.Extras.HitPlayChance;
                     Info.AvShot.HitParticleActive = hitPlayChance >= 1 || hitPlayChance >= MyUtils.GetRandomDouble(0.0f, 1f);
@@ -635,9 +635,9 @@ namespace CoreSystems.Projectiles
 
         internal void EwarEffects()
         {
-            switch (Info.AmmoDef.Const.AreaEffect)
+            switch (Info.AmmoDef.Const.EwarType)
             {
-                case AreaEffectType.AntiSmart:
+                case AntiSmart:
                     var eWarSphere = new BoundingSphereD(Position, Info.AmmoDef.Const.AreaEffectSize);
 
                     DynTrees.GetAllProjectilesInSphere(Info.System.Session, ref eWarSphere, EwaredProjectiles, false);
@@ -663,43 +663,43 @@ namespace CoreSystems.Projectiles
                     }
                     EwaredProjectiles.Clear();
                     return;
-                case AreaEffectType.PushField:
+                case Push:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.PullField:
+                case Pull:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.TractorField:
+                case Tractor:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.JumpNullField:
+                case JumpNull:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.AnchorField:
+                case Anchor:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.EnergySinkField:
+                case EnergySink:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.EmpField:
+                case Emp:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.OffenseField:
+                case Offense:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.NavField:
+                case Nav:
                     if (!Info.AmmoDef.Const.Pulse || Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance)
                         Info.EwarActive = true;
                     break;
-                case AreaEffectType.DotField:
+                case Dot:
                     if (Info.EwarAreaPulse && Info.Random.NextDouble() * 100f <= Info.AmmoDef.Const.PulseChance || !Info.AmmoDef.Const.Pulse)
                     {
                         Info.EwarActive = true;
@@ -882,9 +882,9 @@ namespace CoreSystems.Projectiles
 
         internal void ProjectileClose()
         {
-            var detInfo = Info.AmmoDef.AreaEffect.Detonation;
-            var detonate = detInfo.DetonateOnEnd && (!detInfo.ArmOnlyOnHit || Info.ObjectsHit > 0);
-            if (GenerateShrapnel && Info.Age >= Info.AmmoDef.Const.MinArmingTime && (!detInfo.DetonateOnEnd || detonate))
+            var detInfo = Info.AmmoDef.AreaOfDamage.EndOfLife;
+            var detonate = detInfo.Enable && (!detInfo.ArmOnlyOnHit || Info.ObjectsHit > 0);
+            if (GenerateShrapnel && Info.Age >= Info.AmmoDef.Const.MinArmingTime && (!detInfo.Enable || detonate))
                 SpawnShrapnel();
 
             for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
@@ -898,8 +898,8 @@ namespace CoreSystems.Projectiles
 
             State = ProjectileState.Dead;
 
-            var afInfo = Info.AmmoDef.AreaEffect;
-            var detExp = !afInfo.Explosions.NoVisuals && detonate;
+            var afInfo = Info.AmmoDef.AreaOfDamage;
+            var detExp = !afInfo.EndOfLife.NoVisuals && detonate;
 
             if (EnableAv)
             {

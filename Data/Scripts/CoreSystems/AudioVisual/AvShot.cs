@@ -907,10 +907,10 @@ namespace CoreSystems.Support
         internal void PlayFieldParticle()
         {
             var pos = TriggerEntity.PositionComp.WorldAABB.Center;
-            if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AreaEffect.Pulse.Particle.Name, ref TriggerMatrix, ref pos, uint.MaxValue, out FieldEffect))
+            if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.Ewar.Field.Particle.Name, ref TriggerMatrix, ref pos, uint.MaxValue, out FieldEffect))
             {
                 //FieldEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
-                FieldEffect.UserScale = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
+                FieldEffect.UserScale = AmmoDef.Ewar.Field.Particle.Extras.Scale;
 
                 FieldParticleStopped = false;
                 FieldParticleInited = true;
@@ -994,7 +994,7 @@ namespace CoreSystems.Support
                     var a = AmmoDef;
                     var c = a.Const;
 
-                    if (!a.AreaEffect.Explosions.NoSound)
+                    if (!a.AreaOfDamage.EndOfLife.NoSound)
                     {
                         var pool = c.CustomSoundPairs;
                         var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.Const.DetSoundStr, false);
@@ -1013,7 +1013,7 @@ namespace CoreSystems.Support
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
                             //detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
-                            detEffect.UserScale = AmmoDef.AreaEffect.Explosions.Scale;
+                            detEffect.UserScale = AmmoDef.AreaOfDamage.EndOfLife.ParticleScale;
 
                             detEffect.Velocity = Hit.HitVelocity;
 

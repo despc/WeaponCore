@@ -262,7 +262,7 @@ namespace CoreSystems.Support
                 if (ammo.AmmoDef.Const.GuidedAmmoDetected)
                     HasGuidedAmmo = true;
 
-                if (ammo.AmmoDef.Const.AreaEffect == AmmoDef.AreaDamageDef.AreaEffectType.AntiSmart)
+                if (ammo.AmmoDef.Const.EwarType == AmmoDef.EwarDef.EwarType.AntiSmart)
                     HasAntiSmart = true;
 
                 if (ammo.AmmoDef.Const.IsTurretSelectable)

@@ -266,107 +266,29 @@ namespace CoreSystems.Support
             return zero;
         }
 
-        public static void CreateMissileExplosion(Session session, float damage, double radius, Vector3D position, Vector3D direction, MyEntity owner, MyEntity hitEnt, WeaponDefinition.AmmoDef ammoDef, bool forceNoDraw = false)
+        public static void CreateVoxelExplosion(Session session, float damage, double radius, Vector3D position, Vector3D direction, MyEntity owner, MyEntity hitEnt, WeaponDefinition.AmmoDef ammoDef, bool forceNoDraw = false)
         {
-            var af = ammoDef.AreaEffect;
-            var justShrapnel = !af.Explosions.NoShrapnel && af.Explosions.NoDeformation;
-            var justDeform = af.Explosions.NoShrapnel && !af.Explosions.NoDeformation;
 
-            var eInfo = af.Explosions;
-            var playSound = !eInfo.NoSound && !forceNoDraw;
             var sphere = new BoundingSphereD(position, radius);
-            var cullSphere = sphere;
-            cullSphere.Radius = radius * 5;
-            MyExplosionFlags eFlags;
-            var drawParticles = !forceNoDraw && !eInfo.NoVisuals && session.Camera.IsInFrustum(ref cullSphere);
+            var eFlags = MyExplosionFlags.AFFECT_VOXELS;
 
-            if (drawParticles)
-            {
-                if (justShrapnel)
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.CREATE_DEBRIS | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_PARTICLE_EFFECT | MyExplosionFlags.CREATE_SHRAPNELS;
-                else if (justDeform)
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.CREATE_DEBRIS | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_PARTICLE_EFFECT | MyExplosionFlags.APPLY_DEFORMATION;
-                else
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.CREATE_DEBRIS | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_PARTICLE_EFFECT | MyExplosionFlags.CREATE_SHRAPNELS | MyExplosionFlags.APPLY_DEFORMATION;
-            }
-            else
-            {
-                if (justShrapnel)
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_SHRAPNELS;
-                else if (justDeform)
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.APPLY_DEFORMATION;
-                else
-                    eFlags = MyExplosionFlags.APPLY_FORCE_AND_DAMAGE | MyExplosionFlags.AFFECT_VOXELS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_SHRAPNELS | MyExplosionFlags.APPLY_DEFORMATION;
-            }
-
-            var customParticle = eInfo.CustomParticle != string.Empty;
-            var explosionType = !customParticle ? MyExplosionTypeEnum.MISSILE_EXPLOSION : MyExplosionTypeEnum.CUSTOM;
             var explosionInfo = new MyExplosionInfo
             {
                 PlayerDamage = 0.1f,
                 Damage = damage,
-                ExplosionType = explosionType,
+                ExplosionType = MyExplosionTypeEnum.MISSILE_EXPLOSION,
                 ExplosionSphere = sphere,
-                LifespanMiliseconds = 700,
+                LifespanMiliseconds = 0,
                 HitEntity = hitEnt,
-                ParticleScale = eInfo.Scale,
                 OwnerEntity = owner,
                 Direction = direction,
                 VoxelExplosionCenter = sphere.Center,
                 ExplosionFlags = eFlags,
                 VoxelCutoutScale = 0.3f,
-                PlaySound = playSound,
+                PlaySound = false,
                 ApplyForceAndDamage = true,
                 KeepAffectedBlocks = true,
-                CustomEffect = eInfo.CustomParticle,
-                CreateParticleEffect = drawParticles,
-            };
-            if (hitEnt?.Physics != null)
-                explosionInfo.Velocity = hitEnt.Physics.LinearVelocity;
-            MyExplosions.AddExplosion(ref explosionInfo);
-        }
-
-        public static void CreateFakeExplosion(Session session, double radius, Vector3D position, Vector3D direction, MyEntity hitEnt, WeaponDefinition.AmmoDef ammoDef, Vector3 velocity)
-        {
-            var af = ammoDef.AreaEffect;
-            var eInfo = af.Explosions;
-            if (radius > 10) radius = 10;
-            var sphere = new BoundingSphereD(position, radius);
-            var cullSphere = sphere;
-            cullSphere.Radius = radius * 5;
-            var drawParticles = !eInfo.NoVisuals && session.Camera.IsInFrustum(ref cullSphere);
-            MyExplosionFlags eFlags; 
-            if (drawParticles) eFlags = MyExplosionFlags.CREATE_DEBRIS | MyExplosionFlags.CREATE_DECALS | MyExplosionFlags.CREATE_PARTICLE_EFFECT;
-            else eFlags = MyExplosionFlags.CREATE_DECALS;
-            var customParticle = eInfo.CustomParticle != string.Empty;
-            var explosionType = !customParticle ? MyExplosionTypeEnum.MISSILE_EXPLOSION : MyExplosionTypeEnum.CUSTOM;
-
-            MySoundPair customSound = null;
-            if (ammoDef.Const.CustomExplosionSound && !eInfo.NoSound) {
-                customSound = ammoDef.Const.CustomSoundPairs.Count > 0 ? ammoDef.Const.CustomSoundPairs.Pop() : new MySoundPair(eInfo.CustomSound, false);
-                session.FutureEvents.Schedule(ammoDef.Const.ReturnSoundPair, customSound, 1800);
-            }
-
-            MyExplosionInfo explosionInfo = new MyExplosionInfo
-            {
-                PlayerDamage = 0.0f,
-                Damage = 0f,
-                ExplosionType = explosionType,
-                ExplosionSphere = sphere,
-                LifespanMiliseconds = 0,
-                ParticleScale = eInfo.Scale,
-                Direction = direction,
-                VoxelExplosionCenter = position,
-                ExplosionFlags = eFlags,
-                VoxelCutoutScale = 0f,
-                HitEntity = hitEnt,
-                PlaySound = !eInfo.NoSound,
-                ApplyForceAndDamage = false,
-                ObjectsRemoveDelayInMiliseconds = 0,
-                CustomEffect = eInfo.CustomParticle,
-                CreateParticleEffect = drawParticles,
-                Velocity = velocity,
-                CustomSound = customSound,
+                CreateParticleEffect = false,
             };
             if (hitEnt?.Physics != null)
                 explosionInfo.Velocity = hitEnt.Physics.LinearVelocity;

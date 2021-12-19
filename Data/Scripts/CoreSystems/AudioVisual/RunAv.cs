@@ -90,7 +90,7 @@ namespace CoreSystems.Support
                     }
                     if (av.Triggered && av.TriggerEntity != null)
                     {
-                        if (!av.AmmoDef.AreaEffect.Pulse.HideModel && (!av.TriggerEntity.InScene))
+                        if (!av.AmmoDef.Ewar.Field.HideModel && (!av.TriggerEntity.InScene))
                         {
                             av.TriggerEntity.InScene = true;
                             av.TriggerEntity.Render.UpdateRenderObject(true, false);

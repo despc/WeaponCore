@@ -163,8 +163,6 @@ namespace CoreSystems
         internal readonly Dictionary<WeaponDefinition.AmmoDef, Dictionary<string, string>> AmmoValuesMap = new Dictionary<WeaponDefinition.AmmoDef, Dictionary<string, string>>();
         internal readonly Dictionary<WeaponDefinition, Dictionary<string, string>> WeaponValuesMap = new Dictionary<WeaponDefinition, Dictionary<string, string>>();
         internal readonly Dictionary<ulong, Projectile> MonitoredProjectiles = new Dictionary<ulong, Projectile>();
-        internal readonly Dictionary<double, List<Vector3I>> LargeBlockSphereDb = new Dictionary<double, List<Vector3I>>();
-        internal readonly Dictionary<double, List<Vector3I>> SmallBlockSphereDb = new Dictionary<double, List<Vector3I>>();
         internal readonly HashSet<MyDefinitionId> DefIdsComparer = new HashSet<MyDefinitionId>(MyDefinitionId.Comparer);
         internal readonly HashSet<string> VanillaSubpartNames = new HashSet<string>();
         internal readonly HashSet<MyDefinitionBase> AllArmorBaseDefinitions = new HashSet<MyDefinitionBase>();
