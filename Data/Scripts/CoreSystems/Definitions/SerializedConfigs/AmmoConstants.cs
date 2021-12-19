@@ -376,12 +376,19 @@ namespace CoreSystems.Support
 
                     if (oldDetDetected)
                     {
+                        ammoDef.AreaOfDamage.EndOfLife.Enable = true;
+                        ammoDef.AreaOfDamage.EndOfLife.Damage = ammoDef.AreaEffect.Detonation.DetonationDamage;
+                        ammoDef.AreaOfDamage.EndOfLife.Radius = ammoDef.AreaEffect.Detonation.DetonationRadius;
+                        ammoDef.AreaOfDamage.EndOfLife.Falloff = Falloff.Pooled;
 
                     }
 
                     if (oldAoeDetectetd)
                     {
-
+                        ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
+                        ammoDef.AreaOfDamage.ByBlockHit.Damage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
+                        ammoDef.AreaOfDamage.ByBlockHit.Radius = ammoDef.AreaEffect.Base.Radius;
+                        ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
                     }
                 }
                 else

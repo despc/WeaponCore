@@ -139,8 +139,8 @@ namespace CoreSystems
             {
                 switch (detfalloff)
                 {
-                    case Falloff.Legacy:  //mimic linear
-                        unscaledDetDmg *= detradius*0.55f;
+                    case Falloff.Pooled:  //Limited to damage only, retained for future tweaks if needed
+                        unscaledDetDmg *= 1;
                         break;
                     case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
                         unscaledDetDmg *= detradius;
@@ -169,8 +169,8 @@ namespace CoreSystems
             {
                 switch (areafalloff)
                 {
-                    case Falloff.Legacy:  //mimic linear
-                        unscaledAoeDmg *= aoeRadius * 0.55f;
+                    case Falloff.Pooled:  //Limited to damage only, retained for future tweaks if needed
+                        unscaledAoeDmg *= 1;
                         break;
                     case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
                         unscaledAoeDmg *= aoeRadius;
@@ -450,16 +450,7 @@ namespace CoreSystems
                         var maxfalldist = aoeRadius * grid.GridSizeR + 1;
                         switch (aoeFalloff)
                         {
-                            case Falloff.Legacy:
-                                if (!detonating)//mimic InvCurve for legacy radiating
-                                {
-                                    expDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
-                                }
-                                else //mimic linear falloff for legacy detonations
-                                {
-                                    expDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
-                                }
-                                break;
+                            
                             case Falloff.NoFalloff:  //No falloff, damage stays the same regardless of distance
                                 expDamageFall = aoeDamage;
                                 break;
