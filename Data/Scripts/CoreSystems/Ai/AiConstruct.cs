@@ -158,13 +158,12 @@ namespace CoreSystems.Support
 
             internal void Refresh(Ai ai, RefreshCaller caller)
             {
-                if (RootAi.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
+                if (ai.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
                     CheckEmptyWeapons();
 
                 OptimalDps = 0;
                 BlockCount = 0;
-                GridMap gridMap;
-                if (ai.Session.GridToInfoMap.TryGetValue(ai.TopEntity, out gridMap)) {
+                if (ai.TopEntity != null && ai.Session.GridToInfoMap.ContainsKey(ai.TopEntity)) {
                     Ai leadingAi = null;
                     Ai largestAi = null;
                     int leadingBlocks = 0;
@@ -180,8 +179,8 @@ namespace CoreSystems.Support
                                 if (leadingAi.TopEntity.EntityId > grid.EntityId)
                                     leadingAi = thisAi;
                             }
-                        } 
-                        if (ai.Session.GridToInfoMap.TryGetValue(grid, out gridMap)) {
+                        }
+                        if (ai.Session.GridToInfoMap.ContainsKey(grid)) {
                             var blockCount = ai.Session.GridToInfoMap[grid].MostBlocks;
                             if (blockCount > leadingBlocks)
                             {
@@ -206,14 +205,14 @@ namespace CoreSystems.Support
                     UpdatePartCounters(ai);
                     return;
                 }
-                if (ai.AiType != AiTypes.Grid)
+                if (ai.TopEntity != null && ai.AiType != AiTypes.Grid)
                 {
                     RootAi = ai;
                     LargestAi = ai;
                     ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
                     return;
                 }
-                Log.Line($"ConstructRefresh Failed main Ai no GridMap: {caller} - Marked: {ai.TopEntity.MarkedForClose}");
+                Log.Line($"ConstructRefresh Failed main Ai no GridMap: {caller} - Marked: {ai.TopEntity?.MarkedForClose}");
                 RootAi = null;
                 LargestAi = null;
             }

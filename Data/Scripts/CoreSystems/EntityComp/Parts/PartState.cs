@@ -40,7 +40,6 @@ namespace CoreSystems.Platform
         internal void StopPowerDraw(bool hardStop, Ai ai)
         {
             if (!Charging) {
-                if (!hardStop) Log.Line($"wasnt drawing power");
                 return;
             }
 

@@ -19,10 +19,10 @@ namespace CoreSystems.Platform
     {
         internal readonly RecursiveSubparts Parts = new RecursiveSubparts();
         private readonly List<int> _orderToCreate = new List<int>();
-        internal List<Weapon> Weapons = new List<Weapon>();
-        internal List<SupportSys> Support = new List<SupportSys>();
-        internal List<Upgrades> Upgrades = new List<Upgrades>();
-        internal List<Weapon> Phantoms = new List<Weapon>();
+        internal readonly List<Weapon> Weapons = new List<Weapon>();
+        internal readonly List<SupportSys> Support = new List<SupportSys>();
+        internal readonly List<Upgrades> Upgrades = new List<Upgrades>();
+        internal readonly List<Weapon> Phantoms = new List<Weapon>();
         internal CoreStructure Structure;
         internal CoreComponent Comp;
         internal PlatformState State;

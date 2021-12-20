@@ -414,13 +414,7 @@ namespace CoreSystems
                 {
                     var dbc = DamageBlockCache[j];
 
-                    if (earlyExit)
-                    {
-                        dbc.Clear();
-                        break;
-                    }
-
-                    if (breakMidLoop)
+                    if (earlyExit || breakMidLoop)
                         break;
 
                     //Log.Line($"i:{i} - j:{j} - currentRadius:{detRequested} - detActive:{detActive} - distance:{maxAoeDistance} - foundBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0)");
@@ -467,7 +461,6 @@ namespace CoreSystems
 
                         if (block.IsDestroyed)
                             continue;
-
 
                         var cubeBlockDef = (MyCubeBlockDefinition)block.BlockDefinition;
                         float cachedIntegrity;
@@ -580,8 +573,6 @@ namespace CoreSystems
                             }
                         }
 
-
-
                         //AOE damage logic applied to aoeDamageFall
                         if (!rootStep && (hasAoe || hasDet) && aoeDamage >= 0 && aoeDamageFall >= 0 && !deadBlock)
                         {
@@ -618,7 +609,6 @@ namespace CoreSystems
                                 _destroyedSlims.Add(block);
                         }
 
-
                         //Apply damage
                         if (canDamage)
                         {
@@ -629,7 +619,7 @@ namespace CoreSystems
                             }
                             catch
                             {
-                                Log.Line($"[DoDamage crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxDbc:{maxAoeDistance} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
+                                Log.Line($"[DoDamage crash] detRequested:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxAoeDistance:{maxAoeDistance} - foundAoeBlocks:{foundAoeBlocks} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
                                 foreach (var l in DamageBlockCache)
                                     l.Clear();
 
@@ -663,7 +653,6 @@ namespace CoreSystems
                                 breakMidLoop = true;
 
                                 --i;
-                                dbc.Clear();
                                 break;
                             }
 
@@ -679,8 +668,10 @@ namespace CoreSystems
                             }
                         }
                     }
-                    dbc.Clear();
                 }
+
+                for (int l = 0; l < blockStages; l++)
+                    DamageBlockCache[l].Clear();
 
                 breakMidLoop = false;
             }
