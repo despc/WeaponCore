@@ -364,11 +364,7 @@ namespace CoreSystems.Platform
                 EventTriggerStateChanged(EventTriggers.Reloading, false);
                 LastLoadedTick = Comp.Session.Tick;
 
-                if (Comp.Structure.ModId != 2530716039) {
-                    ShotsFired = 0; 
-                    ShootTick = 0; 
-                }
-                else if (!ActiveAmmoDef.AmmoDef.Const.HasShotReloadDelay)
+                if (!ActiveAmmoDef.AmmoDef.Const.HasShotReloadDelay)
                     ShotsFired = 0;
 
                 Loading = false;

@@ -547,7 +547,7 @@ namespace CoreSystems
                         var primaryDamage = rootStep && block == rootBlock;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
-                        var aoeScaledDmg = (float)(aoeDamageFall * (detRequested ? detDamageScale : areaDamageScale));
+                        var aoeScaledDmg = (float)((aoeDamageFall * (detRequested ? detDamageScale : areaDamageScale)) * damageScale);
                         bool deadBlock = false;
 
                         //Check for end of primary life
