@@ -332,6 +332,8 @@ namespace CoreSystems
             //Switches and setup for damage types/event loops
             var detRequested = false;
             var detActive = false;
+            var breakMidLoop = false;
+
             var earlyExit = false;
             var destroyed = 0;
 
@@ -395,51 +397,35 @@ namespace CoreSystems
                         continue;
                 }
 
-                var maxDbc = 0;
+                var maxAoeDistance = 0;
                 var foundAoeBlocks = false;
+
+                if (!detRequested)
+                    DamageBlockCache[0].Add(rootBlock);
+
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxDbc, out foundAoeBlocks);
-                    //Log.Line($"got blocks to distance: {maxDbc} - wasDetonating:{detRequested}");
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks);
+                    //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
-                var offset = !detActive && foundAoeBlocks ? 2 : 1;
-                maxDbc = !foundAoeBlocks ? 1 : maxDbc + offset;
+                var blockStages = maxAoeDistance + 1;
 
-                for (int j = 0; j < maxDbc; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
+                for (int j = 0; j < blockStages; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
-                    if (earlyExit || i  < 0)
-                        break;
+                    var dbc = DamageBlockCache[j];
 
-                    var rootStep = j == 0 && !detActive;
-                    //Log.Line($"i:{i} - j:{j} - detonating:{detRequested} - maxDbc:{maxDbc} - foundAoeBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0) - detComp:{detActive}");
-
-                    int dbCount = 1;
-                    var aoeDamageFall = 0d;
-                    List<IMySlimBlock> dbc = null;
-
-                    if (!rootStep)
+                    if (earlyExit)
                     {
-                        try
-                        {
-                            dbc = DamageBlockCache[j - (offset - 1)];
-                        }
-                        catch
-                        {
-                            Log.Line($"[DamageBlockCache crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - offset:{offset} - index:{j - (offset - 1)} - maxDbc:{maxDbc}");
-                            foreach (var l in DamageBlockCache)
-                                l.Clear();
-                            
-                            earlyExit = true;
-                            break;
-                        }
-                        dbCount = dbc.Count;
-                        if (dbCount == 0)
-                        {
-                            //Log.Line($"dbCount == 0 - i:{i} - j:{j}");
-                            continue;
-                        }
+                        dbc.Clear();
+                        break;
                     }
 
+                    if (breakMidLoop)
+                        break;
+
+                    //Log.Line($"i:{i} - j:{j} - currentRadius:{detRequested} - detActive:{detActive} - distance:{maxAoeDistance} - foundBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0)");
+
+                    var aoeDamageFall = 0d;
                     if (hasAoe || hasDet && detRequested)
                     {
                         //Falloff switches & calcs for type of explosion & aoeDamageFall as output
@@ -469,32 +455,19 @@ namespace CoreSystems
                         }
                     }
 
-                    //apply to blocks (k) in distance group (j)
-                    for (int k = 0; k < dbCount; k++)
+                    for (int k = 0; k < dbc.Count; k++)
                     {
-                        if (earlyExit || i < 0)
+                        var block = dbc[k];
+
+                        if (partialShield && SApi.IsBlockProtected(block))
+                            earlyExit = true;
+
+                        if (earlyExit)
                             break;
 
-                        var block = rootBlock;//temp for debug purposes in try below
-                        try
-                        {
-                            block = !rootStep ? dbc[k] : rootBlock;
-
-                        }
-                        catch
-                        {
-                            Log.Line($"Index error on calling group DBC[J{j}][K{k}]" +
-                                $"hasaoe {hasAoe} or hasdet{hasDet}");
-                            continue;
-                        }
                         if (block.IsDestroyed)
                             continue;
 
-                        if (partialShield && SApi.IsBlockProtected(block))
-                        {
-                            earlyExit = true;
-                            break;
-                        }
 
                         var cubeBlockDef = (MyCubeBlockDefinition)block.BlockDefinition;
                         float cachedIntegrity;
@@ -577,6 +550,7 @@ namespace CoreSystems
                                 damageScale *= fallOffMultipler;
                         }
 
+                        var rootStep = k == 0 && j == 0 && !detActive;
                         var primaryDamage = rootStep && block == rootBlock;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
@@ -589,7 +563,7 @@ namespace CoreSystems
                             basePool = 0;
                             t.BaseDamagePool = basePool;
                             detRequested = hasDet;
-                            //  Log.Line($"basePool exhausted: detonating:{detRequested} - i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
+                            ///Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
                             if (hitMass > 0)//apply force
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
@@ -648,14 +622,14 @@ namespace CoreSystems
                         //Apply damage
                         if (canDamage)
                         {
-                            //Log.Line($"damage: i:{i} - j:{j} - k:{k}[{dbCount - 1}] - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - detActive:{detActive} - foundAoeBlocks:{foundAoeBlocks}");
+                            //Log.Line($"damage: i:{i} - j:{j} - k:{k} - damage:{scaledDamage} of blockHp:{blockHp} - primary:{primaryDamage} - isRoot:{rootBlock == block} - aoeDepth:{aoeDepth} - detActive:{detActive} - foundBlocks:{foundAoeBlocks}");
                             try
                             {
                                 block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
                             }
                             catch
                             {
-                                Log.Line($"[DoDamage crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - offset:{offset} - index:{j - (offset - 1)} - maxDbc:{maxDbc} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
+                                Log.Line($"[DoDamage crash] detonating:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxDbc:{maxAoeDistance} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
                                 foreach (var l in DamageBlockCache)
                                     l.Clear();
 
@@ -684,15 +658,17 @@ namespace CoreSystems
                         {
                             if (detRequested && !detActive)
                             {
-                                //Log.Line($"start det phase: i:{i} - j:{j} - k:{k}[{dbCount - 1}]");
+                                //Log.Line($"[START-DET] i:{i} - j:{j} - k:{k}");
                                 detActive = true;
+                                breakMidLoop = true;
+
                                 --i;
-                                dbc?.Clear();
+                                dbc.Clear();
                                 break;
                             }
 
                             if (detRequested) {
-                                //Log.Line($"early exit by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                //Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
@@ -703,10 +679,10 @@ namespace CoreSystems
                             }
                         }
                     }
-
-                    dbc?.Clear();
+                    dbc.Clear();
                 }
 
+                breakMidLoop = false;
             }
 
             //stuff I still haven't looked at yet
@@ -956,7 +932,7 @@ namespace CoreSystems
             
             int maxradius = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
             int i, j, k;
-            int maxdepth = (int)Math.Ceiling(depth*grid.GridSizeR); //Meters to cube conversion.  Round up or down?
+            int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
             Vector3I min2 = Vector3I.Max(rootPos - maxradius, grid.Min);
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, grid.Max);
 
