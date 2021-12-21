@@ -562,10 +562,10 @@ namespace CoreSystems
                         }
 
                         var rootStep = k == 0 && j == 0 && !detActive;
-                        var primaryDamage = rootStep && block == rootBlock;//limits application to first run w/AOE, suppresses with detonation
+                        var primaryDamage = rootStep && block == rootBlock && !detActive;//limits application to first run w/AOE, suppresses with detonation
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
-                        var aoeScaledDmg = (float)((aoeDamageFall * (detRequested ? detDamageScale : areaDamageScale)) * damageScale);
+                        var aoeScaledDmg = (float)((aoeDamageFall * (detActive ? detDamageScale : areaDamageScale)) * damageScale);
                         bool deadBlock = false;
 
                         //Check for end of primary life
@@ -674,7 +674,7 @@ namespace CoreSystems
                                 break;
                             }
 
-                            if (detRequested) {
+                            if (detActive) {
                                 //Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
@@ -691,6 +691,7 @@ namespace CoreSystems
                 for (int l = 0; l < blockStages; l++)
                     DamageBlockCache[l].Clear();
 
+                detRequested = false;
                 breakMidLoop = false;
             }
 
