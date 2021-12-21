@@ -324,6 +324,7 @@ namespace CoreSystems
 
             //Generics used for both AOE and detonation
             var aoeFalloff = Falloff.NoFalloff;
+            var aoeShape = AOEShape.Diamond;
 
             var hasAoe = t.AmmoDef.AreaOfDamage.ByBlockHit.Enable; 
             var hasDet = t.AmmoDef.AreaOfDamage.EndOfLife.Enable && t.Age >= t.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime;
@@ -361,7 +362,8 @@ namespace CoreSystems
                     aoeRadius = t.AmmoDef.Const.AreaEffectSize; //fix type in definitions to float?
                     aoeFalloff = t.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
                     aoeAbsorb = t.AmmoDef.Const.AoeMaxAbsorb;
-                    aoeDepth = t.AmmoDef.AreaOfDamage.ByBlockHit.Depth;
+                    aoeDepth = t.AmmoDef.Const.ByBlockHitDepth;
+                    aoeShape = t.AmmoDef.AreaOfDamage.ByBlockHit.Shape;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
                 else if (hasDet && detRequested)//load in Detonation vars
@@ -370,7 +372,8 @@ namespace CoreSystems
                     aoeRadius = t.AmmoDef.Const.DetonationRadius;
                     aoeFalloff = t.AmmoDef.AreaOfDamage.EndOfLife.Falloff;
                     aoeAbsorb = t.AmmoDef.Const.DetMaxAbsorb;
-                    aoeDepth = t.AmmoDef.AreaOfDamage.EndOfLife.Depth;
+                    aoeDepth = t.AmmoDef.Const.EndOfLifeDepth;
+                    aoeShape = t.AmmoDef.AreaOfDamage.EndOfLife.Shape;
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
 
@@ -405,7 +408,7 @@ namespace CoreSystems
 
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks);
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -434,7 +437,7 @@ namespace CoreSystems
                                 aoeDamageFall = (maxfalldist - j) / maxfalldist * aoeDamage;
                                 break;
                             case Falloff.Curve:  //Drops sharply closer to max range
-                                aoeDamageFall = 100 - j / maxfalldist / (maxfalldist - j) * aoeDamage;
+                                aoeDamageFall = aoeDamage - j / maxfalldist / (maxfalldist - j) * aoeDamage;
                                 break;
                             case Falloff.InvCurve:  //Drops at beginning, roughly similar to inv square
                                 aoeDamageFall = (maxfalldist - j) / maxfalldist * (maxfalldist - j) / maxfalldist * aoeDamage;
@@ -925,12 +928,12 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AOEShape shape) //added depth and angle
         {
 
             var rootPos = root.Position; //local cube grid
             if (root.Min != root.Max) rootPos = localpos;
-
+            
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
             
@@ -1001,8 +1004,17 @@ namespace CoreSystems
                         MyCube cube;
                         if (grid.TryGetCube(vector3I, out cube))  
                         {
+                            int hitdist = 9999;
+                            switch(shape)
+                            {
+                                case AOEShape.Diamond:
+                                    hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
+                                    break;
 
-                            int hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
+                                case AOEShape.Round:
+                                    hitdist = (int)Math.Sqrt((rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z));
+                                    break;
+                            }
 
                             if (hitdist <= maxradius)
                             {
