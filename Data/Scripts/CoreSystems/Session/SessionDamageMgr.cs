@@ -993,7 +993,6 @@ namespace CoreSystems
 
             }
 
-
             var damageBlockCache = DamageBlockCache;
 
             for (i = min2.X; i <= max2.X; ++i)
@@ -1013,7 +1012,7 @@ namespace CoreSystems
                                     hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
                                     break;
                                 case AoeShape.Round:
-                                    hitdist = IntSqrtLookup[(rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z)];
+                                    hitdist = (int)Math.Round(Math.Sqrt((rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z)));
                                     break;
                                 default:
                                     hitdist = int.MaxValue;
@@ -1041,7 +1040,6 @@ namespace CoreSystems
                                         distArray.Add(slim);
                                         foundSomething = true;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
-                                        //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                     }
    
                                    
@@ -1051,7 +1049,6 @@ namespace CoreSystems
                                     distArray.Add(slim);
                                     foundSomething = true;
                                     if (hitdist > maxDbc) maxDbc = hitdist;
-                                    //slim.Dithering = 0.5f;//temp debug to make "hits" go clear, including the root block
                                 }
                             }
                         }
