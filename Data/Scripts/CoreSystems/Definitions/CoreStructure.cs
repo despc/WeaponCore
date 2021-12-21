@@ -107,6 +107,13 @@ namespace CoreSystems.Support
                 for (int i = 0; i < weaponDef.Ammos.Length; i++)
                 {
                     var ammo = weaponDef.Ammos[i];
+
+                    if (string.IsNullOrEmpty(ammo.AmmoRound))
+                    {
+                        var newName = tDef.Key + "-"+ i;
+                        Log.Line($"[!!! MOD ERROR !!!] Invalid AmmoName for weapon [{tDef.Key}] --- Forcing ammo name to: {newName}");
+                        ammo.AmmoRound = newName;
+                    }
                     var ammoDefId = new MyDefinitionId();
                     var ejectionDefId = new MyDefinitionId();
 
