@@ -180,6 +180,8 @@ namespace CoreSystems.Support
         public readonly bool EnergyDetDmg;
         public readonly bool EnergyShieldDmg;
         public readonly bool SlowFireFixedWeapon;
+        public readonly bool HasNegFragmentOffset;
+        public readonly bool HasFragmentOffset;
         public readonly float FragmentOffset;
         public readonly float FallOffDistance;
         public readonly float FallOffMinMultiplier;
@@ -193,7 +195,6 @@ namespace CoreSystems.Support
         public readonly float MagVolume;
         public readonly float Health;
         public readonly float BaseDamage;
-
         public readonly float DetMaxAbsorb;
         public readonly float AoeMaxAbsorb;
         public readonly float AreaEffectDamage;
@@ -303,7 +304,10 @@ namespace CoreSystems.Support
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
-            FragmentOffset = ammo.AmmoDef.Fragment.Fragments; 
+            HasFragmentOffset = !MyUtils.IsZero(ammo.AmmoDef.Fragment.Offset);
+            HasNegFragmentOffset = ammo.AmmoDef.Fragment.Offset < 0;
+            FragmentOffset = Math.Abs(ammo.AmmoDef.Fragment.Offset);
+
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
             ArmorCoreActive = session.ArmorCoreActive;
@@ -315,7 +319,7 @@ namespace CoreSystems.Support
             MaxLateralThrust = MathHelperD.Clamp(ammo.AmmoDef.Trajectory.Smarts.MaxLateralThrust, 0.000001, 1);
 
             //remap
-            RemapLegacyAoeAndEwar(ammo.AmmoDef);
+            RemapLegacy(ammo.AmmoDef);
 
             CustomDetParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle);
             DetParticleStr = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle) ? ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle : "Explosion_Missile";
@@ -368,7 +372,7 @@ namespace CoreSystems.Support
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
 
-        private void RemapLegacyAoeAndEwar(AmmoDef ammoDef)
+        private void RemapLegacy(AmmoDef ammoDef)
         {
             var oldDetDetected = ammoDef.AreaEffect.Detonation.DetonateOnEnd;
             var oldType = ammoDef.AreaEffect.AreaEffect;

@@ -406,6 +406,7 @@ namespace CoreSystems.Support
                 var frag = fragPool.Get();
                 frag.System = p.Info.System;
                 frag.Ai = p.Info.Ai;
+                var aConst = p.Info.AmmoDef.Const;
                 frag.AmmoDef = p.Info.System.AmmoTypes[p.Info.AmmoDef.Const.ShrapnelId].AmmoDef;
                 frag.TargetEntity = p.Info.Target.TargetEntity;
                 frag.Overrides = p.Info.Overrides;
@@ -416,7 +417,15 @@ namespace CoreSystems.Support
                 frag.CoreCube = p.Info.Target.CoreCube;
                 frag.CoreIsCube = p.Info.Target.CoreIsCube;
                 frag.Guidance = p.Info.EnableGuidance;
-                frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) + (p.Info.Direction * frag.AmmoDef.Const.FragmentOffset); 
+
+                if (aConst.HasFragmentOffset)
+                {
+                    if (aConst.HasNegFragmentOffset)
+                        frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) - (p.Info.Direction * aConst.FragmentOffset);
+                    else
+                        frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) + (p.Info.Direction * aConst.FragmentOffset);
+                }
+
                 frag.OriginUp = p.Info.OriginUp;
                 frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
                 frag.DoDamage = p.Info.DoDamage;
@@ -424,7 +433,7 @@ namespace CoreSystems.Support
                 frag.Velocity = !p.Info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;
                 frag.DeadSphere = p.DeadSphere;
                 frag.LockOnFireState = p.Info.LockOnFireState;
-                frag.IgnoreShield = p.Info.ShieldBypassed && p.Info.AmmoDef.Const.ShieldDamageBypassMod > 0;
+                frag.IgnoreShield = p.Info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
                 var dirMatrix = Matrix.CreateFromDir(p.Info.Direction);
                 var posValue = MathHelper.ToRadians(MathHelper.Clamp(p.Info.AmmoDef.Fragment.Degrees, 0, 360));
                 posValue *= 0.5f;

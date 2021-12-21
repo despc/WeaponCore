@@ -510,7 +510,20 @@ namespace CoreSystems
                                 float modifier;
                                 var found = t.AmmoDef.Const.CustomBlockDefinitionBasesToScales.TryGetValue(blockDef, out modifier);
                                 if (found) damageScale *= modifier;
-                                else if (t.AmmoDef.DamageScales.Custom.IgnoreAllOthers) continue;
+                                
+                                if (t.AmmoDef.DamageScales.Custom.SkipOthers != CustomScalesDef.SkipMode.NoSkip) {
+
+                                    var exclusive = t.AmmoDef.DamageScales.Custom.SkipOthers == CustomScalesDef.SkipMode.Exclusive;
+                                    if (exclusive && !found)
+                                        continue;
+                                    
+                                    if (exclusive)
+                                        damageScale *= modifier;
+                                    else if (found)
+                                        continue;
+                                }
+                                else
+                                    damageScale *= modifier;
                             }
 
                             if (GlobalDamageModifed)
