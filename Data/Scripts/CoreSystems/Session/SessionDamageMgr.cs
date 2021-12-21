@@ -118,13 +118,13 @@ namespace CoreSystems
             var scaledDamage = (scaledBaseDamage) * info.AmmoDef.Const.ShieldModifier * shieldDmgGlobal* info.ShieldResistMod* info.ShieldBypassMod;
 
             var areafalloff = info.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
-            var aoeMaxAbsorb = info.AmmoDef.AreaOfDamage.ByBlockHit.MaxAbsorb;
+            var aoeMaxAbsorb = info.AmmoDef.Const.AoeMaxAbsorb;
             var unscaledAoeDmg = info.AmmoDef.Const.AreaEffectDamage;
             var aoeRadius = (float)info.AmmoDef.Const.AreaEffectSize;
 
             //Detonation info
             var detfalloff = info.AmmoDef.AreaOfDamage.EndOfLife.Falloff;
-            var detmaxabsorb = info.AmmoDef.AreaOfDamage.EndOfLife.MaxAbsorb;
+            var detmaxabsorb = info.AmmoDef.Const.DetMaxAbsorb;
             var unscaledDetDmg = info.AmmoDef.Const.DetonationDamage;
             var detradius = info.AmmoDef.Const.DetonationRadius;
 
@@ -133,7 +133,7 @@ namespace CoreSystems
                 var fallOffMultipler = MathHelperD.Clamp(1.0 - ((distTraveled - info.AmmoDef.Const.FallOffDistance) / (info.AmmoDef.Const.MaxTrajectory - info.AmmoDef.Const.FallOffDistance)), info.AmmoDef.DamageScales.FallOff.MinMultipler, 1);
                 scaledDamage *= fallOffMultipler;
             }
-
+            //Log.Line($"Pri- {scaledDamage}  Det- fall {detfalloff} dmg{unscaledDetDmg} rad{detradius}      Area- fall{areafalloff} dmg{unscaledAoeDmg} rad {aoeRadius}");
             //detonation falloff scaling and capping by maxabsorb
             if (detonateOnEnd)
             {
@@ -161,6 +161,7 @@ namespace CoreSystems
             
             }
             var detonateDamage = detonateOnEnd && info.ShieldBypassMod >= 1 ? (unscaledDetDmg * info.AmmoDef.Const.ShieldModifier * areaDmgGlobal * shieldDmgGlobal) * info.ShieldResistMod : 0;
+            //Log.Line($"detdmg {detonateDamage}  maxabsorb{detmaxabsorb}");
             if (detonateDamage >= detmaxabsorb) detonateDamage = detmaxabsorb;
             //end of new detonation stuffs
 
@@ -222,6 +223,7 @@ namespace CoreSystems
                         }
                 }
             }
+            //Log.Line($"Shld hit:  Scaled pri & blockhit AOE {scaledDamage}   det dmg{detonateDamage}");
             var hitWave = info.AmmoDef.Const.RealShotsPerMin <= 120;
             var hit = SApi.PointAttackShieldCon(shield, hitEnt.HitPos.Value, info.Target.CoreEntity.EntityId, (float)scaledDamage, (float)detonateDamage, energy, hitWave);
             if (hit.HasValue)
