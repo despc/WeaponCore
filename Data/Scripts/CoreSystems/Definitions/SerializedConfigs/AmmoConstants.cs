@@ -324,7 +324,7 @@ namespace CoreSystems.Support
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.Ewar.Field.Particle.Name);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
-            AreaEffects(ammo.AmmoDef, out EwarType, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb); 
+            AreaEffects(ammo.AmmoDef, out EwarType, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb);
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -353,7 +353,7 @@ namespace CoreSystems.Support
             ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && ShrapnelId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
-                 Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {ShrapnelId}");
+                Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {ShrapnelId}");
 
             SlowFireFixedWeapon = system.TurretMovement == WeaponSystem.TurretType.Fixed && (RealShotsPerMin <= 120 || Reloadable && system.WConst.ReloadTime >= 120);
 
@@ -375,7 +375,7 @@ namespace CoreSystems.Support
             var oldDamageType = oldType == AmmoDef.AreaDamageDef.AreaEffectType.Explosive || oldType == AmmoDef.AreaDamageDef.AreaEffectType.Radiant;
             if (oldDamageType)
             {
-                var currentDamage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength; 
+                var currentDamage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
                 var currentRadius = ammoDef.AreaEffect.Base.Radius;
                 if (currentDamage > 0 && currentRadius > 0)
                 {
@@ -409,7 +409,7 @@ namespace CoreSystems.Support
 
                 ammoDef.Ewar.Radius = ammoDef.AreaEffect.Base.Radius <= 0 ? ammoDef.AreaEffect.AreaEffectDamage : ammoDef.AreaEffect.Base.Radius;
                 ammoDef.Ewar.Strength = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.AreaEffect.AreaEffectDamage : ammoDef.AreaEffect.Base.EffectStrength;
-                
+
                 ammoDef.Ewar.Depletable = ammoDef.AreaEffect.EwarFields.Depletable;
                 ammoDef.Ewar.NoHitParticle = ammoDef.AreaEffect.EwarFields.DisableParticleEffect;
                 ammoDef.Ewar.StackDuration = ammoDef.AreaEffect.EwarFields.StackDuration;
@@ -749,16 +749,26 @@ namespace CoreSystems.Support
             }
             realShotsPerMin = (shotsPerSec * 60);
             baseDps = BaseDamage * shotsPerSec;
-            areaDps = AreaEffectDamage * shotsPerSec;
+            areaDps = 0; //TODO: Add back in some way
             detDps = (GetDetDmg(a) * shotsPerSec);
             if (mexLogLevel >= 1) Log.Line($"Got Area damage={AreaEffectDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
                 var sAmmo = wDef.Ammos[ShrapnelId];
                 var fragments = a.Fragment.Fragments;
-                baseDps += (sAmmo.BaseDamage * fragments) * shotsPerSec;
-                areaDps += (AreaEffectDamage * fragments) * shotsPerSec;
-                detDps += (GetDetDmg(sAmmo) * fragments) * shotsPerSec;
+
+                var FragDmg = 0.0f;
+
+                FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, 0, a);
+                //TODO: Add pattern average damage
+
+                //Log.Line($"Total Fragment Dmg -- {FragDmg}");
+
+                //TODO: fix when fragDmg is split
+                baseDps += FragDmg;
+                //baseDps += (sAmmo.BaseDamage * fragments) * shotsPerSec;
+                areaDps += 0;
+                //detDps += (GetDetDmg(sAmmo) * fragments) * shotsPerSec;
             }
             peakDps = (baseDps + areaDps + detDps);
             effectiveDps = (float)(peakDps * effectiveModifier);
@@ -767,6 +777,38 @@ namespace CoreSystems.Support
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
         }
 
+        private float FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, float FragDmg, int pastI, AmmoDef parentAmmo)
+        {
+            //Log.Line($"Found Ammos= {wDef.Ammos.Length}");
+            for (int j = pastI; j < wDef.Ammos.Length; j++)
+            {
+                //Log.Line($"Found J= {j}");
+                var fragmentAmmo = wDef.Ammos[j];
+                if (fragmentAmmo.AmmoRound.Equals(parentAmmo.Fragment.AmmoRound))
+                {
+                    //Log.Line($"Found [{pastI}|{j}] Fragment= {fragmentAmmo.Fragment.AmmoRound}");
+
+                    FragDmg += GetShrapnelDamage(fragmentAmmo, parentAmmo.Fragment.Fragments, shotsPerSec);
+                    FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, j, fragmentAmmo);
+
+                }
+            }
+
+            return FragDmg;
+        }
+
+        private float GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps)
+        {
+            float fragDmg = 0;
+
+            fragDmg += (fAmmo.BaseDamage * frags) * sps;
+            fragDmg += 0;
+            fragDmg += (GetDetDmg(fAmmo) * frags) * sps;
+
+            // TODO: Split into fragBaseDmg,FragAreaDmg, fragAoeDmg
+
+            return fragDmg;
+        }
         private float GetShotsPerSecond(int magCapacity, int rof, int reloadTime, int barrelsPerShot, int trajectilesPerBarrel, int shotsInBurst, int delayAfterBurst)
         {
             if (mexLogLevel > 0) Log.Line($"magCapacity={magCapacity} rof={rof} reloadTime={reloadTime} barrelsPerShot={barrelsPerShot} trajectilesPerBarrel={trajectilesPerBarrel} shotsInBurst={shotsInBurst} delayAfterBurst={delayAfterBurst}");
@@ -785,11 +827,55 @@ namespace CoreSystems.Support
 
         private float GetDetDmg(AmmoDef a)
         {
-            if (!a.AreaOfDamage.EndOfLife.Enable)
+            var dmgOut = 0.0d;
+            var dmgByBlockHit = a.AreaOfDamage.ByBlockHit;
+            var dmgEndOfLife = a.AreaOfDamage.EndOfLife;
+
+
+            if (dmgByBlockHit.Enable)
             {
-                return 0;
+                if (mexLogLevel >= 1) Log.Line($"ByBlockHit = {dmgByBlockHit.Falloff.ToString()}");
+
+                dmgOut += dmgByBlockHit.Damage * GetFalloffModifier(dmgByBlockHit.Falloff.ToString(), (float)dmgByBlockHit.Radius); ;
+
+            };
+
+            if (dmgEndOfLife.Enable)
+            {
+                if (mexLogLevel >= 1) Log.Line($"EndOffLife = {dmgEndOfLife.Falloff.ToString()}");
+                dmgOut += dmgEndOfLife.Damage * GetFalloffModifier(dmgEndOfLife.Falloff.ToString(), (float)dmgEndOfLife.Radius); ;
+            };
+            if (mexLogLevel >= 1) Log.Line($"dmgOut = {dmgOut}");
+            return (float)dmgOut;
+        }
+
+        private static float GetFalloffModifier(string falloffType, float radius)
+        {
+            var falloffModifier = 1.0f;
+            Log.Line($"Name = {falloffType}");
+            switch (falloffType)
+            {
+                case "NoFalloff":
+                    falloffModifier = radius * 1;
+                    break;
+                case "Linear":
+                    falloffModifier = radius * 0.55f;
+                    break;
+                case "Curve":
+                    falloffModifier = radius * 0.81f;
+                    break;
+                case "InvCurve":
+                    falloffModifier = radius * 0.39f;
+                    break;
+                case "Squeeze":
+                    falloffModifier = radius * 0.22f;
+                    break;
+                default:
+                    falloffModifier = 1;
+                    break;
             }
-            return (float)(DetonationDamage * (DetonationRadius * 0.5d));
+
+            return falloffModifier;
         }
 
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)
@@ -894,8 +980,8 @@ namespace CoreSystems.Support
                         }
             }
 
-            damageScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;    
-            
+            damageScaling = FallOffMinMultiplier > 0 && !MyUtils.IsZero(FallOffMinMultiplier - 1) || d.MaxIntegrity > 0 || d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0 || d.Grids.Large >= 0 || d.Grids.Small >= 0 || customDamageScales || ArmorCoreActive;
+
             if (damageScaling)
             {
                 armorScaling = d.Armor.Armor >= 0 || d.Armor.NonArmor >= 0 || d.Armor.Heavy >= 0 || d.Armor.Light >= 0;
@@ -1024,7 +1110,7 @@ namespace CoreSystems.Support
 
             var givenShieldModifier = AmmoModsFound && _modifierMap[ShieldModStr].HasData() ? _modifierMap[ShieldModStr].GetAsDouble : ammoDef.DamageScales.Shields.Modifier;
             shieldModifier = givenShieldModifier < 0 ? 1 : givenShieldModifier;
-            
+
             fallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammoDef.DamageScales.FallOff.Distance;
             fallOffMinMult = AmmoModsFound && _modifierMap[FallOffMinMultStr].HasData() ? _modifierMap[FallOffMinMultStr].GetAsFloat : ammoDef.DamageScales.FallOff.MinMultipler;
         }
