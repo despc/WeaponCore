@@ -324,7 +324,7 @@ namespace CoreSystems
 
             //Generics used for both AOE and detonation
             var aoeFalloff = Falloff.NoFalloff;
-            var aoeShape = AOEShape.Diamond;
+            var aoeShape = AoeShape.Diamond;
 
             var hasAoe = t.AmmoDef.AreaOfDamage.ByBlockHit.Enable; 
             var hasDet = t.AmmoDef.AreaOfDamage.EndOfLife.Enable && t.Age >= t.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime;
@@ -928,7 +928,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AOEShape shape) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AoeShape shape) //added depth and angle
         {
 
             var rootPos = root.Position; //local cube grid
@@ -1004,15 +1004,17 @@ namespace CoreSystems
                         MyCube cube;
                         if (grid.TryGetCube(vector3I, out cube))  
                         {
-                            int hitdist = 9999;
+                            int hitdist;
                             switch(shape)
                             {
-                                case AOEShape.Diamond:
+                                case AoeShape.Diamond:
                                     hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
                                     break;
-
-                                case AOEShape.Round:
-                                    hitdist = (int)Math.Sqrt((rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z));
+                                case AoeShape.Round:
+                                    hitdist = IntSqrtLookup[(rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z)];
+                                    break;
+                                default:
+                                    hitdist = int.MaxValue;
                                     break;
                             }
 

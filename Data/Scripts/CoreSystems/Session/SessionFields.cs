@@ -213,6 +213,7 @@ namespace CoreSystems
         internal readonly List<MyTuple<IMyPlayer, Vector4, FakeTarget>> ActiveMarks = new List<MyTuple<IMyPlayer, Vector4, FakeTarget>>();
         internal readonly Queue<PartAnimation> ThreadedAnimations = new Queue<PartAnimation>();
 
+        internal readonly int[] IntSqrtLookup = new int[262646];
         internal readonly int[] AuthorSettings = new int[6];
         internal readonly List<Weapon>[] LeadGroups = new List<Weapon>[4];
 
@@ -521,6 +522,11 @@ namespace CoreSystems
 
             for (int i = 0; i < DamageBlockCache.Length; i++)
                DamageBlockCache[i] = new List<IMySlimBlock>();
+
+            for (int i = 0; i < IntSqrtLookup.Length; i++)
+            {
+                IntSqrtLookup[i] = (int)Math.Round(Math.Sqrt(i));
+            }
         }
     }
 }

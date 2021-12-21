@@ -858,7 +858,6 @@ namespace CoreSystems.Support
         private static float GetFalloffModifier(string falloffType, float radius)
         {
             var falloffModifier = 1.0f;
-            Log.Line($"Name = {falloffType}");
             switch (falloffType)
             {
                 case "NoFalloff":

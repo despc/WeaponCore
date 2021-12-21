@@ -842,10 +842,10 @@ namespace CoreSystems.Support
                     Pooled,
                 }
 
-                public enum AOEShape
+                public enum AoeShape
                 {
-                    Diamond,
                     Round,
+                    Diamond,
                 }
 
                 [ProtoMember(1)] internal ByBlockHitDef ByBlockHit;
@@ -860,7 +860,7 @@ namespace CoreSystems.Support
                     [ProtoMember(4)] internal float Depth;
                     [ProtoMember(5)] internal float MaxAbsorb;
                     [ProtoMember(6)] internal Falloff Falloff;
-                    [ProtoMember(7)] internal AOEShape Shape;
+                    [ProtoMember(7)] internal AoeShape Shape;
 
                 }
 
@@ -880,8 +880,7 @@ namespace CoreSystems.Support
                     [ProtoMember(11)] internal float ParticleScale;
                     [ProtoMember(12)] internal string CustomParticle;
                     [ProtoMember(13)] internal string CustomSound;
-                    [ProtoMember(14)] internal AOEShape Shape;
-
+                    [ProtoMember(14)] internal AoeShape Shape;
                 }
             }
 
