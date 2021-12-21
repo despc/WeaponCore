@@ -896,7 +896,6 @@ namespace CoreSystems.Support
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.AmmoGraphics.Particles.Ammo.Name, ref matrix, ref TracerFront, renderId, out AmmoEffect))
             {
 
-                //AmmoEffect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
                 AmmoEffect.UserScale = AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Scale;
 
                 AmmoParticleStopped = false;
@@ -912,7 +911,6 @@ namespace CoreSystems.Support
             var pos = TriggerEntity.PositionComp.WorldAABB.Center;
             if (MyParticlesManager.TryCreateParticleEffect(AmmoDef.Ewar.Field.Particle.Name, ref TriggerMatrix, ref pos, uint.MaxValue, out FieldEffect))
             {
-                //FieldEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Pulse.Particle.Extras.Scale;
                 FieldEffect.UserScale = AmmoDef.Ewar.Field.Particle.Extras.Scale;
 
                 FieldParticleStopped = false;
@@ -965,7 +963,6 @@ namespace CoreSystems.Support
                 if (effect.Loop || effect.DurationMax <= 0)
                     System.Session.Av.BeamEffects[UniqueMuzzleId] = effect;
 
-                //effect.UserRadiusMultiplier = AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
                 effect.UserScale = AmmoDef.AmmoGraphics.Particles.Hit.Extras.Scale;
 
                 Vector3D.ClampToSphere(ref vel, (float)MaxSpeed);
@@ -1018,7 +1015,6 @@ namespace CoreSystems.Support
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
-                            //detEffect.UserRadiusMultiplier = AmmoDef.AreaEffect.Explosions.Scale;
                             detEffect.UserScale = AmmoDef.AreaOfDamage.EndOfLife.ParticleScale;
 
                             detEffect.Velocity = Hit.HitVelocity;
