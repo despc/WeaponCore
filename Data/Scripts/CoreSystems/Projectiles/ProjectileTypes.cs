@@ -407,7 +407,7 @@ namespace CoreSystems.Support
                 frag.System = p.Info.System;
                 frag.Ai = p.Info.Ai;
                 var aConst = p.Info.AmmoDef.Const;
-                frag.AmmoDef = p.Info.System.AmmoTypes[p.Info.AmmoDef.Const.ShrapnelId].AmmoDef;
+                frag.AmmoDef = p.Info.System.AmmoTypes[aConst.ShrapnelId].AmmoDef;
                 frag.TargetEntity = p.Info.Target.TargetEntity;
                 frag.Overrides = p.Info.Overrides;
                 frag.WeaponId = p.Info.PartId;
@@ -425,6 +425,8 @@ namespace CoreSystems.Support
                     else
                         frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) + (p.Info.Direction * aConst.FragmentOffset);
                 }
+                else 
+                    frag.Origin = !Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position;
 
                 frag.OriginUp = p.Info.OriginUp;
                 frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
