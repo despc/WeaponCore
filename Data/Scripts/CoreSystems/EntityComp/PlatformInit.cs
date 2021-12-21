@@ -76,7 +76,9 @@ namespace CoreSystems.Platform
             var newAi = false;
             if (!Comp.Session.EntityAIs.TryGetValue(Comp.TopEntity, out Comp.Ai)) {
                 newAi = true;
-                Comp.Ai = Comp.Session.GridAiPool.Get();
+
+                Comp.Ai = Comp.Session.AiPool.Count > 0 ? Comp.Session.AiPool.Pop() : new Ai(Comp.Session);
+
                 Comp.Ai.Init(Comp.TopEntity, Comp.Session, Comp.TypeSpecific);
                 Comp.Session.EntityAIs.TryAdd(Comp.TopEntity, Comp.Ai);
             }
@@ -213,7 +215,7 @@ namespace CoreSystems.Platform
                 part.RemoveFromGamePruningStructure();
                 part.Flags |= EntityFlags.IsNotGamePrunningStructureObject;
                 part.Render.NeedsDrawFromParent = true;
-                if (!optimizeOnly) 
+                if (!optimizeOnly || Parts.EntityNeedsWorld.ContainsKey(part)) 
                     part.NeedsWorldMatrix = true;
             }
         }

@@ -180,6 +180,7 @@ namespace CoreSystems.Support
         public readonly bool EnergyDetDmg;
         public readonly bool EnergyShieldDmg;
         public readonly bool SlowFireFixedWeapon;
+        public readonly float FragmentOffset;
         public readonly float FallOffDistance;
         public readonly float FallOffMinMultiplier;
         public readonly float EnergyCost;
@@ -302,6 +303,7 @@ namespace CoreSystems.Support
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
+            FragmentOffset = ammo.AmmoDef.Fragment.Fragments; 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
             ArmorCoreActive = session.ArmorCoreActive;

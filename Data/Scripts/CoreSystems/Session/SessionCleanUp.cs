@@ -61,7 +61,14 @@ namespace CoreSystems
 
             CompsDelayed.Clear();
             CompReAdds.Clear();
-            GridAiPool.Clean();
+
+            foreach (var a in AiPool)
+            {
+                if (a.Closed)
+                    continue;
+                a.CleanUp();
+            }
+            AiPool.Clear();
 
 
             PurgeTerminalSystem(this);

@@ -416,7 +416,7 @@ namespace CoreSystems.Support
                 frag.CoreCube = p.Info.Target.CoreCube;
                 frag.CoreIsCube = p.Info.Target.CoreIsCube;
                 frag.Guidance = p.Info.EnableGuidance;
-                frag.Origin = !Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position;
+                frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) + (p.Info.Direction * frag.AmmoDef.Const.FragmentOffset); 
                 frag.OriginUp = p.Info.OriginUp;
                 frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
                 frag.DoDamage = p.Info.DoDamage;

@@ -296,7 +296,7 @@ namespace CoreSystems.Support
         
         internal void AiDelayedClose()
         {
-            if (Session == null || TopEntity == null || Closed) {
+            if (TopEntity == null || Closed) {
                 Log.Line($"AiDelayedClose: Session is null {Session == null} - Grid is null {TopEntity == null}  - Closed: {Closed}");
                 return;
             }
@@ -307,20 +307,24 @@ namespace CoreSystems.Support
                 {
                     if (ScanInProgress)
                         return;
-                    Session.GridAiPool.Return(this);
+
+                    CleanUp();
+                    Session.AiPool.Push(this);
                 }
             }
         }
 
         internal void AiForceClose()
         {
-            if (Session == null || TopEntity == null || Closed) {
+            if (TopEntity == null || Closed) {
                 Log.Line($"AiDelayedClose: Session is null {Session == null} - Grid is null {TopEntity == null} - Closed: {Closed}");
                 return;
             }
 
             RegisterMyGridEvents(false, true);
-            Session.GridAiPool.Return(this);
+            
+            CleanUp();
+            Session.AiPool.Push(this);
         }
 
         internal void CleanSortedTargets()
@@ -407,7 +411,6 @@ namespace CoreSystems.Support
             PowerBlock = null;
             TopEntity = null;
             PowerDistributor = null;
-            Session = null;
             Closed = true;
             CanShoot = true;
             Version++;

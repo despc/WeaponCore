@@ -109,8 +109,7 @@ namespace CoreSystems.Support
             BlockChangeArea.Max = Vector3.Max(BlockChangeArea.Max, slim.Max);
             RemovedBlockPositions[slim.Position] = slim;
 
-            if (Session != null)
-                LastBlockChangeTick = Session.Tick;
+            LastBlockChangeTick = Session.Tick;
         }
 
         internal void OnBlockIntegrityChanged(IMySlimBlock mySlimBlock)
@@ -170,15 +169,11 @@ namespace CoreSystems.Support
         {
             try
             {
-                var sessionNull = Session == null;
                 var weaponType = (cube is MyConveyorSorter || cube is IMyUserControllableGun);
                 var cubeDef = cube.BlockDefinition;
-                var isWeaponBase = weaponType && cubeDef != null && !sessionNull && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cubeDef.Id) || Session.PartPlatforms.ContainsKey(cubeDef.Id));
+                var isWeaponBase = weaponType && cubeDef != null && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cubeDef.Id) || Session.PartPlatforms.ContainsKey(cubeDef.Id));
                 var battery = cube as MyBatteryBlock;
                 
-                if (sessionNull)
-                    Log.Line($"FatBlockRemoved Session was null: AiMarked:{MarkedForClose} - AiClosed:{Closed} - cubeMarked:{cube.MarkedForClose} - CubeGridMarked:{cube.CubeGrid.MarkedForClose} - isRegistered:{SubGridsRegistered.Contains(cube.CubeGrid)} - regCnt:{SubGridsRegistered.Count}");
-
                 MyInventory inventory;
                 if (!isWeaponBase && cube.HasInventory && cube.TryGetInventory(out inventory)) {
 

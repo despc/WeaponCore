@@ -113,7 +113,7 @@ namespace CoreSystems.Support
                     Ai ai;
                     if (!Session.EntityAIs.TryGetValue(TopEntity, out ai)) {
 
-                        var newAi = Session.GridAiPool.Get();
+                        var newAi = Session.AiPool.Count > 0 ? Session.AiPool.Pop() : new Ai(Session);
                         newAi.Init(TopEntity, Session, TypeSpecific);
                         Session.EntityAIs[TopEntity] = newAi;
                         Ai = newAi;

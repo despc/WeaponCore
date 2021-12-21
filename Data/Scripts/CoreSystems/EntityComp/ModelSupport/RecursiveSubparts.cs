@@ -19,6 +19,10 @@ namespace CoreSystems.Support
         private readonly Dictionary<string, IMyModelDummy> _tmp2 = new Dictionary<string, IMyModelDummy>();
         internal readonly Dictionary<string, MyEntity> NameToEntity = new Dictionary<string, MyEntity>();
         internal readonly Dictionary<MyEntity, string> EntityToName = new Dictionary<MyEntity, string>();
+        internal readonly Dictionary<MyEntity, string> EntityNeedsWorld = new Dictionary<MyEntity, string>();
+        internal const string VanillaBase = "MissileTurretBase1";
+        internal const string VanillaBarrels = "MissileTurretBarrels";
+
         private IMyModel _trackedModel;
         internal MyEntity Entity;
 
@@ -29,6 +33,7 @@ namespace CoreSystems.Support
             _tmp1.Clear();
             NameToEntity.Clear();
             EntityToName.Clear();
+            EntityNeedsWorld.Clear();
             _trackedModel = null;
             Entity = myEntity;
         }
@@ -41,6 +46,7 @@ namespace CoreSystems.Support
             _subparts.Clear();
             NameToEntity.Clear();
             EntityToName.Clear();
+            EntityNeedsWorld.Clear();
             if (Entity != null)
             {
                 var head = -1;
@@ -65,6 +71,8 @@ namespace CoreSystems.Support
                                 _subparts.Add(res);
                                 NameToEntity[name] = res;
                                 EntityToName[res] = name;
+                                if (name.Equals(VanillaBase) || name.Equals(VanillaBarrels))
+                                    EntityNeedsWorld[res] = name;
                             }
                         }
                         else NameToEntity[kv.Key] = Entity;

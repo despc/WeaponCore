@@ -80,7 +80,7 @@ namespace CoreSystems.Support
         internal readonly AiComponent AiComp;
         internal readonly AiCharger Charger;
 
-        internal Session Session;
+        internal readonly Session Session;
         internal MyEntity TopEntity;
         internal MyCubeGrid GridEntity;
         internal MyCubeBlock PowerBlock;
@@ -188,8 +188,9 @@ namespace CoreSystems.Support
         private readonly List<MyEntity> _possibleTargets = new List<MyEntity>();
         private uint _pCacheTick;
 
-        public Ai()
+        public Ai(Session session)
         {
+            Session = session;
             for (int i = 0; i < TargetState.Length; i++)
                 TargetState[i] = new TargetStatus();
 
@@ -213,8 +214,6 @@ namespace CoreSystems.Support
 
                 MaxTargetingRange = session.Settings.Enforcement.MinHudFocusDistance;
                 MaxTargetingRangeSqr = MaxTargetingRange * MaxTargetingRange;
-
-                Session = session;
 
                 if (CreatedTick == 0)
                     CreatedTick = session.Tick;

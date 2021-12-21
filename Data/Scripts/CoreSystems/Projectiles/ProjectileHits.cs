@@ -16,7 +16,6 @@ using VRage.Utils;
 using VRageMath;
 using static CoreSystems.Support.HitEntity.Type;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef.EwarType;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.DamageScaleDef;
 using static CoreSystems.Support.DeferedVoxels;
 using CollisionLayers = Sandbox.Engine.Physics.MyPhysics.CollisionLayers;
 namespace CoreSystems.Projectiles
@@ -52,7 +51,7 @@ namespace CoreSystems.Projectiles
                 var firingCube = p.Info.Target.CoreCube;
                 var goCritical = p.Info.AmmoDef.Const.IsCriticalReaction;
                 var selfDamage = p.Info.AmmoDef.Const.SelfDamage;
-
+                var ignoreVoxels = p.Info.AmmoDef.IgnoreVoxels;
                 var isGrid = p.Info.Ai.AiType == Ai.AiTypes.Grid;
                 WaterData water = null;
                 if (Session.WaterApiLoaded && p.Info.MyPlanet != null)
@@ -186,7 +185,7 @@ namespace CoreSystems.Projectiles
 
                     var destroyable = ent as IMyDestroyableObject;
                     var voxel = ent as MyVoxelBase;
-                    if (voxel != null && voxel == voxel?.RootVoxel)
+                    if (voxel != null && voxel == voxel?.RootVoxel && !ignoreVoxels)
                     {
 
                         if ((ent == p.Info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance || p.CachedPlanetHit)) || !p.LinePlanetCheck && isBeam)
