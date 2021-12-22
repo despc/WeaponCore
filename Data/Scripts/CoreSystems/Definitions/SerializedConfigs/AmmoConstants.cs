@@ -753,7 +753,7 @@ namespace CoreSystems.Support
                 }
 
             }
-            Log.Line($"Name = {s.PartName}");
+            
             realShotsPerMin = (shotsPerSec * 60);
             baseDps = BaseDamage * shotsPerSec;
             areaDps = 0; //TODO: Add back in some way
@@ -863,7 +863,7 @@ namespace CoreSystems.Support
             double blocksHit = Math.Round(((4 / 3) * 3.14f * Math.Pow(radius, 3)) / Math.Pow(2.5f, 3)) / 2;
             //Pyramid
             //double blocksHit = (((0.3333d*radius)*radius)*radius) / Math.Pow(2.5f, 3);
-            Log.Line($"blocksHit = {blocksHit}");
+            //Log.Line($"blocksHit = {blocksHit}");
 
 
             switch (falloffType)
