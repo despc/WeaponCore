@@ -35,9 +35,9 @@ namespace CoreSystems.Support
 
         private const string Arc = "Arc";
         private const string BaseDmgStr = "BaseDamage";
-        private const string AreaDmgStr = "ByBlockHitDamage";
+        private const string AreaDmgStr = "AreaEffectDamage";
         private const string AreaRadStr = "AreaEffectRadius";
-        private const string DetDmgStr = "EndOfLifeDamage";
+        private const string DetDmgStr = "DetonationDamage";
         private const string DetRadStr = "DetonationRadius";
         private const string HealthStr = "Health";
         private const string MaxTrajStr = "MaxTrajectory";
