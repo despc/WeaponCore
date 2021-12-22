@@ -702,15 +702,15 @@ namespace CoreSystems.Support
 
             if (!EnergyAmmo && MagazineSize > 0 || IsHybrid)
             {
-                shotsPerSec = GetShotsPerSecond(MagazineSize, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
+                shotsPerSec = GetShotsPerSecond(MagazineSize,wDef.HardPoint.Loading.MagsToLoad, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
             }
             else if (EnergyAmmo && a.EnergyMagazineSize > 0)
             {
-                shotsPerSec = GetShotsPerSecond(a.EnergyMagazineSize, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
+                shotsPerSec = GetShotsPerSecond(a.EnergyMagazineSize,1, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
             }
             else
             {
-                shotsPerSec = GetShotsPerSecond(1, s.WConst.RateOfFire, 0, s.BarrelsPerShot, l.TrajectilesPerBarrel, s.ShotsPerBurst, l.DelayAfterBurst);
+                shotsPerSec = GetShotsPerSecond(1,1, s.WConst.RateOfFire, 0, s.BarrelsPerShot, l.TrajectilesPerBarrel, s.ShotsPerBurst, l.DelayAfterBurst);
             }
             var shotsPerSecPower = shotsPerSec; //save for power calc
 
@@ -753,6 +753,7 @@ namespace CoreSystems.Support
                 }
 
             }
+            Log.Line($"Name = {s.PartName}");
             realShotsPerMin = (shotsPerSec * 60);
             baseDps = BaseDamage * shotsPerSec;
             areaDps = 0; //TODO: Add back in some way
@@ -763,7 +764,7 @@ namespace CoreSystems.Support
                 var sAmmo = wDef.Ammos[ShrapnelId];
                 var fragments = a.Fragment.Fragments;
 
-                var FragDmg = 0.0f;
+                Vector2 FragDmg = new Vector2(0, 0);
 
                 FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, 0, a);
                 //TODO: Add pattern average damage
@@ -771,9 +772,9 @@ namespace CoreSystems.Support
                 //Log.Line($"Total Fragment Dmg -- {FragDmg}");
 
                 //TODO: fix when fragDmg is split
-                baseDps += FragDmg;
+                baseDps += FragDmg.X;
                 //baseDps += (sAmmo.BaseDamage * fragments) * shotsPerSec;
-                areaDps += 0;
+                detDps += FragDmg.Y;
                 //detDps += (GetDetDmg(sAmmo) * fragments) * shotsPerSec;
             }
             peakDps = (baseDps + areaDps + detDps);
@@ -783,7 +784,7 @@ namespace CoreSystems.Support
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
         }
 
-        private float FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, float FragDmg, int pastI, AmmoDef parentAmmo)
+        private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo)
         {
             //Log.Line($"Found Ammos= {wDef.Ammos.Length}");
             for (int j = pastI; j < wDef.Ammos.Length; j++)
@@ -803,22 +804,22 @@ namespace CoreSystems.Support
             return FragDmg;
         }
 
-        private float GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps)
+        private Vector2 GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps)
         {
-            float fragDmg = 0;
+           Vector2 fragDmg = new Vector2(0,0);
 
-            fragDmg += (fAmmo.BaseDamage * frags) * sps;
-            fragDmg += 0;
-            fragDmg += (GetDetDmg(fAmmo) * frags) * sps;
+            fragDmg.X += (fAmmo.BaseDamage * frags) * sps;
+            //fragDmg += 0;
+            fragDmg.Y += (GetDetDmg(fAmmo) * frags) * sps;
 
             // TODO: Split into fragBaseDmg,FragAreaDmg, fragAoeDmg
 
             return fragDmg;
         }
-        private float GetShotsPerSecond(int magCapacity, int rof, int reloadTime, int barrelsPerShot, int trajectilesPerBarrel, int shotsInBurst, int delayAfterBurst)
+        private float GetShotsPerSecond(int magCapacity,int magPerReload, int rof, int reloadTime, int barrelsPerShot, int trajectilesPerBarrel, int shotsInBurst, int delayAfterBurst)
         {
             if (mexLogLevel > 0) Log.Line($"magCapacity={magCapacity} rof={rof} reloadTime={reloadTime} barrelsPerShot={barrelsPerShot} trajectilesPerBarrel={trajectilesPerBarrel} shotsInBurst={shotsInBurst} delayAfterBurst={delayAfterBurst}");
-            var reloadsPerRoF = rof / (magCapacity / (float)barrelsPerShot);
+            var reloadsPerRoF = rof / (magCapacity*magPerReload / (float)barrelsPerShot);
             var burstsPerRoF = shotsInBurst == 0 ? 0 : rof / (float)shotsInBurst;
             var ticksReloading = reloadsPerRoF * reloadTime;
 
@@ -855,25 +856,32 @@ namespace CoreSystems.Support
             return (float)dmgOut;
         }
 
-        private static float GetFalloffModifier(string falloffType, float radius)
+        private static double GetFalloffModifier(string falloffType, float radius)
         {
-            var falloffModifier = 1.0f;
+            var falloffModifier = 1.0d;
+            //Sphere
+            double blocksHit = Math.Round(((4 / 3) * 3.14f * Math.Pow(radius, 3)) / Math.Pow(2.5f, 3)) / 2;
+            //Pyramid
+            //double blocksHit = (((0.3333d*radius)*radius)*radius) / Math.Pow(2.5f, 3);
+            Log.Line($"blocksHit = {blocksHit}");
+
+
             switch (falloffType)
             {
                 case "NoFalloff":
-                    falloffModifier = radius * 1;
+                    falloffModifier = blocksHit * 1.0d;
                     break;
                 case "Linear":
-                    falloffModifier = radius * 0.55f;
+                    falloffModifier = blocksHit * 0.55d;
                     break;
                 case "Curve":
-                    falloffModifier = radius * 0.81f;
+                    falloffModifier = blocksHit * 0.81d;
                     break;
                 case "InvCurve":
-                    falloffModifier = radius * 0.39f;
+                    falloffModifier = blocksHit * 0.39d;
                     break;
                 case "Squeeze":
-                    falloffModifier = radius * 0.22f;
+                    falloffModifier = blocksHit * 0.22d;
                     break;
                 default:
                     falloffModifier = 1;
