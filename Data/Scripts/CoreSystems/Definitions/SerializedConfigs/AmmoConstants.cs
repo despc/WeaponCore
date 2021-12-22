@@ -752,11 +752,17 @@ namespace CoreSystems.Support
                 }
 
             }
-            
+            var avgArmorModifier = (
+                a.DamageScales.Armor.Heavy +
+                a.DamageScales.Armor.Light +
+                a.DamageScales.Armor.Armor +
+                a.DamageScales.Armor.NonArmor
+                ) / 4;
+
             realShotsPerMin = (shotsPerSec * 60);
-            baseDps = BaseDamage * shotsPerSec;
+            baseDps = BaseDamage * shotsPerSec * avgArmorModifier;
             areaDps = 0; //TODO: Add back in some way
-            detDps = (GetDetDmg(a) * shotsPerSec);
+            detDps = (GetDetDmg(a) * shotsPerSec) * avgArmorModifier;
             if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
@@ -781,6 +787,27 @@ namespace CoreSystems.Support
             if (mexLogLevel >= 1) Log.Line($"peakDps= {peakDps}");
 
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
+
+            if (wDef.HardPoint.Other.Debug && a.HardPointUsable)
+            {
+
+                Log.Line($"[========================]");
+                Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
+                Log.Line($"AmmoMagazine: {a.AmmoMagazine}");
+                Log.Line($"AmmoRound: {a.AmmoRound}");
+                Log.Line($"--------------------------");
+                Log.Line($"Shots per second: {shotsPerSec}");
+                Log.Line($"Peak DPS: {peakDps}");
+                Log.Line($"Effective DPS: {effectiveDps}");
+                Log.Line($"Base Damage DPS: {baseDps}");
+                Log.Line($"Area Damage DPS: {areaDps}");
+                Log.Line($"Explosive Dmg DPS: {detDps}");
+
+
+
+
+            }
+
         }
 
         private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo)
@@ -812,6 +839,12 @@ namespace CoreSystems.Support
             fragDmg.Y += (GetDetDmg(fAmmo) * frags) * sps;
 
             // TODO: Split into fragBaseDmg,FragAreaDmg, fragAoeDmg
+            fragDmg*= (
+                fAmmo.DamageScales.Armor.Heavy +
+                fAmmo.DamageScales.Armor.Light +
+                fAmmo.DamageScales.Armor.Armor +
+                fAmmo.DamageScales.Armor.NonArmor
+                ) / 4;
 
             return fragDmg;
         }
