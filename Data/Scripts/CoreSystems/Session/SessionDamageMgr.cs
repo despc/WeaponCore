@@ -515,6 +515,7 @@ namespace CoreSystems
                                 float modifier;
                                 var found = t.AmmoDef.Const.CustomBlockDefinitionBasesToScales.TryGetValue(blockDef, out modifier);
                                 if (found) damageScale *= modifier;
+                                else modifier = 1f;
                                 
                                 if (t.AmmoDef.DamageScales.Custom.SkipOthers != CustomScalesDef.SkipMode.NoSkip) {
 
