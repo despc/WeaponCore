@@ -1038,7 +1038,7 @@ namespace CoreSystems
                                         distArray.Add(slim);
                                         foundSomething = true;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
-                                        if (showHits) slim.Dithering = 0.80f;
+                                        if (showHits) slim.Dithering = 0.50f;
                                     }
 
 
@@ -1048,7 +1048,7 @@ namespace CoreSystems
                                     distArray.Add(slim);
                                     foundSomething = true;
                                     if (hitdist > maxDbc) maxDbc = hitdist;
-                                    if(showHits)slim.Dithering = 0.80f;
+                                    if(showHits)slim.Dithering = 0.50f;
                                 }
                             }
                         }
