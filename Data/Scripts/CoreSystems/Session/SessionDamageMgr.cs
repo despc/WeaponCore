@@ -410,6 +410,7 @@ namespace CoreSystems
 
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
+                    detRequested = false;
                     RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
@@ -419,7 +420,7 @@ namespace CoreSystems
                 {
                     var dbc = DamageBlockCache[j];
 
-                    if (earlyExit || breakMidLoop)
+                    if (earlyExit || detActive && detRequested)
                         break;
 
                     //Log.Line($"i:{i} - j:{j} - currentRadius:{detRequested} - detActive:{detActive} - distance:{maxAoeDistance} - foundBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0)");
@@ -668,7 +669,6 @@ namespace CoreSystems
                             {
                                 //Log.Line($"[START-DET] i:{i} - j:{j} - k:{k}");
                                 detActive = true;
-                                breakMidLoop = true;
 
                                 --i;
                                 break;
@@ -691,8 +691,6 @@ namespace CoreSystems
                 for (int l = 0; l < blockStages; l++)
                     DamageBlockCache[l].Clear();
 
-                detRequested = false;
-                breakMidLoop = false;
             }
 
             //stuff I still haven't looked at yet
