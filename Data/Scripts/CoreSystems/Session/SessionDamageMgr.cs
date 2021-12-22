@@ -515,6 +515,7 @@ namespace CoreSystems
                                 float modifier;
                                 var found = t.AmmoDef.Const.CustomBlockDefinitionBasesToScales.TryGetValue(blockDef, out modifier);
                                 if (found) damageScale *= modifier;
+                                else modifier = 1f;
                                 
                                 if (t.AmmoDef.DamageScales.Custom.SkipOthers != CustomScalesDef.SkipMode.NoSkip) {
 
@@ -930,7 +931,8 @@ namespace CoreSystems
 
         public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
         {
-
+            //Log.Line($"Start");
+           //var watch = System.Diagnostics.Stopwatch.StartNew();
             var rootPos = root.Position; //local cube grid
             if (root.Min != root.Max) rootPos = localpos;
             
@@ -943,10 +945,12 @@ namespace CoreSystems
             Vector3I min2 = Vector3I.Max(rootPos - maxradius, grid.Min);
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, grid.Max);
 
-            foundSomething = false;
 
+            foundSomething = false;
+            /*
             if (maxdepth < maxradius)
             {
+                
                 switch (direction.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
                 {                   
                     case 0://hit face perp to y
@@ -989,7 +993,9 @@ namespace CoreSystems
                         break;
                 }
 
+
             }
+                        */
 
             var damageBlockCache = DamageBlockCache;
 
@@ -1000,9 +1006,7 @@ namespace CoreSystems
                     for (k = min2.Z; k <= max2.Z; ++k)
                     {
                         var vector3I = new Vector3I(i, j, k);
-                        MyCube cube;
-                        if (grid.TryGetCube(vector3I, out cube))  
-                        {
+
                             int hitdist;
                             switch(shape)
                             {
@@ -1019,6 +1023,10 @@ namespace CoreSystems
 
                             if (hitdist <= maxradius)
                             {
+                                MyCube cube;
+                                if (grid.TryGetCube(vector3I, out cube))
+                                {
+
                                 var slim = (IMySlimBlock)cube.CubeBlock;
                                 if (slim.IsDestroyed)
                                     continue;
@@ -1055,6 +1063,8 @@ namespace CoreSystems
                     }
                 }
             }
+            //watch.Stop();
+            //Log.Line($"End {watch.ElapsedMilliseconds}");
         }
 
         public static void GetBlocksInsideSphereFast(MyCubeGrid grid, ref BoundingSphereD sphere, bool checkDestroyed, List<IMySlimBlock> blocks)
