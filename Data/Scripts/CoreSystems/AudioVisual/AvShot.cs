@@ -266,7 +266,7 @@ namespace CoreSystems.Support
                 {
                     a.ModelSphereCurrent.Center = a.TracerFront;
                     if (a.Triggered)
-                        a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.AreaEffectSize ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.AreaEffectSize;
+                        a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.EwarRadius;
 
                     if (s.Camera.IsInFrustum(ref a.ModelSphereCurrent))
                         a.OnScreen = Screen.ModelOnly;
@@ -295,7 +295,7 @@ namespace CoreSystems.Support
                     {
                         a.ModelSphereCurrent.Center = a.TracerFront;
                         if (a.Triggered)
-                            a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.AreaEffectSize ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.AreaEffectSize;
+                            a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.EwarRadius;
 
                         if (a.OnScreen == Screen.None && s.Camera.IsInFrustum(ref a.ModelSphereCurrent))
                             a.OnScreen = Screen.ModelOnly;

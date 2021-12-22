@@ -10,7 +10,7 @@ namespace CoreSystems.Support
         {
             if (projectile.PruningProxyId != -1)
                 return;
-            BoundingSphereD sphere = new BoundingSphereD(projectile.Position, projectile.Info.AmmoDef.Const.AreaEffectSize);
+            BoundingSphereD sphere = new BoundingSphereD(projectile.Position, projectile.Info.AmmoDef.Const.LargestHitSize);
             BoundingBoxD result;
             BoundingBoxD.CreateFromSphere(ref sphere, out result);
             projectile.PruningProxyId = projectile.Info.Ai.Session.ProjectileTree.AddProxy(ref result, projectile, 0U);
@@ -28,7 +28,7 @@ namespace CoreSystems.Support
         {
             if (projectile.PruningProxyId == -1)
                 return;
-            BoundingSphereD sphere = new BoundingSphereD(projectile.Position, projectile.Info.AmmoDef.Const.AreaEffectSize);
+            BoundingSphereD sphere = new BoundingSphereD(projectile.Position, projectile.Info.AmmoDef.Const.LargestHitSize);
             BoundingBoxD result;
             BoundingBoxD.CreateFromSphere(ref sphere, out result);
             projectile.Info.Ai.Session.ProjectileTree.MoveProxy(projectile.PruningProxyId, ref result, velocity);

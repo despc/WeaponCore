@@ -119,14 +119,14 @@ namespace CoreSystems
 
             var areafalloff = info.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
             var aoeMaxAbsorb = info.AmmoDef.Const.AoeMaxAbsorb;
-            var unscaledAoeDmg = info.AmmoDef.Const.AreaEffectDamage;
-            var aoeRadius = (float)info.AmmoDef.Const.AreaEffectSize;
+            var unscaledAoeDmg = info.AmmoDef.Const.ByBlockHitDamage;
+            var aoeRadius = (float)info.AmmoDef.Const.ByBlockHitRadius;
 
             //Detonation info
             var detfalloff = info.AmmoDef.AreaOfDamage.EndOfLife.Falloff;
             var detmaxabsorb = info.AmmoDef.Const.DetMaxAbsorb;
-            var unscaledDetDmg = info.AmmoDef.Const.DetonationDamage;
-            var detradius = info.AmmoDef.Const.DetonationRadius;
+            var unscaledDetDmg = info.AmmoDef.Const.EndOfLifeDamage;
+            var detradius = info.AmmoDef.Const.EndOfLifeRadius;
 
             if (fallOff)
             {
@@ -359,8 +359,8 @@ namespace CoreSystems
 
                 if (hasAoe && !detRequested)//load in AOE vars
                 {
-                    aoeDamage = t.AmmoDef.Const.AreaEffectDamage;
-                    aoeRadius = t.AmmoDef.Const.AreaEffectSize; //fix type in definitions to float?
+                    aoeDamage = t.AmmoDef.Const.ByBlockHitDamage;
+                    aoeRadius = t.AmmoDef.Const.ByBlockHitRadius; //fix type in definitions to float?
                     aoeFalloff = t.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
                     aoeAbsorb = t.AmmoDef.Const.AoeMaxAbsorb;
                     aoeDepth = t.AmmoDef.Const.ByBlockHitDepth;
@@ -369,8 +369,8 @@ namespace CoreSystems
                 }
                 else if (hasDet && detRequested)//load in Detonation vars
                 {
-                    aoeDamage = t.AmmoDef.Const.DetonationDamage;
-                    aoeRadius = t.AmmoDef.Const.DetonationRadius;
+                    aoeDamage = t.AmmoDef.Const.EndOfLifeDamage;
+                    aoeRadius = t.AmmoDef.Const.EndOfLifeRadius;
                     aoeFalloff = t.AmmoDef.AreaOfDamage.EndOfLife.Falloff;
                     aoeAbsorb = t.AmmoDef.Const.DetMaxAbsorb;
                     aoeDepth = t.AmmoDef.Const.EndOfLifeDepth;
@@ -757,7 +757,7 @@ namespace CoreSystems
                 damageScale *= info.AmmoDef.DamageScales.Characters;
 
             var areaEffect = info.AmmoDef.AreaOfDamage;
-            var areaDamage = areaEffect.ByBlockHit.Enable ? (info.AmmoDef.Const.AreaEffectDamage * (info.AmmoDef.Const.AreaEffectSize * 0.5f)) * areaDmgGlobal : 0;
+            var areaDamage = areaEffect.ByBlockHit.Enable ? (info.AmmoDef.Const.ByBlockHitDamage * (info.AmmoDef.Const.ByBlockHitRadius * 0.5f)) * areaDmgGlobal : 0;
             var scaledDamage = (float)((((info.BaseDamagePool * damageScale) * directDmgGlobal) + areaDamage) * info.ShieldResistMod);
 
             var distTraveled = info.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? info.DistanceTraveled : info.DistanceTraveled;
@@ -818,7 +818,7 @@ namespace CoreSystems
                 attacker.BaseDamagePool -= remaining;
                 pTarget.Info.BaseHealthPool = 0;
                 pTarget.State = Projectile.ProjectileState.Destroy;
-                if (attacker.AmmoDef.Const.DetonationDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
+                if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
                     DetonateProjectile(hitEnt, attacker);
             }
             else
@@ -831,9 +831,9 @@ namespace CoreSystems
 
         private static void DetonateProjectile(HitEntity hitEnt, ProInfo attacker)
         {
-            if (attacker.AmmoDef.Const.DetonationDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
+            if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
             {
-                var areaSphere = new BoundingSphereD(hitEnt.Projectile.Position, attacker.AmmoDef.Const.DetonationRadius);
+                var areaSphere = new BoundingSphereD(hitEnt.Projectile.Position, attacker.AmmoDef.Const.EndOfLifeRadius);
                 foreach (var sTarget in attacker.Ai.LiveProjectile)
                 {
 
@@ -893,7 +893,7 @@ namespace CoreSystems
                     scaledDamage *= fallOffMultipler;
                 }
 
-                var oRadius = info.AmmoDef.Const.AreaEffectSize;
+                var oRadius = info.AmmoDef.Const.ByBlockHitRadius;
                 var minTestRadius = distTraveled - info.PrevDistanceTraveled;
                 var tRadius = oRadius < minTestRadius && !info.AmmoDef.Const.IsBeamWeapon ? minTestRadius : oRadius;
                 var objHp = (int)MathHelper.Clamp(MathFuncs.VolumeCube(MathFuncs.LargestCubeInSphere(tRadius)), 5000, double.MaxValue);
@@ -918,8 +918,8 @@ namespace CoreSystems
 
                 if (detonateOnEnd && info.BaseDamagePool <= 0)
                 {
-                    var dRadius = info.AmmoDef.Const.DetonationRadius;
-                    var dDamage = info.AmmoDef.Const.DetonationDamage * detDmgGlobal;
+                    var dRadius = info.AmmoDef.Const.EndOfLifeRadius;
+                    var dDamage = info.AmmoDef.Const.EndOfLifeDamage * detDmgGlobal;
 
                     if (dRadius < 1.5) dRadius = 1.5f;
 

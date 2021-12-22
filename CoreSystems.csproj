@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{CA69D7C5-9224-4115-8398-A20E0DCE160B}</ProjectGuid>
+    <ProjectGuid>{A02FF223-D75F-45ED-84F4-63ED89AFCCE9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
     <AssemblyName>ClassLibrary</AssemblyName>
@@ -262,7 +262,7 @@
     <Compile Include="Data\Scripts\CoreSystems\Session\SessionAnimationMgr.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="Data\Scripts\CoreSystems\Session\SessionAreaEffect.cs">
+    <Compile Include="Data\Scripts\CoreSystems\Session\SessionEwar.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="Data\Scripts\CoreSystems\Session\SessionCleanUp.cs">

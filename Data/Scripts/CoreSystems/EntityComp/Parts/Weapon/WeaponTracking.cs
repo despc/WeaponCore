@@ -352,9 +352,12 @@ namespace CoreSystems.Platform
 
             var locked = true;
             var isTracking = false;
+
+            if (readyToTrack && w.PosChangedTick != w.Comp.Session.Tick)
+                    w.UpdatePivotPos();
+
             if (readyToTrack && baseData.State.Control != ProtoWeaponState.ControlMode.Camera)
             {
-
                 if (MathFuncs.WeaponLookAt(w, ref targetDir, rangeToTargetSqr, true, false, out isTracking))
                 {
 

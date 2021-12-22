@@ -26,7 +26,10 @@ namespace CoreSystems.Support
         internal static void AcquireTarget(Weapon w, bool attemptReset, MyEntity targetGrid = null)
         {
             var targetType = TargetType.None;
-            if (w.PosChangedTick != w.Comp.Session.Tick) w.UpdatePivotPos();
+
+            if (w.PosChangedTick != w.Comp.Session.Tick) 
+                w.UpdatePivotPos();
+
             FakeTarget.FakeWorldTargetInfo fakeInfo = null;
             var cMode =  w.Comp.Data.Repo.Values.Set.Overrides.Control;
             if (cMode == ProtoWeaponOverrides.ControlModes.Auto || cMode == ProtoWeaponOverrides.ControlModes.Painter && !w.Comp.PainterMode)

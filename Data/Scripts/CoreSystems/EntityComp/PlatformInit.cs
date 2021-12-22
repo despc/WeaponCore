@@ -215,7 +215,7 @@ namespace CoreSystems.Platform
                 part.RemoveFromGamePruningStructure();
                 part.Flags |= EntityFlags.IsNotGamePrunningStructureObject;
                 part.Render.NeedsDrawFromParent = true;
-                if (!optimizeOnly || Parts.EntityNeedsWorld.ContainsKey(part)) 
+                if (!optimizeOnly) 
                     part.NeedsWorldMatrix = true;
             }
         }

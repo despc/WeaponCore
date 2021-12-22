@@ -601,7 +601,7 @@ namespace CoreSystems.Projectiles
 
             if (Info.EwarAreaPulse)
             {
-                var areaSize = Info.AmmoDef.Const.AreaEffectSize;
+                var areaSize = Info.AmmoDef.Const.EwarRadius;
                 var maxSteps = Info.AmmoDef.Const.PulseGrowTime;
                 if (Info.TriggerGrowthSteps < areaSize)
                 {
@@ -638,7 +638,7 @@ namespace CoreSystems.Projectiles
             switch (Info.AmmoDef.Const.EwarType)
             {
                 case AntiSmart:
-                    var eWarSphere = new BoundingSphereD(Position, Info.AmmoDef.Const.AreaEffectSize);
+                    var eWarSphere = new BoundingSphereD(Position, Info.AmmoDef.Const.EwarRadius);
 
                     DynTrees.GetAllProjectilesInSphere(Info.System.Session, ref eWarSphere, EwaredProjectiles, false);
                     for (int j = 0; j < EwaredProjectiles.Count; j++)

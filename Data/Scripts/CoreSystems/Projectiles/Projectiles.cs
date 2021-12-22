@@ -226,7 +226,7 @@ namespace CoreSystems.Projectiles
 
                     if (p.DynamicGuidance) {
                         if (p.PruningProxyId != -1) {
-                            var sphere = new BoundingSphereD(p.Position, p.Info.AmmoDef.Const.AreaEffectSize);
+                            var sphere = new BoundingSphereD(p.Position, p.Info.AmmoDef.Const.LargestHitSize);
                             BoundingBoxD result;
                             BoundingBoxD.CreateFromSphere(ref sphere, out result);
                             var displacement = 0.1 * p.Velocity;
@@ -242,7 +242,7 @@ namespace CoreSystems.Projectiles
 
                     if (p.Info.AmmoDef.Const.PrimeModel)
                         p.Info.AvShot.PrimeMatrix = matrix;
-                    if (p.Info.AmmoDef.Const.TriggerModel && p.Info.TriggerGrowthSteps < p.Info.AmmoDef.Const.AreaEffectSize) 
+                    if (p.Info.AmmoDef.Const.TriggerModel && p.Info.TriggerGrowthSteps < p.Info.AmmoDef.Const.EwarRadius) 
                         p.Info.TriggerMatrix = matrix;
                 }
 
@@ -313,7 +313,7 @@ namespace CoreSystems.Projectiles
                 if ((p.FieldTime <= 0 && p.State != ProjectileState.OneAndDone && p.Info.DistanceTraveled * p.Info.DistanceTraveled >= p.DistanceToTravelSqr)) {
                     
                     p.PruneSphere.Center = p.Position;
-                    p.PruneSphere.Radius = p.Info.AmmoDef.Const.DetonationRadius;
+                    p.PruneSphere.Radius = p.Info.AmmoDef.Const.EndOfLifeRadius;
 
                     var dInfo = p.Info.AmmoDef.AreaOfDamage.EndOfLife;
                     if (p.MoveToAndActivate || dInfo.Enable && p.Info.Age >= dInfo.MinArmingTime && (!dInfo.ArmOnlyOnHit || p.Info.ObjectsHit > 0)) {
@@ -347,7 +347,7 @@ namespace CoreSystems.Projectiles
                 else if (useEwarSphere) {
                     if (p.Info.EwarActive) {
                         p.PruneSphere = new BoundingSphereD(p.Position, 0).Include(new BoundingSphereD(p.LastPosition, 0));
-                        var currentRadius = p.Info.TriggerGrowthSteps < p.Info.AmmoDef.Const.AreaEffectSize ? p.Info.TriggerMatrix.Scale.AbsMax() : p.Info.AmmoDef.Const.AreaEffectSize;
+                        var currentRadius = p.Info.TriggerGrowthSteps < p.Info.AmmoDef.Const.EwarRadius ? p.Info.TriggerMatrix.Scale.AbsMax() : p.Info.AmmoDef.Const.EwarRadius;
                         if (p.PruneSphere.Radius < currentRadius) {
                             p.PruneSphere.Center = p.Position;
                             p.PruneSphere.Radius = currentRadius;

@@ -22,8 +22,6 @@ namespace CoreSystems.Platform
                 var tick = s.Tick;
                 #region Prefire
 
-                if (PosChangedTick != Comp.Session.Tick)
-                    UpdatePivotPos();
                 if (_ticksUntilShoot++ < System.DelayToFire) {
 
                     if (AvCapable && System.PreFireSound && !PreFiringEmitter.IsPlaying)
@@ -54,6 +52,9 @@ namespace CoreSystems.Platform
                     
                     //Target.LockTarget(this, focusTarget);
                 }
+
+                if (PosChangedTick != Comp.Session.Tick)
+                    UpdatePivotPos();
 
                 ShootTick = tick + TicksPerShot;
                 LastShootTick = tick;

@@ -35,9 +35,9 @@ namespace CoreSystems.Support
 
         private const string Arc = "Arc";
         private const string BaseDmgStr = "BaseDamage";
-        private const string AreaDmgStr = "AreaEffectDamage";
+        private const string AreaDmgStr = "ByBlockHitDamage";
         private const string AreaRadStr = "AreaEffectRadius";
-        private const string DetDmgStr = "DetonationDamage";
+        private const string DetDmgStr = "EndOfLifeDamage";
         private const string DetRadStr = "DetonationRadius";
         private const string HealthStr = "Health";
         private const string MaxTrajStr = "MaxTrajectory";
@@ -197,9 +197,9 @@ namespace CoreSystems.Support
         public readonly float BaseDamage;
         public readonly float DetMaxAbsorb;
         public readonly float AoeMaxAbsorb;
-        public readonly float AreaEffectDamage;
-        public readonly float DetonationDamage;
-        public readonly float DetonationRadius;
+        public readonly float ByBlockHitDamage;
+        public readonly float EndOfLifeDamage;
+        public readonly float EndOfLifeRadius;
         public readonly float DesiredProjectileSpeed;
         public readonly float HitSoundDistSqr;
         public readonly float AmmoTravelSoundDistSqr;
@@ -216,11 +216,10 @@ namespace CoreSystems.Support
         public readonly float GravityMultiplier;
         public readonly float EndOfLifeDepth;
         public readonly float ByBlockHitDepth;
-        public readonly double AreaRadiusSmall;
-        public readonly double AreaRadiusLarge;
-        public readonly double AreaEffectSize;
-        public readonly double DetonateRadiusSmall;
-        public readonly double DetonateRadiusLarge;
+        public readonly double LargestHitSize;
+        public readonly double EwarRadius;
+        public readonly double EwarStrength;
+        public readonly double ByBlockHitRadius;
         public readonly double ShieldModifier;
         public readonly double MaxLateralThrust;
         public readonly double EwarTriggerRange;
@@ -330,7 +329,7 @@ namespace CoreSystems.Support
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.Ewar.Field.Particle.Name);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
-            AreaEffects(ammo.AmmoDef, out ByBlockHitDepth, out EndOfLifeDepth, out EwarType, out AreaEffectDamage, out AreaEffectSize, out DetonationDamage, out DetonationRadius, out AreaRadiusSmall, out AreaRadiusLarge, out DetonateRadiusSmall, out DetonateRadiusLarge, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb);
+            AreaEffects(ammo.AmmoDef, out ByBlockHitDepth, out EndOfLifeDepth, out EwarType, out ByBlockHitDamage, out ByBlockHitRadius, out EndOfLifeDamage, out EndOfLifeRadius, out EwarStrength, out LargestHitSize, out EwarRadius, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb);
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -758,7 +757,7 @@ namespace CoreSystems.Support
             baseDps = BaseDamage * shotsPerSec;
             areaDps = 0; //TODO: Add back in some way
             detDps = (GetDetDmg(a) * shotsPerSec);
-            if (mexLogLevel >= 1) Log.Line($"Got Area damage={AreaEffectDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
+            if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
                 var sAmmo = wDef.Ammos[ShrapnelId];
@@ -899,33 +898,34 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out float byBlockHitDepth, out float endOfLifeDepth, out EwarType ewarType, out float areaEffectDamage, out double areaEffectSize, out float detonationDamage, out float detonationRadius, out double areaRadiusSmall, out double areaRadiusLarge, out double detonateRadiusSmall, out double detonateRadiusLarge, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb)
+        private void AreaEffects(AmmoDef ammoDef, out float byBlockHitDepth, out float endOfLifeDepth, out EwarType ewarType, out float byBlockHitDamage, out double byBlockHitRadius, out float endOfLifeDamage, out float endOfLifeRadius, out double ewarEffectStrength, out double largestHitSize, out double ewarEffectSize, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb)
         {
             ewarType = ammoDef.Ewar.Type;
 
             if (AmmoModsFound && _modifierMap[AreaDmgStr].HasData())
-                areaEffectDamage = _modifierMap[AreaDmgStr].GetAsFloat;
+                byBlockHitDamage = _modifierMap[AreaDmgStr].GetAsFloat;
             else
-                areaEffectDamage = ammoDef.AreaOfDamage.ByBlockHit.Damage;
+                byBlockHitDamage = ammoDef.AreaOfDamage.ByBlockHit.Damage;
 
             if (AmmoModsFound && _modifierMap[AreaRadStr].HasData())
-                areaEffectSize = _modifierMap[AreaRadStr].GetAsDouble;
+                byBlockHitRadius = _modifierMap[AreaRadStr].GetAsDouble;
             else
-                areaEffectSize = ammoDef.AreaOfDamage.ByBlockHit.Radius;
+                byBlockHitRadius = ammoDef.AreaOfDamage.ByBlockHit.Radius;
 
             if (AmmoModsFound && _modifierMap[DetDmgStr].HasData())
-                detonationDamage = _modifierMap[DetDmgStr].GetAsFloat;
+                endOfLifeDamage = _modifierMap[DetDmgStr].GetAsFloat;
             else
-                detonationDamage = ammoDef.AreaOfDamage.EndOfLife.Damage;
+                endOfLifeDamage = ammoDef.AreaOfDamage.EndOfLife.Damage;
 
             if (AmmoModsFound && _modifierMap[DetRadStr].HasData())
-                detonationRadius = _modifierMap[DetRadStr].GetAsFloat;
+                endOfLifeRadius = _modifierMap[DetRadStr].GetAsFloat;
             else
-                detonationRadius = (float)ammoDef.AreaOfDamage.EndOfLife.Radius;
-            areaRadiusSmall = Session.ModRadius(areaEffectSize / 5, false); //needed?
-            areaRadiusLarge = Session.ModRadius(areaEffectSize, true);//needed?
-            detonateRadiusSmall = Session.ModRadius(detonationRadius / 5, false);//needed?
-            detonateRadiusLarge = Session.ModRadius(detonationRadius, true);//needed?
+                endOfLifeRadius = (float)ammoDef.AreaOfDamage.EndOfLife.Radius;
+
+            ewarEffectStrength = ammoDef.Ewar.Strength;
+            ewarEffectSize = ammoDef.Ewar.Radius;
+            largestHitSize = Math.Max(byBlockHitRadius, Math.Max(endOfLifeRadius, ewarEffectSize));
+
             eWar = ammoDef.Ewar.Enable;
             nonAntiSmart = ewarType != EwarType.AntiSmart;
             eWarTriggerRange = eWar && Pulse && ammoDef.Ewar.Field.TriggerRange > 0 ? ammoDef.Ewar.Field.TriggerRange : 0;

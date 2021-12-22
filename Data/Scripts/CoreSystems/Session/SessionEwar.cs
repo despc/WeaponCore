@@ -85,14 +85,14 @@ namespace CoreSystems
                 if (info.AmmoDef.Const.EwarType != Tractor)
                 {
                     normHitDir = info.AmmoDef.Const.EwarType == Push ? normHitDir : -normHitDir;
-                    force = info.AmmoDef.Ewar.Strength;
+                    force = info.AmmoDef.Const.EwarStrength;
                 }
                 else
                 {
                     var distFromFocalPoint = forceDef.TractorRange - hitEnt.HitDist ?? info.ProjectileDisplacement;
                     var positive = distFromFocalPoint > 0;
                     normHitDir = positive ? normHitDir : -normHitDir;
-                    force = positive ?MathHelper.Lerp(distFromFocalPoint, forceDef.TractorRange, info.AmmoDef.Ewar.Strength) : MathHelper.Lerp(Math.Abs(distFromFocalPoint), forceDef.TractorRange, info.AmmoDef.Ewar.Strength);
+                    force = positive ?MathHelper.Lerp(distFromFocalPoint, forceDef.TractorRange, info.AmmoDef.Const.EwarStrength) : MathHelper.Lerp(Math.Abs(distFromFocalPoint), forceDef.TractorRange, info.AmmoDef.Const.EwarStrength);
                 }
                 var massMod = !forceDef.DisableRelativeMass ? hitEnt.Entity.Physics.Mass : 1;
                 
@@ -139,11 +139,11 @@ namespace CoreSystems
             GetAndSortBlocksInSphere(info.AmmoDef, hitEnt.Info.System, grid, hitEnt.PruneSphere, !hitEnt.DamageOverTime, hitEnt.Blocks);
 
             var depletable = info.AmmoDef.Ewar.Depletable;
-            var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : float.MaxValue;
-            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Ewar.Strength, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
+            var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : double.MaxValue;
+            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Const.EwarStrength, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
 
             if (depletable)
-                info.BaseHealthPool -= healthPool;
+                info.BaseHealthPool -= (float)healthPool;
         }
 
         private void UpdateEffect(HitEntity hitEnt, ProInfo info)
@@ -167,7 +167,7 @@ namespace CoreSystems
                     GridEffect gridEffect;
                     if (effects.TryGetValue(info.AmmoDef.Ewar.Type, out gridEffect))
                     {
-                        gridEffect.Damage += info.AmmoDef.Ewar.Strength;
+                        gridEffect.Damage += (float)info.AmmoDef.Const.EwarStrength;
                         gridEffect.Ai = info.Ai;
                         gridEffect.AttackerId = attackerId;
                         gridEffect.Hits++;
@@ -182,7 +182,7 @@ namespace CoreSystems
                     effects = GridEffectsPool.Get();
                     var gridEffect = GridEffectPool.Get();
                     gridEffect.System = info.System;
-                    gridEffect.Damage = info.AmmoDef.Ewar.Strength;
+                    gridEffect.Damage = (float)info.AmmoDef.Const.EwarStrength;
                     gridEffect.Ai = info.Ai;
                     gridEffect.AmmoDef = info.AmmoDef;
                     gridEffect.AttackerId = attackerId;
@@ -200,7 +200,7 @@ namespace CoreSystems
         }
 
 
-        private void ComputeEffects(MyCubeGrid grid, AmmoDef ammoDef, float damagePool, ref float healthPool, long attackerId, int sysmteId, List<IMySlimBlock> blocks)
+        private void ComputeEffects(MyCubeGrid grid, AmmoDef ammoDef, double damagePool, ref double healthPool, long attackerId, int sysmteId, List<IMySlimBlock> blocks)
         {
             var largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
             var eWarInfo = ammoDef.Ewar;
@@ -270,7 +270,7 @@ namespace CoreSystems
 
                 if (fieldType == Dot && IsServer)
                 {
-                    block.DoDamage(scaledDamage, MyDamageType.Explosion, sync, null, attackerId);
+                    block.DoDamage((float) scaledDamage, MyDamageType.Explosion, sync, null, attackerId);
                     continue;
                 }
 
@@ -283,7 +283,7 @@ namespace CoreSystems
                         if (blockState.Health - scaledDamage > 0)
                         {
                             damagePool = 0;
-                            blockState.Health -= scaledDamage;
+                            blockState.Health -= (float)scaledDamage;
                             blockState.Endtick = Tick + (duration + 1);
                         }
                         else if (blockState.Endtick + (duration + 1) < maxTick)
@@ -322,7 +322,7 @@ namespace CoreSystems
                         if (scaledDamage <= blockHp)
                         {
                             damagePool = 0;
-                            blockState.Health = (blockHp - scaledDamage);
+                            blockState.Health = (blockHp - (float)scaledDamage);
                         }
                         else
                         {
@@ -352,7 +352,7 @@ namespace CoreSystems
                 foreach (var v in ge.Value)
                 {
                     GetCubesForEffect(v.Value.Ai, ge.Key, v.Value.HitPos, v.Key, _tmpEffectCubes);
-                    var healthPool = v.Value.AmmoDef.Const.Health > 0 ? v.Value.AmmoDef.Const.Health : float.MaxValue;
+                    var healthPool = v.Value.AmmoDef.Const.Health > 0 ? v.Value.AmmoDef.Const.Health : double.MaxValue;
                     ComputeEffects(ge.Key, v.Value.AmmoDef, v.Value.Damage * v.Value.Hits, ref healthPool, v.Value.AttackerId, v.Value.System.WeaponIdHash, _tmpEffectCubes);
                     _tmpEffectCubes.Clear();
                     GridEffectPool.Return(v.Value);
