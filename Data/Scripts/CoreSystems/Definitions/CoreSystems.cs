@@ -164,6 +164,8 @@ namespace CoreSystems.Support
         public readonly bool SuppressFire;
         public readonly bool NoSubParts;
         public readonly bool HasSpinPart;
+        public readonly bool DebugMode;
+
         public readonly double MaxTargetSpeed;
         public readonly double AzStep;
         public readonly double ElStep;
@@ -207,7 +209,8 @@ namespace CoreSystems.Support
             Session = session;
 
             WConst = new WeaponConstants(session, values);
-
+            
+            DebugMode = values.HardPoint.Other.Debug;
             PartNameIdHash = partNameIdHash;
             MuzzlePartName = muzzlePartName;
             DesignatorWeapon = muzzlePartName.String == "Designator";
@@ -246,7 +249,6 @@ namespace CoreSystems.Support
             Track(out TrackProjectile, out TrackGrids, out TrackCharacters, out TrackMeteors, out TrackNeutrals, out TrackTopMostEntities);
             SubSystems(out TargetSubSystems, out OnlySubSystems);
             ValidTargetSize(out MinTargetRadius, out MaxTargetRadius);
-
             Session.CreateAnimationSets(Values.Animations, this, out WeaponAnimationSet, out PartEmissiveSet, out PartLinearMoveSet, out AnimationIdLookup, out PartAnimationLengths, out HeatingSubparts, out ParticleEvents);
 
            // CheckForBadAnimations();
@@ -550,12 +552,13 @@ namespace CoreSystems.Support
         internal readonly int RateOfFire;
         internal readonly int HeatPerShot;
 
+        internal bool DebugMode;
         internal bool HasServerOverrides;
 
         internal WeaponConstants(Session session, WeaponDefinition values)
         {
             LoadModifiers(session, values, out HasServerOverrides);
-            GetModifiableValues(values, out MaxTargetDistance, out MinTargetDistance, out RateOfFire, out ReloadTime, out DeviateShotAngleRads, out AimingToleranceRads, out IdlePower, out HeatSinkRate, out HeatPerShot);
+            GetModifiableValues(values, out MaxTargetDistance, out MinTargetDistance, out RateOfFire, out ReloadTime, out DeviateShotAngleRads, out AimingToleranceRads, out IdlePower, out HeatSinkRate, out HeatPerShot, out DebugMode);
         }
 
         private void LoadModifiers(Session session, WeaponDefinition weaponDef, out bool modsFound)
@@ -574,11 +577,13 @@ namespace CoreSystems.Support
             }
         }
 
-        private void GetModifiableValues(WeaponDefinition weaponDef, out double maxTargetDistance, out float minTargetDistance, out int rateOfFire, out int reloadTime, out float deviateShotAngleRads, out double aimingToleranceRads, out float idlePower, out float heatSinkRate, out int heatPerShot)
+        private void GetModifiableValues(WeaponDefinition weaponDef, out double maxTargetDistance, out float minTargetDistance, out int rateOfFire, out int reloadTime, out float deviateShotAngleRads, out double aimingToleranceRads, out float idlePower, out float heatSinkRate, out int heatPerShot, out bool debugMode)
         {
             var givenMaxDist = HasServerOverrides && modifierMap[MaxTargetStr].HasData() ? modifierMap[MaxTargetStr].GetAsFloat : weaponDef.Targeting.MaxTargetDistance;
             maxTargetDistance = givenMaxDist > 0 ? givenMaxDist : double.MaxValue;
 
+            debugMode = weaponDef.HardPoint.Other.Debug;
+            
             minTargetDistance = HasServerOverrides && modifierMap[MinTargetStr].HasData() ? modifierMap[MinTargetStr].GetAsFloat : weaponDef.Targeting.MinTargetDistance;
 
             rateOfFire = HasServerOverrides && modifierMap[ROFStr].HasData() ? modifierMap[ROFStr].GetAsInt : weaponDef.HardPoint.Loading.RateOfFire;

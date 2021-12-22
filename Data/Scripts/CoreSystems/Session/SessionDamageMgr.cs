@@ -335,10 +335,9 @@ namespace CoreSystems
             //Switches and setup for damage types/event loops
             var detRequested = false;
             var detActive = false;
-            var breakMidLoop = false;
-
             var earlyExit = false;
             var destroyed = 0;
+            var showHits = t.System.WConst.DebugMode;
 
             //Main loop (finally)
 
@@ -411,7 +410,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape);
+                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -419,7 +418,7 @@ namespace CoreSystems
                 for (int j = 0; j < blockStages; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
                     var dbc = DamageBlockCache[j];
-
+                    //Log.Line($"dist {j}  has {dbc.Count} blocks");
                     if (earlyExit || detActive && detRequested)
                         break;
 
@@ -575,7 +574,7 @@ namespace CoreSystems
                             basePool = 0;
                             t.BaseDamagePool = basePool;
                             detRequested = hasDet;
-                            ///Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
+                            //Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
                             if (hitMass > 0)//apply force
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
@@ -638,7 +637,7 @@ namespace CoreSystems
                             }
                             catch
                             {
-                                Log.Line($"[DoDamage crash] detRequested:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxAoeDistance:{maxAoeDistance} - foundAoeBlocks:{foundAoeBlocks} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
+                                //Log.Line($"[DoDamage crash] detRequested:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxAoeDistance:{maxAoeDistance} - foundAoeBlocks:{foundAoeBlocks} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
                                 foreach (var l in DamageBlockCache)
                                     l.Clear();
 
@@ -929,7 +928,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AoeShape shape) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
         {
 
             var rootPos = root.Position; //local cube grid
@@ -1039,15 +1038,17 @@ namespace CoreSystems
                                         distArray.Add(slim);
                                         foundSomething = true;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
+                                        if (showHits) slim.Dithering = 0.80f;
                                     }
-   
-                                   
+
+
                                 }
                                 else//Happy normal 1x1x1
                                 {
                                     distArray.Add(slim);
                                     foundSomething = true;
                                     if (hitdist > maxDbc) maxDbc = hitdist;
+                                    if(showHits)slim.Dithering = 0.80f;
                                 }
                             }
                         }
