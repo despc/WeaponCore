@@ -632,12 +632,12 @@ namespace CoreSystems.Support
             if (mexLogLevel >= 1) Log.Line($"Name = {s.PartName}"); //a.EnergyMagazineSize
             if (mexLogLevel >= 2) Log.Line($"EnergyMag = {a.EnergyMagazineSize}");
 
-            var baselineRange = 1000;
+            var baselineRange = a.Trajectory.MaxTrajectory * 0.5f; // 1000; ba
 
             //Inaccuracy
-            var inaccuracyRadius = Math.Tan(system.WConst.DeviateShotAngleRads / 2) * baselineRange;
-
-            var inaccuracyScore = ((Math.PI * 10 * 10) / (Math.PI * inaccuracyRadius * inaccuracyRadius));
+            var inaccuracyRadius = Math.Tan(system.WConst.DeviateShotAngleRads) * baselineRange;
+            var targetRadius = 10;
+            var inaccuracyScore = ((Math.PI * targetRadius * targetRadius) / (Math.PI * inaccuracyRadius * inaccuracyRadius));
             inaccuracyScore = inaccuracyScore > 1 ? 1 : inaccuracyScore;
             inaccuracyScore = system.WConst.DeviateShotAngleRads <= 0 ? 1 : inaccuracyScore;
 
@@ -780,6 +780,8 @@ namespace CoreSystems.Support
             }
             peakDps = (baseDps + areaDps + detDps);
             effectiveDps = (float)(peakDps * effectiveModifier);
+            var dpsWoInaccuracy = (float)(effectiveModifier / inaccuracyScore) * peakDps;
+            
             if (mexLogLevel >= 1) Log.Line($"peakDps= {peakDps}");
 
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
@@ -791,13 +793,14 @@ namespace CoreSystems.Support
                 Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
                 Log.Line($"AmmoMagazine: {a.AmmoMagazine}");
                 Log.Line($"AmmoRound: {a.AmmoRound}");
+                Log.Line($"InaccuracyScore: {Math.Round(inaccuracyScore*100, 2)}% | ShotAngle: {wDef.HardPoint.DeviateShotAngle}  @: { baselineRange}m vs { targetRadius}m Circle");
                 Log.Line($"--------------------------");
-                Log.Line($"Shots per second: {shotsPerSec}");
-                Log.Line($"Peak DPS: {peakDps}");
-                Log.Line($"Effective DPS: {effectiveDps}");
-                Log.Line($"Base Damage DPS: {baseDps}");
-                Log.Line($"Area Damage DPS: {areaDps}");
-                Log.Line($"Explosive Dmg DPS: {detDps}");
+                Log.Line($"Shots per second: {Math.Round(shotsPerSec,2)}");
+                Log.Line($"Peak DPS: {Math.Round(peakDps)}");
+                Log.Line($"Effective DPS: {Math.Round(effectiveDps)} | without Inaccuracy: {Math.Round(dpsWoInaccuracy)}");
+                Log.Line($"Base Damage DPS: {Math.Round(baseDps)}");
+                Log.Line($"Area Damage DPS: {Math.Round(areaDps)}");
+                Log.Line($"Explosive Dmg DPS: {Math.Round(detDps)}");
 
 
 
