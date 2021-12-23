@@ -425,7 +425,7 @@ namespace CoreSystems
                     //Log.Line($"i:{i} - j:{j} - currentRadius:{detRequested} - detActive:{detActive} - distance:{maxAoeDistance} - foundBlocks:{foundAoeBlocks} -- (tally:{aoeDmgTally} >= {aoeAbsorb} OR aoeDmt:{aoeDamage} <= 0)");
 
                     var aoeDamageFall = 0d;
-                    if (hasAoe || hasDet && detRequested)
+                    if (hasAoe || hasDet && detActive)
                     {
                         //Falloff switches & calcs for type of explosion & aoeDamageFall as output
                         var maxfalldist = aoeRadius * grid.GridSizeR + 1;

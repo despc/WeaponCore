@@ -251,7 +251,7 @@ namespace CoreSystems.Projectiles
             }
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
-            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget || Info.ModOverride) && !Info.Target.IsFakeTarget && !Info.LockOnFireState;
+            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget || Info.ModOverride || Info.LockOnFireState) && !Info.Target.IsFakeTarget;
             if (PickTarget || LockedTarget) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
