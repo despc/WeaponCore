@@ -297,7 +297,7 @@ namespace CoreSystems
             var gridMatrix = grid.PositionComp.WorldMatrixRef;
             var playerAi = t.Ai.AiType == Ai.AiTypes.Player;
             var distTraveled = t.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? t.DistanceTraveled : t.DistanceTraveled;
-            var direction = hitEnt.Intersection.Direction;
+            var direction = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.Direction, grid.PositionComp.WorldMatrixNormalizedInv));
             var localpos = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR - 0.5);
 
             //Ammo properties
@@ -929,7 +929,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3D direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3I direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -938,20 +938,34 @@ namespace CoreSystems
             
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
-            
+            var gmin = grid.Min;
+            var gmax = grid.Max;
             int maxradius = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
             int i, j, k;
             int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
-            Vector3I min2 = Vector3I.Max(rootPos - maxradius, grid.Min);
-            Vector3I max2 = Vector3I.Min(rootPos + maxradius, grid.Max);
-
-
+            Vector3I min2 = Vector3I.Max(rootPos - maxradius, gmin);
+            Vector3I max2 = Vector3I.Min(rootPos + maxradius, gmax);
             foundSomething = false;
-            /*
+
             if (maxdepth < maxradius)
             {
-                
-                switch (direction.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
+                var gctr = (gmax - gmin)/2;
+                var xplane = new BoundingBox(gmin, new Vector3(gmax.X,gmax.Y,gmin.Z));
+                var yplane = new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z));
+                var zplane = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z));
+                var xmplane = new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z));
+                var ymplane = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z));
+                var zmplane = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z));
+                var hitline = new Line(gctr, rootPos);
+                var hitray = new Ray(gctr, hitline.Direction);
+                var axis = 1;
+                if (hitray.Intersects(xplane) > 0 || hitray.Intersects(xmplane) > 0) axis = 2;
+                if (hitray.Intersects(yplane) > 0 || hitray.Intersects(ymplane) > 0) axis = 0;
+
+
+                //Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)}  z{hitray.Intersects(zplane)}  xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}  zm{hitray.Intersects(zmplane)}");
+
+                switch (axis)//sort out which "face" was hit and coming/going along that axis
                 {                   
                     case 0://hit face perp to y
                         if (direction.Y <= 0f)
@@ -995,7 +1009,7 @@ namespace CoreSystems
 
 
             }
-                        */
+                        
 
             var damageBlockCache = DamageBlockCache;
 
