@@ -251,7 +251,7 @@ namespace CoreSystems.Projectiles
             }
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
-            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget || Info.ModOverride || Info.LockOnFireState) && !Info.Target.IsFakeTarget;
+            PickTarget = (Info.AmmoDef.Trajectory.Smarts.OverideTarget || Info.ModOverride && !LockedTarget) && !Info.Target.IsFakeTarget;
             if (PickTarget || LockedTarget) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
@@ -443,10 +443,13 @@ namespace CoreSystems.Projectiles
                 var fake = Info.Target.IsFakeTarget;
                 var gaveUpChase = !fake && Info.Age - ChaseAge > MaxChaseTime && HadTarget;
                 var overMaxTargets = HadTarget && NewTargets > Info.AmmoDef.Const.MaxTargets && Info.AmmoDef.Const.MaxTargets != 0;
-                var validTarget = fake || Info.Target.IsProjectile || Info.Target.TargetEntity != null && !overMaxTargets;
+                var validEntity = !Info.Target.TargetEntity?.MarkedForClose ?? false;
+                var validTarget = fake || Info.Target.IsProjectile || validEntity && !overMaxTargets;
                 var isZombie = Info.AmmoDef.Const.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
-                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && (Info.Age + SmartSlot) % 30 == 0 || Info.Age % 30 == 0 && Info.IsShrapnel);
-                if ((PickTarget && (Info.Age + SmartSlot) % 30 == 0 || gaveUpChase && validTarget || isZombie || seekFirstTarget) && NewTarget() || validTarget)
+                var timeSlot = (Info.Age + SmartSlot) % 30 == 0;
+                var seekNewTarget = timeSlot && HadTarget && !validEntity && !overMaxTargets;
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsShrapnel);
+                if ((PickTarget && timeSlot || seekNewTarget || gaveUpChase && validTarget || isZombie || seekFirstTarget) && NewTarget() || validTarget)
                 {
 
                     HadTarget = true;
@@ -491,6 +494,8 @@ namespace CoreSystems.Projectiles
                     if (fake && fakeTargetInfo != null) tVel = fakeTargetInfo.LinearVelocity;
                     else if (Info.Target.IsProjectile) tVel = Info.Target.Projectile.Velocity;
                     else if (physics != null) tVel = physics.LinearVelocity;
+
+
                     if (Info.AmmoDef.Const.TargetLossDegree > 0 && Vector3D.DistanceSquared(Info.Origin, Position) >= Info.AmmoDef.Const.SmartsDelayDistSqr)
                     {
 

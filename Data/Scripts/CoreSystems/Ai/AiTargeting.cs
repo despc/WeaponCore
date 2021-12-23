@@ -218,7 +218,6 @@ namespace CoreSystems.Support
             TargetInfo alphaInfo = null;
             TargetInfo betaInfo = null;
             int offset = 0;
-
             MyEntity fTarget;
             if (ai.Construct.Data.Repo.FocusData.Target[0] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[0], out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
                 offset++;
