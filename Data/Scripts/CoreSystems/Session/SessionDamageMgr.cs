@@ -963,7 +963,7 @@ namespace CoreSystems
                 if (hitray.Intersects(yplane) > 0 || hitray.Intersects(ymplane) > 0) axis = 0;
 
 
-                Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)}  z{hitray.Intersects(zplane)}  xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}  zm{hitray.Intersects(zmplane)}");
+                //Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)}  z{hitray.Intersects(zplane)}  xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}  zm{hitray.Intersects(zmplane)}");
 
                 switch (axis)//sort out which "face" was hit and coming/going along that axis
                 {                   
