@@ -210,7 +210,7 @@ namespace CoreSystems.Support
             var stationOnly = moveMode == ProtoWeaponOverrides.MoveModes.Moored;
             var acquired = false;
             var lockedToTarget = p.Info.LockOnFireState;
-
+            var topTarget = p.Info.Target.TargetEntity?.GetTopMostParent();
             BoundingSphereD waterSphere = new BoundingSphereD(Vector3D.Zero, 1f);
             WaterData water = null;
             if (s.Session.WaterApiLoaded && !p.Info.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && s.Session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
@@ -263,7 +263,7 @@ namespace CoreSystems.Support
                     continue;
 
                 var targetRadius = info.Target.PositionComp.LocalVolume.Radius;
-                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || lockedToTarget && info.Target != p.Info.Target.TargetEntity) continue;
+                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || lockedToTarget && info.Target != topTarget) continue;
                 if (water != null)
                 {
                     if (new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius).Contains(new BoundingSphereD(targetPos, targetRadius)) == ContainmentType.Contains)
@@ -292,7 +292,7 @@ namespace CoreSystems.Support
                 acquired = true;
                 break;
             }
-            if (!acquired) p.Info.Target.Reset(ai.Session.Tick, Target.States.NoTargetsSeen);
+            if (!acquired && !lockedToTarget) p.Info.Target.Reset(ai.Session.Tick, Target.States.NoTargetsSeen);
             p.Info.System.Session.InnerStallReporter.End();
             return acquired;
         }

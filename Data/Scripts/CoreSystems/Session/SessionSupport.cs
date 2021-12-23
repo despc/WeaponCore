@@ -70,7 +70,8 @@ namespace CoreSystems
                         if (ServerVersion != ModContext.ModName)
                         {
                             var message = $"::CoreSystems Version Mismatch::    Server:{ServerVersion} - Client:{ModContext.ModName} -   Unexpected behavior may occur.";
-                            MyAPIGateway.Utilities.ShowNotification(message, 10000, "Red");
+                            Log.Line(message);
+                            //MyAPIGateway.Utilities.ShowNotification(message, 10000, "Red");
                         }
                     }
 
