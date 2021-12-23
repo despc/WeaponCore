@@ -105,7 +105,7 @@ namespace CoreSystems.Platform
                         Ai.SmartHandheld = w.System.HasGuidedAmmo;
                     }
 
-                    if (w.IsTurret) {
+                    if (w.TurretAttached) {
                         w.Azimuth = w.System.HomeAzimuth;
                         w.Elevation = w.System.HomeElevation;
                         w.AimBarrel();

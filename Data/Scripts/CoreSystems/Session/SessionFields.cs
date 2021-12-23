@@ -43,7 +43,7 @@ namespace CoreSystems
         internal const int VersionControl = 32;
         internal const int AwakeBuckets = 60;
         internal const int AsleepBuckets = 180;
-        internal const int ServerCfgVersion = 4;
+        internal const int ServerCfgVersion = 5;
         internal const int ClientCfgVersion = 6;
         internal const string ServerCfgName = "CoreSystemsServer.cfg";
         internal const string ClientCfgName = "CoreSystemsClient.cfg";
@@ -189,6 +189,7 @@ namespace CoreSystems
         internal readonly List<Projectile> Hits = new List<Projectile>(16);
         internal readonly List<Weapon> AcquireTargets = new List<Weapon>(128);
         internal readonly List<Weapon> HomingWeapons = new List<Weapon>(128);
+        internal readonly List<Ai> AimingAi = new List<Ai>(128);
         internal readonly HashSet<MyDefinitionId> CoreSystemsFixedBlockDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<MyDefinitionId> CoreSystemsTurretBlockDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<MyDefinitionId> CoreSystemsSupportDefs = new HashSet<MyDefinitionId>();

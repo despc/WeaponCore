@@ -25,7 +25,7 @@ namespace CoreSystems.Projectiles
         internal void InitialHitCheck()
         {
             var vhCount = ValidateHits.Count;
-            var minCount = Session.Settings.Enforcement.ServerOptimizations ? 96 : 99999;
+            var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
             var stride = vhCount < minCount ? 100000 : 48;
 
             MyAPIGateway.Parallel.For(0, ValidateHits.Count, x => {

@@ -306,7 +306,7 @@ namespace CoreSystems
                         foreach (var w in collection)
                         {
 
-                            if (!w.AiEnabled && w.ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart)
+                            if (!w.TurretController && w.ActiveAmmoDef.AmmoDef.Trajectory.Guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart)
                                 w.SmartLosDebug();
                         }
                     }

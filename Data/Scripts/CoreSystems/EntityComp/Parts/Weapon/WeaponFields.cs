@@ -173,14 +173,15 @@ namespace CoreSystems.Platform
         internal double MinTargetDistanceBufferSqr;
         internal double MuzzleDistToBarrelCenter;
         internal double ScopeDistToCheckPos;
+        internal bool TurretActive;
+        internal bool TargetLock;
         internal bool ClientReloading;
         internal bool ServerQueuedAmmo;
         internal bool Rotating;
-        internal bool IsTurret;
-        internal bool TurretMode;
+        internal bool TurretAttached;
+        internal bool TurretController;
         internal bool TrackTarget;
         internal bool AiShooting;
-        internal bool AiEnabled;
         internal bool IsShooting;
         internal bool PlayTurretAv;
         internal bool AvCapable;
@@ -310,12 +311,9 @@ namespace CoreSystems.Platform
                 Comp.HasAim = true;
 
             PrimaryWeaponGroup = PartId % 2 == 0;
-            IsTurret = System.Values.HardPoint.Ai.TurretAttached;
-            TurretMode = System.Values.HardPoint.Ai.TurretController;
+            TurretAttached = System.Values.HardPoint.Ai.TurretAttached;
+            TurretController = System.Values.HardPoint.Ai.TurretController;
             TrackTarget = System.Values.HardPoint.Ai.TrackTargets;
-
-            if (System.Values.HardPoint.Ai.TurretController)
-                AiEnabled = true;
 
             AimOffset = System.Values.HardPoint.HardWare.Offset;
             FixedOffset = System.Values.HardPoint.HardWare.FixedOffset;
@@ -329,7 +327,7 @@ namespace CoreSystems.Platform
             if (Comp.Platform.Structure.PrimaryPart == partId)
                 comp.TrackingWeapon = this;
 
-            if (IsTurret && !TrackTarget)
+            if (TurretAttached && !TrackTarget)
                 Target = comp.TrackingWeapon.Target;
             else Target = new Target(this, true);
 
@@ -394,7 +392,7 @@ namespace CoreSystems.Platform
             if (!comp.Debug && System.Values.HardPoint.Other.Debug)
                 comp.Debug = true;
 
-            if (System.Values.HardPoint.Ai.TurretController)
+            if (TurretController)
             {
                 if (System.Values.HardPoint.Ai.PrimaryTracking && comp.TrackingWeapon == null)
                     comp.TrackingWeapon = this;

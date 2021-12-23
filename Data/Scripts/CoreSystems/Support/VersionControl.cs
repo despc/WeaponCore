@@ -139,7 +139,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Support
             var oldBlockModifers = oldSettings.BlockModifers;
             var oldShipSizes = oldSettings.ShipSizes;
             var oldSleep = oldSettings.ServerSleepSupport;
-            var oldOptimize = oldSettings.ServerOptimizations;
+            var oldBaseOptimize = oldSettings.BaseOptimizations;
+            var oldAdvancedOptimize = oldSettings.AdvancedOptimizations;
+
             var oldFocusDist = oldSettings.MinHudFocusDistance;
             var oldMaxFocusDist = oldSettings.MaxHudFocusDistance;
             var oldDisableAi = oldSettings.DisableAi;
@@ -158,7 +160,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Support
 
             Core.Enforcement.ServerSleepSupport = oldSleep;
 
-            Core.Enforcement.ServerOptimizations = oldOptimize;
+            Core.Enforcement.BaseOptimizations = oldBaseOptimize;
+            Core.Enforcement.AdvancedOptimizations = oldAdvancedOptimize;
+
             Core.Enforcement.MinHudFocusDistance = oldFocusDist;
             Core.Enforcement.MaxHudFocusDistance = oldMaxFocusDist;
             Core.Enforcement.DisableAi = oldDisableAi;

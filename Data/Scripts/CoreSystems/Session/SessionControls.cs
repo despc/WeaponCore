@@ -377,7 +377,7 @@ namespace CoreSystems
 
                 if (!on) {
 
-                    if (w.TurretMode) {
+                    if (w.TurretController) {
                         var azSteps = w.Azimuth / w.System.AzStep;
                         var elSteps = w.Elevation / w.System.ElStep;
 

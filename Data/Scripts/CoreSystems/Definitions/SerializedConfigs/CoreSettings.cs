@@ -65,11 +65,11 @@ namespace CoreSystems.Settings
 
             [ProtoMember(1)] public int Version = -1;
             [ProtoMember(2)] public int Debug = -1;
-            [ProtoMember(3)] public bool DisableWeaponGridLimits;
+            [ProtoMember(3)] public bool AdvancedOptimizations = false;
             [ProtoMember(4)] public float DirectDamageModifer = 1;
             [ProtoMember(5)] public float AreaDamageModifer = 1;
             [ProtoMember(6)] public float ShieldDamageModifer = 1;
-            [ProtoMember(7)] public bool ServerOptimizations = true;
+            [ProtoMember(7)] public bool BaseOptimizations = true;
             [ProtoMember(8)] public bool ServerSleepSupport = false;
             [ProtoMember(9)] public bool DisableAi;
             [ProtoMember(10)] public bool DisableLeads;

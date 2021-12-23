@@ -146,7 +146,7 @@ namespace CoreSystems.Support
                     if (!s.TrackGrids || !overRides.Grids || info.FatCount < 2) continue;
                     session.CanShoot++;
                     Vector3D newCenter;
-                    if (!w.AiEnabled)
+                    if (!w.TurretController)
                     {
 
                         var validEstimate = true;
@@ -397,7 +397,7 @@ namespace CoreSystems.Support
                         if (!s.TrackGrids || !overRides.Grids || !focusTarget && info.FatCount < 2) continue;
                         session.CanShoot++;
                         Vector3D newCenter;
-                        if (!w.AiEnabled)
+                        if (!w.TurretController)
                         {
 
                             var validEstimate = true;

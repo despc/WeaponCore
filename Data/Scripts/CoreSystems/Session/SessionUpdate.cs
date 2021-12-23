@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CoreSystems.Platform;
 using CoreSystems.Projectiles;
 using CoreSystems.Support;
+using Sandbox.ModAPI;
 using VRage.Game;
 using VRageMath;
 using static CoreSystems.Support.Target;
@@ -17,6 +18,8 @@ namespace CoreSystems
     {
         private void AiLoop()
         { //Fully Inlined due to keen's mod profiler
+
+            var advOptimize = Settings.Enforcement.AdvancedOptimizations;
             foreach (var ai in EntityAIs.Values)
             {
 
@@ -26,6 +29,7 @@ namespace CoreSystems
                 ai.MyProjectiles = 0;
                 ai.ProInMinCacheRange = 0;
                 ai.AccelChecked = false;
+                var activeTurret = false;
 
                 if (ai.MarkedForClose || !ai.AiInit || ai.TopEntity == null || ai.Construct.RootAi == null || ai.TopEntity.MarkedForClose)
                     continue;
@@ -310,7 +314,6 @@ namespace CoreSystems
                         ///
                         /// Check target for expire states
                         /// 
-                        bool targetLock = false;
                         var noAmmo = w.NoMagsToLoad && w.ProtoWeaponAmmo.CurrentAmmo == 0 && w.ActiveAmmoDef.AmmoDef.Const.Reloadable && !w.System.DesignatorWeapon && Tick - w.LastMagSeenTick > 600;
                         if (w.Target.HasTarget) {
 
@@ -329,22 +332,22 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired);
                                 w.FastTargetResetTick = Tick + 6;
                             }
-                            else if (w.AiEnabled) {
+                            else if (w.TurretController) {
 
-                                if (!Weapon.TrackingTarget(w, w.Target, out targetLock) && !IsClient && w.Target.ExpiredTick != Tick)
+                                if (!advOptimize && !Weapon.TrackingTarget(w, w.Target, out w.TargetLock) && !IsClient && w.Target.ExpiredTick != Tick)
                                     w.Target.Reset(Tick, States.LostTracking, !comp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
                             }
                             else {
 
                                 Vector3D targetPos;
-                                if (w.IsTurret) {
+                                if (w.TurretAttached) {
 
                                     if (!w.TrackTarget && !IsClient) {
 
                                         if ((comp.TrackingWeapon.Target.Projectile != w.Target.Projectile || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive || comp.TrackingWeapon.Target.TargetEntity != w.Target.TargetEntity || comp.TrackingWeapon.Target.IsFakeTarget != w.Target.IsFakeTarget))
                                             w.Target.Reset(Tick, States.Expired);
                                         else
-                                            targetLock = true;
+                                            w.TargetLock = true;
                                     }
                                     else if (!Weapon.TargetAligned(w, w.Target, out targetPos) && !IsClient)
                                         w.Target.Reset(Tick, States.Expired);
@@ -376,14 +379,14 @@ namespace CoreSystems
                         /// Check weapon's turret to see if its time to go home
                         ///
 
-                        if (w.TurretMode && !w.IsHome && !w.ReturingHome && !w.Target.HasTarget && Tick - w.Target.ResetTick > 239 && !comp.UserControlled && w.PartState.Action == TriggerOff)
+                        if (w.TurretController && !w.IsHome && !w.ReturingHome && !w.Target.HasTarget && Tick - w.Target.ResetTick > 239 && !comp.UserControlled && w.PartState.Action == TriggerOff)
                             w.ScheduleWeaponHome();
 
                         ///
                         /// Determine if its time to shoot
                         ///
                         ///
-                        w.AiShooting = targetLock && !comp.UserControlled && !w.System.SuppressFire;
+                        w.AiShooting = w.TargetLock && !comp.UserControlled && !w.System.SuppressFire;
 
                         var reloading = w.ActiveAmmoDef.AmmoDef.Const.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         var canShoot = !w.PartState.Overheated && !reloading && !w.System.DesignatorWeapon;
@@ -416,6 +419,12 @@ namespace CoreSystems
                             }
                         }
 
+                        if (w.TurretController) {
+                            w.TurretActive = w.Target.HasTarget;
+                            if (advOptimize && w.TurretActive)
+                                activeTurret = true;
+                        }
+
                         if (comp.Debug && !DedicatedServer)
                             WeaponDebug(w);
                     }
@@ -427,10 +436,41 @@ namespace CoreSystems
                     ai.RemovedBlockPositions.Clear();
                 }
                 ai.DbUpdated = false;
+                if (activeTurret)
+                    AimingAi.Add(ai);
             }
 
             if (DbTask.IsComplete && DbsToUpdate.Count > 0 && !DbUpdating)
                 UpdateDbsInQueue();
+        }
+
+        private void AimAi()
+        {
+            var aiCount = AimingAi.Count;
+            var stride = aiCount < 32 ? 1 : 2;
+
+            MyAPIGateway.Parallel.For(0, aiCount, i =>
+            {
+                var ai = AimingAi[i];
+                for (int j = 0; j < ai.TrackingComps.Count; j++)
+                {
+                    var wComp = ai.TrackingComps[j];
+                    for (int k = 0; k < wComp.Platform.Weapons.Count; k++)
+                    {
+
+                        var w = wComp.Platform.Weapons[k];
+                        if (!w.TurretActive || !ai.AiInit || ai.MarkedForClose || ai.Concealed || w.Comp.Ai == null || ai.TopEntity == null || ai.Construct.RootAi == null || w.Comp.CoreEntity == null  || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || ai.TopEntity.MarkedForClose || wComp.CoreEntity.MarkedForClose || w.Comp.Platform.State != CorePlatform.PlatformState.Ready) continue;
+
+                        if (!Weapon.TrackingTarget(w, w.Target, out w.TargetLock) && !IsClient && w.Target.ExpiredTick != Tick)
+                            w.Target.Reset(Tick, States.LostTracking,
+                                !w.Comp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
+                    }
+                }
+
+            },
+                stride);
+
+            AimingAi.Clear();
         }
 
         private void CheckAcquire()
@@ -456,7 +496,8 @@ namespace CoreSystems
 
                 if (checkTime || w.BaseComp.Ai.TargetResetTick == Tick && w.Target.HasTarget) {
 
-                    if (seekProjectile || comp.Data.Repo.Values.State.TrackingReticle || (comp.DetectOtherSignals && w.BaseComp.Ai.DetectionInfo.OtherInRange || w.BaseComp.Ai.DetectionInfo.PriorityInRange) && w.BaseComp.Ai.DetectionInfo.ValidSignalExists(w)) {
+                    if (seekProjectile || comp.Data.Repo.Values.State.TrackingReticle || (comp.DetectOtherSignals && w.BaseComp.Ai.DetectionInfo.OtherInRange || w.BaseComp.Ai.DetectionInfo.PriorityInRange) && w.BaseComp.Ai.DetectionInfo.ValidSignalExists(w))
+                    {
                         if (comp.TrackingWeapon != null && comp.TrackingWeapon.System.DesignatorWeapon && comp.TrackingWeapon != w && comp.TrackingWeapon.Target.HasTarget) {
 
                             var topMost = comp.TrackingWeapon.Target.TargetEntity?.GetTopMostParent();

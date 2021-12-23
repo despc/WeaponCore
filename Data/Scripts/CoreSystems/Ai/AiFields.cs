@@ -33,10 +33,6 @@ namespace CoreSystems.Support
         internal readonly FastResourceLock DbLock = new FastResourceLock();
 
         internal readonly ConcurrentDictionary<MyEntity, CoreComponent> CompBase = new ConcurrentDictionary<MyEntity, CoreComponent>();
-        internal readonly List<Weapon.WeaponComponent> WeaponComps = new List<Weapon.WeaponComponent>(32);
-        internal readonly List<Upgrade.UpgradeComponent> UpgradeComps = new List<Upgrade.UpgradeComponent>(32);
-        internal readonly List<SupportSys.SupportComponent> SupportComps = new List<SupportSys.SupportComponent>(32);
-        internal readonly List<Weapon.WeaponComponent> PhantomComps = new List<Weapon.WeaponComponent>(32);
         internal readonly Dictionary<Weapon.WeaponComponent, int> WeaponIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
         internal readonly Dictionary<Upgrade.UpgradeComponent, int> UpgradeIdx = new Dictionary<Upgrade.UpgradeComponent, int>(32);
         internal readonly Dictionary<SupportSys.SupportComponent, int> SupportIdx = new Dictionary<SupportSys.SupportComponent, int>(32);
@@ -46,6 +42,7 @@ namespace CoreSystems.Support
         internal readonly Dictionary<Vector3I, IMySlimBlock> RemovedBlockPositions = new Dictionary<Vector3I, IMySlimBlock>(Vector3I.Comparer);
 
         internal readonly Dictionary<MyStringHash, PartCounter> PartCounting = new Dictionary<MyStringHash, PartCounter>(MyStringHash.Comparer);
+
         internal readonly ConcurrentDictionary<MyEntity, MyInventory> InventoryMonitor = new ConcurrentDictionary<MyEntity, MyInventory>();
         internal readonly ConcurrentDictionary<MyEntity, uint> NoTargetLos = new ConcurrentDictionary<MyEntity, uint>();
         internal readonly HashSet<MyEntity> ValidGrids = new HashSet<MyEntity>();
@@ -58,6 +55,11 @@ namespace CoreSystems.Support
         internal readonly HashSet<Projectile> LiveProjectile = new HashSet<Projectile>();
         internal readonly HashSet<MyCubeGrid> SubGridsRegistered = new HashSet<MyCubeGrid>();
 
+        internal readonly List<Weapon.WeaponComponent> TrackingComps = new List<Weapon.WeaponComponent>();
+        internal readonly List<Weapon.WeaponComponent> WeaponComps = new List<Weapon.WeaponComponent>(32);
+        internal readonly List<Upgrade.UpgradeComponent> UpgradeComps = new List<Upgrade.UpgradeComponent>(32);
+        internal readonly List<SupportSys.SupportComponent> SupportComps = new List<SupportSys.SupportComponent>(32);
+        internal readonly List<Weapon.WeaponComponent> PhantomComps = new List<Weapon.WeaponComponent>(32);
         internal readonly List<Projectile> DeadProjectiles = new List<Projectile>();
         internal readonly List<Ai> TargetAisTmp = new List<Ai>();
         internal readonly List<Shields> NearByShieldsTmp = new List<Shields>();
@@ -73,6 +75,7 @@ namespace CoreSystems.Support
         internal readonly List<TargetInfo> SortedTargets = new List<TargetInfo>();
         internal readonly List<DetectInfo> NewEntities = new List<DetectInfo>();
         internal readonly List<MyEntity> NearByEntityCache = new List<MyEntity>();
+
         internal readonly Dictionary<MyEntity, TargetInfo> Targets = new Dictionary<MyEntity, TargetInfo>(32);
         internal readonly MyDefinitionId GId = MyResourceDistributorComponent.ElectricityId;
         internal readonly AiData Data = new AiData();
@@ -106,6 +109,7 @@ namespace CoreSystems.Support
         internal long AiOwner;
         internal bool BlockMonitoring;
         internal bool AiSleep;
+        internal bool Aiming;
         internal bool DbUpdated;
         internal bool DetectOtherSignals;
         internal bool PointDefense;

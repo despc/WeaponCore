@@ -419,7 +419,7 @@ namespace CoreSystems
                     switch (w.StructureType)
                     {
                         case CoreStructure.StructureTypes.Weapon:
-                            if (w.HasTurret && w.EntityType == CoreStructure.EnittyTypes.Block)
+                            if (w.TurretAttached && w.EntityType == CoreStructure.EnittyTypes.Block)
                                 CoreSystemsTurretBlockDefs.Add(defId);
                             else if (w.EntityType == CoreStructure.EnittyTypes.Block)
                                 CoreSystemsFixedBlockDefs.Add(defId);

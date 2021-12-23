@@ -19,7 +19,7 @@ namespace CoreSystems.Platform
         internal static bool CanShootTarget(Weapon weapon, ref Vector3D targetCenter, Vector3D targetLinVel, Vector3D targetAccel, out Vector3D targetPos, bool checkSelfHit = false, MyEntity target = null)
         {
             var prediction = weapon.System.Values.HardPoint.AimLeadingPrediction;
-            var trackingWeapon = weapon.TurretMode ? weapon : weapon.Comp.TrackingWeapon;
+            var trackingWeapon = weapon.TurretController ? weapon : weapon.Comp.TrackingWeapon;
             if (Vector3D.IsZero(targetLinVel, 5E-03)) targetLinVel = Vector3.Zero;
             if (Vector3D.IsZero(targetAccel, 5E-03)) targetAccel = Vector3.Zero;
 
@@ -110,7 +110,7 @@ namespace CoreSystems.Platform
         {
             var vel = target.Physics.LinearVelocity;
             var accel = target.Physics.LinearAcceleration;
-            var trackingWeapon = weapon.TurretMode || weapon.Comp.TrackingWeapon == null ? weapon : weapon.Comp.TrackingWeapon;
+            var trackingWeapon = weapon.TurretController || weapon.Comp.TrackingWeapon == null ? weapon : weapon.Comp.TrackingWeapon;
 
             var box = target.PositionComp.LocalAABB;
             var obb = new MyOrientedBoundingBoxD(box, target.PositionComp.WorldMatrixRef);
@@ -168,7 +168,7 @@ namespace CoreSystems.Platform
         internal static bool CanShootTargetObb(Weapon weapon, MyEntity entity, Vector3D targetLinVel, Vector3D targetAccel, out Vector3D targetPos)
         {
             var prediction = weapon.System.Values.HardPoint.AimLeadingPrediction;
-            var trackingWeapon = weapon.TurretMode ? weapon : weapon.Comp.TrackingWeapon;
+            var trackingWeapon = weapon.TurretController ? weapon : weapon.Comp.TrackingWeapon;
 
             if (Vector3D.IsZero(targetLinVel, 5E-03)) targetLinVel = Vector3.Zero;
             if (Vector3D.IsZero(targetAccel, 5E-03)) targetAccel = Vector3.Zero;

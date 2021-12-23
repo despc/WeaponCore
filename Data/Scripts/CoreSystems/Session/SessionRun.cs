@@ -143,7 +143,11 @@ namespace CoreSystems
                 }
 
                 if (GameLoaded) {
+
                     DsUtil.Start("ai");
+                    if (AimingAi.Count > 0) 
+                        AimAi();
+
                     AiLoop();
                     DsUtil.Complete("ai", true);
 
@@ -159,6 +163,8 @@ namespace CoreSystems
                     DsUtil.Start("shoot");
                     if (ShootingWeapons.Count > 0) ShootWeapons();
                     DsUtil.Complete("shoot", true);
+
+
 
                 }
 

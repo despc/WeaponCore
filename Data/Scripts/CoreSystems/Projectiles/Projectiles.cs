@@ -376,7 +376,7 @@ namespace CoreSystems.Projectiles
             }
 
             var apCount = ActiveProjetiles.Count;
-            var minCount = Session.Settings.Enforcement.ServerOptimizations ? 96 : 99999;
+            var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
             var stride = apCount < minCount ? 100000 : 48;
 
             MyAPIGateway.Parallel.For(0, apCount, i =>

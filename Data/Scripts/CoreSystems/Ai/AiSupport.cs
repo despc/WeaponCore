@@ -33,6 +33,8 @@ namespace CoreSystems.Support
 
                             WeaponIdx.Add(wComp, WeaponComps.Count);
                             WeaponComps.Add(wComp);
+                            if (wComp.TurretController && Session.Settings.Enforcement.AdvancedOptimizations)
+                                TrackingComps.Add(wComp);
                         }
                         else
                         {
@@ -46,6 +48,8 @@ namespace CoreSystems.Support
                             if (idx < WeaponComps.Count)
                                 WeaponIdx[WeaponComps[idx]] = idx;
                             WeaponIdx.Remove(wComp);
+                            if (wComp.TurretController && Session.Settings.Enforcement.AdvancedOptimizations)
+                                TrackingComps.Remove(wComp);
                         }
                     }
                     else
@@ -364,6 +368,7 @@ namespace CoreSystems.Support
             NoTargetLos.Clear();
             Targets.Clear();
 
+            TrackingComps.Clear();
             WeaponComps.Clear();
             UpgradeComps.Clear();
             SupportComps.Clear();

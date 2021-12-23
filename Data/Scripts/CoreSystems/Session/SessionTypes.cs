@@ -379,9 +379,9 @@ namespace CoreSystems
             {
                 var weaponFields = new Dictionary<string, Func<string>>
                 {
-                    {"AiEnabled", () => {
+                    {"TurretController", () => {
                         var message = string.Empty;
-                        return !TryGetValidPlatform(out TmpPlatform) ? string.Empty : TmpPlatform.Weapons.Aggregate(message, (current, w) => current + $"{w.AiEnabled}"); }
+                        return !TryGetValidPlatform(out TmpPlatform) ? string.Empty : TmpPlatform.Weapons.Aggregate(message, (current, w) => current + $"{w.TurretController}"); }
                     },
                     {"AcquireEnabled", () => {
                             var message = string.Empty;

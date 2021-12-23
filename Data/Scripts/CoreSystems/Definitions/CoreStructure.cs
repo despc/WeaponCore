@@ -47,7 +47,7 @@ namespace CoreSystems.Support
 
     internal class WeaponStructure : CoreStructure
     {
-        internal bool HasTurret;
+        internal bool TurretAttached;
         internal WeaponStructure(Session session, KeyValuePair<string, Dictionary<string, MyTuple<string, string, string, string>>> tDef, List<WeaponDefinition> wDefList, string modPath)
         {
             Session = session;
@@ -140,8 +140,8 @@ namespace CoreSystems.Support
                 HashToId.Add(partHash, partId);
                 var coreSystem = new WeaponSystem(Session, partNameIdHash, muzzletNameHash, azimuthNameHash, elevationNameHash, spinNameHash, weaponDef, typeName, weaponAmmo, partHash, partId);
 
-                if (coreSystem.Values.HardPoint.Ai.TurretAttached && !HasTurret)
-                    HasTurret = true;
+                if (coreSystem.Values.HardPoint.Ai.TurretAttached && !TurretAttached)
+                    TurretAttached = true;
                 
                 ApproximatePeakPowerCombined += coreSystem.ApproximatePeakPower;
                 CombinedIdlePower += coreSystem.WConst.IdlePower;

@@ -67,6 +67,7 @@ namespace CoreSystems.Support
                                 {
                                     var w = collection[i];
                                     w.StopShooting();
+                                    w.TurretActive = false;
                                     w.WeaponCache.HitEntity.Clean();
                                     if (!Session.IsClient) w.Target.Reset(Session.Tick, Target.States.AiLost);
 
