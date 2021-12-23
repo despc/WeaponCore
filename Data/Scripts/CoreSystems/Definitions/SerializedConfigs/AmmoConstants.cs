@@ -752,11 +752,12 @@ namespace CoreSystems.Support
                 }
 
             }
+            var avgArmorModifier = GetAverageArmorModifier(a.DamageScales.Armor);
             
             realShotsPerMin = (shotsPerSec * 60);
-            baseDps = BaseDamage * shotsPerSec;
+            baseDps = BaseDamage * shotsPerSec * avgArmorModifier;
             areaDps = 0; //TODO: Add back in some way
-            detDps = (GetDetDmg(a) * shotsPerSec);
+            detDps = (GetDetDmg(a) * shotsPerSec) * avgArmorModifier;
             if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
@@ -781,6 +782,27 @@ namespace CoreSystems.Support
             if (mexLogLevel >= 1) Log.Line($"peakDps= {peakDps}");
 
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
+
+            if (wDef.HardPoint.Other.Debug && a.HardPointUsable)
+            {
+
+                Log.Line($"[========================]");
+                Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
+                Log.Line($"AmmoMagazine: {a.AmmoMagazine}");
+                Log.Line($"AmmoRound: {a.AmmoRound}");
+                Log.Line($"--------------------------");
+                Log.Line($"Shots per second: {shotsPerSec}");
+                Log.Line($"Peak DPS: {peakDps}");
+                Log.Line($"Effective DPS: {effectiveDps}");
+                Log.Line($"Base Damage DPS: {baseDps}");
+                Log.Line($"Area Damage DPS: {areaDps}");
+                Log.Line($"Explosive Dmg DPS: {detDps}");
+
+
+
+
+            }
+
         }
 
         private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo)
@@ -805,20 +827,39 @@ namespace CoreSystems.Support
 
         private Vector2 GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps)
         {
-           Vector2 fragDmg = new Vector2(0,0);
+            Vector2 fragDmg = new Vector2(0, 0);
 
             fragDmg.X += (fAmmo.BaseDamage * frags) * sps;
             //fragDmg += 0;
             fragDmg.Y += (GetDetDmg(fAmmo) * frags) * sps;
-
-            // TODO: Split into fragBaseDmg,FragAreaDmg, fragAoeDmg
+            float avgArmorModifier = GetAverageArmorModifier(fAmmo.DamageScales.Armor);
+            
+            fragDmg *= avgArmorModifier;
 
             return fragDmg;
         }
+
+        private static float GetAverageArmorModifier(AmmoDef.DamageScaleDef.ArmorDef armor)
+        {
+            var avgArmorModifier = 0.0f;
+            if (armor.Heavy < 0) { avgArmorModifier += 1.0f; }
+            else { avgArmorModifier += armor.Heavy; }
+            if (armor.Light < 0) { avgArmorModifier += 1.0f; }
+            else { avgArmorModifier += armor.Light; }
+            if (armor.Armor < 0) { avgArmorModifier += 1.0f; }
+            else { avgArmorModifier += armor.Armor; }
+            if (armor.NonArmor < 0) { avgArmorModifier += 1.0f; }
+            else { avgArmorModifier += armor.NonArmor; }
+
+            avgArmorModifier *= 0.25f;
+            return avgArmorModifier;
+        }
+
         private float GetShotsPerSecond(int magCapacity,int magPerReload, int rof, int reloadTime, int barrelsPerShot, int trajectilesPerBarrel, int shotsInBurst, int delayAfterBurst)
         {
             if (mexLogLevel > 0) Log.Line($"magCapacity={magCapacity} rof={rof} reloadTime={reloadTime} barrelsPerShot={barrelsPerShot} trajectilesPerBarrel={trajectilesPerBarrel} shotsInBurst={shotsInBurst} delayAfterBurst={delayAfterBurst}");
-            var reloadsPerRoF = rof / (magCapacity*magPerReload / (float)barrelsPerShot);
+            if (magPerReload < 1) magPerReload = 1;
+            var reloadsPerRoF = rof / ((magCapacity*magPerReload) / (float)barrelsPerShot);
             var burstsPerRoF = shotsInBurst == 0 ? 0 : rof / (float)shotsInBurst;
             var ticksReloading = reloadsPerRoF * reloadTime;
 
