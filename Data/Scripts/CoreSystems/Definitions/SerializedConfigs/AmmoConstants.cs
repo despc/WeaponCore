@@ -380,8 +380,9 @@ namespace CoreSystems.Support
             var oldDamageType = oldType == AmmoDef.AreaDamageDef.AreaEffectType.Explosive || oldType == AmmoDef.AreaDamageDef.AreaEffectType.Radiant;
             if (oldDamageType)
             {
-                var currentDamage = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.BaseDamage : ammoDef.AreaEffect.Base.EffectStrength;
-                var currentRadius = ammoDef.AreaEffect.Base.Radius;
+                var checkold = Math.Max(ammoDef.AreaEffect.Base.EffectStrength, ammoDef.AreaEffect.AreaEffectDamage);
+                var currentDamage = checkold <= 0 ? ammoDef.BaseDamage : checkold;
+                var currentRadius = Math.Max(ammoDef.AreaEffect.Base.Radius, ammoDef.AreaEffect.AreaEffectRadius);
                 if (currentDamage > 0 && currentRadius > 0)
                 {
                     ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
