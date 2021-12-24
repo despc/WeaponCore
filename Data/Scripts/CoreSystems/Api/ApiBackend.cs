@@ -89,7 +89,12 @@ namespace CoreSystems.Api
                 ["SetAmmo"] = new Action<MyEntity, int, string>(SetAmmo),
                 ["ClosePhantom"] = new Func<MyEntity, bool>(ClosePhantom),
                 ["SpawnPhantom"] = new Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, MyEntity>(SpawnPhantom),
+                ["ToggleDamageEvents"] = new Action<Dictionary<MyEntity, MyTuple<Vector3D, Dictionary<MyEntity, List<MyTuple<int, float, Vector3I>>>>>>(ToggleDamageEvents),
             };
+        }
+
+        private void ToggleDamageEvents(Dictionary<MyEntity, MyTuple<Vector3D, Dictionary<MyEntity, List<MyTuple<int, float, Vector3I>>>>> obj)
+        {
         }
 
         internal void PbInit()
@@ -1183,5 +1188,6 @@ namespace CoreSystems.Api
         private void GetPhantomInfo(string phantomSubtypeId, ICollection<MyTuple<MyEntity, long, int, float, uint, long>> collection)
         {
         }
+
     }
 }

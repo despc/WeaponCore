@@ -69,7 +69,6 @@ namespace CoreSystems.Support
                                     var w = collection[i];
                                     w.StopShooting();
                                     w.TurretActive = false;
-                                    w.WeaponCache.HitEntity.Clean();
                                     if (!Session.IsClient) w.Target.Reset(Session.Tick, Target.States.AiLost);
 
                                     if (w.InCharger)
@@ -80,7 +79,7 @@ namespace CoreSystems.Support
                             }
                             Ai.CompChange(false, this);
                         }
-                        else Log.Line($"RemoveComp Weaponbase didn't have my comp: {Ai.Session.CompsDelayed.Contains(this)} - FoundAi:{Ai.Session.EntityAIs.TryGetValue(TopEntity, out testAi)} - sameAi:{testAi == Ai} - sameTopEntity:{comp.TopEntity == Ai.TopEntity} - inScene:{comp.CoreEntity.InScene} - LastRemoveFromScene:{LastRemoveFromScene} - LastAddToScene:{LastAddToScene} - Tick:{Session.Tick}");
+                        else Log.Line($"RemoveComp Weaponbase didn't have my comp: inDelayedStart: {Ai.Session.CompsDelayed.Contains(this)} - FoundAi:{Ai.Session.EntityAIs.TryGetValue(TopEntity, out testAi)} - sameAi:{testAi == Ai} - sameTopEntity:{TopEntity == Ai.TopEntity} - inScene:{CoreEntity.InScene} - LastRemoveFromScene:{LastRemoveFromScene} - LastAddToScene:{LastAddToScene} - Tick:{Ai.Session.Tick}");
 
                         if (Ai.CompBase.Count == 0)
                         {

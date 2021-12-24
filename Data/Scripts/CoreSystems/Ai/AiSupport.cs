@@ -15,6 +15,7 @@ namespace CoreSystems.Support
     {
         internal void CompChange(bool add, CoreComponent comp)
         {
+            var optimize = comp.TurretController && Session.Settings.Enforcement.AdvancedOptimizations;
             int idx;
             switch (comp.Type)
             {
@@ -31,25 +32,34 @@ namespace CoreSystems.Support
                                 return;
                             }
 
-                            WeaponIdx.Add(wComp, WeaponComps.Count);
+                            WeaponIdx.Add(wComp, new CompIndexer {AllComps = WeaponComps.Count, TrackingComps = TrackingComps.Count});
                             WeaponComps.Add(wComp);
-                            if (wComp.TurretController && Session.Settings.Enforcement.AdvancedOptimizations)
+                            if (optimize)
                                 TrackingComps.Add(wComp);
                         }
                         else
                         {
-                            if (!WeaponIdx.TryGetValue(wComp, out idx))
-                            {
-                                Log.Line($"CompRemoveFailed: <{wComp.CoreEntity.EntityId}> - {WeaponComps.Count}[{WeaponIdx.Count}]({CompBase.Count}) - {WeaponComps.Contains(wComp)}[{WeaponComps.Count}] - {Session.EntityAIs[wComp.TopEntity].CompBase.ContainsKey(wComp.CoreEntity)} - {Session.EntityAIs[wComp.TopEntity].CompBase.Count} ");
+                            CompIndexer wCompIdx;
+                            if (!WeaponIdx.TryGetValue(wComp, out wCompIdx))
                                 return;
+
+                            var freedIndex = wCompIdx.AllComps;
+                            var trackIndex = wCompIdx.TrackingComps;
+                            
+                            WeaponComps.RemoveAtFast(freedIndex);
+                            if (optimize)
+                                TrackingComps.RemoveAtFast(trackIndex);
+
+                            if (freedIndex < WeaponComps.Count || optimize && trackIndex < TrackingComps.Count)
+                            {
+                                var secCond = freedIndex >= WeaponComps.Count && optimize && trackIndex < TrackingComps.Count;
+                                Log.Line($"[swap] altCondition: {secCond} - optimize:{optimize}");
+                                var swappedComp = WeaponComps[freedIndex];
+                                WeaponIdx[swappedComp] = new CompIndexer {AllComps = freedIndex, TrackingComps = trackIndex};
                             }
 
-                            WeaponComps.RemoveAtFast(idx);
-                            if (idx < WeaponComps.Count)
-                                WeaponIdx[WeaponComps[idx]] = idx;
                             WeaponIdx.Remove(wComp);
-                            if (wComp.TurretController && Session.Settings.Enforcement.AdvancedOptimizations)
-                                TrackingComps.Remove(wComp);
+
                         }
                     }
                     else
