@@ -19,7 +19,6 @@ namespace CoreSystems
         private void AiLoop()
         { //Fully Inlined due to keen's mod profiler
 
-            var advOptimize = Settings.Enforcement.AdvancedOptimizations;
             foreach (var ai in EntityAIs.Values)
             {
 
@@ -52,7 +51,10 @@ namespace CoreSystems
                 if (ai.AiType == Ai.AiTypes.Grid && (ai.UpdatePowerSources || !ai.HadPower && ai.GridEntity.IsPowered || ai.HasPower && !ai.GridEntity.IsPowered || Tick10))
                     ai.UpdateGridPower();
 
-                if (ai.AiType == Ai.AiTypes.Grid && !ai.HasPower || Settings.Enforcement.ServerSleepSupport && IsServer && ai.AwakeComps == 0 && ai.WeaponsTracking == 0 && ai.SleepingComps > 0 && !ai.CheckProjectiles && ai.AiSleep && !ai.DbUpdated) 
+                var enforcement = Settings.Enforcement;
+                var advOptimize = enforcement.AdvancedOptimizations;
+
+                if (ai.AiType == Ai.AiTypes.Grid && !ai.HasPower || enforcement.ServerSleepSupport && IsServer && ai.AwakeComps == 0 && ai.WeaponsTracking == 0 && ai.SleepingComps > 0 && !ai.CheckProjectiles && ai.AiSleep && !ai.DbUpdated) 
                     continue;
 
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
@@ -365,8 +367,8 @@ namespace CoreSystems
                         ///
                         /// Queue for target acquire or set to tracking weapon.
                         /// 
-                        var seek = comp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!comp.UserControlled && !Settings.Enforcement.DisableAi || w.PartState.Action == TriggerClick));
-                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !Settings.Enforcement.DisableAi) && !w.AcquiringTarget && comp.Data.Repo.Values.State.Control != ControlMode.Camera)
+                        var seek = comp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!comp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick));
+                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && comp.Data.Repo.Values.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;
                             AcquireTargets.Add(w);
@@ -424,6 +426,8 @@ namespace CoreSystems
                             if (advOptimize && w.TurretActive)
                                 activeTurret = true;
                         }
+
+                        w.TargetLock = false;
 
                         if (comp.Debug && !DedicatedServer)
                             WeaponDebug(w);

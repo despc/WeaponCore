@@ -26,6 +26,7 @@ namespace CoreSystems.Platform
             internal TriggerActions DefaultTrigger;
             internal uint LastRayCastTick;
             internal float EffectiveDps;
+            internal float PerfectDps;
             internal float PeakDps;
             internal float ShotsPerSec;
             internal float BaseDps;
@@ -175,6 +176,7 @@ namespace CoreSystems.Platform
 
                 Ai.OptimalDps += PeakDps;
                 Ai.EffectiveDps += EffectiveDps;
+                Ai.PerfectDps += PerfectDps;
 
                 VanillaTurretBase?.SetTarget(Vector3D.MaxValue);
 
@@ -204,6 +206,7 @@ namespace CoreSystems.Platform
                     {
                         weapon.Comp.PeakDps += ammo.Const.PeakDps / patternSize;
                         weapon.Comp.EffectiveDps += ammo.Const.EffectiveDps / patternSize;
+                        weapon.Comp.PerfectDps += ammo.Const.PerfectDps / patternSize;
                         weapon.Comp.ShotsPerSec += ammo.Const.ShotsPerSec / patternSize;
                         weapon.Comp.BaseDps += ammo.Const.BaseDps / patternSize;
                         weapon.Comp.AreaDps += ammo.Const.AreaDps / patternSize;

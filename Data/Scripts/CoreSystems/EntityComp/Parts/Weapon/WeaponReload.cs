@@ -158,7 +158,7 @@ namespace CoreSystems.Platform
 
                 return false;
             }
-            
+
             ClientStartId = Reload.StartId;
             ClientMakeUpShots += ProtoWeaponAmmo.CurrentAmmo;
 
@@ -309,7 +309,6 @@ namespace CoreSystems.Platform
             var input = o as int? ?? 0;
             var callBack = input == 1;
             var earlyExit = input == 2;
-
             using (Comp.CoreEntity.Pin()) {
 
                 if (PartState == null || Comp.Data.Repo == null || Comp.Ai == null || Comp.CoreEntity.MarkedForClose) {
@@ -347,6 +346,7 @@ namespace CoreSystems.Platform
                 }
                 else {
                     ClientReloading = false;
+                    
                     ClientMakeUpShots = 0;
                     ClientEndId = Reload.EndId;
                     ServerQueuedAmmo = false;
@@ -361,6 +361,7 @@ namespace CoreSystems.Platform
                         System.Session.SendClientReady(this);
                 }
 
+                TargetData.WeaponRandom.TurretRandom = new XorShiftRandomStruct((ulong)(TargetData.WeaponRandom.CurrentSeed + (Reload.EndId + 1000000)));
                 EventTriggerStateChanged(EventTriggers.Reloading, false);
                 LastLoadedTick = Comp.Session.Tick;
 

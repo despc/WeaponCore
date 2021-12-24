@@ -106,7 +106,7 @@ namespace CoreSystems.Platform
                         }
 
                         if (System.HasEjector && ActiveAmmoDef.AmmoDef.Const.HasEjectEffect)  {
-                            if (ActiveAmmoDef.AmmoDef.Ejection.SpawnChance >= 1 || rnd.TurretRandom.Range(0f, 1f) >= ActiveAmmoDef.AmmoDef.Ejection.SpawnChance)
+                            if (ActiveAmmoDef.AmmoDef.Ejection.SpawnChance >= 1 || rnd.AcquireRandom.Range(0f, 1f) >= ActiveAmmoDef.AmmoDef.Ejection.SpawnChance)
                                 SpawnEjection();
                         }
                     }
@@ -296,7 +296,6 @@ namespace CoreSystems.Platform
             }
             catch (Exception e) { Log.Line($"Error in shoot: {e}", null, true); }
         }
-
 
         private void FinishMode()
         {

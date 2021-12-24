@@ -429,7 +429,9 @@ namespace CoreSystems.Support
                     frag.Origin = !Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position;
 
                 frag.OriginUp = p.Info.OriginUp;
-                frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
+                var fragSeed = p.Info.Random.NextUInt64();
+                Log.Line($"fragSeed: {fragSeed}");
+                frag.Random = new XorShiftRandomStruct(fragSeed);
                 frag.DoDamage = p.Info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
                 frag.Velocity = !p.Info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;

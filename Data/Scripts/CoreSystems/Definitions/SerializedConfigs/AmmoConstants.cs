@@ -207,6 +207,7 @@ namespace CoreSystems.Support
         public readonly float BaseDps;
         public readonly float AreaDps;
         public readonly float EffectiveDps;
+        public readonly float PerfectDps;
         public readonly float DetDps;
         public readonly float PeakDps;
         public readonly float ShotsPerSec;
@@ -350,7 +351,7 @@ namespace CoreSystems.Support
             MagsToLoad = wDef.HardPoint.Loading.MagsToLoad > 0 ? wDef.HardPoint.Loading.MagsToLoad : 1;
             MaxAmmo = MagsToLoad * MagazineSize;
 
-            GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out ShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
+            GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out PerfectDps, out ShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
 
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
             var predictionEligible = session.IsClient || session.DedicatedServer;
@@ -620,7 +621,7 @@ namespace CoreSystems.Support
         }
 
         private int mexLogLevel = 0;
-        private void GetPeakDps(WeaponSystem.AmmoType ammoDef, WeaponSystem system, WeaponDefinition wDef, out float peakDps, out float effectiveDps, out float shotsPerSec, out float baseDps, out float areaDps, out float detDps, out float realShotsPerMin)
+        private void GetPeakDps(WeaponSystem.AmmoType ammoDef, WeaponSystem system, WeaponDefinition wDef, out float peakDps, out float effectiveDps, out float dpsWoInaccuracy, out float shotsPerSec, out float baseDps, out float areaDps, out float detDps, out float realShotsPerMin)
         {
             var s = system;
             var a = ammoDef.AmmoDef;
@@ -780,7 +781,7 @@ namespace CoreSystems.Support
             }
             peakDps = (baseDps + areaDps + detDps);
             effectiveDps = (float)(peakDps * effectiveModifier);
-            var dpsWoInaccuracy = (float)(effectiveModifier / inaccuracyScore) * peakDps;
+            dpsWoInaccuracy = (float)(effectiveModifier / inaccuracyScore) * peakDps;
             
             if (mexLogLevel >= 1) Log.Line($"peakDps= {peakDps}");
 

@@ -175,6 +175,7 @@ namespace CoreSystems.Support
         internal float BatteryCurrentInput;
         internal float OptimalDps;
         internal float EffectiveDps;
+        internal float PerfectDps;
         internal enum TargetType
         {
             Projectile,
