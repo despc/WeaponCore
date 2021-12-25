@@ -960,7 +960,7 @@ namespace CoreSystems
                 //var hitDirection = rootPos - gctr;
                 //var hitray = new Ray(gctr, hitDirection);
 
-                var hitDirection = localpos - (localpos + (direction * 1));
+                var hitDirection = localpos - (localpos * direction);
                 var hitray = new Ray(localpos, hitDirection);
                 var axis = 1;
                 if (hitray.Intersects(xplane) > 0 || hitray.Intersects(xmplane) > 0) axis = 2;
