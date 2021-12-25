@@ -210,6 +210,7 @@ namespace CoreSystems.Support
         public readonly float PerfectDps;
         public readonly float DetDps;
         public readonly float PeakDps;
+        public readonly float RealShotsPerSec;
         public readonly float ShotsPerSec;
         public readonly float MaxTrajectory;
         public readonly float ShotFadeStep;
@@ -351,8 +352,7 @@ namespace CoreSystems.Support
             MagsToLoad = wDef.HardPoint.Loading.MagsToLoad > 0 ? wDef.HardPoint.Loading.MagsToLoad : 1;
             MaxAmmo = MagsToLoad * MagazineSize;
 
-            GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out PerfectDps, out ShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
-
+            GetPeakDps(ammo, system, wDef, out PeakDps, out EffectiveDps, out PerfectDps, out ShotsPerSec, out RealShotsPerSec, out BaseDps, out AreaDps, out DetDps, out RealShotsPerMin);
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
             var predictionEligible = session.IsClient || session.DedicatedServer;
 
@@ -549,7 +549,7 @@ namespace CoreSystems.Support
             shotFadeStep = 1f / changeFadeSteps;
 
             trajectoryStep = MaxTrajectoryGrows ? MaxTrajectory / ammo.AmmoDef.Trajectory.MaxTrajectoryTime : MaxTrajectory;
-            alwaysDraw = (Trail || HasShotFade) && ShotsPerSec < 0.1;
+            alwaysDraw = (Trail || HasShotFade) && RealShotsPerSec < 0.1;
         }
 
         private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int patternIndex, out bool guidedDetected)
@@ -621,7 +621,7 @@ namespace CoreSystems.Support
         }
 
         private int mexLogLevel = 0;
-        private void GetPeakDps(WeaponSystem.AmmoType ammoDef, WeaponSystem system, WeaponDefinition wDef, out float peakDps, out float effectiveDps, out float dpsWoInaccuracy, out float shotsPerSec, out float baseDps, out float areaDps, out float detDps, out float realShotsPerMin)
+        private void GetPeakDps(WeaponSystem.AmmoType ammoDef, WeaponSystem system, WeaponDefinition wDef, out float peakDps, out float effectiveDps, out float dpsWoInaccuracy, out float shotsPerSec, out float realShotsPerSec, out float baseDps, out float areaDps, out float detDps, out float realShotsPerMin)
         {
             var s = system;
             var a = ammoDef.AmmoDef;
@@ -703,23 +703,25 @@ namespace CoreSystems.Support
 
             if (!EnergyAmmo && MagazineSize > 0 || IsHybrid)
             {
-                shotsPerSec = GetShotsPerSecond(MagazineSize,wDef.HardPoint.Loading.MagsToLoad, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
+                realShotsPerSec = GetShotsPerSecond(MagazineSize,wDef.HardPoint.Loading.MagsToLoad, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
             }
             else if (EnergyAmmo && a.EnergyMagazineSize > 0)
             {
-                shotsPerSec = GetShotsPerSecond(a.EnergyMagazineSize,1, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
+                realShotsPerSec = GetShotsPerSecond(a.EnergyMagazineSize,1, s.WConst.RateOfFire, s.WConst.ReloadTime, s.BarrelsPerShot, l.TrajectilesPerBarrel, l.ShotsInBurst, l.DelayAfterBurst);
             }
             else
             {
-                shotsPerSec = GetShotsPerSecond(1,1, s.WConst.RateOfFire, 0, s.BarrelsPerShot, l.TrajectilesPerBarrel, s.ShotsPerBurst, l.DelayAfterBurst);
+                realShotsPerSec = GetShotsPerSecond(1,1, s.WConst.RateOfFire, 0, s.BarrelsPerShot, l.TrajectilesPerBarrel, s.ShotsPerBurst, l.DelayAfterBurst);
             }
-            var shotsPerSecPower = shotsPerSec; //save for power calc
+            var shotsPerSecPower = realShotsPerSec; //save for power calc
+
+            shotsPerSec = realShotsPerSec;
 
             if (s.WConst.HeatPerShot > 0)
             {
 
 
-                var heatGenPerSec = (s.WConst.HeatPerShot * shotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
+                var heatGenPerSec = (s.WConst.HeatPerShot * realShotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
 
 
 
@@ -732,7 +734,7 @@ namespace CoreSystems.Support
                     var timeHeatCycle = (safeToOverheat + cooldownTime);
 
 
-                    shotsPerSec = ((safeToOverheat / timeHeatCycle) * shotsPerSec);
+                    realShotsPerSec = ((safeToOverheat / timeHeatCycle) * realShotsPerSec);
 
                     if ((mexLogLevel >= 1))
                     {
@@ -748,7 +750,7 @@ namespace CoreSystems.Support
 
                         Log.Line($"timeHeatCycle = {timeHeatCycle}s");
 
-                        Log.Line($"shotsPerSec wHeat = {shotsPerSec}");
+                        Log.Line($"realShotsPerSec wHeat = {realShotsPerSec}");
                     }
 
                 }
@@ -756,11 +758,11 @@ namespace CoreSystems.Support
             }
             var avgArmorModifier = GetAverageArmorModifier(a.DamageScales.Armor);
             
-            realShotsPerMin = (shotsPerSec * 60);
-            baseDps = BaseDamage * shotsPerSec * avgArmorModifier;
+            realShotsPerMin = (realShotsPerSec * 60);
+            baseDps = BaseDamage * realShotsPerSec * avgArmorModifier;
             areaDps = 0; //TODO: Add back in some way
-            detDps = (GetDetDmg(a) * shotsPerSec) * avgArmorModifier;
-            if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {shotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
+            detDps = (GetDetDmg(a) * realShotsPerSec) * avgArmorModifier;
+            if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {realShotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
                 var sAmmo = wDef.Ammos[ShrapnelId];
@@ -768,16 +770,16 @@ namespace CoreSystems.Support
 
                 Vector2 FragDmg = new Vector2(0, 0);
 
-                FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, 0, a);
+                FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a);
                 //TODO: Add pattern average damage
 
                 //Log.Line($"Total Fragment Dmg -- {FragDmg}");
 
                 //TODO: fix when fragDmg is split
                 baseDps += FragDmg.X;
-                //baseDps += (sAmmo.BaseDamage * fragments) * shotsPerSec;
+                //baseDps += (sAmmo.BaseDamage * fragments) * realShotsPerSec;
                 detDps += FragDmg.Y;
-                //detDps += (GetDetDmg(sAmmo) * fragments) * shotsPerSec;
+                //detDps += (GetDetDmg(sAmmo) * fragments) * realShotsPerSec;
             }
             peakDps = (baseDps + areaDps + detDps);
             effectiveDps = (float)(peakDps * effectiveModifier);
@@ -796,7 +798,7 @@ namespace CoreSystems.Support
                 Log.Line($"AmmoRound: {a.AmmoRound}");
                 Log.Line($"InaccuracyScore: {Math.Round(inaccuracyScore*100, 2)}% | ShotAngle: {wDef.HardPoint.DeviateShotAngle}  @: { baselineRange}m vs { targetRadius}m Circle");
                 Log.Line($"--------------------------");
-                Log.Line($"Shots per second: {Math.Round(shotsPerSec,2)}");
+                Log.Line($"Shots per second: {Math.Round(realShotsPerSec,2)}");
                 Log.Line($"Peak DPS: {Math.Round(peakDps)}");
                 Log.Line($"Effective DPS: {Math.Round(effectiveDps)} | without Inaccuracy: {Math.Round(dpsWoInaccuracy)}");
                 Log.Line($"Base Damage DPS: {Math.Round(baseDps)}");

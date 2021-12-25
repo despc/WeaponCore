@@ -209,7 +209,7 @@ namespace CoreSystems.Support
 
                 stringBuilder.Append($"\n{Localization.GetText("WeaponInfoConstructDPS")}: " + Ai.EffectiveDps.ToString("0.0"))
                     .Append($"\n                        ( " + Ai.PerfectDps.ToString("0.0") +" )")
-                    .Append($"\n{Localization.GetText("WeaponInfoShotsPerSec")}: " + comp.ShotsPerSec.ToString("0.000"))
+                    .Append($"\n{Localization.GetText("WeaponInfoShotsPerSec")}: " + comp.RealShotsPerSec.ToString("0.000") + " (" + comp.ShotsPerSec.ToString("0.000") + ")")
                     .Append("\n")
                     .Append($"\n{Localization.GetText("WeaponInfoRealDps")}: " + comp.EffectiveDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoPerfectDps")}: " + comp.PerfectDps.ToString("0.0"))
