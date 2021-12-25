@@ -134,10 +134,10 @@ namespace CoreSystems
             for (int i = CompReAdds.Count - 1; i >= 0; i--)
             {
                 var reAdd = CompReAdds[i];
-                if (reAdd.Ai.Version != reAdd.AiVersion || Tick - reAdd.AddTick > 1200)
+                if (reAdd.Ai.Version != reAdd.AiVersion || Tick - reAdd.AddTick > 1200 || reAdd.Comp.CoreEntity!= null && reAdd.Comp.CoreEntity.MarkedForClose)
                 {
                     CompReAdds.RemoveAtFast(i);
-                    Log.Line($"ChangeReAdds reject: Age:{Tick - reAdd.AddTick} - Version:{reAdd.Ai.Version}({reAdd.AiVersion}) - Marked/Closed:{reAdd.Ai.MarkedForClose}({reAdd.Ai.Closed})");
+                    Log.Line($"ChangeReAdds reject: Age:{Tick - reAdd.AddTick} - Version:{reAdd.Ai.Version}({reAdd.AiVersion}) - Marked/Closed:{reAdd.Ai.MarkedForClose}({reAdd.Ai.Closed})[{reAdd.Comp.CoreEntity?.MarkedForClose ?? true}]");
                     continue;
                 }
 

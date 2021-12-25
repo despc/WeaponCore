@@ -52,8 +52,6 @@ namespace CoreSystems.Support
 
                             if (freedIndex < WeaponComps.Count || optimize && trackIndex < TrackingComps.Count)
                             {
-                                var secCond = freedIndex >= WeaponComps.Count && optimize && trackIndex < TrackingComps.Count;
-                                Log.Line($"[swap] altCondition: {secCond} - optimize:{optimize}");
                                 var swappedComp = WeaponComps[freedIndex];
                                 WeaponIdx[swappedComp] = new CompIndexer {AllComps = freedIndex, TrackingComps = trackIndex};
                             }

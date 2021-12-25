@@ -162,8 +162,8 @@ namespace CoreSystems.Support
         {
             try {
 
-                if (Ai.MarkedForClose)
-                    Log.Line($"OnAddedToSceneTasks and AI MarkedForClose - Subtype:{SubtypeName} - grid:{TopEntity.DebugName} - CubeMarked:{CoreEntity.MarkedForClose} - GridMarked:{TopEntity.MarkedForClose} - GridMatch:{TopEntity == Ai.TopEntity} - AiContainsMe:{Ai.CompBase.ContainsKey(CoreEntity)} - MyGridInAi:{Ai.Session.EntityToMasterAi.ContainsKey(TopEntity)}[{Ai.Session.EntityAIs.ContainsKey(TopEntity)}]");
+                if (Ai.MarkedForClose || CoreEntity.MarkedForClose)
+                    Log.Line($"OnAddedToSceneTasks and AI/CoreEntity MarkedForClose - Subtype:{SubtypeName} - grid:{TopEntity.DebugName} - CubeMarked:{CoreEntity.MarkedForClose} - CubeClosed:{CoreEntity.Closed} - CubeInScene:{CoreEntity.InScene} - GridMarked:{TopEntity.MarkedForClose} - GridMatch:{TopEntity == Ai.TopEntity} - AiContainsMe:{Ai.CompBase.ContainsKey(CoreEntity)} - MyGridInAi:{Ai.Session.EntityToMasterAi.ContainsKey(TopEntity)}[{Ai.Session.EntityAIs.ContainsKey(TopEntity)}]");
                 
                 Ai.UpdatePowerSources = true;
                 RegisterEvents();
