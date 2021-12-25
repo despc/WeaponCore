@@ -949,7 +949,7 @@ namespace CoreSystems
 
             if (maxdepth < maxradius)
             {
-                //var gctr = ((Vector3)gmax - gmin)/2;
+                var gctr = ((Vector3)gmax - gmin)/2;
                 var xplane = new BoundingBox(gmin, new Vector3(gmax.X,gmax.Y,gmin.Z));
                 var yplane = new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z));
                 //var zplane = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z));
@@ -957,9 +957,9 @@ namespace CoreSystems
                 var ymplane = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z));
                 //var zmplane = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z));
 
-                //var hitDirection = gctr - rootPos;
-                //hitDirection.Normalize();
-                var hitray = new Ray(rootPos, -direction);
+                var hitDirection = gctr - rootPos;
+                hitDirection.Normalize();
+                var hitray = new Ray(gctr, hitDirection);
                 var axis = 1;
                 if (hitray.Intersects(xplane) > 0 || hitray.Intersects(xmplane) > 0) axis = 2;
                 if (hitray.Intersects(yplane) > 0 || hitray.Intersects(ymplane) > 0) axis = 0;
