@@ -957,10 +957,11 @@ namespace CoreSystems
                 var ymplane = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z));
                 //var zmplane = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z));
 
-                //var hitline = new Line(gctr, localpos);
-                var hitDirection = rootPos - gctr;
-                hitDirection.Normalize();
-                var hitray = new Ray(gctr, hitDirection);
+                //var hitDirection = rootPos - gctr;
+                //var hitray = new Ray(gctr, hitDirection);
+
+                var hitDirection = localpos - rootPos;
+                var hitray = new Ray(rootPos, hitDirection);
                 var axis = 1;
                 if (hitray.Intersects(xplane) > 0 || hitray.Intersects(xmplane) > 0) axis = 2;
                 if (hitray.Intersects(yplane) > 0 || hitray.Intersects(ymplane) > 0) axis = 0;
