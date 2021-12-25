@@ -957,7 +957,7 @@ namespace CoreSystems
                 var ymplane = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z));
                 //var zmplane = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z));
 
-                var hitDirection = gctr - rootPos;
+                var hitDirection = gctr - localpos;
                 hitDirection.Normalize();
                 var hitray = new Ray(gctr, hitDirection);
                 var axis = 1;
