@@ -716,6 +716,7 @@ namespace CoreSystems.Support
             var shotsPerSecPower = realShotsPerSec; //save for power calc
 
             shotsPerSec = realShotsPerSec;
+            var shotsPerSecPreHeat = shotsPerSec;
 
             if (s.WConst.HeatPerShot > 0)
             {
@@ -759,9 +760,63 @@ namespace CoreSystems.Support
             var avgArmorModifier = GetAverageArmorModifier(a.DamageScales.Armor);
             
             realShotsPerMin = (realShotsPerSec * 60);
-            baseDps = BaseDamage * realShotsPerSec * avgArmorModifier;
-            areaDps = 0; //TODO: Add back in some way
-            detDps = (GetDetDmg(a) * realShotsPerSec) * avgArmorModifier;
+            //Log.Line($"Current: {a.AmmoRound} ");
+            if (a.Pattern.Enable) //make into function
+            {
+                Vector2 totalPatternDamage = new Vector2();
+                //Log.Line($"||:::Ammo [{a.AmmoRound} got {a.Pattern.Patterns.Length} patterns]");
+                foreach (var patternName in a.Pattern.Patterns)
+                {
+                    for (int j = 0; j < wDef.Ammos.Length; j++)
+                    {
+                        //Log.Line($"Found J= {j}");
+                        var patternAmmo = wDef.Ammos[j];
+                        if (patternAmmo.AmmoRound.Equals(patternName))
+                        {
+
+
+                            //Log.Line($"Found [{pastI}|{j}] Fragment= {fragmentAmmo.Fragment.AmmoRound}");
+                            //Log.Line($"::::{patternAmmo.AmmoRound} got a parent with:{parentFragments} fragments");
+                            Vector2 tempDmg = new Vector2();
+                            Vector2 tempFragDmg = new Vector2();
+                            tempDmg.X += patternAmmo.BaseDamage;
+                            tempDmg.Y += GetDetDmg(patternAmmo);
+                            //Log.Line($"||:::PatternAmmo [{patternAmmo.AmmoRound}| temp dmg {tempDmg}]");
+                            if (patternAmmo.Fragment.Fragments != 0)
+                            {
+                                tempFragDmg += FragDamageLoopCheck(wDef, 1, tempFragDmg, 0, a, a.Fragment.Fragments);
+                            }
+                            //Log.Line($"||:::PatternAmmo [{patternAmmo.AmmoRound}| Pattern dmg {tempFragDmg}]");
+
+                            totalPatternDamage += tempFragDmg + tempDmg;
+                            totalPatternDamage *= patternAmmo.Pattern.PatternSteps;
+
+                            // = GetShrapnelDamage(fragmentAmmo, parentAmmo.Fragment.Fragments, shotsPerSec, parentFragments);
+
+
+                        }
+
+
+
+
+                    }
+
+                }
+                var leng = (float)1 / a.Pattern.Patterns.Length;
+                //Log.Line($"||:::PatternAmmo Avg Damage [{totalPatternDamage * leng} || DPS:{(totalPatternDamage * leng) * realShotsPerSec} {realShotsPerSec}]");
+
+                baseDps = (totalPatternDamage.X * leng) * realShotsPerSec * avgArmorModifier;
+                areaDps = 0; //TODO: Add back in some way
+                detDps = (totalPatternDamage.Y * leng) * realShotsPerSec * avgArmorModifier;
+
+            }
+            else
+            {
+                baseDps = BaseDamage * realShotsPerSec * avgArmorModifier;
+                areaDps = 0; //TODO: Add back in some way
+                detDps = (GetDetDmg(a) * realShotsPerSec) * avgArmorModifier;
+
+            }
             if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {realShotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
             if (hasShrapnel)
             {
@@ -769,8 +824,9 @@ namespace CoreSystems.Support
                 var fragments = a.Fragment.Fragments;
 
                 Vector2 FragDmg = new Vector2(0, 0);
+                Vector2 patternDmg = new Vector2(0, 0);
 
-                FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a);
+                FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a, a.Fragment.Fragments);
                 //TODO: Add pattern average damage
 
                 //Log.Line($"Total Fragment Dmg -- {FragDmg}");
@@ -789,6 +845,31 @@ namespace CoreSystems.Support
 
             if (mexLogLevel >= 1) Log.Line($"Effective DPS(mult) = {effectiveDps}");
 
+            if (false)
+            {
+
+                //DebugAll Weapons
+
+                Log.Line($"[========================]");
+                Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
+                Log.Line($"AmmoMagazine: {a.AmmoMagazine}");
+                Log.Line($"AmmoRound: {a.AmmoRound}");
+                Log.Line($"AmmoRound: {a.BaseDamage}");
+                Log.Line($"AmmoRound: {a.AreaOfDamage.ByBlockHit.Damage}");
+                Log.Line($"AmmoRound: {a.AreaOfDamage.EndOfLife.Damage}");
+                Log.Line($"InaccuracyScore: {Math.Round(inaccuracyScore * 100, 2)}% | ShotAngle: {wDef.HardPoint.DeviateShotAngle}  @: { baselineRange}m vs { targetRadius}m Circle");
+                Log.Line($"--------------------------");
+                Log.Line($"Shots per second(w/Heat): {Math.Round(shotsPerSecPreHeat, 2)} ({Math.Round(realShotsPerSec, 2)})");
+                Log.Line($"Peak DPS: {Math.Round(peakDps)}");
+                Log.Line($"Effective DPS: {Math.Round(effectiveDps)} | without Inaccuracy: {Math.Round(dpsWoInaccuracy)}");
+                Log.Line($"Base Damage DPS: {Math.Round(baseDps)}");
+                Log.Line($"Area Damage DPS: {Math.Round(areaDps)}");
+                Log.Line($"Explosive Dmg DPS: {Math.Round(detDps)}");
+                Log.Line($"[=========== Ammo End =============]");
+
+
+
+            }
             if (wDef.HardPoint.Other.Debug && a.HardPointUsable)
             {
 
@@ -796,35 +877,41 @@ namespace CoreSystems.Support
                 Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
                 Log.Line($"AmmoMagazine: {a.AmmoMagazine}");
                 Log.Line($"AmmoRound: {a.AmmoRound}");
-                Log.Line($"InaccuracyScore: {Math.Round(inaccuracyScore*100, 2)}% | ShotAngle: {wDef.HardPoint.DeviateShotAngle}  @: { baselineRange}m vs { targetRadius}m Circle");
+                Log.Line($"InaccuracyScore: {Math.Round(inaccuracyScore * 100, 2)}% | ShotAngle: {wDef.HardPoint.DeviateShotAngle}  @: { baselineRange}m vs { targetRadius}m Circle");
                 Log.Line($"--------------------------");
-                Log.Line($"Shots per second: {Math.Round(realShotsPerSec,2)}");
+                Log.Line($"Shots per second(w/Heat): {Math.Round(shotsPerSecPreHeat, 2)} ({Math.Round(realShotsPerSec, 2)})");
                 Log.Line($"Peak DPS: {Math.Round(peakDps)}");
                 Log.Line($"Effective DPS: {Math.Round(effectiveDps)} | without Inaccuracy: {Math.Round(dpsWoInaccuracy)}");
                 Log.Line($"Base Damage DPS: {Math.Round(baseDps)}");
                 Log.Line($"Area Damage DPS: {Math.Round(areaDps)}");
                 Log.Line($"Explosive Dmg DPS: {Math.Round(detDps)}");
-
+                Log.Line($"[=========== Ammo End =============]");
 
 
 
             }
+            
 
         }
 
-        private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo)
+        private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo, int parentFragments)
         {
             //Log.Line($"Found Ammos= {wDef.Ammos.Length}");
-            for (int j = pastI; j < wDef.Ammos.Length; j++)
+            for (int j = 0; j < wDef.Ammos.Length; j++)
             {
                 //Log.Line($"Found J= {j}");
                 var fragmentAmmo = wDef.Ammos[j];
                 if (fragmentAmmo.AmmoRound.Equals(parentAmmo.Fragment.AmmoRound))
                 {
                     //Log.Line($"Found [{pastI}|{j}] Fragment= {fragmentAmmo.Fragment.AmmoRound}");
+                    //Log.Line($"::::{fragmentAmmo.AmmoRound} got a parent with:{parentFragments} fragments");
+                    var tempDmg = GetShrapnelDamage(fragmentAmmo, parentFragments, shotsPerSec, parentFragments);
+                    //Log.Line($"Per frag Damage {tempDmg/parentFragments} frags {parentFragments}||Total Frag Damage:{tempDmg}");
 
-                    FragDmg += GetShrapnelDamage(fragmentAmmo, parentAmmo.Fragment.Fragments, shotsPerSec);
-                    FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, j, fragmentAmmo);
+                    FragDmg += tempDmg;
+                    parentFragments *= fragmentAmmo.Fragment.Fragments;
+                    FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, j, fragmentAmmo, parentFragments);
+
 
                 }
             }
@@ -832,7 +919,7 @@ namespace CoreSystems.Support
             return FragDmg;
         }
 
-        private Vector2 GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps)
+        private Vector2 GetShrapnelDamage(AmmoDef fAmmo, int frags, float sps, int parentFragments)
         {
             Vector2 fragDmg = new Vector2(0, 0);
 
@@ -840,7 +927,7 @@ namespace CoreSystems.Support
             //fragDmg += 0;
             fragDmg.Y += (GetDetDmg(fAmmo) * frags) * sps;
             float avgArmorModifier = GetAverageArmorModifier(fAmmo.DamageScales.Armor);
-            
+
             fragDmg *= avgArmorModifier;
 
             return fragDmg;
@@ -864,18 +951,82 @@ namespace CoreSystems.Support
 
         private float GetShotsPerSecond(int magCapacity,int magPerReload, int rof, int reloadTime, int barrelsPerShot, int trajectilesPerBarrel, int shotsInBurst, int delayAfterBurst)
         {
-            if (mexLogLevel > 0) Log.Line($"magCapacity={magCapacity} rof={rof} reloadTime={reloadTime} barrelsPerShot={barrelsPerShot} trajectilesPerBarrel={trajectilesPerBarrel} shotsInBurst={shotsInBurst} delayAfterBurst={delayAfterBurst}");
-            if (magPerReload < 1) magPerReload = 1;
-            var reloadsPerRoF = rof / ((magCapacity*magPerReload) / (float)barrelsPerShot);
-            var burstsPerRoF = shotsInBurst == 0 ? 0 : rof / (float)shotsInBurst;
-            var ticksReloading = reloadsPerRoF * reloadTime;
+            //Log.Line($"magCapacity={magCapacity} rof={rof} reloadTime={reloadTime} barrelsPerShot={barrelsPerShot} trajectilesPerBarrel={trajectilesPerBarrel} shotsInBurst={shotsInBurst} delayAfterBurst={delayAfterBurst}");
+            
+            if (true) //WHy is this required ;_;
+            {
+                if (magPerReload < 1) magPerReload = 1;
+                var reloadsPerRoF = rof / ((magCapacity * magPerReload) / (float)barrelsPerShot);
+                var burstsPerRoF = shotsInBurst == 0 ? 0 : rof / (float)shotsInBurst;
+                var ticksReloading = reloadsPerRoF * reloadTime;
 
-            var ticksDelaying = burstsPerRoF * delayAfterBurst;
+                var ticksDelaying = burstsPerRoF * delayAfterBurst;
 
-            if (mexLogLevel > 0) Log.Line($"burstsPerRof={burstsPerRoF} reloadsPerRof={reloadsPerRoF} ticksReloading={ticksReloading} ticksDelaying={ticksDelaying}");
-            float shotsPerSecond = rof / (60f + (ticksReloading / 60) + (ticksDelaying / 60));
+                if (mexLogLevel > 0) Log.Line($"burstsPerRof={burstsPerRoF} reloadsPerRof={reloadsPerRoF} ticksReloading={ticksReloading} ticksDelaying={ticksDelaying}");
+                float shotsPerSecond = rof / (60f + (ticksReloading / 60) + (ticksDelaying / 60));
+            }
+            //if (magPerReload < 1) magPerReload = 1;
+            //V2///////
+            var doRofLog = false;
+            if (doRofLog) Log.Line($"------V2-ROF------");
+            if (doRofLog) Log.Line($"------------------");
 
-            return shotsPerSecond * trajectilesPerBarrel * barrelsPerShot;
+            var totMagCap = magCapacity * magPerReload;
+
+            // How many times will the weapon shoot per magazine
+            var shotsPerMagazine = MagazineSize == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot) - 1);
+
+            // How many bursts per magazine
+            var burstPerMagazine = shotsInBurst == 0 ? 0 : Math.Ceiling(((float)totMagCap / (float)shotsInBurst) - 1); // how many bursts per magazine
+                                                                                                                       // Log.Line($"NoReload..{reloadTime} spm {shotsPerMagazine}");
+
+            //Case of no reload time
+            if (reloadTime == 0)
+            {
+                shotsPerMagazine = MagazineSize == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot));
+                burstPerMagazine = shotsInBurst == 0 ? 0 : Math.Ceiling(((float)totMagCap / (float)shotsInBurst));
+                if (doRofLog) Log.Line($"NoReload..{reloadTime} spm {shotsPerMagazine} pbm {burstPerMagazine}");
+            }
+
+            //in tick - time spent shooting magazine
+            var timeShots = shotsPerMagazine == 0 ? 0 : shotsPerMagazine * ((float)3600 / rof);
+            // in tick - time spent on burst
+            var timeBurst = burstPerMagazine == 0 ? 0 : burstPerMagazine * ((float)delayAfterBurst);
+            // total time per mag
+            var timePerCycle = timeShots + timeBurst + reloadTime; //add delayed fire
+
+            if (doRofLog) Log.Line($"shotsPerMagazine={shotsPerMagazine} burstPerMagazine={burstPerMagazine} timeShots={timeShots} timeBurst={timeBurst} timePerCycle={timePerCycle} ");
+
+            //if 0 its a non magazine weapon so a cycle will be base on rof
+            timePerCycle = timePerCycle == 0 ? ((float)3600 / rof) : timePerCycle;
+
+            //this part might be shit
+            timePerCycle = timePerCycle < ((float)3600 / rof) ? ((float)3600 / rof) : timePerCycle;
+            if (doRofLog) Log.Line($"timePerCycleFixed={timePerCycle} ");
+
+            // Convert to seconds
+            timePerCycle = (float)timePerCycle / 60f;
+            if (doRofLog) Log.Line($"Mag Cycle Time(s)= {timePerCycle} ");
+
+            //Shots per cycle
+            var shotsPerSecondV2 = (float)timePerCycle / (totMagCap);
+            //Shots per second
+            shotsPerSecondV2 = 1.0f / shotsPerSecondV2;
+            if (doRofLog) Log.Line($"shotsPerSecond V2 = {shotsPerSecondV2 * trajectilesPerBarrel}");
+            //if (doRofLog) Log.Line($"shotsPerSecond V1 = {shotsPerSecond * trajectilesPerBarrel * barrelsPerShot}");
+
+            if (doRofLog) Log.Line($"----------------");
+
+
+
+
+            //----
+
+
+
+
+            return shotsPerSecondV2 * trajectilesPerBarrel;
+            //return shotsPerSecond * trajectilesPerBarrel * barrelsPerShot;
         }
 
 
