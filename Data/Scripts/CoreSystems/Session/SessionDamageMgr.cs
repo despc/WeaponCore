@@ -958,7 +958,6 @@ namespace CoreSystems
                 float? revresult = 0;
                 int fwdaxishit = 0;
                 int revaxishit = 0;
-                int axis;
 
                 for (int m = 0; m < 6; m++) // make this into a method in TS
                 {
@@ -998,16 +997,10 @@ namespace CoreSystems
                     }
 
                     if (fwdresult > 0 && revresult > 0)
-                    break;
+                        break;
                 }
-                if(fwdresult < revresult)
-                {
-                    axis = fwdaxishit;
-                }
-                else
-                {
-                    axis = revaxishit;
-                }
+
+                var axis = fwdresult < revresult ? fwdaxishit : revaxishit;
 
                 if (axis >= 3) axis -= 3;
 
