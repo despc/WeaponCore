@@ -50,7 +50,7 @@ namespace CoreSystems.Support
                             if (optimize)
                                 TrackingComps.RemoveAtFast(trackIndex);
 
-                            if (freedIndex < WeaponComps.Count || optimize && trackIndex < TrackingComps.Count)
+                            if (freedIndex < WeaponComps.Count && (!optimize || trackIndex < TrackingComps.Count))
                             {
                                 var swappedComp = WeaponComps[freedIndex];
                                 WeaponIdx[swappedComp] = new CompIndexer {AllComps = freedIndex, TrackingComps = trackIndex};
