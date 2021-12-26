@@ -951,7 +951,7 @@ namespace CoreSystems
             {
                 gmin -= 1; //offsets to catch outer face hits (ie, on bbox)
                 gmax += 1;
-                var gctr = ((Vector3)gmax - gmin) / 2;
+                //var gctr = ((Vector3)gmax - gmin) / 2;
                 var hitrayfwd = new Ray(rootPos, direction);
                 var hitrayrev = new Ray(rootPos, -direction);
                 float? fwdresult = 0;
@@ -960,31 +960,45 @@ namespace CoreSystems
                 int revaxishit = 0;
                 int axis;
 
-                var boxlist = new List<BoundingBox>
+                for (int m = 0; m < 6; m++)
                 {
-                new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z)),//y 0
-                new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z)), //z 1
-                new BoundingBox(gmin, new Vector3(gmax.X,gmax.Y,gmin.Z)),  //x 2
-                new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z)), //ym
-                new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z)), //zm
-                new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z)), //xm
-                };
+                    BoundingBox bbox;
+                    switch (m)
+                    {
+                        case 0:
+                            bbox= new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z)); //y 0;
+                            break;
+                        case 1:
+                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z)); //z 1
+                            break;
+                        case 2:
+                            bbox = new BoundingBox(gmin, new Vector3(gmax.X, gmax.Y, gmin.Z)); //x 2
+                            break;
+                        case 3:
+                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmin.Z)); //ym
+                            break;
+                        case 4:
+                            bbox = new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmin.Z)); //zm
+                            break;
+                        default:
+                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmin.Y, gmax.Z)); //xm
+                            break;
+                    }
 
-                var l = 0;
-                foreach (BoundingBox bbox in boxlist)
-                {
                     if (hitrayfwd.Intersects(bbox) > 0)
                     {
                         fwdresult = hitrayfwd.Intersects(bbox);
-                        fwdaxishit = l;
+                        fwdaxishit = m;
                     }
 
                     if (hitrayrev.Intersects(bbox) > 0)
                     {
                         revresult = hitrayrev.Intersects(bbox);
-                        revaxishit = l;
+                        revaxishit = m;
                     }
-                    l++;
+
+                    if (fwdresult > 0 && revresult > 0)
+                        break;
                 }
 
                 if(fwdresult < revresult)
@@ -997,7 +1011,6 @@ namespace CoreSystems
                 }
 
                 if (axis >= 3) axis -= 3;
-
 
 
                 switch (axis)//sort out which "face" was hit and coming/going along that axis
