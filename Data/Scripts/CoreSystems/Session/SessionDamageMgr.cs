@@ -962,7 +962,6 @@ namespace CoreSystems
 
                 for (int m = 0; m < 6; m++) // make this into a method in TS
                 {
-                    Log.Line($"int M {m}");
                     BoundingBox bbox;
                     switch (m)
                     {
