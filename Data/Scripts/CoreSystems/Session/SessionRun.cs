@@ -92,9 +92,6 @@ namespace CoreSystems
                 if (!IsClient && !InventoryUpdate && PartToPullConsumable.Count > 0 && ITask.IsComplete)
                     StartAmmoTask();
 
-                if (CompReAdds.Count > 0)
-                    ChangeReAdds();
-
                 if (!CompsToStart.IsEmpty)
                     StartComps();
 
@@ -102,7 +99,18 @@ namespace CoreSystems
                     DelayedComps();
 
                 if (Tick10 && !DelayedAiClean.IsEmpty)
+                {
+                    if (CompsDelayed.Count > 0) DelayedComps();
                     DelayedAiCleanup();
+                }
+
+                if (CompReAdds.Count > 0)
+                {
+                    if (CompsDelayed.Count > 0) DelayedComps();
+                    if (!DelayedAiClean.IsEmpty) DelayedAiCleanup();
+
+                    ChangeReAdds();
+                }
 
                 if (Tick3600 && MpActive) 
                     NetReport();

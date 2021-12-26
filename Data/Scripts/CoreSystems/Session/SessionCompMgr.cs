@@ -141,7 +141,7 @@ namespace CoreSystems
                     continue;
                 }
 
-                if (reAdd.Comp.IsBlock && !GridToInfoMap.ContainsKey(reAdd.Comp.TopEntity) || reAdd.Ai.MarkedForClose)
+                if (reAdd.Comp.IsBlock && !GridToInfoMap.ContainsKey(reAdd.Comp.TopEntity))
                     continue;
 
                 if (reAdd.Comp.Ai != null && reAdd.Comp.Entity != null) 
