@@ -962,6 +962,7 @@ namespace CoreSystems
 
                 for (int m = 0; m < 6; m++) // make this into a method in TS
                 {
+                    Log.Line($"int M {m}");
                     BoundingBox bbox;
                     switch (m)
                     {
@@ -975,13 +976,13 @@ namespace CoreSystems
                             bbox = new BoundingBox(gmin, new Vector3(gmax.X, gmax.Y, gmin.Z)); //x 2
                             break;
                         case 3:
-                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmin.Z)); //ym
+                            bbox = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z)); //ym
                             break;
                         case 4:
-                            bbox = new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmin.Z)); //zm
+                            bbox = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z)); //zm
                             break;
                         default:
-                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmin.Y, gmax.Z)); //xm
+                            bbox = new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z)); //xm
                             break;
                     }
 
@@ -998,9 +999,8 @@ namespace CoreSystems
                     }
 
                     if (fwdresult > 0 && revresult > 0)
-                        break;
+                    break;
                 }
-
                 if(fwdresult < revresult)
                 {
                     axis = fwdaxishit;
