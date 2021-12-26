@@ -949,25 +949,56 @@ namespace CoreSystems
 
             if (maxdepth < maxradius)
             {
-                var gctr = ((Vector3)gmax - gmin)/2;
-                var xplane = new BoundingBox(gmin, new Vector3(gmax.X,gmax.Y,gmin.Z));
-                var yplane = new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z));
-                //var zplane = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z));
-                var xmplane = new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z));
-                var ymplane = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z));
-                //var zmplane = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z));
+                gmin -= 1; //offsets to catch outer face hits (ie, on bbox)
+                gmax += 1;
+                var gctr = ((Vector3)gmax - gmin) / 2;
+                var hitrayfwd = new Ray(rootPos, direction);
+                var hitrayrev = new Ray(rootPos, -direction);
+                float? fwdresult = 0;
+                float? revresult = 0;
+                int fwdaxishit = 0;
+                int revaxishit = 0;
+                int axis;
 
-                //var hitDirection = rootPos - gctr;
-                //var hitray = new Ray(gctr, hitDirection);
+                var boxlist = new List<BoundingBox>
+                {
+                new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z)),//y 0
+                new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z)), //z 1
+                new BoundingBox(gmin, new Vector3(gmax.X,gmax.Y,gmin.Z)),  //x 2
+                new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z)), //ym
+                new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z)), //zm
+                new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z)), //xm
+                };
 
-                var hitDirection = rootPos - gctr;
-                var hitray = new Ray(rootPos, hitDirection);
-                var axis = 1;
-                if (hitray.Intersects(xplane) > 0 || hitray.Intersects(xmplane) > 0) axis = 2;
-                if (hitray.Intersects(yplane) > 0 || hitray.Intersects(ymplane) > 0) axis = 0;
+                var l = 0;
+                foreach (BoundingBox bbox in boxlist)
+                {
+                    if (hitrayfwd.Intersects(bbox) > 0)
+                    {
+                        fwdresult = hitrayfwd.Intersects(bbox);
+                        fwdaxishit = l;
+                    }
+
+                    if (hitrayrev.Intersects(bbox) > 0)
+                    {
+                        revresult = hitrayrev.Intersects(bbox);
+                        revaxishit = l;
+                    }
+                    l++;
+                }
+
+                if(fwdresult < revresult)
+                {
+                    axis = fwdaxishit;
+                }
+                else
+                {
+                    axis = revaxishit;
+                }
+
+                if (axis >= 3) axis -= 3;
 
 
-                //Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)}  z{hitray.Intersects(zplane)}  xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}  zm{hitray.Intersects(zmplane)}");
 
                 switch (axis)//sort out which "face" was hit and coming/going along that axis
                 {                   
