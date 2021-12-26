@@ -460,6 +460,8 @@ namespace CoreSystems
             CameraChannel = syncFrom.CameraChannel;
             Debug = syncFrom.Debug;
             LeadGroup = syncFrom.LeadGroup;
+            Armed = syncFrom.Armed;
+            ArmedTimer = syncFrom.ArmedTimer;
         }
     }
 }

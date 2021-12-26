@@ -140,6 +140,7 @@ namespace CoreSystems
             if (!comp.Data.Repo.Values.State.Sync(comp, compStatePacket.Data, ProtoWeaponState.Caller.Direct))
                 Log.Line($"ClientWeaponState: version fail - senderId:{packet.SenderId} - version:{comp.Data.Repo.Values.Revision}({compStatePacket.Data.Revision})");
 
+            if (comp.IsBomb) comp.Cube.UpdateTerminal();
             data.Report.PacketValid = true;
 
             return true;

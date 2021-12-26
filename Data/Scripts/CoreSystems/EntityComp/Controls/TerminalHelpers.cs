@@ -247,7 +247,7 @@ namespace CoreSystems.Control
         internal static bool TargetLead(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>();
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (!comp.HasTurret && !comp.OverrideLeads || comp.HasTurret && comp.OverrideLeads) && comp.Type == CoreComponent.CompType.Weapon;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.Type == CoreComponent.CompType.Weapon && !comp.IsBomb && (!comp.HasTurret && !comp.OverrideLeads || comp.HasTurret && comp.OverrideLeads);
         }
 
         internal static bool GuidedAmmo(IMyTerminalBlock block)
@@ -322,17 +322,15 @@ namespace CoreSystems.Control
 
             var value = BlockUi.GetArmedTimeRemaining(block);
 
-            string message;
-            if (value >=59.95)
-                message = "01:00:00";
+            if (value >= 59.95)
+                builder.Append("00:01:00");
             else if (value < 0.33)
-                message = "00:00:00";
-            else {
-                message = $"00:{value}";
-                message = message.Replace(".", ":");
+                builder.Append("00:00:00");
+            else
+            {
+                builder.Append("00:")
+                    .Append(value.ToString("00:00"));
             }
-
-            builder.Append(message);
         }
 
         internal static void SliderLeadGroupWriterRange(IMyTerminalBlock block, StringBuilder builder)
