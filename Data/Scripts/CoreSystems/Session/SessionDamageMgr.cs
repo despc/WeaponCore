@@ -960,7 +960,7 @@ namespace CoreSystems
                 int revaxishit = 0;
                 int axis;
 
-                for (int m = 0; m < 6; m++)
+                for (int m = 0; m < 6; m++) // make this into a method in TS
                 {
                     BoundingBox bbox;
                     switch (m)
