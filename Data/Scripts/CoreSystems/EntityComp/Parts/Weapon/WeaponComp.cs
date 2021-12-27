@@ -118,6 +118,10 @@ namespace CoreSystems.Platform
             internal void OnAddedToSceneWeaponTasks(bool firstRun)
             {
                 var maxTrajectory1 = 0f;
+                
+                if (firstRun && TypeSpecific == CompTypeSpecific.Phantom)
+                    Ai.AiOwner = CustomIdentity;
+                
                 for (int i = 0; i < Collection.Count; i++)
                 {
 

@@ -88,7 +88,7 @@ namespace CoreSystems.Api
                 ["AddMagazines"] = new Action<MyEntity, int, long>(AddMagazines),
                 ["SetAmmo"] = new Action<MyEntity, int, string>(SetAmmo),
                 ["ClosePhantom"] = new Func<MyEntity, bool>(ClosePhantom),
-                ["SpawnPhantom"] = new Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, MyEntity>(SpawnPhantom),
+                ["SpawnPhantom"] = new Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, long, MyEntity>(SpawnPhantom),
                 ["ToggleDamageEvents"] = new Action<Dictionary<MyEntity, MyTuple<Vector3D, Dictionary<MyEntity, List<MyTuple<int, float, Vector3I>>>>>>(ToggleDamageEvents),
             };
         }
@@ -1119,9 +1119,9 @@ namespace CoreSystems.Api
         }
 
 
-        private MyEntity SpawnPhantom(string phantomType, uint maxAge, bool closeWhenOutOfAmmo, long defaultReloads, string ammoOverideName, int trigger, float? modelScale, MyEntity parnet, bool addToPrunning, bool shadows)
+        private MyEntity SpawnPhantom(string phantomType, uint maxAge, bool closeWhenOutOfAmmo, long defaultReloads, string ammoOverideName, int trigger, float? modelScale, MyEntity parnet, bool addToPrunning, bool shadows, long identityId = 0)
         {
-            var ent = _session.CreatePhantomEntity(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (CoreComponent.TriggerActions)trigger, modelScale, parnet, addToPrunning, shadows);
+            var ent = _session.CreatePhantomEntity(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (CoreComponent.TriggerActions)trigger, modelScale, parnet, addToPrunning, shadows, identityId);
             return ent;
         }
 
@@ -1178,11 +1178,13 @@ namespace CoreSystems.Api
         {
             Ai ai;
             CoreComponent comp;
-            if (_session.EntityAIs.TryGetValue(phantom, out ai) && ai.CompBase.TryGetValue(phantom, out comp) && comp is Weapon.WeaponComponent)
+            if (_session.IsServer && _session.EntityAIs.TryGetValue(phantom, out ai) && ai.CompBase.TryGetValue(phantom, out comp) && comp is Weapon.WeaponComponent)
             {
                 var wComp = (Weapon.WeaponComponent)comp;
-                wComp.Data.Repo.Values.State.TerminalActionSetter(wComp, (CoreComponent.TriggerActions) trigger, false, true);
+                wComp.ResetShootState((CoreComponent.TriggerActions) trigger, ai.AiOwner);
             }
+            else 
+                Log.Line($"failed to set phantom trigger: {(CoreComponent.TriggerActions)trigger} - isServer:{_session.IsServer}");
         }
 
         private void GetPhantomInfo(string phantomSubtypeId, ICollection<MyTuple<MyEntity, long, int, float, uint, long>> collection)

@@ -566,6 +566,7 @@ namespace CoreSystems.Support
                 trackingScore = 1.0d;
 
             trackingScore = trackingScore > 1 ? 1 : trackingScore;
+            trackingScore = 1;
 
             //FinalScore
             var effectiveModifier = ((effectiveRangeScore * inaccuracyScore) * trackingScore);
@@ -684,8 +685,7 @@ namespace CoreSystems.Support
                             //Log.Line($"||:::PatternAmmo [{patternAmmo.AmmoRound}| Pattern dmg {tempFragDmg}]");
 
                             totalPatternDamage += tempFragDmg + tempDmg;
-                            totalPatternDamage *= patternAmmo.Pattern.PatternSteps;
-
+                            totalPatternDamage *= patternAmmo.Pattern.PatternSteps == 0 ? 1 : patternAmmo.Pattern.PatternSteps;
                             // = GetShrapnelDamage(fragmentAmmo, parentAmmo.Fragment.Fragments, shotsPerSec, parentFragments);
 
 
