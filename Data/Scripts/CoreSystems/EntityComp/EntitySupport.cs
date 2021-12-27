@@ -22,13 +22,18 @@ namespace CoreSystems.Support
             }
         }
 
+        internal void RemoveFromReInit()
+        {
+            InReInit = false;
+            Session.CompsDelayedReInit.Remove(this);
+        }
+
         internal void RemoveComp()
         {
             try {
 
                 if (InReInit) {
-                    InReInit = false;
-                    Session.CompsDelayedReInit.Remove(this);
+                    RemoveFromReInit();
                     return;
                 }
 

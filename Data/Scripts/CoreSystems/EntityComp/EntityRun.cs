@@ -106,7 +106,7 @@ namespace CoreSystems.Support
             }
         }
 
-        internal void ReInit()
+        internal void ReInit(bool checkMap = true)
         {
             using (CoreEntity.Pin())  {
 
@@ -115,18 +115,19 @@ namespace CoreSystems.Support
                     if (IsBlock)
                     {
                         TopEntity = ((Weapon.WeaponComponent)this).GetTopEntity();
-                        if (!Session.GridToInfoMap.ContainsKey(TopEntity)) {
-                            Session.CompsDelayedReInit.Add(this);
+                        if (checkMap && !Session.GridToInfoMap.ContainsKey(TopEntity)) {
+                            
+                            if (!InReInit)
+                                Session.CompsDelayedReInit.Add(this);
+                            
                             Session.ReInitTick = Session.Tick;
                             InReInit = true;
                             return;
                         }
+
+                        if (InReInit)
+                            RemoveFromReInit();
                     }
-
-                    if (InReInit)
-                        Session.CompsDelayedReInit.Remove(this);
-
-                    InReInit = false;
 
                     Ai ai;
                     if (!Session.EntityAIs.TryGetValue(TopEntity, out ai)) {

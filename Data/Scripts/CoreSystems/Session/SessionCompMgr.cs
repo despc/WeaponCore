@@ -192,10 +192,10 @@ namespace CoreSystems
                 }
                 else if (delayed.Cube.IsFunctional && GridToInfoMap.ContainsKey(delayed.Cube.CubeGrid))
                 {
-
-                    delayed.ReInit();
                     CompsDelayedReInit.RemoveAtFast(i);
-                    Log.Line($"reinit");
+                    
+                    delayed.InReInit = false;
+                    delayed.ReInit(false);
                 }
             }
         }
