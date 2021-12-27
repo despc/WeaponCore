@@ -160,8 +160,9 @@ namespace CoreSystems
 
         private void DelayedCompsInit(bool forceRemove = false)
         {
-            foreach (var delayed in CompsDelayedInit)
+            for (int i = CompsDelayedInit.Count - 1; i >= 0; i--)
             {
+                var delayed = CompsDelayedInit[i];
                 if (forceRemove || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Delay)
                 {
                     if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Delay)
