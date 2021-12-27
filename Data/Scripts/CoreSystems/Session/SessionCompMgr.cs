@@ -209,7 +209,15 @@ namespace CoreSystems
                         wComp.StopAllSounds();
                         wComp.CleanCompParticles();
                         wComp.CleanCompSounds();
+
+                        if (comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom)
+                        {
+                            Dictionary<long, Weapon.WeaponComponent> phantoms;
+                            if (PhantomDatabase.TryGetValue(comp.PhantomType, out phantoms))
+                                phantoms.Remove(entity.EntityId);
+                        }
                     }
+
                     comp.Platform.RemoveParts();
                 }
 

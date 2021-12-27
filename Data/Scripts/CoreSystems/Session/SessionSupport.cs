@@ -907,6 +907,7 @@ namespace CoreSystems
             comp.DefaultTrigger = trigger;
             comp.HasCloseConsition = closeWhenOutOfAmmo;
             comp.CustomIdentity = identity;
+            comp.PhantomType = phantomType;
             if (maxAge > 0)
                 FutureEvents.Schedule(comp.ForceClose, phantomType, maxAge);
 

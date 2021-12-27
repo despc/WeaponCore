@@ -36,6 +36,7 @@ namespace CoreSystems.Support
         internal MyDefinitionId Id;
         internal MyStringHash SubTypeId;
         internal string SubtypeName;
+        internal string PhantomType;
         internal bool LazyUpdate;
         internal MyInventory CoreInventory;
         internal CompData BaseData;
