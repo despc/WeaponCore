@@ -131,7 +131,6 @@ namespace CoreSystems
 
         private void ChangeReAdds()
         {
-            Log.Line($"ReAdds: {CompReAdds.Count} - {Tick}");
             for (int i = CompReAdds.Count - 1; i >= 0; i--)
             {
                 var reAdd = CompReAdds[i];

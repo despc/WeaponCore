@@ -230,6 +230,7 @@ namespace CoreSystems.Support
                 }
                 Status = !IsWorking ? Start.Starting : Start.ReInit;
             }
+
             catch (Exception ex) { Log.Line($"Exception in OnAddedToSceneTasks: {ex} AiNull:{Ai == null} - SessionNull:{Session == null} EntNull{Entity == null} MyCubeNull:{TopEntity == null}", null, true); }
         }
 

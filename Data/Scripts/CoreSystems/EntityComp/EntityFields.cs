@@ -97,6 +97,7 @@ namespace CoreSystems.Support
         internal bool HasInventory;
         internal bool NeedsWorldMatrix;
         internal bool WorldMatrixEnabled;
+        internal bool NeedsWorldReset;
         internal bool AnimationsModifyCoreParts;
         internal bool HasAim;
         internal bool InReInit;
