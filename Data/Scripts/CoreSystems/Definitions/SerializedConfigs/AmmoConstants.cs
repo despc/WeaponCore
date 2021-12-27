@@ -182,7 +182,7 @@ namespace CoreSystems.Support
         public readonly bool SlowFireFixedWeapon;
         public readonly bool HasNegFragmentOffset;
         public readonly bool HasFragmentOffset;
-        public readonly bool Radial;
+        public readonly float Radial;
         public readonly float FragmentOffset;
         public readonly float FallOffDistance;
         public readonly float FallOffMinMultiplier;
