@@ -976,7 +976,7 @@ namespace CoreSystems.Support
             var totMagCap = magCapacity * magPerReload;
 
             // How many times will the weapon shoot per magazine
-            var shotsPerMagazine = MagazineSize == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot) - 1);
+            var shotsPerMagazine = totMagCap == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot) - 1);
 
             // How many bursts per magazine
             var burstPerMagazine = shotsInBurst == 0 ? 0 : Math.Ceiling(((float)totMagCap / (float)shotsInBurst) - 1); // how many bursts per magazine
@@ -985,7 +985,7 @@ namespace CoreSystems.Support
             //Case of no reload time
             if (reloadTime == 0)
             {
-                shotsPerMagazine = MagazineSize == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot));
+                shotsPerMagazine = totMagCap == 1 ? 0 : (Math.Ceiling((float)totMagCap / barrelsPerShot));
                 burstPerMagazine = shotsInBurst == 0 ? 0 : Math.Ceiling(((float)totMagCap / (float)shotsInBurst));
                 if (doRofLog) Log.Line($"NoReload..{reloadTime} spm {shotsPerMagazine} pbm {burstPerMagazine}");
             }
