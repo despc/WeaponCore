@@ -43,7 +43,13 @@ namespace CoreSystems
                 }
             }
 
-            foreach (var comp in CompsDelayed)
+            foreach (var comp in CompsDelayedInit)
+            {
+                if (comp?.Platform != null)
+                    CloseComps(comp.CoreEntity);
+            }
+
+            foreach (var comp in CompsDelayedReInit)
             {
                 if (comp?.Platform != null)
                     CloseComps(comp.CoreEntity);
@@ -59,7 +65,9 @@ namespace CoreSystems
             CompsToStart.ClearImmediate();
             DelayedAiClean.ClearImmediate();
 
-            CompsDelayed.Clear();
+            CompsDelayedInit.Clear();
+            CompsDelayedReInit.Clear();
+
             CompReAdds.Clear();
 
             foreach (var a in AiPool)

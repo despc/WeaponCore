@@ -65,7 +65,7 @@ namespace CoreSystems.Support
                     Platform.PlatformCrash(this, false, true, $"Something went wrong with Platform PreInit: {SubtypeName}");
                     break;
                 case CorePlatform.PlatformState.Delay:
-                    Session.CompsDelayed.Add(this);
+                    Session.CompsDelayedInit.Add(this);
                     break;
                 case CorePlatform.PlatformState.Inited:
                     Init();
@@ -92,7 +92,12 @@ namespace CoreSystems.Support
 
                     Entity.NeedsWorldMatrix = NeedsWorldMatrix;
                     WorldMatrixEnabled = NeedsWorldMatrix;
-                    if (!Ai.AiInit) Session.CompReAdds.Add(new CompReAdd { Ai = Ai, AiVersion = Ai.Version, AddTick = Ai.Session.Tick, Comp = this });
+
+                    if (IsBlock && !Ai.Session.GridToInfoMap.ContainsKey(Ai.TopEntity))
+                    {
+                        Log.Line($"WeaponComp Init did not have GridToInfoMap");
+                        Session.CompReAdds.Add(new CompReAdd { Ai = Ai, AiVersion = Ai.Version, AddTick = Ai.Session.Tick, Comp = this });
+                    }
                     else OnAddedToSceneTasks(true);
 
                     Platform.State = CorePlatform.PlatformState.Ready;
@@ -107,9 +112,22 @@ namespace CoreSystems.Support
 
                 if (!CoreEntity.MarkedForClose && Entity != null)  {
 
-                    if (IsBlock) 
+                    if (IsBlock)
+                    {
                         TopEntity = ((Weapon.WeaponComponent)this).GetTopEntity();
-                    
+                        if (!Session.GridToInfoMap.ContainsKey(TopEntity)) {
+                            Session.CompsDelayedReInit.Add(this);
+                            Session.ReInitTick = Session.Tick;
+                            InReInit = true;
+                            return;
+                        }
+                    }
+
+                    if (InReInit)
+                        Session.CompsDelayedReInit.Remove(this);
+
+                    InReInit = false;
+
                     Ai ai;
                     if (!Session.EntityAIs.TryGetValue(TopEntity, out ai)) {
 
@@ -143,10 +161,7 @@ namespace CoreSystems.Support
                         Constructs.UpdatePartCounters(Ai);
                         // end ReInit
 
-                        if (IsBlock && !Ai.AiInit || IsBlock && !Ai.Session.GridToInfoMap.ContainsKey(Ai.TopEntity)) 
-                            Session.CompReAdds.Add(new CompReAdd { Ai = Ai, AiVersion = Ai.Version, AddTick = Ai.Session.Tick, Comp = this });
-                        else 
-                            OnAddedToSceneTasks(false);
+                        OnAddedToSceneTasks(false);
                     }
                     else {
                         Log.Line("BaseComp ReInit() failed stage2!");
@@ -163,7 +178,7 @@ namespace CoreSystems.Support
             try {
 
                 if (Ai.MarkedForClose || CoreEntity.MarkedForClose)
-                    Log.Line($"OnAddedToSceneTasks and AI/CoreEntity MarkedForClose - Subtype:{SubtypeName} - grid:{TopEntity.DebugName} - CubeMarked:{CoreEntity.MarkedForClose} - CubeClosed:{CoreEntity.Closed} - CubeInScene:{CoreEntity.InScene} - GridMarked:{TopEntity.MarkedForClose} - GridMatch:{TopEntity == Ai.TopEntity} - AiContainsMe:{Ai.CompBase.ContainsKey(CoreEntity)} - MyGridInAi:{Ai.Session.EntityToMasterAi.ContainsKey(TopEntity)}[{Ai.Session.EntityAIs.ContainsKey(TopEntity)}]");
+                    Log.Line($"OnAddedToSceneTasks and AI/CoreEntity MarkedForClose - Subtype:{SubtypeName} - grid:{TopEntity.DebugName} - CubeMarked:{CoreEntity.MarkedForClose} - CubeClosed:{CoreEntity.Closed} - CubeInScene:{CoreEntity.InScene} - GridMarked:{TopEntity.MarkedForClose}({CoreEntity.GetTopMostParent()?.MarkedForClose ?? true}) - GridMatch:{TopEntity == Ai.TopEntity} - AiContainsMe:{Ai.CompBase.ContainsKey(CoreEntity)} - MyGridInAi:{Ai.Session.EntityToMasterAi.ContainsKey(TopEntity)}[{Ai.Session.EntityAIs.ContainsKey(TopEntity)}]");
                 
                 Ai.UpdatePowerSources = true;
                 RegisterEvents();

@@ -26,6 +26,12 @@ namespace CoreSystems.Support
         {
             try {
 
+                if (InReInit) {
+                    InReInit = false;
+                    Session.CompsDelayedReInit.Remove(this);
+                    return;
+                }
+
                 if (Registered) 
                     RegisterEvents(false);
                 if (Ai != null) {
@@ -79,7 +85,7 @@ namespace CoreSystems.Support
                             }
                             Ai.CompChange(false, this);
                         }
-                        else Log.Line($"RemoveComp Weaponbase didn't have my comp: inDelayedStart: {Ai.Session.CompsDelayed.Contains(this)} - FoundAi:{Ai.Session.EntityAIs.TryGetValue(TopEntity, out testAi)} - sameAi:{testAi == Ai} - sameTopEntity:{TopEntity == Ai.TopEntity} - inScene:{CoreEntity.InScene} - marked:{CoreEntity.MarkedForClose} - LastRemoveFromScene:{LastRemoveFromScene} - LastAddToScene:{LastAddToScene} - Tick:{Ai.Session.Tick}");
+                        else Log.Line($"RemoveComp Weaponbase didn't have my comp: inDelayedStart: {Ai.Session.CompsDelayedInit.Contains(this)} - FoundAi:{Ai.Session.EntityAIs.TryGetValue(TopEntity, out testAi)} - sameAi:{testAi == Ai} - sameTopEntity:{TopEntity == Ai.TopEntity} - inScene:{CoreEntity.InScene} - marked:{CoreEntity.MarkedForClose} - LastRemoveFromScene:{LastRemoveFromScene} - LastAddToScene:{LastAddToScene} - Tick:{Ai.Session.Tick}");
 
                         if (Ai.CompBase.Count == 0)
                         {

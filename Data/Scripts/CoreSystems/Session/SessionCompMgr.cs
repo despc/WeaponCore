@@ -131,6 +131,7 @@ namespace CoreSystems
 
         private void ChangeReAdds()
         {
+            Log.Line($"ReAdds: {CompReAdds.Count} - {Tick}");
             for (int i = CompReAdds.Count - 1; i >= 0; i--)
             {
                 var reAdd = CompReAdds[i];
@@ -151,22 +152,50 @@ namespace CoreSystems
             }
         }
 
-        private void DelayedComps(bool forceRemove = false)
+        private void InitDelayedComps()
         {
-            for (int i = CompsDelayed.Count - 1; i >= 0; i--)
+            DelayedCompsReInit();
+            DelayedCompsInit();
+        }
+
+        private void DelayedCompsInit(bool forceRemove = false)
+        {
+            foreach (var delayed in CompsDelayedInit)
             {
-                var delayed = CompsDelayed[i];
                 if (forceRemove || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Delay)
                 {
                     if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Delay)
                         Log.Line($"[DelayedComps skip due to platform != Delay] marked:{delayed.Cube.MarkedForClose} - entityNull:{delayed.Entity == null} - force:{forceRemove}");
 
-                    CompsDelayed.RemoveAtFast(i);
+                    CompsDelayedInit.RemoveAtFast(i);
                 }
                 else if (delayed.Cube.IsFunctional)
                 {
                     delayed.PlatformInit();
-                    CompsDelayed.RemoveAtFast(i);
+                    CompsDelayedInit.RemoveAtFast(i);
+                }
+            }
+        }
+
+        private void DelayedCompsReInit(bool forceRemove = false)
+        {
+            for (int i = CompsDelayedReInit.Count - 1; i >= 0; i--)
+            {
+                var delayed = CompsDelayedReInit[i];
+                if (forceRemove || !delayed.InReInit || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Ready)
+                {
+                    if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Ready && delayed.InReInit)
+                        Log.Line($"[DelayedComps skip due to platform != Ready] marked:{delayed.Cube.MarkedForClose} - entityNull:{delayed.Entity == null} - force:{forceRemove}");
+
+                    delayed.InReInit = false;
+                    CompsDelayedReInit.RemoveAtFast(i);
+                }
+                else if (delayed.Cube.IsFunctional && GridToInfoMap.ContainsKey(delayed.Cube.CubeGrid))
+                {
+
+                    delayed.ReInit();
+                    CompsDelayedReInit.RemoveAtFast(i);
+                    Log.Line($"reinit");
                 }
             }
         }
