@@ -323,9 +323,6 @@ namespace CoreSystems.Support
             HasBackKickForce = ammo.AmmoDef.BackKickForce > 0;
             MaxLateralThrust = MathHelperD.Clamp(ammo.AmmoDef.Trajectory.Smarts.MaxLateralThrust, 0.000001, 1);
 
-            //remap
-            RemapLegacy(ammo.AmmoDef);
-
             CustomDetParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle);
             DetParticleStr = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle) ? ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle : "Explosion_Missile";
             CustomExplosionSound = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomSound);
@@ -374,110 +371,6 @@ namespace CoreSystems.Support
             ComputeSteps(ammo, out ShotFadeStep, out TrajectoryStep, out AlwaysDraw);
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
-        }
-
-        private void RemapLegacy(AmmoDef ammoDef)
-        {
-            var oldDetDetected = ammoDef.AreaEffect.Detonation.DetonateOnEnd;
-            var oldType = ammoDef.AreaEffect.AreaEffect;
-            var oldDamageType = oldType == AmmoDef.AreaDamageDef.AreaEffectType.Explosive || oldType == AmmoDef.AreaDamageDef.AreaEffectType.Radiant;
-            if (oldDamageType)
-            {
-                var checkold = Math.Max(ammoDef.AreaEffect.Base.EffectStrength, ammoDef.AreaEffect.AreaEffectDamage);
-                var currentDamage = checkold <= 0 ? ammoDef.BaseDamage : checkold;
-                var currentRadius = Math.Max(ammoDef.AreaEffect.Base.Radius, ammoDef.AreaEffect.AreaEffectRadius);
-                if (currentDamage > 0 && currentRadius > 0)
-                {
-                    ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
-                    ammoDef.AreaOfDamage.ByBlockHit.Damage = currentDamage;
-                    ammoDef.AreaOfDamage.ByBlockHit.Radius = currentRadius;
-                    ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)currentRadius;
-                    ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
-                }
-            }
-
-            if (oldDetDetected)
-            {
-                ammoDef.AreaOfDamage.EndOfLife.Enable = true;
-                ammoDef.AreaOfDamage.EndOfLife.Damage = ammoDef.AreaEffect.Detonation.DetonationDamage;
-                ammoDef.AreaOfDamage.EndOfLife.Radius = ammoDef.AreaEffect.Detonation.DetonationRadius;
-                ammoDef.AreaOfDamage.EndOfLife.Depth = ammoDef.AreaEffect.Detonation.DetonationRadius;
-                ammoDef.AreaOfDamage.EndOfLife.MinArmingTime = ammoDef.AreaEffect.Detonation.MinArmingTime;
-                ammoDef.AreaOfDamage.EndOfLife.ArmOnlyOnHit = ammoDef.AreaEffect.Detonation.ArmOnlyOnHit;
-                ammoDef.AreaOfDamage.EndOfLife.CustomParticle = ammoDef.AreaEffect.Explosions.CustomParticle;
-                ammoDef.AreaOfDamage.EndOfLife.CustomSound = ammoDef.AreaEffect.Explosions.CustomSound;
-                ammoDef.AreaOfDamage.EndOfLife.ParticleScale = ammoDef.AreaEffect.Explosions.Scale;
-                ammoDef.AreaOfDamage.EndOfLife.NoVisuals = ammoDef.AreaEffect.Explosions.NoVisuals;
-                ammoDef.AreaOfDamage.EndOfLife.NoSound = ammoDef.AreaEffect.Explosions.NoSound;
-                ammoDef.AreaOfDamage.EndOfLife.Falloff = Falloff.Pooled;
-            }
-
-            if (!oldDamageType && oldType != AmmoDef.AreaDamageDef.AreaEffectType.Disabled)
-            {
-                ammoDef.Ewar.Enable = true;
-
-                ammoDef.Ewar.Radius = ammoDef.AreaEffect.Base.Radius <= 0 ? ammoDef.AreaEffect.AreaEffectDamage : ammoDef.AreaEffect.Base.Radius;
-                ammoDef.Ewar.Strength = ammoDef.AreaEffect.Base.EffectStrength <= 0 ? ammoDef.AreaEffect.AreaEffectDamage : ammoDef.AreaEffect.Base.EffectStrength;
-
-                ammoDef.Ewar.Depletable = ammoDef.AreaEffect.EwarFields.Depletable;
-                ammoDef.Ewar.NoHitParticle = ammoDef.AreaEffect.EwarFields.DisableParticleEffect;
-                ammoDef.Ewar.StackDuration = ammoDef.AreaEffect.EwarFields.StackDuration;
-                ammoDef.Ewar.Duration = ammoDef.AreaEffect.EwarFields.Duration;
-                ammoDef.Ewar.MaxStacks = ammoDef.AreaEffect.EwarFields.MaxStacks;
-
-                var field = ammoDef.AreaEffect.Pulse.PulseChance > 0 && ammoDef.AreaEffect.EwarFields.TriggerRange > 0;
-                ammoDef.Ewar.Mode = field ? EwarMode.Field : EwarMode.Effect;
-                ammoDef.Ewar.Type = PickEwarType(ammoDef);
-
-                ammoDef.Ewar.Field.Particle = ammoDef.AreaEffect.Pulse.Particle;
-
-                ammoDef.Ewar.Field.ShowParticle = ammoDef.AreaEffect.Pulse.ShowParticle;
-                ammoDef.Ewar.Field.HideModel = ammoDef.AreaEffect.Pulse.HideModel;
-                ammoDef.Ewar.Field.GrowTime = ammoDef.AreaEffect.Pulse.GrowTime;
-                ammoDef.Ewar.Field.Interval = ammoDef.AreaEffect.Pulse.Interval;
-                ammoDef.Ewar.Field.PulseChance = ammoDef.AreaEffect.Pulse.PulseChance;
-
-                ammoDef.Ewar.Field.TriggerRange = ammoDef.AreaEffect.EwarFields.TriggerRange;
-
-                ammoDef.Ewar.Force.DisableRelativeMass = ammoDef.AreaEffect.EwarFields.Force.DisableRelativeMass;
-                ammoDef.Ewar.Force.ShooterFeelsForce = ammoDef.AreaEffect.EwarFields.Force.ShooterFeelsForce;
-                ammoDef.Ewar.Force.TractorRange = ammoDef.AreaEffect.EwarFields.Force.TractorRange;
-                ammoDef.Ewar.Force.ForceFrom = (PushPullDef.Force)ammoDef.AreaEffect.EwarFields.Force.ForceFrom;
-                ammoDef.Ewar.Force.ForceTo = (PushPullDef.Force)ammoDef.AreaEffect.EwarFields.Force.ForceTo;
-                ammoDef.Ewar.Force.Position = (PushPullDef.Force)ammoDef.AreaEffect.EwarFields.Force.Position;
-
-            }
-        }
-
-        private EwarType PickEwarType(AmmoDef def)
-        {
-            switch (def.AreaEffect.AreaEffect)
-            {
-                case AmmoDef.AreaDamageDef.AreaEffectType.AntiSmart:
-                    return EwarType.AntiSmart;
-                case AmmoDef.AreaDamageDef.AreaEffectType.AnchorField:
-                    return EwarType.Anchor;
-                case AmmoDef.AreaDamageDef.AreaEffectType.TractorField:
-                    return EwarType.Tractor;
-                case AmmoDef.AreaDamageDef.AreaEffectType.PushField:
-                    return EwarType.Push;
-                case AmmoDef.AreaDamageDef.AreaEffectType.PullField:
-                    return EwarType.Pull;
-                case AmmoDef.AreaDamageDef.AreaEffectType.DotField:
-                    return EwarType.Dot;
-                case AmmoDef.AreaDamageDef.AreaEffectType.EmpField:
-                    return EwarType.Emp;
-                case AmmoDef.AreaDamageDef.AreaEffectType.EnergySinkField:
-                    return EwarType.EnergySink;
-                case AmmoDef.AreaDamageDef.AreaEffectType.NavField:
-                    return EwarType.Nav;
-                case AmmoDef.AreaDamageDef.AreaEffectType.OffenseField:
-                    return EwarType.Offense;
-                case AmmoDef.AreaDamageDef.AreaEffectType.JumpNullField:
-                    return EwarType.JumpNull;
-                default:
-                    return EwarType.Offense;
-            }
         }
 
         internal void ComputeShieldBypass(WeaponSystem.AmmoType ammo, out float shieldDamageBypassMod)
