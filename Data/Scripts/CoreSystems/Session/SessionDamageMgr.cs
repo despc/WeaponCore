@@ -250,11 +250,11 @@ namespace CoreSystems
                 }
                 else info.BaseDamagePool = (objHp * -1);
 
-                if (info.AmmoDef.Mass <= 0) return;
+                if (info.AmmoDef.Const.Mass <= 0) return;
 
                 var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
                 if (Session.IsServer && !shield.CubeGrid.IsStatic && !SApi.IsFortified(shield))
-                    ApplyProjectileForce((MyEntity)shield.CubeGrid, hitEnt.HitPos.Value, hitEnt.Intersection.Direction, info.AmmoDef.Mass * speed);
+                    ApplyProjectileForce((MyEntity)shield.CubeGrid, hitEnt.HitPos.Value, hitEnt.Intersection.Direction, info.AmmoDef.Const.Mass * speed);
             }
             else if (!_shieldNull)
             {
@@ -301,7 +301,7 @@ namespace CoreSystems
             var localpos = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR - 0.5);
 
             //Ammo properties
-            var hitMass = t.AmmoDef.Mass;
+            var hitMass = t.AmmoDef.Const.Mass;
 
             //overall primary falloff scaling
             var fallOff = t.AmmoDef.Const.FallOffScaling && distTraveled > t.AmmoDef.Const.FallOffDistance;
@@ -780,10 +780,10 @@ namespace CoreSystems
 
             if (info.DoDamage)
                 destObj.DoDamage(scaledDamage, !info.ShieldBypassed ? MyDamageType.Bullet : MyDamageType.Drill, sync, null, attackerId);
-            if (info.AmmoDef.Mass > 0)
+            if (info.AmmoDef.Const.Mass > 0)
             {
                 var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
-                if (Session.IsServer) ApplyProjectileForce(entity, entity.PositionComp.WorldAABB.Center, hitEnt.Intersection.Direction, (info.AmmoDef.Mass * speed));
+                if (Session.IsServer) ApplyProjectileForce(entity, entity.PositionComp.WorldAABB.Center, hitEnt.Intersection.Direction, (info.AmmoDef.Const.Mass * speed));
             }
         }
 
