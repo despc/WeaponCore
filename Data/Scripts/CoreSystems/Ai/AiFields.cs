@@ -33,7 +33,9 @@ namespace CoreSystems.Support
         internal readonly FastResourceLock DbLock = new FastResourceLock();
 
         internal readonly ConcurrentDictionary<MyEntity, CoreComponent> CompBase = new ConcurrentDictionary<MyEntity, CoreComponent>();
-        internal readonly Dictionary<Weapon.WeaponComponent, CompIndexer> WeaponIdx = new Dictionary<Weapon.WeaponComponent, CompIndexer>(32);
+        internal readonly Dictionary<Weapon.WeaponComponent, int> WeaponIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
+        internal readonly Dictionary<Weapon.WeaponComponent, int> WeaponTrackIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
+
         internal readonly Dictionary<Upgrade.UpgradeComponent, int> UpgradeIdx = new Dictionary<Upgrade.UpgradeComponent, int>(32);
         internal readonly Dictionary<SupportSys.SupportComponent, int> SupportIdx = new Dictionary<SupportSys.SupportComponent, int>(32);
         internal readonly Dictionary<Weapon.WeaponComponent, int> PhantomIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
