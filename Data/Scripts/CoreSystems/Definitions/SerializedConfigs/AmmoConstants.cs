@@ -52,6 +52,8 @@ namespace CoreSystems.Support
         private const string ClientPredAmmoStr = "DisableClientPredictedAmmo";
         private const string FallOffDistanceStr = "FallOffDistance";
         private const string FallOffMinMultStr = "FallOffMinMultipler";
+        private const string ShieldBypassStr = "ShieldBypass";
+        private const string MassStr = "Mass";
 
         private readonly Dictionary<string, BaseProcessor> _modifierMap = new Dictionary<string, BaseProcessor>()
         {
@@ -73,6 +75,8 @@ namespace CoreSystems.Support
             {ClientPredAmmoStr, new BoolProcessor() },
             {FallOffDistanceStr, new FloatProcessor() },
             {FallOffMinMultStr, new FloatProcessor() },
+            {ShieldBypassStr, new FloatProcessor() },
+            {MassStr, new FloatProcessor() },
         };
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
@@ -196,6 +200,7 @@ namespace CoreSystems.Support
         public readonly float MagVolume;
         public readonly float Health;
         public readonly float BaseDamage;
+        public readonly float Mass;
         public readonly float DetMaxAbsorb;
         public readonly float AoeMaxAbsorb;
         public readonly float ByBlockHitDamage;
@@ -271,7 +276,8 @@ namespace CoreSystems.Support
             }
 
             LoadModifiers(session, ammo, out AmmoModsFound);
-            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier, out FallOffDistance, out FallOffMinMultiplier);
+            float shieldBypassRaw;
+            GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier, out FallOffDistance, out FallOffMinMultiplier, out Mass, out shieldBypassRaw);
 
             FixedFireAmmo = system.TurretMovement == WeaponSystem.TurretType.Fixed && ammo.AmmoDef.Trajectory.Guidance == None;
             IsMine = ammo.AmmoDef.Trajectory.Guidance == DetectFixed || ammo.AmmoDef.Trajectory.Guidance == DetectSmart || ammo.AmmoDef.Trajectory.Guidance == DetectTravelTo;
@@ -336,7 +342,7 @@ namespace CoreSystems.Support
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
 
-            ComputeShieldBypass(ammo, out ShieldDamageBypassMod);
+            ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
             ComputeAmmoPattern(ammo, wDef, guidedAmmo, out AmmoPattern, out PatternIndexCnt, out GuidedAmmoDetected);
 
@@ -373,14 +379,14 @@ namespace CoreSystems.Support
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
 
-        internal void ComputeShieldBypass(WeaponSystem.AmmoType ammo, out float shieldDamageBypassMod)
+        internal void ComputeShieldBypass(float shieldBypassRaw, out float shieldDamageBypassMod)
         {
-            if (ammo.AmmoDef.DamageScales.Shields.BypassModifier <= 0)
+            if (shieldBypassRaw <= 0)
                 shieldDamageBypassMod = 0;
-            else if (ammo.AmmoDef.DamageScales.Shields.BypassModifier >= 1)
+            else if (shieldBypassRaw >= 1)
                 shieldDamageBypassMod = 0.00001f;
             else
-                shieldDamageBypassMod = MathHelper.Clamp(1 - ammo.AmmoDef.DamageScales.Shields.BypassModifier, 0.00001f, 0.99999f);
+                shieldDamageBypassMod = MathHelper.Clamp(1 - shieldBypassRaw, 0.00001f, 0.99999f);
         }
 
         internal void ComputeTextures(WeaponSystem.AmmoType ammo, out MyStringId[] tracerTextures, out MyStringId[] segmentTextures, out MyStringId[] trailTextures, out Texture tracerTexture, out Texture trailTexture)
@@ -1204,7 +1210,7 @@ namespace CoreSystems.Support
             }
         }
 
-        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier, out float fallOffDistance, out float fallOffMinMult)
+        private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier, out float fallOffDistance, out float fallOffMinMult, out float mass, out float shieldBypassRaw)
         {
             baseDamage = AmmoModsFound && _modifierMap[BaseDmgStr].HasData() ? _modifierMap[BaseDmgStr].GetAsFloat : ammoDef.BaseDamage;
             health = AmmoModsFound && _modifierMap[HealthStr].HasData() ? _modifierMap[HealthStr].GetAsFloat : ammoDef.Health;
@@ -1221,6 +1227,10 @@ namespace CoreSystems.Support
 
             fallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammoDef.DamageScales.FallOff.Distance;
             fallOffMinMult = AmmoModsFound && _modifierMap[FallOffMinMultStr].HasData() ? _modifierMap[FallOffMinMultStr].GetAsFloat : ammoDef.DamageScales.FallOff.MinMultipler;
+
+            mass = AmmoModsFound && _modifierMap[MassStr].HasData() ? _modifierMap[MassStr].GetAsFloat : ammoDef.Mass;
+
+            shieldBypassRaw = AmmoModsFound && _modifierMap[ShieldBypassStr].HasData() ? _modifierMap[ShieldBypassStr].GetAsFloat : ammoDef.DamageScales.Shields.BypassModifier;
         }
 
     }
