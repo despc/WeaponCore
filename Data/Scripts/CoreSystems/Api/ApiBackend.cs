@@ -886,7 +886,11 @@ namespace CoreSystems.Api
         {
             var comp = weaponBlock.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp?.Platform != null && comp.Platform.State == Ready)
+            {
                 comp.ModOverride = true;
+                if (comp.Ai != null)
+                    comp.Ai.ModOverride = true;
+            }
         }
 
         private bool HasGridAi(IMyEntity entity)

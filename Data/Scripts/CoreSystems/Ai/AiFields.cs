@@ -142,6 +142,7 @@ namespace CoreSystems.Support
         internal bool TouchingWater;
         internal bool IsGrid;
         internal bool SmartHandheld;
+        internal bool ModOverride;
         internal uint TargetsUpdatedTick;
         internal uint VelocityUpdateTick;
         internal uint TargetResetTick;

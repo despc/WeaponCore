@@ -109,7 +109,7 @@ namespace CoreSystems.Platform
                     Log.Line($"PlatFormInit and AI MarkedForClose: CubeMarked:{Comp.CoreEntity.MarkedForClose}");
             }
 
-            if (wCounter.Max == 0 || Comp.Ai.Construct.GetPartCount(blockDef) + 1 <= wCounter.Max) {
+            if (wCounter.Max == 0 || Comp.Ai.ModOverride || Comp.Ai.Construct.GetPartCount(blockDef) + 1 <= wCounter.Max) {
                 wCounter.Current++;
                 Ai.Constructs.UpdatePartCounters(Comp.Ai);
                 State = PlatformState.Valid;

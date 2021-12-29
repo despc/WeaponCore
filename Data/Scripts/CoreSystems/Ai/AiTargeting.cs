@@ -210,7 +210,6 @@ namespace CoreSystems.Support
             var stationOnly = moveMode == ProtoWeaponOverrides.MoveModes.Moored;
             var acquired = false;
             var lockedToTarget = p.Info.LockOnFireState;
-            var topTarget = p.Info.Target.TargetEntity?.GetTopMostParent();
             BoundingSphereD waterSphere = new BoundingSphereD(Vector3D.Zero, 1f);
             WaterData water = null;
             if (s.Session.WaterApiLoaded && !p.Info.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && s.Session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
@@ -225,6 +224,7 @@ namespace CoreSystems.Support
             if (ai.Construct.Data.Repo.FocusData.Target[1] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[1], out fTarget) && ai.Targets.TryGetValue(fTarget, out betaInfo))
                 offset++;
 
+            var topTarget = lockedToTarget ? p.Info.Target.TargetEntity?.GetTopMostParent() ?? alphaInfo?.Target ?? betaInfo?.Target : null;
             var numOfTargets = ai.SortedTargets.Count;
             var hasOffset = offset > 0;
             var adjTargetCount = forceFoci && hasOffset ? offset : numOfTargets + offset;
