@@ -894,12 +894,12 @@ namespace CoreSystems
             if (ModelMaps.TryGetValue(phantomType, out model) || parent != null || sync) 
                 ent.Init(null, model, parent, modelScale, null);
             
-            Log.Line($"phantom entityId 2: {ent.EntityId} - flags:{ent.Flags}");
+            //Log.Line($"phantom entityId 2: {ent.EntityId} - flags:{ent.Flags}");
 
             if (sync)
                 ent.CreateSync();
 
-            Log.Line($"phantom entityId 3: {ent.EntityId} - flags:{ent.Flags}");
+            //Log.Line($"phantom entityId 3: {ent.EntityId} - flags:{ent.Flags}");
 
             if (ent.EntityId == 0)
             {
@@ -910,7 +910,7 @@ namespace CoreSystems
             MyEntities.Add(ent);
 
             Dictionary<long, Weapon.WeaponComponent> phantoms;
-            Log.Line($"phantom entityId 2: {ent.EntityId}");
+            //Log.Line($"phantom entityId 2: {ent.EntityId}");
             if (PhantomDatabase.TryGetValue(phantomType, out phantoms))
                 phantoms[ent.EntityId] = comp;
             else

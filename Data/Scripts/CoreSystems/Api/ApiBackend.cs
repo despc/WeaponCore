@@ -89,7 +89,7 @@ namespace CoreSystems.Api
                 ["SetAmmo"] = new Action<MyEntity, int, string>(SetPhantomAmmo),
                 ["ClosePhantom"] = new Func<MyEntity, bool>(ClosePhantom),
                 ["SetFocusTarget"] = new Func<MyEntity, MyEntity, int, bool>(SetPhantomFocusTarget),
-                ["SpawnPhantom"] = new Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, long, MyEntity>(SpawnPhantom),
+                ["SpawnPhantom"] = new Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, long, bool, MyEntity>(SpawnPhantom),
                 ["ToggleDamageEvents"] = new Action<Dictionary<MyEntity, MyTuple<Vector3D, Dictionary<MyEntity, List<MyTuple<int, float, Vector3I>>>>>>(ToggleDamageEvents),
             };
         }
@@ -1131,10 +1131,9 @@ namespace CoreSystems.Api
 
             return false;
         }
-
-        private MyEntity SpawnPhantom(string phantomType, uint maxAge, bool closeWhenOutOfAmmo, long defaultReloads, string ammoOverideName, int trigger, float? modelScale, MyEntity parnet, bool addToPrunning, bool shadows, long identityId = 0)
+        private MyEntity SpawnPhantom(string phantomType, uint maxAge, bool closeWhenOutOfAmmo, long defaultReloads, string ammoOverideName, int trigger, float? modelScale, MyEntity parnet, bool addToPrunning, bool shadows, long identityId = 0, bool sync = false)
         {
-            var ent = _session.CreatePhantomEntity(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (CoreComponent.TriggerActions)trigger, modelScale, parnet, addToPrunning, shadows, identityId);
+            var ent = _session.CreatePhantomEntity(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (CoreComponent.TriggerActions)trigger, modelScale, parnet, addToPrunning, shadows, identityId, sync);
             return ent;
         }
 

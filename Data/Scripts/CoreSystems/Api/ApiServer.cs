@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CoreSystems.Support;
 using Sandbox.ModAPI;
 
 namespace CoreSystems.Api
@@ -37,7 +38,12 @@ namespace CoreSystems.Api
                 MyAPIGateway.Utilities.RegisterMessageHandler(Channel, HandleMessage);
             }
             IsReady = true;
-            MyAPIGateway.Utilities.SendModMessage(Channel, _session.Api.ModApiMethods);
+            try
+            {
+                MyAPIGateway.Utilities.SendModMessage(Channel, _session.Api.ModApiMethods);
+
+            }
+            catch (Exception ex) { Log.Line($"Exception in Api Load: {ex}", null, true); }
         }
 
 
