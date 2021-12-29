@@ -124,7 +124,6 @@ namespace CoreSystems.Platform
                 
                 for (int i = 0; i < Collection.Count; i++)
                 {
-
                     var w = Collection[i];
 
                     if (Session.IsServer)

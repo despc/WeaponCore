@@ -35,6 +35,7 @@ namespace CoreSystems
                 var ws = Values.State.Weapons[i];
                 var wr = Values.Reloads[i];
                 var wa = Ammos[i];
+                
                 var we = comp.Collection[i];
 
                 if (comp.DefaultReloads != 0)
@@ -49,6 +50,9 @@ namespace CoreSystems
                 {
                     ws.Action = comp.DefaultTrigger;
                 }
+
+                if (wr.AmmoTypeId >= we.System.AmmoTypes.Length)
+                    wr.AmmoTypeId = 0;
 
                 wr.StartId = 0;
                 wr.WaitForClient = false;

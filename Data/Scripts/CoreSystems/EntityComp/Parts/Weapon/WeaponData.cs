@@ -49,6 +49,7 @@ namespace CoreSystems.Platform
 
                         w.PartState = Repo.Values.State.Weapons[i];
                         w.Reload = Repo.Values.Reloads[i];
+
                         w.ProtoWeaponAmmo = Repo.Ammos[i];
 
                         if (Comp.Session.IsServer)
@@ -65,6 +66,9 @@ namespace CoreSystems.Platform
                             w.ClientEndId = w.Reload.EndId;
                             w.TargetData = Repo.Values.Targets[i];
                             w.TargetData.WeaponRandom.Init(w);
+
+                            if (w.Reload.AmmoTypeId >= w.System.AmmoTypes.Length)
+                                w.Reload.AmmoTypeId = 0;
                         }
 
                     }
