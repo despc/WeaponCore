@@ -791,7 +791,7 @@ namespace CoreSystems.Support
                 [ProtoMember(7)] internal bool RandomizeDir;
                 [ProtoMember(8)] internal bool DropVelocity;
                 [ProtoMember(9)] internal float Offset;
-                [ProtoMember(10)] internal bool Radial;
+                [ProtoMember(10)] internal float Radial;
             }
 
             [ProtoContract]

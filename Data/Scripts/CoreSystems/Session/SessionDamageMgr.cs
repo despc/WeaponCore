@@ -297,8 +297,9 @@ namespace CoreSystems
             var gridMatrix = grid.PositionComp.WorldMatrixRef;
             var playerAi = t.Ai.AiType == Ai.AiTypes.Player;
             var distTraveled = t.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? t.DistanceTraveled : t.DistanceTraveled;
-            var direction = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.Direction, grid.PositionComp.WorldMatrixNormalizedInv));
-            var localpos = Vector3I.Round(Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR - 0.5);
+
+            var direction = hitEnt.Intersection;
+            var localpos = Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR;
 
             //Ammo properties
             var hitMass = t.AmmoDef.Const.Mass;
@@ -929,12 +930,12 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3I localpos, MyCubeGrid grid, double radius, double depth, Vector3I direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, Vector3D localpos, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
             var rootPos = root.Position; //local cube grid
-            if (root.Min != root.Max) rootPos = localpos;
+            if (root.Min != root.Max) rootPos = (Vector3I)localpos;
             
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
@@ -949,66 +950,35 @@ namespace CoreSystems
 
             if (maxdepth < maxradius)
             {
-                gmin -= 1; //offsets to catch outer face hits (ie, on bbox)
-                gmax += 1;
-                //var gctr = ((Vector3)gmax - gmin) / 2;
-                var hitrayfwd = new Ray(rootPos, direction);
-                var hitrayrev = new Ray(rootPos, -direction);
-                float? fwdresult = 0;
-                float? revresult = 0;
-                int fwdaxishit = 0;
-                int revaxishit = 0;
+                var localfrom = grid.WorldToGridScaledLocal(direction.From);
+                var localto = grid.WorldToGridScaledLocal(direction.To);
+                var localline = new LineD(localfrom, localto);
+                
+                var bmin = new Vector3D(rootPos) - 0.51d;//Check if this needs to be adjusted for small grid
+                var bmax = new Vector3D(rootPos) + 0.51d;
 
-                for (int m = 0; m < 6; m++) // make this into a method in TS
-                {
-                    BoundingBox bbox;
-                    switch (m)
-                    {
-                        case 0:
-                            bbox= new BoundingBox(gmin, new Vector3(gmax.X, gmin.Y, gmax.Z)); //y 0;
-                            break;
-                        case 1:
-                            bbox = new BoundingBox(gmin, new Vector3(gmin.X, gmax.Y, gmax.Z)); //z 1
-                            break;
-                        case 2:
-                            bbox = new BoundingBox(gmin, new Vector3(gmax.X, gmax.Y, gmin.Z)); //x 2
-                            break;
-                        case 3:
-                            bbox = new BoundingBox(gmax, new Vector3(gmin.X, gmax.Y, gmin.Z)); //ym
-                            break;
-                        case 4:
-                            bbox = new BoundingBox(gmax, new Vector3(gmax.X, gmin.Y, gmin.Z)); //zm
-                            break;
-                        default:
-                            bbox = new BoundingBox(gmax, new Vector3(gmin.X, gmin.Y, gmax.Z)); //xm
-                            break;
-                    }
+                var xplane = new BoundingBox(bmin, new Vector3(bmax.X, bmax.Y, bmin.Z));
+                var yplane = new BoundingBox(bmin, new Vector3(bmax.X, bmin.Y, bmax.Z));
+                var zplane = new BoundingBox(bmin, new Vector3(bmin.X, bmax.Y, bmax.Z));
+                var xmplane = new BoundingBox(bmax, new Vector3(bmin.X, bmin.Y, bmax.Z));
+                var ymplane = new BoundingBox(bmax, new Vector3(bmin.X, bmax.Y, bmin.Z));
+                var zmplane = new BoundingBox(bmax, new Vector3(bmax.X, bmin.Y, bmin.Z));
 
-                    if (hitrayfwd.Intersects(bbox) > 0)
-                    {
-                        fwdresult = hitrayfwd.Intersects(bbox);
-                        fwdaxishit = m;
-                    }
+                var hitray = new Ray(localto, -localline.Direction);
 
-                    if (hitrayrev.Intersects(bbox) > 0)
-                    {
-                        revresult = hitrayrev.Intersects(bbox);
-                        revaxishit = m;
-                    }
+                var xhit = (hitray.Intersects(xplane) ?? 0) + (hitray.Intersects(xmplane) ?? 0);
+                var yhit = (hitray.Intersects(yplane) ?? 0) + (hitray.Intersects(ymplane) ?? 0);
+                var zhit = (hitray.Intersects(zplane) ?? 0) + (hitray.Intersects(zmplane) ?? 0);
+                Log.Line($"localto{localto}  rootpos{rootPos} rootmin{root.Min}  rootmax{root.Max}");
+                Log.Line($"xhit {xhit}  yhit {yhit}  zhit{zhit}");
+                var axishit = new Vector3D(xhit, yhit, zhit);
 
-                    if (fwdresult > 0 && revresult > 0)
-                        break;
-                }
+                // Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)} xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}");
 
-                var axis = fwdresult < revresult ? fwdaxishit : revaxishit;
-
-                if (axis >= 3) axis -= 3;
-
-
-                switch (axis)//sort out which "face" was hit and coming/going along that axis
+                switch (axishit.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
                 {                   
-                    case 0://hit face perp to y
-                        if (direction.Y <= 0f)
+                    case 1://hit face perp to y
+                        if (localline.Direction.Y <= 0f)
                         { 
                             min2.Y = rootPos.Y - maxdepth + 1;
                             max2.Y = rootPos.Y + maxdepth - 1;
@@ -1020,8 +990,8 @@ namespace CoreSystems
                         }
                         break;
 
-                    case 1://hit face perp to x
-                        if (direction.X <= 0f)
+                    case 2://hit face perp to x
+                        if (localline.Direction.X <= 0f)
                         { 
                             min2.X = rootPos.X - maxdepth + 1;
                             max2.X = rootPos.X + maxdepth - 1;        
@@ -1033,8 +1003,8 @@ namespace CoreSystems
                         }
                         break;
 
-                    case 2://Hit face is perp to z
-                        if (direction.Z <= 0f)
+                    case 0://Hit face is perp to z
+                        if (localline.Direction.Z <= 0f)
                         {
                             min2.Z = rootPos.Z - maxdepth + 1;
                             max2.Z = rootPos.Z + maxdepth - 1;

@@ -417,7 +417,7 @@ namespace CoreSystems.Support
                 frag.CoreCube = p.Info.Target.CoreCube;
                 frag.CoreIsCube = p.Info.Target.CoreIsCube;
                 frag.Guidance = p.Info.EnableGuidance;
-                frag.Radial = aConst.Radial;
+                frag.Radial = MathHelper.ToRadians(MathHelper.Clamp(p.Info.AmmoDef.Const.Radial, 0, 360));
 
                 if (aConst.HasFragmentOffset)
                 {
@@ -440,7 +440,7 @@ namespace CoreSystems.Support
                 var dirMatrix = Matrix.CreateFromDir(p.Info.Direction);
                 var posValue = MathHelper.ToRadians(MathHelper.Clamp(p.Info.AmmoDef.Fragment.Degrees, 0, 360));
                 posValue *= 0.5f;
-                var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial ? 1.571f - (posValue / 2) : 0);
+                var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial);
                 var randomFloat2 = (float)(frag.Random.NextDouble() * MathHelper.TwoPi);
                 var mutli = p.Info.AmmoDef.Fragment.Reverse ? -1 : 1;
 
@@ -547,7 +547,7 @@ namespace CoreSystems.Support
         public bool LockOnFireState;
         public bool IgnoreShield;
         public bool CoreIsCube;
-        public bool Radial;
+        public float Radial;
     }
 
     public class VoxelCache
