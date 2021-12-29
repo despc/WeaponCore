@@ -36,6 +36,7 @@ namespace CoreSystems.Support
         internal MyDefinitionId Id;
         internal MyStringHash SubTypeId;
         internal string SubtypeName;
+        internal string PhantomType;
         internal bool LazyUpdate;
         internal MyInventory CoreInventory;
         internal CompData BaseData;
@@ -64,6 +65,7 @@ namespace CoreSystems.Support
         internal float MaxIntegrity;
         internal float CurrentInventoryVolume;
         internal int PowerGroupId;
+        internal long CustomIdentity;
         internal bool DetectOtherSignals;
         internal bool IsAsleep;
         internal bool IsFunctional;
@@ -95,8 +97,10 @@ namespace CoreSystems.Support
         internal bool HasInventory;
         internal bool NeedsWorldMatrix;
         internal bool WorldMatrixEnabled;
+        internal bool NeedsWorldReset;
         internal bool AnimationsModifyCoreParts;
         internal bool HasAim;
+        internal bool InReInit;
         internal string CustomIcon;
 
         internal MyDefinitionId GId = MyResourceDistributorComponent.ElectricityId;

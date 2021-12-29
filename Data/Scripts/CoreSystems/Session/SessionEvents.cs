@@ -233,7 +233,10 @@ namespace CoreSystems
                     grid.OnFatBlockRemoved += FromGridMap;
                     grid.OnClose += RemoveGridFromMap;
                     using (_dityGridLock.Acquire())
+                    {
                         DirtyGridInfos.Add(grid);
+                        DirtyGrid = true;
+                    }
                 }
                 else Log.Line($"GridAddedToScene entity was not a grid");
 
@@ -257,7 +260,10 @@ namespace CoreSystems
                 grid.OnClose -= RemoveGridFromMap;
                 grid.AddedToScene -= AddGridToMap;
                 using (_dityGridLock.Acquire())
+                {
                     DirtyGridInfos.Add(grid);
+                    DirtyGrid = true;
+                }
             }
             else Log.Line($"grid not removed and list not cleaned: marked:{grid.MarkedForClose}({grid.Closed}) - inScene:{grid.InScene}");
         }
@@ -272,7 +278,10 @@ namespace CoreSystems
                 {
                     gridMap.MyCubeBocks.Add(myCubeBlock);
                     using (_dityGridLock.Acquire())
+                    {
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
+                        DirtyGrid = true;
+                    }
                 }
                 else if (term != null) Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
 
@@ -290,7 +299,10 @@ namespace CoreSystems
                 {
                     gridMap.MyCubeBocks.Remove(myCubeBlock);
                     using (_dityGridLock.Acquire())
+                    {
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
+                        DirtyGrid = true;
+                    }
                 }
                 else if (term != null) Log.Line($"ToGridMap missing grid: cubeMark:{myCubeBlock.MarkedForClose} - gridMark:{myCubeBlock.CubeGrid.MarkedForClose} - name:{myCubeBlock.DebugName}");
             }

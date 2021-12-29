@@ -95,20 +95,17 @@ namespace CoreSystems
                 if (!CompsToStart.IsEmpty)
                     StartComps();
 
-                if (Tick120 && CompsDelayed.Count > 0)
-                    DelayedComps();
+                if ((Tick120 || ReInitTick > 0 && Tick - ReInitTick < 10) && (CompsDelayedReInit.Count > 0 || CompsDelayedInit.Count > 0))
+                    DelayedCompsInit();
 
-                if (Tick10 && !DelayedAiClean.IsEmpty)
-                {
-                    if (CompsDelayed.Count > 0) DelayedComps();
+                if (Tick10 && !DelayedAiClean.IsEmpty) {
+                    InitDelayedComps();
                     DelayedAiCleanup();
                 }
 
-                if (CompReAdds.Count > 0)
-                {
-                    if (CompsDelayed.Count > 0) DelayedComps();
+                if (CompReAdds.Count > 0) {
+                    InitDelayedComps();
                     if (!DelayedAiClean.IsEmpty) DelayedAiCleanup();
-
                     ChangeReAdds();
                 }
 

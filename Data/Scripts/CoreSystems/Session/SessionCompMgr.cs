@@ -151,22 +151,51 @@ namespace CoreSystems
             }
         }
 
-        private void DelayedComps(bool forceRemove = false)
+        private void InitDelayedComps()
         {
-            for (int i = CompsDelayed.Count - 1; i >= 0; i--)
+            DelayedCompsReInit();
+            DelayedCompsInit();
+        }
+
+        private void DelayedCompsInit(bool forceRemove = false)
+        {
+            for (int i = CompsDelayedInit.Count - 1; i >= 0; i--)
             {
-                var delayed = CompsDelayed[i];
+                var delayed = CompsDelayedInit[i];
                 if (forceRemove || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Delay)
                 {
                     if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Delay)
                         Log.Line($"[DelayedComps skip due to platform != Delay] marked:{delayed.Cube.MarkedForClose} - entityNull:{delayed.Entity == null} - force:{forceRemove}");
 
-                    CompsDelayed.RemoveAtFast(i);
+                    CompsDelayedInit.RemoveAtFast(i);
                 }
                 else if (delayed.Cube.IsFunctional)
                 {
                     delayed.PlatformInit();
-                    CompsDelayed.RemoveAtFast(i);
+                    CompsDelayedInit.RemoveAtFast(i);
+                }
+            }
+        }
+
+        private void DelayedCompsReInit(bool forceRemove = false)
+        {
+            for (int i = CompsDelayedReInit.Count - 1; i >= 0; i--)
+            {
+                var delayed = CompsDelayedReInit[i];
+                if (forceRemove || !delayed.InReInit || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Ready)
+                {
+                    if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Ready && delayed.InReInit)
+                        Log.Line($"[DelayedComps skip due to platform != Ready] marked:{delayed.Cube.MarkedForClose} - entityNull:{delayed.Entity == null} - force:{forceRemove}");
+
+                    delayed.InReInit = false;
+                    CompsDelayedReInit.RemoveAtFast(i);
+                }
+                else if (delayed.Cube.IsFunctional && GridToInfoMap.ContainsKey(delayed.Cube.CubeGrid))
+                {
+                    CompsDelayedReInit.RemoveAtFast(i);
+                    
+                    delayed.InReInit = false;
+                    delayed.ReInit(false);
                 }
             }
         }
@@ -209,7 +238,15 @@ namespace CoreSystems
                         wComp.StopAllSounds();
                         wComp.CleanCompParticles();
                         wComp.CleanCompSounds();
+
+                        if (comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom)
+                        {
+                            Dictionary<long, Weapon.WeaponComponent> phantoms;
+                            if (PhantomDatabase.TryGetValue(comp.PhantomType, out phantoms))
+                                phantoms.Remove(entity.EntityId);
+                        }
                     }
+
                     comp.Platform.RemoveParts();
                 }
 

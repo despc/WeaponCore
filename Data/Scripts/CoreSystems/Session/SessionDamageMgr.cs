@@ -250,11 +250,11 @@ namespace CoreSystems
                 }
                 else info.BaseDamagePool = (objHp * -1);
 
-                if (info.AmmoDef.Mass <= 0) return;
+                if (info.AmmoDef.Const.Mass <= 0) return;
 
                 var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
                 if (Session.IsServer && !shield.CubeGrid.IsStatic && !SApi.IsFortified(shield))
-                    ApplyProjectileForce((MyEntity)shield.CubeGrid, hitEnt.HitPos.Value, hitEnt.Intersection.Direction, info.AmmoDef.Mass * speed);
+                    ApplyProjectileForce((MyEntity)shield.CubeGrid, hitEnt.HitPos.Value, hitEnt.Intersection.Direction, info.AmmoDef.Const.Mass * speed);
             }
             else if (!_shieldNull)
             {
@@ -302,7 +302,7 @@ namespace CoreSystems
             var localpos = Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR;
 
             //Ammo properties
-            var hitMass = t.AmmoDef.Mass;
+            var hitMass = t.AmmoDef.Const.Mass;
 
             //overall primary falloff scaling
             var fallOff = t.AmmoDef.Const.FallOffScaling && distTraveled > t.AmmoDef.Const.FallOffDistance;
@@ -781,10 +781,10 @@ namespace CoreSystems
 
             if (info.DoDamage)
                 destObj.DoDamage(scaledDamage, !info.ShieldBypassed ? MyDamageType.Bullet : MyDamageType.Drill, sync, null, attackerId);
-            if (info.AmmoDef.Mass > 0)
+            if (info.AmmoDef.Const.Mass > 0)
             {
                 var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
-                if (Session.IsServer) ApplyProjectileForce(entity, entity.PositionComp.WorldAABB.Center, hitEnt.Intersection.Direction, (info.AmmoDef.Mass * speed));
+                if (Session.IsServer) ApplyProjectileForce(entity, entity.PositionComp.WorldAABB.Center, hitEnt.Intersection.Direction, (info.AmmoDef.Const.Mass * speed));
             }
         }
 
@@ -950,7 +950,6 @@ namespace CoreSystems
 
             if (maxdepth < maxradius)
             {
-
                 var localfrom = grid.WorldToGridScaledLocal(direction.From);
                 var localto = grid.WorldToGridScaledLocal(direction.To);
                 var localline = new LineD(localfrom, localto);
@@ -967,7 +966,6 @@ namespace CoreSystems
 
                 var hitray = new Ray(localto, -localline.Direction);
 
-
                 var xhit = (hitray.Intersects(xplane) ?? 0) + (hitray.Intersects(xmplane) ?? 0);
                 var yhit = (hitray.Intersects(yplane) ?? 0) + (hitray.Intersects(ymplane) ?? 0);
                 var zhit = (hitray.Intersects(zplane) ?? 0) + (hitray.Intersects(zmplane) ?? 0);
@@ -975,11 +973,7 @@ namespace CoreSystems
                 Log.Line($"xhit {xhit}  yhit {yhit}  zhit{zhit}");
                 var axishit = new Vector3D(xhit, yhit, zhit);
 
-
-
                 // Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)} xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}");
-
-
 
                 switch (axishit.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
                 {                   

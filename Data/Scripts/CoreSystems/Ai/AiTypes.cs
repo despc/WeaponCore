@@ -545,11 +545,5 @@ namespace CoreSystems.Support
             internal MyEntity ShieldEnt;
             internal MyCubeBlock ShieldBlock;
         }
-
-        internal struct CompIndexer
-        {
-            internal int AllComps;
-            internal int TrackingComps;
-        }
     }
 }

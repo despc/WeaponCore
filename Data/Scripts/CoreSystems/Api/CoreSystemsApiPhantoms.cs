@@ -31,7 +31,8 @@ namespace CoreSystems.Api
         private Action<MyEntity, int, long> _addMagazines;
         private Action<MyEntity, int, string> _setAmmo;
         private Func<MyEntity, bool> _closePhantom;
-        private Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, MyEntity> _spawnPhantom;
+        private Func<string, uint, bool, long, string, int, float?, MyEntity, bool, bool, long, MyEntity> _spawnPhantom;
+        private Func<MyEntity, MyEntity, int, bool> _setPhantomFocusTarget;
 
         /// <summary>
         /// Get information about a particular target relative to this phantom
@@ -102,7 +103,16 @@ namespace CoreSystems.Api
         /// <param name="addToPrunning"></param>
         /// <param name="shadows"></param>
         /// <returns></returns>
-        internal MyEntity SpawnPhantom(string phantomType, uint maxAge = 0, bool closeWhenOutOfAmmo = false, long defaultReloads = long.MaxValue, string ammoOverideName = null, TriggerActions trigger = TriggerActions.TriggerOff, float? modelScale = null, MyEntity parnet = null, bool addToPrunning = false, bool shadows = false)
-            => _spawnPhantom?.Invoke(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (int)trigger, modelScale, parnet, addToPrunning, shadows) ?? null;
+        internal MyEntity SpawnPhantom(string phantomType, uint maxAge = 0, bool closeWhenOutOfAmmo = false, long defaultReloads = long.MaxValue, string ammoOverideName = null, TriggerActions trigger = TriggerActions.TriggerOff, float? modelScale = null, MyEntity parnet = null, bool addToPrunning = false, bool shadows = false, long identityId = 0)
+            => _spawnPhantom?.Invoke(phantomType, maxAge, closeWhenOutOfAmmo, defaultReloads, ammoOverideName, (int)trigger, modelScale, parnet, addToPrunning, shadows, identityId) ?? null;
+
+        /// <summary>
+        /// Set/switch ammo
+        /// focusId is a value between 0 and 1, can have two active focus targets.
+        /// </summary>
+        /// <param name="phantom"></param>
+        /// <param name="target"></param>
+        /// <param name="focusId"></param>
+        internal bool SetPhantomFocusTarget(MyEntity phantom, MyEntity target, int focusId) => _setPhantomFocusTarget?.Invoke(phantom, target, focusId) ?? false;
     }
 }

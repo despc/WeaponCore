@@ -184,8 +184,11 @@ namespace CoreSystems
         internal readonly HashSet<MyDefinitionId> BadModBlock = new HashSet<MyDefinitionId>();
         internal readonly List<Weapon> InvPullClean = new List<Weapon>();
         internal readonly List<Weapon> InvRemoveClean = new List<Weapon>();
-        internal readonly List<CoreComponent> CompsDelayed = new List<CoreComponent>();
+        internal readonly List<CoreComponent> CompsDelayedInit = new List<CoreComponent>();
+        internal readonly List<CoreComponent> CompsDelayedReInit = new List<CoreComponent>();
+
         internal readonly List<CompReAdd> CompReAdds = new List<CompReAdd>();
+
         internal readonly List<Projectile> Hits = new List<Projectile>(16);
         internal readonly List<Weapon> AcquireTargets = new List<Weapon>(128);
         internal readonly List<Weapon> HomingWeapons = new List<Weapon>(128);
@@ -313,7 +316,7 @@ namespace CoreSystems
 
         internal uint Tick;
         internal uint LastDamageTick;
-
+        internal uint ReInitTick;
         internal int WeaponIdCounter;
         internal int PlayerEventId;
         internal int TargetRequests;
@@ -406,6 +409,7 @@ namespace CoreSystems
         internal bool ArmorCoreActive;
         internal bool DebugMod;
         internal bool AntiSmartActive;
+        internal bool DirtyGrid;
         internal readonly HashSet<ulong> BlackListedPlayers = new HashSet<ulong>()
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.

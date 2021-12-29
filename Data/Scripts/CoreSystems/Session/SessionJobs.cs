@@ -208,23 +208,6 @@ namespace CoreSystems
             catch (Exception ex) { Log.Line($"Exception in ProcessDbsCallBack: {ex}"); }
         }
 
-        internal void CheckDirtyGridInfos()
-        {
-            if ((!GameLoaded || Tick20))
-            {
-                using (_dityGridLock.Acquire())
-                {
-                    if (DirtyGridInfos.Count <= 0)
-                        return;
-                }
-
-                if (GridTask.valid && GridTask.Exceptions != null)
-                    TaskHasErrors(ref GridTask, "GridTask");
-                if (!GameLoaded) UpdateGrids();
-                else GridTask = MyAPIGateway.Parallel.StartBackground(UpdateGrids);
-            }
-        }
-
         private void UpdateWaters()
         {
             foreach (var planet in PlanetMap.Values)
@@ -294,6 +277,25 @@ namespace CoreSystems
             }
         }
 
+
+        internal void CheckDirtyGridInfos(bool mainThread = false)
+        {
+            if ((mainThread || Tick60 || DirtyGrid))
+            {
+                using (_dityGridLock.Acquire())
+                {
+                    if (DirtyGridInfos.Count <= 0)
+                        return;
+                }
+
+                if (GridTask.valid && GridTask.Exceptions != null)
+                    TaskHasErrors(ref GridTask, "GridTask");
+                if (mainThread) UpdateGrids();
+                else GridTask = MyAPIGateway.Parallel.StartBackground(UpdateGrids);
+            }
+        }
+
+
         private void UpdateGrids()
         {
             DeferedUpBlockTypeCleanUp();
@@ -303,6 +305,7 @@ namespace CoreSystems
             {
                 DirtyGridsTmp.AddRange(DirtyGridInfos);
                 DirtyGridInfos.Clear();
+                DirtyGrid = false;
             }
 
             for (int i = 0; i < DirtyGridsTmp.Count; i++)

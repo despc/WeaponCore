@@ -32,32 +32,49 @@ namespace CoreSystems.Support
                                 return;
                             }
 
-                            WeaponIdx.Add(wComp, new CompIndexer {AllComps = WeaponComps.Count, TrackingComps = TrackingComps.Count});
+                            WeaponIdx.Add(wComp,  WeaponComps.Count);
                             WeaponComps.Add(wComp);
                             if (optimize)
+                            {
+                                if (WeaponTrackIdx.ContainsKey(wComp))
+                                {
+                                    Log.Line($"CompTrackAddFailed:<{wComp.CoreEntity.EntityId}> - comp({wComp.CoreEntity.DebugName}[{wComp.SubtypeName}]) already existed in {TopEntity.DebugName}");
+                                    return;
+                                }
+
+                                WeaponTrackIdx.Add(wComp, TrackingComps.Count);
                                 TrackingComps.Add(wComp);
+                            }
                         }
                         else
                         {
-                            CompIndexer wCompIdx;
-                            if (!WeaponIdx.TryGetValue(wComp, out wCompIdx))
-                                return;
-
-                            var freedIndex = wCompIdx.AllComps;
-                            var trackIndex = wCompIdx.TrackingComps;
-                            
-                            WeaponComps.RemoveAtFast(freedIndex);
-                            if (optimize)
-                                TrackingComps.RemoveAtFast(trackIndex);
-
-                            if (freedIndex < WeaponComps.Count && (!optimize || trackIndex < TrackingComps.Count))
+                            int weaponIdx;
+                            if (!WeaponIdx.TryGetValue(wComp, out weaponIdx))
                             {
-                                var swappedComp = WeaponComps[freedIndex];
-                                WeaponIdx[swappedComp] = new CompIndexer {AllComps = freedIndex, TrackingComps = trackIndex};
+                                Log.Line($"CompRemoveFailed: <{wComp.CoreEntity.EntityId}> - {WeaponComps.Count}[{WeaponIdx.Count}]({CompBase.Count}) - {WeaponComps.Contains(wComp)}[{WeaponComps.Count}] - {Session.EntityAIs[wComp.TopEntity].CompBase.ContainsKey(wComp.CoreEntity)} - {Session.EntityAIs[wComp.TopEntity].CompBase.Count} ");
+                                return;
                             }
 
+                            WeaponComps.RemoveAtFast(weaponIdx);
+                            if (weaponIdx < WeaponComps.Count)
+                                WeaponIdx[WeaponComps[weaponIdx]] = weaponIdx;
                             WeaponIdx.Remove(wComp);
 
+
+                            if (optimize)
+                            {
+                                int weaponTrackIdx;
+                                if (!WeaponTrackIdx.TryGetValue(wComp, out weaponTrackIdx))
+                                {
+                                    Log.Line($"CompRemoveFailed: <{wComp.CoreEntity.EntityId}> - {WeaponComps.Count}[{WeaponIdx.Count}]({CompBase.Count}) - {WeaponComps.Contains(wComp)}[{WeaponComps.Count}] - {Session.EntityAIs[wComp.TopEntity].CompBase.ContainsKey(wComp.CoreEntity)} - {Session.EntityAIs[wComp.TopEntity].CompBase.Count} ");
+                                    return;
+                                }
+
+                                TrackingComps.RemoveAtFast(weaponTrackIdx);
+                                if (weaponTrackIdx < TrackingComps.Count)
+                                    WeaponTrackIdx[TrackingComps[weaponTrackIdx]] = weaponTrackIdx;
+                                WeaponTrackIdx.Remove(wComp);
+                            }
                         }
                     }
                     else
@@ -382,6 +399,7 @@ namespace CoreSystems.Support
             SupportComps.Clear();
             PhantomComps.Clear();
             WeaponIdx.Clear();
+            WeaponTrackIdx.Clear();
             SupportIdx.Clear();
             UpgradeIdx.Clear();
             PhantomIdx.Clear();

@@ -26,7 +26,7 @@ namespace CoreSystems.Platform
         internal CoreStructure Structure;
         internal CoreComponent Comp;
         internal PlatformState State;
-
+        internal bool ForceNeedsWorld;
         internal enum PlatformState
         {
             Fresh,
@@ -35,9 +35,21 @@ namespace CoreSystems.Platform
             Valid,
             Inited,
             Ready,
-            Incomplete
+            Incomplete,
         }
-        
+
+        internal enum PartType
+        {
+            Default,
+            Azimuth,
+            Elevation,
+            Muzzle,
+            Spin,
+            Heating,
+            Animation,
+            Particle,
+        }
+
         internal void Setup(CoreComponent comp)
         {
             if (!comp.Session.PartPlatforms.ContainsKey(comp.Id))
@@ -200,23 +212,35 @@ namespace CoreSystems.Platform
                 if (Comp.TypeSpecific != Phantom) Weapons.Add(weapon);
                 else Phantoms.Add(weapon);
                 
-                SetupWorldMatrix(azimuthPart);
-                SetupWorldMatrix(elevationPart);
+                SetupWorldMatrix(azimuthPart, PartType.Azimuth);
+                SetupWorldMatrix(elevationPart, PartType.Elevation);
 
                 CompileTurret(weapon);
             }
             return State;
         }
 
-        private void SetupWorldMatrix(MyEntity part, bool optimizeOnly = false)
+        private void SetupWorldMatrix(MyEntity part, PartType type, bool optimizeOnly = false)
         {
             if (part != null && part != Comp.Entity)
             {
                 part.RemoveFromGamePruningStructure();
                 part.Flags |= EntityFlags.IsNotGamePrunningStructureObject;
                 part.Render.NeedsDrawFromParent = true;
-                if (!optimizeOnly) 
+
+                string name;
+                if (!ForceNeedsWorld && Comp.Type == CoreComponent.CompType.Weapon && type == PartType.Animation && Parts.NeedsWorld.TryGetValue(part, out name))
+                {
+                    Log.Line($"[{Comp.SubtypeName}] - type:{type} - part[{name}] is forcing NeedsWorld on all subparts, this is due to custom child arts on vanilla turret subparts, this will greatly increase cpu usage for this weapon");
+                    ForceNeedsWorld = true;
+                    Comp.NeedsWorldReset = true;
                     part.NeedsWorldMatrix = true;
+                    return;
+                }
+                if (!optimizeOnly || ForceNeedsWorld)
+                {
+                    part.NeedsWorldMatrix = true;
+                }
             }
         }
 
@@ -261,7 +285,7 @@ namespace CoreSystems.Platform
             var mPartName = weaponSystem.MuzzlePartName.String;
             if (Parts.NameToEntity.TryGetValue(mPartName, out muzzlePart) || weaponSystem.DesignatorWeapon)
             {
-                SetupWorldMatrix(muzzlePart, true);
+                SetupWorldMatrix(muzzlePart, PartType.Muzzle, true);
                 var azimuthPartName = Comp.TypeSpecific == VanillaTurret ? string.IsNullOrEmpty(weaponSystem.AzimuthPartName.String) ? "MissileTurretBase1" : weaponSystem.AzimuthPartName.String : weaponSystem.AzimuthPartName.String;
                 var elevationPartName = Comp.TypeSpecific == VanillaTurret ? string.IsNullOrEmpty(weaponSystem.ElevationPartName.String) ? "MissileTurretBarrels" : weaponSystem.ElevationPartName.String : weaponSystem.ElevationPartName.String;
                 if (weaponSystem.DesignatorWeapon)
@@ -283,7 +307,7 @@ namespace CoreSystems.Platform
                     weapon.MuzzlePart.ToTransformation = muzzlePartPosTo;
                     weapon.MuzzlePart.FromTransformation = muzzlePartPosFrom;
                     weapon.MuzzlePart.PartLocalLocation = muzzlePartLocation;
-                    SetupWorldMatrix(weapon.MuzzlePart.Entity, true);
+                    SetupWorldMatrix(weapon.MuzzlePart.Entity, PartType.Muzzle, true);
                 }
 
                 if (weapon.System.HasBarrelRotation && weapon.SpinPart.Entity != null)
@@ -304,7 +328,7 @@ namespace CoreSystems.Platform
                         weapon.SpinPart.ToTransformation = spinPartPosTo;
                         weapon.SpinPart.FromTransformation = spinPartPosFrom;
                         weapon.SpinPart.PartLocalLocation = spinPartLocation;
-                        SetupWorldMatrix(weapon.SpinPart.Entity, true);
+                        SetupWorldMatrix(weapon.SpinPart.Entity, PartType.Spin, true);
                     }
                 }
 
@@ -430,7 +454,7 @@ namespace CoreSystems.Platform
                     MyEntity ent;
                     if (Parts.NameToEntity.TryGetValue(partName, out ent))
                     {
-                        SetupWorldMatrix(ent, true);
+                        SetupWorldMatrix(ent, PartType.Heating, true);
                         weapon.HeatingParts.Add(ent);
                         try
                         {
@@ -484,7 +508,7 @@ namespace CoreSystems.Platform
                 {
 
                     if (muzzlePart != null)
-                        SetupWorldMatrix(muzzlePart, true);
+                        SetupWorldMatrix(muzzlePart, PartType.Muzzle, true);
 
                     if (!registered)
                     {
@@ -499,14 +523,14 @@ namespace CoreSystems.Platform
                     {
                         weapon.AzimuthPart.Entity = azimuthPartEntity;
                         weapon.AzimuthPart.Parent = azimuthPartEntity.Parent;
-                        SetupWorldMatrix(azimuthPartEntity, true);
+                        SetupWorldMatrix(azimuthPartEntity, PartType.Azimuth, true);
                     }
 
                     MyEntity elevationPartEntity;
                     if (Parts.NameToEntity.TryGetValue(elevationPartName, out elevationPartEntity))
                     {
                         weapon.ElevationPart.Entity = elevationPartEntity;
-                        SetupWorldMatrix(elevationPartEntity, true);
+                        SetupWorldMatrix(elevationPartEntity, PartType.Elevation, true);
                     }
 
                     if (weapon.System.HasBarrelRotation) {
@@ -517,7 +541,7 @@ namespace CoreSystems.Platform
 
                         if (spinPart != null) {
                             weapon.SpinPart.Entity = spinPart;
-                            SetupWorldMatrix(weapon.SpinPart.Entity, true);
+                            SetupWorldMatrix(weapon.SpinPart.Entity, PartType.Spin, true);
                         }
                     }
 
@@ -547,7 +571,7 @@ namespace CoreSystems.Platform
                             MyEntity part;
                             if (Parts.NameToEntity.TryGetValue(animation.SubpartId, out part) && !(string.IsNullOrEmpty(animation.SubpartId) || animation.SubpartId == "None"))
                             {
-                                SetupWorldMatrix(part, true);
+                                SetupWorldMatrix(part, PartType.Animation, true);
                                 animation.Part = part;
                                 //if (animation.Running)
                                 //  animation.Paused = true;
@@ -565,7 +589,7 @@ namespace CoreSystems.Platform
                             MyEntity part;
                             if (Parts.NameToEntity.TryGetValue(particle.PartName, out part))
                             {
-                                SetupWorldMatrix(part, true);
+                                SetupWorldMatrix(part, PartType.Particle, true);
                                 particle.MyDummy.Entity = part;
                             }
                         }
@@ -602,7 +626,7 @@ namespace CoreSystems.Platform
                         MyEntity ent;
                         if (Parts.NameToEntity.TryGetValue(partName, out ent))
                         {
-                            SetupWorldMatrix(ent, true);
+                            SetupWorldMatrix(ent, PartType.Heating, true);
                             weapon.HeatingParts.Add(ent);
                             try
                             {

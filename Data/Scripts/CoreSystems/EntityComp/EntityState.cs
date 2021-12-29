@@ -20,9 +20,12 @@ namespace CoreSystems.Support
                     Startup();
                     break;
                 case Start.ReInit:
+
                     if (Type == CompType.Weapon) 
                         Platform.ResetParts();
-                    Status = Start.Started;
+
+                    Status = NeedsWorldReset ? Start.ReInit : Start.Started;
+                    NeedsWorldReset = false;
                     break;
             }
         }

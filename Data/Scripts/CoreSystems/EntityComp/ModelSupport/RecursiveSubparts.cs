@@ -19,9 +19,13 @@ namespace CoreSystems.Support
         private readonly Dictionary<string, IMyModelDummy> _tmp2 = new Dictionary<string, IMyModelDummy>();
         internal readonly Dictionary<string, MyEntity> NameToEntity = new Dictionary<string, MyEntity>();
         internal readonly Dictionary<MyEntity, string> EntityToName = new Dictionary<MyEntity, string>();
-        internal readonly Dictionary<MyEntity, string> EntityNeedsWorld = new Dictionary<MyEntity, string>();
+        internal readonly Dictionary<MyEntity, string> VanillaSubparts = new Dictionary<MyEntity, string>();
+        internal readonly Dictionary<MyEntity, string> NeedsWorld = new Dictionary<MyEntity, string>();
+
         internal const string VanillaBase = "MissileTurretBase1";
         internal const string VanillaBarrels = "MissileTurretBarrels";
+        internal const string NoneStr = "None";
+
 
         private IMyModel _trackedModel;
         internal MyEntity Entity;
@@ -33,7 +37,8 @@ namespace CoreSystems.Support
             _tmp1.Clear();
             NameToEntity.Clear();
             EntityToName.Clear();
-            EntityNeedsWorld.Clear();
+            VanillaSubparts.Clear();
+            NeedsWorld.Clear();
             _trackedModel = null;
             Entity = myEntity;
         }
@@ -46,7 +51,8 @@ namespace CoreSystems.Support
             _subparts.Clear();
             NameToEntity.Clear();
             EntityToName.Clear();
-            EntityNeedsWorld.Clear();
+            VanillaSubparts.Clear();
+            NeedsWorld.Clear();
             if (Entity != null)
             {
                 var head = -1;
@@ -72,14 +78,20 @@ namespace CoreSystems.Support
                                 NameToEntity[name] = res;
                                 EntityToName[res] = name;
                                 if (name.Equals(VanillaBase) || name.Equals(VanillaBarrels))
-                                    EntityNeedsWorld[res] = name;
+                                    VanillaSubparts[res] = name;
                             }
                         }
                         else NameToEntity[kv.Key] = Entity;
                     }
                 }
-                NameToEntity["None"] = Entity;
-                EntityToName[Entity] = "None";
+                NameToEntity[NoneStr] = Entity;
+                EntityToName[Entity] = NoneStr;
+            }
+
+            foreach (var ent in EntityToName)
+            {
+                if (!string.IsNullOrWhiteSpace(ent.Value) && !ent.Value.Equals(NoneStr) && VanillaSubparts.ContainsKey(ent.Key.Parent) && !VanillaSubparts.ContainsKey(ent.Key))
+                    NeedsWorld[ent.Key] = ent.Value;
             }
         }
 
