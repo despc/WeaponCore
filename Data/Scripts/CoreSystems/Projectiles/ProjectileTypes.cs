@@ -417,7 +417,7 @@ namespace CoreSystems.Support
                 frag.CoreCube = p.Info.Target.CoreCube;
                 frag.CoreIsCube = p.Info.Target.CoreIsCube;
                 frag.Guidance = p.Info.EnableGuidance;
-                frag.Radial = MathHelper.ToRadians(MathHelper.Clamp(p.Info.AmmoDef.Const.Radial, 0, 360));
+                frag.Radial = p.Info.AmmoDef.Const.FragRadial;
 
                 if (aConst.HasFragmentOffset)
                 {
@@ -438,7 +438,7 @@ namespace CoreSystems.Support
                 frag.LockOnFireState = p.Info.LockOnFireState;
                 frag.IgnoreShield = p.Info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
                 var dirMatrix = Matrix.CreateFromDir(p.Info.Direction);
-                var posValue = MathHelper.ToRadians(MathHelper.Clamp(p.Info.AmmoDef.Fragment.Degrees, 0, 360));
+                var posValue = p.Info.AmmoDef.Const.FragDegrees;
                 posValue *= 0.5f;
                 var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial);
                 var randomFloat2 = (float)(frag.Random.NextDouble() * MathHelper.TwoPi);

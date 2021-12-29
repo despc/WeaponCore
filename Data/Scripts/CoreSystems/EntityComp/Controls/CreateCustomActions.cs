@@ -503,7 +503,7 @@ namespace CoreSystems.Control
         {
             var action0 = MyAPIGateway.TerminalControls.CreateAction<T>($"WC_{name}_Increase");
             action0.Icon = @"Textures\GUI\Icons\Actions\Increase.dds";
-            action0.Name = new StringBuilder(Localization.GetTextWithoutFallback($"Increase {name}"));
+            action0.Name = new StringBuilder(Localization.GetText(name));
             action0.Action = b => tc.Setter(b, tc.Getter(b) + incAmt <= max ? tc.Getter(b) + incAmt : max);
             action0.Writer = TerminalHelpers.EmptyStringBuilder;
             action0.Enabled = enabler;
@@ -514,7 +514,7 @@ namespace CoreSystems.Control
 
             var action1 = MyAPIGateway.TerminalControls.CreateAction<T>($"WC_{name}_Decrease");
             action1.Icon = @"Textures\GUI\Icons\Actions\Decrease.dds";
-            action1.Name = new StringBuilder(Localization.GetTextWithoutFallback($"Decrease {name}"));
+            action1.Name = new StringBuilder(Localization.GetText(name));
             action1.Action = b => tc.Setter(b, tc.Getter(b) - incAmt >= min ? tc.Getter(b) - incAmt : min);
             action1.Writer = TerminalHelpers.EmptyStringBuilder;
             action1.Enabled = enabler;

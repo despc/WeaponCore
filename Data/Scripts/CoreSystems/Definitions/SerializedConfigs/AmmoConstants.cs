@@ -186,7 +186,8 @@ namespace CoreSystems.Support
         public readonly bool SlowFireFixedWeapon;
         public readonly bool HasNegFragmentOffset;
         public readonly bool HasFragmentOffset;
-        public readonly float Radial;
+        public readonly float FragRadial;
+        public readonly float FragDegrees;
         public readonly float FragmentOffset;
         public readonly float FallOffDistance;
         public readonly float FallOffMinMultiplier;
@@ -317,7 +318,8 @@ namespace CoreSystems.Support
             HasFragmentOffset = !MyUtils.IsZero(ammo.AmmoDef.Fragment.Offset);
             HasNegFragmentOffset = ammo.AmmoDef.Fragment.Offset < 0;
             FragmentOffset = Math.Abs(ammo.AmmoDef.Fragment.Offset);
-            Radial = ammo.AmmoDef.Fragment.Radial;
+            FragRadial = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Radial, 0, 360));
+            FragDegrees = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Degrees, 0, 360));
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 

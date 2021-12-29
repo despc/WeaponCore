@@ -864,38 +864,60 @@ namespace CoreSystems
             catch (Exception ex) { Log.Line($"NewThreatLogging in SessionDraw: {ex}", null, true); }
         }
 
-        internal MyEntity CreatePhantomEntity(string phantomType, uint maxAge = 0, bool closeWhenOutOfAmmo = false, long defaultReloads = int.MaxValue, string ammoName = null, TriggerActions trigger = TriggerOff, float? modelScale = null, MyEntity parnet = null, bool addToPrunning = false, bool shadows = false, long identity = 0)
+        internal MyEntity CreatePhantomEntity(string phantomType, uint maxAge = 0, bool closeWhenOutOfAmmo = false, long defaultReloads = int.MaxValue, string ammoName = null, TriggerActions trigger = TriggerOff, float? modelScale = null, MyEntity parent = null, bool addToPrunning = false, bool shadows = false, long identity = 0, bool sync = false)
         {
             if (!Inited) lock (InitObj) Init();
 
             var ent = new MyEntity            {
                 DefinitionId = CoreSystemsDefs[phantomType],
                 Render = {CastShadows = shadows },
-                IsPreview = true,
+                IsPreview = !sync,
                 Save = false,
-                SyncFlag = false,
-                NeedsWorldMatrix = false,
+                SyncFlag = sync,
+                NeedsWorldMatrix = sync,
             };
-
-            var comp = (Weapon.WeaponComponent)InitComp(ent, ref ent.DefinitionId);
-            Dictionary<long, Weapon.WeaponComponent> phantoms;
-            if (PhantomDatabase.TryGetValue(phantomType, out phantoms) && comp != null)
-                phantoms[ent.EntityId] = comp;
-            else
-            {
-                Log.Line($"phantom failed to be created - hasComp:{comp != null}");
-                return null;
-            }
-
-            string model = null;
-            if (ModelMaps.TryGetValue(phantomType, out model) || parnet != null) {
-                ent.Init(null, model, parnet, modelScale, null);
-            }
 
             if (!addToPrunning)
                 ent.Flags |= EntityFlags.IsNotGamePrunningStructureObject;
+
+            var comp = (Weapon.WeaponComponent)InitComp(ent, ref ent.DefinitionId);
+
+            if (comp == null)
+            {
+                Log.Line($"phantom comp failed to create");
+                return null;
+            }
+
+            Log.Line($"phantom entityId 1: {ent.EntityId} - flags:{ent.Flags}");
+
+            string model = null;
+            if (ModelMaps.TryGetValue(phantomType, out model) || parent != null || sync) 
+                ent.Init(null, model, parent, modelScale, null);
             
+            Log.Line($"phantom entityId 2: {ent.EntityId} - flags:{ent.Flags}");
+
+            if (sync)
+                ent.CreateSync();
+
+            Log.Line($"phantom entityId 3: {ent.EntityId} - flags:{ent.Flags}");
+
+            if (ent.EntityId == 0)
+            {
+                Log.Line($"invalid phantom entityId");
+                return null;
+            }
+
             MyEntities.Add(ent);
+
+            Dictionary<long, Weapon.WeaponComponent> phantoms;
+            Log.Line($"phantom entityId 2: {ent.EntityId}");
+            if (PhantomDatabase.TryGetValue(phantomType, out phantoms))
+                phantoms[ent.EntityId] = comp;
+            else
+            {
+                Log.Line($"phantom failed to be created");
+                return null;
+            }
 
             Dictionary<string, WeaponSystem.AmmoType> ammoMap;
 

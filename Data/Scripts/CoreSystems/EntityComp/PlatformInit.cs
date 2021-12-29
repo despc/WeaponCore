@@ -231,7 +231,7 @@ namespace CoreSystems.Platform
                 string name;
                 if (!ForceNeedsWorld && Comp.Type == CoreComponent.CompType.Weapon && type == PartType.Animation && Parts.NeedsWorld.TryGetValue(part, out name))
                 {
-                    Log.Line($"[{Comp.SubtypeName}] - type:{type} - part[{name}] is forcing NeedsWorld on all subparts, this is due to custom child arts on vanilla turret subparts, this will greatly increase cpu usage for this weapon");
+                    Log.Line($"[{Comp.SubtypeName}] - type:{type} - part[{name}] is forcing NeedsWorld on all subparts, this is due to custom child parts on vanilla turret subparts, this will greatly increase cpu usage for this weapon");
                     ForceNeedsWorld = true;
                     Comp.NeedsWorldReset = true;
                     part.NeedsWorldMatrix = true;
