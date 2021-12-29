@@ -262,7 +262,7 @@ namespace CoreSystems.Support
                     continue;
 
                 var targetRadius = info.Target.PositionComp.LocalVolume.Radius;
-                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || lockedToTarget && info.Target != topTarget) continue;
+                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || topTarget != null && info.Target != topTarget) continue;
                 if (water != null)
                 {
                     if (new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius).Contains(new BoundingSphereD(targetPos, targetRadius)) == ContainmentType.Contains)
