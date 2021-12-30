@@ -244,6 +244,9 @@ namespace CoreSystems.Support
         public readonly double SegmentStep;
         public readonly double HealthHitModifier;
         public readonly double VoxelHitModifier;
+        public readonly double MaxOffset;
+        public readonly double MinOffsetLength;
+        public readonly double MaxOffsetLength;
 
         internal AmmoConstants(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session, WeaponSystem system, int ammoIndex)
         {
@@ -391,6 +394,10 @@ namespace CoreSystems.Support
             TinyTrail = DecayTime <= 5;
             ShortTrail = !TinyTrail && DecayTime <= 10;
             RareTrail = DecayTime > 0 && ShotsPerSec * 60 <= 6;
+
+            MaxOffset = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
+            MinOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
+            MaxOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength;
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }

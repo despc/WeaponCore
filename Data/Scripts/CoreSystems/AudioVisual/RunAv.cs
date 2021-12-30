@@ -202,6 +202,7 @@ namespace CoreSystems.Support
                                 var segStepLen = seg.SegmentLength / segTextureCnt;
                                 var gapStepLen = seg.SegmentGap / gapTextureCnt;
                                 var gapEnabled = gapStepLen > 0;
+                                Log.Line($"{segTextureCnt} - {gapTextureCnt} - {segStepLen} - {gapStepLen} - {gapEnabled}");
                                 int j = 0;
                                 double travel = 0;
                                 while (travel < av.VisualLength)
@@ -243,6 +244,7 @@ namespace CoreSystems.Support
                                         travel += len;
                                     stepPos += (av.VisualDir * len);
                                 }
+                                Log.Line($"{j}");
                             }
                         }
                     }

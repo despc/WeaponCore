@@ -686,9 +686,10 @@ namespace CoreSystems.Support
             var startPos = tracerStart + -(direction * tracerLength);
             MatrixD.CreateWorld(ref startPos, ref direction, ref up, out OffsetMatrix);
             TracerLengthSqr = tracerLength * tracerLength;
-            var maxOffset = AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
-            var minLength = AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
-            var maxLength = MathHelperD.Clamp(AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength, 0, tracerLength);
+            var maxOffset = AmmoDef.Const.MaxOffset;
+            var minLength = AmmoDef.Const.MinOffsetLength;
+            var dyncMaxLength = MathHelperD.Clamp(AmmoDef.Const.MaxOffsetLength * System.Session.ClientAvDivisor, 0, Math.Max(tracerLength * 0.5d, AmmoDef.Const.MaxOffsetLength));
+            var maxLength = MathHelperD.Clamp(dyncMaxLength, 0, tracerLength);
 
             double currentForwardDistance = 0;
             while (currentForwardDistance <= tracerLength)
@@ -709,9 +710,11 @@ namespace CoreSystems.Support
             MatrixD.CreateWorld(ref startPos, ref direction, ref up, out matrix);
             var offsetMaterial = AmmoDef.Const.TracerTextures[0];
             var tracerLengthSqr = tracerLength * tracerLength;
-            var maxOffset = AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
-            var minLength = AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
-            var maxLength = MathHelperD.Clamp(AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength, 0, tracerLength);
+            var maxOffset = AmmoDef.Const.MaxOffset;
+            var minLength = AmmoDef.Const.MinOffsetLength;
+            var dyncMaxLength = MathHelperD.Clamp(AmmoDef.Const.MaxOffsetLength * System.Session.ClientAvDivisor, 0, Math.Max(tracerLength * 0.5d, AmmoDef.Const.MaxOffsetLength));
+
+            var maxLength = MathHelperD.Clamp(dyncMaxLength, 0, tracerLength);
 
             double currentForwardDistance = 0;
 
@@ -722,7 +725,6 @@ namespace CoreSystems.Support
                 var lateralYDistance = MyUtils.GetRandomDouble(maxOffset * -1, maxOffset);
                 Offsets.Add(new Vector3D(lateralXDistance, lateralYDistance, currentForwardDistance * -1));
             }
-
             for (int i = 0; i < Offsets.Count; i++)
             {
                 Vector3D fromBeam;
