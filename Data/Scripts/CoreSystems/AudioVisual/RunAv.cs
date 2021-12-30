@@ -289,7 +289,7 @@ namespace CoreSystems.Support
 
                 if (av.Trail != AvShot.TrailState.Off)
                 {
-                    var steps = av.AmmoDef.AmmoGraphics.Lines.Trail.DecayTime;
+                    var steps = av.DecayTime;
                     var widthScaler = !av.AmmoDef.AmmoGraphics.Lines.Trail.UseColorFade;
                     var remove = false;
                     for (int j = glowCnt - 1; j >= 0; j--)

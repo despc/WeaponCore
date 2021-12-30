@@ -115,6 +115,9 @@ namespace CoreSystems
                 if (Tick180) 
                     ProfilePerformance();
 
+                if (Tick60 && HandlesInput && Settings.ClientConfig.ClientOptimizations)
+                    ClientMonitor();
+
                 FutureEvents.Tick(Tick);
 
                 if (HomingWeapons.Count > 0)

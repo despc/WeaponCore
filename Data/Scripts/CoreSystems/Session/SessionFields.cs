@@ -216,9 +216,9 @@ namespace CoreSystems
         internal readonly List<LosDebug> LosDebugList = new List<LosDebug>(128);
         internal readonly List<MyTuple<IMyPlayer, Vector4, FakeTarget>> ActiveMarks = new List<MyTuple<IMyPlayer, Vector4, FakeTarget>>();
         internal readonly Queue<PartAnimation> ThreadedAnimations = new Queue<PartAnimation>();
-
         internal readonly int[] AuthorSettings = new int[6];
         internal readonly List<Weapon>[] LeadGroups = new List<Weapon>[4];
+        internal readonly Queue<double> ClientPerfHistory = new Queue<double>(30);
 
         ///
         ///
@@ -338,10 +338,12 @@ namespace CoreSystems
         internal int AwakeCount = -1;
         internal int AsleepCount = -1;
         internal int Rays;
+        internal int ClientAvLevel;
         internal ulong MultiplayerId;
         internal ulong MuzzleIdCounter;
         internal ulong PhantomIdCounter;
         internal long PlayerId;
+        internal int ClientAvDivisor = 1;
         internal double SyncDistSqr;
         internal double SyncBufferedDistSqr;
         internal double SyncDist;

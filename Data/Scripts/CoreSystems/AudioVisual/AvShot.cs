@@ -82,6 +82,7 @@ namespace CoreSystems.Support
         internal int WeaponId;
         internal int TracerStep;
         internal int TracerSteps;
+        internal int DecayTime;
         internal uint LastTick;
         internal uint LastHit = uint.MaxValue / 2;
         internal int FireCounter;
@@ -185,14 +186,16 @@ namespace CoreSystems.Support
             ShrinkInited = false;
             ModelOnly = info.ModelOnly;
             OriginDir = originDir;
+            var defaultDecayTime = AmmoDef.AmmoGraphics.Lines.Trail.DecayTime;
+            DecayTime = defaultDecayTime > 1 ? MathHelper.Clamp(defaultDecayTime / System.Session.ClientAvDivisor, 1, int.MaxValue) : 0;
             if (AmmoDef.Const.DrawLine) Tracer = !AmmoDef.Const.IsBeamWeapon && firstStepSize < MaxTracerLength && !MyUtils.IsZero(firstStepSize - MaxTracerLength, 1E-01F) ? TracerState.Grow : TracerState.Full;
             else Tracer = TracerState.Off;
 
             if (AmmoDef.Const.Trail)
             {
-                MaxGlowLength = MathHelperD.Clamp(AmmoDef.AmmoGraphics.Lines.Trail.DecayTime * MaxStepSize, 0.1f, MaxTrajectory);
+                MaxGlowLength = MathHelperD.Clamp(DecayTime * MaxStepSize, 0.1f, MaxTrajectory);
                 Trail = AmmoDef.AmmoGraphics.Lines.Trail.Back ? TrailState.Back : Trail = TrailState.Front;
-                GlowShrinkSize = !AmmoDef.AmmoGraphics.Lines.Trail.UseColorFade ? AmmoDef.Const.TrailWidth / AmmoDef.AmmoGraphics.Lines.Trail.DecayTime : 1f / AmmoDef.AmmoGraphics.Lines.Trail.DecayTime;
+                GlowShrinkSize = !AmmoDef.AmmoGraphics.Lines.Trail.UseColorFade ? AmmoDef.Const.TrailWidth / DecayTime : 1f / DecayTime;
                 Back = Trail == TrailState.Back;
             }
             else Trail = TrailState.Off;
@@ -441,7 +444,7 @@ namespace CoreSystems.Support
                 backPos = Back && !extStart ? TracerBack : TracerFront + pastStep;
             }
 
-            if (glowCount <= AmmoDef.AmmoGraphics.Lines.Trail.DecayTime)
+            if (glowCount <= DecayTime)
             {
                 var glow = System.Session.Av.Glows.Count > 0 ? System.Session.Av.Glows.Pop() : new AfterGlow();
 
@@ -1101,6 +1104,7 @@ namespace CoreSystems.Support
             ShotFade = 0;
             FireCounter = 0;
             UniqueMuzzleId = 0;
+            DecayTime = 0;
             LastHit = uint.MaxValue / 2;
             ParentId = ulong.MaxValue;
             LastHitShield = false;
