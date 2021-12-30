@@ -186,8 +186,25 @@ namespace CoreSystems.Support
             ShrinkInited = false;
             ModelOnly = info.ModelOnly;
             OriginDir = originDir;
-            var defaultDecayTime = AmmoDef.AmmoGraphics.Lines.Trail.DecayTime;
-            DecayTime = defaultDecayTime > 1 ? MathHelper.Clamp(defaultDecayTime / System.Session.ClientAvDivisor, 1, int.MaxValue) : 0;
+
+            var defaultDecayTime = AmmoDef.Const.DecayTime;
+
+            if (defaultDecayTime > 1 && System.Session.ClientAvLevel > 0)
+            {
+                if (AmmoDef.Const.RareTrail)
+                    DecayTime = defaultDecayTime;
+                else if (AmmoDef.Const.ShortTrail)
+                    DecayTime = MathHelper.Clamp(defaultDecayTime - System.Session.ClientAvLevel, 1, int.MaxValue);
+                else if (AmmoDef.Const.TinyTrail && System.Session.ClientAvLevel > 5)
+                    DecayTime = MathHelper.Clamp(defaultDecayTime + 5 - System.Session.ClientAvLevel, 1, int.MaxValue);
+                else if (AmmoDef.Const.LongTrail)
+                    DecayTime = MathHelper.Clamp(defaultDecayTime / System.Session.ClientAvDivisor, 1, int.MaxValue);
+                else
+                    DecayTime = defaultDecayTime;
+            }
+            else 
+                DecayTime = defaultDecayTime;
+
             if (AmmoDef.Const.DrawLine) Tracer = !AmmoDef.Const.IsBeamWeapon && firstStepSize < MaxTracerLength && !MyUtils.IsZero(firstStepSize - MaxTracerLength, 1E-01F) ? TracerState.Grow : TracerState.Full;
             else Tracer = TracerState.Off;
 

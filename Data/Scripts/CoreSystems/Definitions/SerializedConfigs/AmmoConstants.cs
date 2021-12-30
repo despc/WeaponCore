@@ -118,6 +118,7 @@ namespace CoreSystems.Support
         public readonly int AmmoIdxPos;
         public readonly int MagsToLoad;
         public readonly int MaxAmmo;
+        public readonly int DecayTime;
         public readonly bool HasEjectEffect;
         public readonly bool Pulse;
         public readonly bool PrimeModel;
@@ -186,6 +187,11 @@ namespace CoreSystems.Support
         public readonly bool SlowFireFixedWeapon;
         public readonly bool HasNegFragmentOffset;
         public readonly bool HasFragmentOffset;
+        public readonly bool LongTrail;
+        public readonly bool ShortTrail;
+        public readonly bool TinyTrail;
+        public readonly bool RareTrail;
+
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -303,7 +309,7 @@ namespace CoreSystems.Support
             SegmentStep = ammo.AmmoDef.AmmoGraphics.Lines.Tracer.Segmentation.Speed * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
             SpeedVariance = ammo.AmmoDef.Trajectory.SpeedVariance.Start > 0 || ammo.AmmoDef.Trajectory.SpeedVariance.End > 0;
             RangeVariance = ammo.AmmoDef.Trajectory.RangeVariance.Start > 0 || ammo.AmmoDef.Trajectory.RangeVariance.End > 0;
-            TrailWidth = ammo.AmmoDef.AmmoGraphics.Lines.Trail.CustomWidth > 0 ? ammo.AmmoDef.AmmoGraphics.Lines.Trail.CustomWidth : ammo.AmmoDef.AmmoGraphics.Lines.Tracer.Width;
+
             TargetOffSet = ammo.AmmoDef.Trajectory.Smarts.Inaccuracy > 0;
             TargetLossTime = ammo.AmmoDef.Trajectory.TargetLossTime > 0 ? ammo.AmmoDef.Trajectory.TargetLossTime : int.MaxValue;
             CanZombie = TargetLossTime > 0 && TargetLossTime != int.MaxValue && !IsMine;
@@ -377,6 +383,14 @@ namespace CoreSystems.Support
             HasShotFade = ammo.AmmoDef.AmmoGraphics.Lines.Tracer.VisualFadeStart > 0 && ammo.AmmoDef.AmmoGraphics.Lines.Tracer.VisualFadeEnd > 1;
             MaxTrajectoryGrows = ammo.AmmoDef.Trajectory.MaxTrajectoryTime > 1;
             ComputeSteps(ammo, out ShotFadeStep, out TrajectoryStep, out AlwaysDraw);
+
+
+            TrailWidth = ammo.AmmoDef.AmmoGraphics.Lines.Trail.CustomWidth > 0 ? ammo.AmmoDef.AmmoGraphics.Lines.Trail.CustomWidth : ammo.AmmoDef.AmmoGraphics.Lines.Tracer.Width;
+            DecayTime = ammo.AmmoDef.AmmoGraphics.Lines.Trail.DecayTime;
+            LongTrail = DecayTime > 20;
+            TinyTrail = DecayTime <= 5;
+            ShortTrail = !TinyTrail && DecayTime <= 10;
+            RareTrail = DecayTime > 0 && ShotsPerSec * 60 <= 6;
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
