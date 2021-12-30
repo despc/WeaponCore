@@ -33,6 +33,7 @@ namespace CoreSystems
             Tick10 = Tick % 10 == 0;
             Tick20 = Tick % 20 == 0;
             Tick60 = Tick % 60 == 0;
+            Tick90 = Tick % 90 == 0;
             Tick120 = Tick % 120 == 0;
             Tick180 = Tick % 180 == 0;
             Tick300 = Tick % 300 == 0;
@@ -188,7 +189,7 @@ namespace CoreSystems
 
         internal void ClientMonitor()
         {
-            if (ClientPerfHistory.Count > 29)
+            if (ClientPerfHistory.Count > 19)
                 ClientPerfHistory.Dequeue();
 
             ClientPerfHistory.Enqueue(_avCpuTime);
@@ -198,7 +199,7 @@ namespace CoreSystems
             var change = ClientAvDivisor != oldDivisor;
 
             if (change)
-                Log.Line($"ClientAvScaler changed From:[{oldDivisor}] To:[{ClientAvDivisor}]");
+                Log.LineShortDate($"ClientAvScaler changed From:[{oldDivisor}] To:[{ClientAvDivisor}]", "perf");
         }
 
         private int GetClientPerfTarget()
@@ -211,8 +212,11 @@ namespace CoreSystems
             foreach (var v in ClientPerfHistory)
             {
                 var rawV = Math.Round(v);
-                if (rawV < 3)
+                if (rawV < 4)
                     rawV = 0;
+                else
+                    rawV -= 2;
+
                 var rV = MathHelper.Clamp((int)rawV, 0 , int.MaxValue);
                 
                 if (rV > maxValue)

@@ -113,8 +113,8 @@ namespace CoreSystems.Settings
         public class ClientSettings
         {
             [ProtoMember(1)] public int Version = -1;
-            [ProtoMember(2)] public bool ClientOptimizations;
-            [ProtoMember(3)] public int MaxProjectiles = 3000;
+            [ProtoMember(2)] public bool ClientOptimizations = true;
+            [ProtoMember(3)] public int MaxProjectiles = 15000;
             [ProtoMember(4)] public string MenuButton = MyMouseButtonsEnum.Middle.ToString();
             [ProtoMember(5)] public string ControlKey = MyKeys.R.ToString();
             [ProtoMember(6)] public bool ShowHudTargetSizes; // retired

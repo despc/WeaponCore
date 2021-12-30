@@ -44,7 +44,7 @@ namespace CoreSystems
         internal const int AwakeBuckets = 60;
         internal const int AsleepBuckets = 180;
         internal const int ServerCfgVersion = 5;
-        internal const int ClientCfgVersion = 6;
+        internal const int ClientCfgVersion = 7;
         internal const string ServerCfgName = "CoreSystemsServer.cfg";
         internal const string ClientCfgName = "CoreSystemsClient.cfg";
         internal volatile bool Inited;
@@ -218,7 +218,7 @@ namespace CoreSystems
         internal readonly Queue<PartAnimation> ThreadedAnimations = new Queue<PartAnimation>();
         internal readonly int[] AuthorSettings = new int[6];
         internal readonly List<Weapon>[] LeadGroups = new List<Weapon>[4];
-        internal readonly Queue<double> ClientPerfHistory = new Queue<double>(30);
+        internal readonly Queue<double> ClientPerfHistory = new Queue<double>(20);
 
         ///
         ///
@@ -373,6 +373,7 @@ namespace CoreSystems
         internal bool Tick10;
         internal bool Tick20;
         internal bool Tick60;
+        internal bool Tick90;
         internal bool Tick120;
         internal bool Tick180;
         internal bool Tick300;
