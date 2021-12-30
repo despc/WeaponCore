@@ -243,7 +243,6 @@ namespace CoreSystems.Support
                                         travel += len;
                                     stepPos += (av.VisualDir * len);
                                 }
-                                Log.Line($"{j}");
                             }
                         }
                     }
