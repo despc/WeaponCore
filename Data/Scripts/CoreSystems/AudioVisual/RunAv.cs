@@ -202,7 +202,6 @@ namespace CoreSystems.Support
                                 var segStepLen = seg.SegmentLength / segTextureCnt;
                                 var gapStepLen = seg.SegmentGap / gapTextureCnt;
                                 var gapEnabled = gapStepLen > 0;
-                                Log.Line($"{segTextureCnt} - {gapTextureCnt} - {segStepLen} - {gapStepLen} - {gapEnabled}");
                                 int j = 0;
                                 double travel = 0;
                                 while (travel < av.VisualLength)
@@ -217,7 +216,7 @@ namespace CoreSystems.Support
                                     Vector4 dyncColor;
                                     if (!gap)
                                     {
-                                        rawLen = first ? av.SegmentLenTranserved : seg.SegmentLength;
+                                        rawLen = first ? av.SegmentLenTranserved * Session.ClientAvDivisor : seg.SegmentLength * Session.ClientAvDivisor;
                                         if (rawLen <= 0)
                                             break;
                                         width = av.SegmentWidth;
@@ -225,7 +224,7 @@ namespace CoreSystems.Support
                                     }
                                     else
                                     {
-                                        rawLen = first ? av.SegmentLenTranserved : seg.SegmentGap;
+                                        rawLen = first ? av.SegmentLenTranserved * Session.ClientAvDivisor : seg.SegmentGap  * Session.ClientAvDivisor;
                                         if (rawLen <= 0)
                                             break;
                                         width = av.TracerWidth;
