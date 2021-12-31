@@ -223,6 +223,19 @@ namespace CoreSystems.Support
             }
         }
 
+        internal void ResetMyGridTargeting()
+        {
+            GridMap gridMap;
+            if (Session.GridToInfoMap.TryGetValue(TopEntity, out gridMap))
+            {
+                if (gridMap.Targeting != null && gridMap.Targeting.AllowScanning)
+                {
+                    //Log.Line("grid has allow scanning, disabling");
+                    gridMap.Targeting.AllowScanning = false;
+                }
+            }
+        }
+
         internal void UpdateGridPower()
         {
             try

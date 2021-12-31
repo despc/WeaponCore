@@ -96,7 +96,9 @@ namespace CoreSystems
                     StartComps();
 
                 if ((Tick120 || ReInitTick > 0 && Tick - ReInitTick < 10) && (CompsDelayedReInit.Count > 0 || CompsDelayedInit.Count > 0))
-                    DelayedCompsInit();
+                {
+                    InitDelayedComps();
+                }
 
                 if (Tick10 && !DelayedAiClean.IsEmpty) {
                     InitDelayedComps();

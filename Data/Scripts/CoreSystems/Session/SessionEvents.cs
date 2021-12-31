@@ -53,7 +53,12 @@ namespace CoreSystems
                         }
                         var cubeType = cube != null && (ReplaceVanilla && VanillaIds.ContainsKey(cube.BlockDefinition.Id) || PartPlatforms.ContainsKey(cube.BlockDefinition.Id));
                         var validType = cubeType;
-                        if (!validType) return;
+                        if (!validType)
+                        {
+                            if (turret != null)
+                                _vanillaTurretTick = Tick;
+                            return;
+                        }
 
                         if (!SorterControls && entity is MyConveyorSorter) {
                             MyAPIGateway.Utilities.InvokeOnGameThread(() => CreateTerminalUi<IMyConveyorSorter>(this));

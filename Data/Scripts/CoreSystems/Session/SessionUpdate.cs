@@ -442,6 +442,10 @@ namespace CoreSystems
                 ai.DbUpdated = false;
                 if (activeTurret)
                     AimingAi.Add(ai);
+
+                if (Tick - _vanillaTurretTick < 3)
+                    ai.ResetMyGridTargeting();
+
             }
 
             if (DbTask.IsComplete && DbsToUpdate.Count > 0 && !DbUpdating)

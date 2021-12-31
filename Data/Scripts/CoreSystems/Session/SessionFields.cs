@@ -460,6 +460,8 @@ namespace CoreSystems
         private int _loadCounter = 1;
         private int _shortLoadCounter = 1;
         private uint _lastDrawTick;
+        internal uint _vanillaTurretTick;
+
         private bool _paused;
 
         internal class HackEqualityComparer : IEqualityComparer
