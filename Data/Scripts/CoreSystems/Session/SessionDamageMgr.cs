@@ -299,7 +299,6 @@ namespace CoreSystems
             var distTraveled = t.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? t.DistanceTraveled : t.DistanceTraveled;
 
             var direction = hitEnt.Intersection;
-            var localpos = Vector3D.Transform(hitEnt.Intersection.To, grid.PositionComp.WorldMatrixNormalizedInv) * grid.GridSizeR;
 
             //Ammo properties
             var hitMass = t.AmmoDef.Const.Mass;
@@ -322,6 +321,8 @@ namespace CoreSystems
             var objectsHit = t.ObjectsHit;
             var blockCount = hitEnt.Blocks.Count;
             var countBlocksAsObjects = t.AmmoDef.ObjectsHit.CountBlocks;
+
+            //Log.Line($"Hit direction from-{grid.WorldToGridScaledLocal(direction.From)}  to-{direction.To}");
 
             //General damage data
 
@@ -411,7 +412,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootBlock, localpos, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits);
+                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -598,20 +599,37 @@ namespace CoreSystems
                         {
                             if (aoeIsPool)
                             {
-                                if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
-                                {
-                                    aoeScaledDmg = aoeDamage;
-                                }
-                                else if (blockHp <= aoeScaledDmg)
-                                {
-                                    aoeScaledDmg = (float)blockHp;
-                                    deadBlock = true;
 
+                                if (aoeAbsorb<= 0)// pooled without AOE absorb limit
+                                {
+                                    if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
+                                    {
+                                        aoeScaledDmg = aoeDamage;
+                                    }
+                                    else if (blockHp <= aoeScaledDmg)
+                                    {
+                                        aoeScaledDmg = (float)blockHp;
+                                        deadBlock = true;
+                                    }
+                                    aoeDamage -= aoeScaledDmg;
                                 }
-                                aoeDamage -= aoeScaledDmg;
+                                else // pooled with AOE absorb limit
+                                {
+                                    aoeScaledDmg = (float)((aoeAbsorb * (detActive ? detDamageScale : areaDamageScale)) * damageScale);
+                                    if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
+                                    {
+                                        aoeScaledDmg = aoeDamage;
+                                    }
+                                    else if (blockHp <= aoeScaledDmg)
+                                    {
+                                        aoeScaledDmg = (float)blockHp;
+                                        deadBlock = true;
+                                    }
+                                    aoeDamage -= aoeScaledDmg;
+                                    //Log.Line($"Aoedmgpool {aoeDamage}  scaleddmg {aoeScaledDmg}");
+                                }
                             }
                             scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
-                            aoeDmgTally += aoeScaledDmg; //used for absorb
                         }
 
 
@@ -930,13 +948,28 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, Vector3D localpos, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
             var rootPos = root.Position; //local cube grid
-            if (root.Min != root.Max) rootPos = (Vector3I)localpos;
-            
+            var localfrom = grid.WorldToGridScaledLocal(direction.From);
+            var localto = grid.WorldToGridScaledLocal(direction.To);
+
+            if (root.Min != root.Max)//non 1x1x1 impact point
+            {
+                var rootbox = new BoundingBoxD(root.Min-1, root.Max+1);
+                if (rootbox.Contains(localfrom) == ContainmentType.Contains)
+                {
+                rootPos = (Vector3I)localfrom;//used for frag generated inside root block
+                }
+                else
+                {
+                rootPos = (Vector3I)localto;//used for most cases
+                }
+            }
+
+            //Log.Line($"Raw rootpos{root.Position}  rootpos {rootPos}  localfrom{localfrom}  min{root.Min} max{root.Max}"); 
             radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
             depth *= grid.GridSizeR;
             var gmin = grid.Min;
@@ -950,8 +983,6 @@ namespace CoreSystems
 
             if (maxdepth < maxradius)
             {
-                var localfrom = grid.WorldToGridScaledLocal(direction.From);
-                var localto = grid.WorldToGridScaledLocal(direction.To);
                 var localline = new LineD(localfrom, localto);
                 
                 var bmin = new Vector3D(rootPos) - 0.51d;//Check if this needs to be adjusted for small grid
@@ -969,8 +1000,8 @@ namespace CoreSystems
                 var xhit = (hitray.Intersects(xplane) ?? 0) + (hitray.Intersects(xmplane) ?? 0);
                 var yhit = (hitray.Intersects(yplane) ?? 0) + (hitray.Intersects(ymplane) ?? 0);
                 var zhit = (hitray.Intersects(zplane) ?? 0) + (hitray.Intersects(zmplane) ?? 0);
-                Log.Line($"localto{localto}  rootpos{rootPos} rootmin{root.Min}  rootmax{root.Max}");
-                Log.Line($"xhit {xhit}  yhit {yhit}  zhit{zhit}");
+                //Log.Line($"localto{localto}  rootpos{rootPos} rootmin{root.Min}  rootmax{root.Max}");
+                //Log.Line($"xhit {xhit}  yhit {yhit}  zhit{zhit}");
                 var axishit = new Vector3D(xhit, yhit, zhit);
 
                 // Log.Line($"Hitvec x{hitray.Intersects(xplane)}  y{hitray.Intersects(yplane)} xm{hitray.Intersects(xmplane)}  ym{hitray.Intersects(ymplane)}");

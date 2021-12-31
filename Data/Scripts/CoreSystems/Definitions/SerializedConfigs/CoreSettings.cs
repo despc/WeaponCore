@@ -65,7 +65,7 @@ namespace CoreSystems.Settings
 
             [ProtoMember(1)] public int Version = -1;
             [ProtoMember(2)] public int Debug = -1;
-            [ProtoMember(3)] public bool AdvancedOptimizations = false;
+            [ProtoMember(3)] public bool AdvancedOptimizations = true;
             [ProtoMember(4)] public float DirectDamageModifer = 1;
             [ProtoMember(5)] public float AreaDamageModifer = 1;
             [ProtoMember(6)] public float ShieldDamageModifer = 1;
@@ -76,22 +76,9 @@ namespace CoreSystems.Settings
             [ProtoMember(11)] public double MinHudFocusDistance;
             [ProtoMember(12)] public double MaxHudFocusDistance = 10000;
             [ProtoMember(13)]
-            public BlockModifer[] BlockModifers =
-            {
-                new BlockModifer {SubTypeId = "TestSubId1", DirectDamageModifer = 0.5f, AreaDamageModifer = 0.1f},
-                new BlockModifer {SubTypeId = "TestSubId2", DirectDamageModifer = -1f, AreaDamageModifer = 0f }
-            };
+            public BlockModifer[] BlockModifers = { }; //legacy
             [ProtoMember(14)]
-            public ShipSize[] ShipSizes =
-            {
-                new ShipSize {Name = "Scout", BlockCount = 0, LargeGrid = false },
-                new ShipSize {Name = "Fighter", BlockCount = 2000, LargeGrid = false },
-                new ShipSize {Name = "Frigate", BlockCount = 0, LargeGrid = true },
-                new ShipSize {Name = "Destroyer", BlockCount = 3000, LargeGrid = true },
-                new ShipSize {Name = "Cruiser", BlockCount = 6000, LargeGrid = true },
-                new ShipSize {Name = "Battleship", BlockCount = 12000, LargeGrid = true },
-                new ShipSize {Name = "Capital", BlockCount = 24000, LargeGrid = true },
-            };
+            public ShipSize[] ShipSizes = { }; //legacy
             [ProtoMember(15)]
             public Modifiers ServerModifiers = new Modifiers
             {
@@ -123,7 +110,7 @@ namespace CoreSystems.Settings
             [ProtoMember(9)] public float HudScale = 1f;
             [ProtoMember(10)] public string InfoKey = MyKeys.Decimal.ToString();
             [ProtoMember(11)] public bool MinimalHud = false;
-            [ProtoMember(12)] public bool StikcyPainter = false;
+            [ProtoMember(12)] public bool StikcyPainter = true;
         }
     }
 }

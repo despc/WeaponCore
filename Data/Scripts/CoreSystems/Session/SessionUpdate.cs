@@ -1,15 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using CoreSystems.Platform;
 using CoreSystems.Projectiles;
 using CoreSystems.Support;
 using Sandbox.ModAPI;
-using VRage.Game;
 using VRageMath;
 using static CoreSystems.Support.Target;
 using static CoreSystems.Support.CoreComponent.Start;
 using static CoreSystems.Support.CoreComponent.TriggerActions;
-using static CoreSystems.Support.WeaponDefinition.HardPointDef.HardwareDef;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType;
 using static CoreSystems.ProtoWeaponState;
 namespace CoreSystems
@@ -443,9 +440,8 @@ namespace CoreSystems
                 if (activeTurret)
                     AimingAi.Add(ai);
 
-                if (Tick - _vanillaTurretTick < 3)
-                    ai.ResetMyGridTargeting();
-
+                //if (Tick - _vanillaTurretTick < 3)
+                //    ai.ResetMyGridTargeting();
             }
 
             if (DbTask.IsComplete && DbsToUpdate.Count > 0 && !DbUpdating)

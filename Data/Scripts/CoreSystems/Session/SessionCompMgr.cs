@@ -187,7 +187,6 @@ namespace CoreSystems
                     if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Ready && delayed.InReInit)
                         Log.Line($"[DelayedComps skip due to platform != Ready] marked:{delayed.Cube.MarkedForClose} - entityNull:{delayed.Entity == null} - force:{forceRemove}");
 
-                    Log.Line($"fail fail fail!");
                     delayed.InReInit = false;
                     CompsDelayedReInit.RemoveAtFast(i);
                 }
