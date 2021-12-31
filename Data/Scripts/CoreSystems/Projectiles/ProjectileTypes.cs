@@ -408,7 +408,11 @@ namespace CoreSystems.Support
                 frag.Ai = p.Info.Ai;
                 var aConst = p.Info.AmmoDef.Const;
                 frag.AmmoDef = p.Info.System.AmmoTypes[aConst.ShrapnelId].AmmoDef;
+
                 frag.TargetEntity = p.Info.Target.TargetEntity;
+                frag.IsFakeTarget = p.Info.Target.IsFakeTarget;
+                frag.TargetProjectile = p.Info.Target.Projectile;
+
                 frag.Overrides = p.Info.Overrides;
                 frag.WeaponId = p.Info.PartId;
                 frag.MuzzleId = p.Info.MuzzleId;
@@ -481,6 +485,9 @@ namespace CoreSystems.Support
                 p.Info.PrimeEntity = frag.PrimeEntity;
                 p.Info.TriggerEntity = frag.TriggerEntity;
                 p.Info.Target.TargetEntity = frag.TargetEntity;
+                p.Info.Target.IsFakeTarget = frag.IsFakeTarget;
+                p.Info.Target.Projectile = frag.TargetProjectile;
+                p.Info.Target.IsProjectile = frag.TargetProjectile != null;
                 p.Info.Target.CoreEntity = frag.CoreEntity;
                 p.Info.Target.CoreParent = frag.CoreParent;
                 p.Info.Target.CoreCube = frag.CoreCube;
@@ -531,7 +538,7 @@ namespace CoreSystems.Support
         public MyEntity CoreEntity;
         public MyEntity CoreParent;
         public MyCubeBlock CoreCube;
-
+        public Projectile TargetProjectile;
         public ProtoWeaponOverrides Overrides;
         public Vector3D Origin;
         public Vector3D OriginUp;
@@ -547,6 +554,7 @@ namespace CoreSystems.Support
         public bool LockOnFireState;
         public bool IgnoreShield;
         public bool CoreIsCube;
+        public bool IsFakeTarget;
         public float Radial;
     }
 
