@@ -205,18 +205,20 @@ namespace CoreSystems.Platform
 
                 if (!weapon.System.DesignatorWeapon)
                 {
-                    var patternSize = MathHelper.Clamp(weapon.ActiveAmmoDef.AmmoDef.Const.AmmoPattern.Length - weapon.ActiveAmmoDef.AmmoDef.Pattern.PatternSteps, 1, int.MaxValue);
-                    foreach (var ammo in weapon.ActiveAmmoDef.AmmoDef.Const.AmmoPattern)
+                    
+                    if (!weapon.System.DesignatorWeapon)
                     {
-                        weapon.Comp.PeakDps += ammo.Const.PeakDps / patternSize;
-                        weapon.Comp.EffectiveDps += ammo.Const.EffectiveDps / patternSize;
-                        weapon.Comp.PerfectDps += ammo.Const.PerfectDps / patternSize;
-                        weapon.Comp.RealShotsPerSec += ammo.Const.RealShotsPerSec / patternSize;
-                        weapon.Comp.ShotsPerSec += ammo.Const.ShotsPerSec / patternSize;
-                        weapon.Comp.BaseDps += ammo.Const.BaseDps / patternSize;
-                        weapon.Comp.AreaDps += ammo.Const.AreaDps / patternSize;
-                        weapon.Comp.DetDps += ammo.Const.DetDps / patternSize;
+                        var ammo = weapon.ActiveAmmoDef.AmmoDef;
+                        weapon.Comp.PeakDps += ammo.Const.PeakDps;
+                        weapon.Comp.EffectiveDps += ammo.Const.EffectiveDps;
+                        weapon.Comp.PerfectDps += ammo.Const.PerfectDps;
+                        weapon.Comp.RealShotsPerSec += ammo.Const.RealShotsPerSec;
+                        weapon.Comp.ShotsPerSec += ammo.Const.ShotsPerSec;
+                        weapon.Comp.BaseDps += ammo.Const.BaseDps;
+                        weapon.Comp.AreaDps += ammo.Const.AreaDps;
+                        weapon.Comp.DetDps += ammo.Const.DetDps;
                     }
+                    
                 }
 
                 maxTrajectory = 0;

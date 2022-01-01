@@ -686,6 +686,33 @@ namespace CoreSystems.Support
             
             realShotsPerMin = (realShotsPerSec * 60);
             //Log.Line($"Current: {a.AmmoRound} ");
+            //if(wDef.HardPoint.PartName=="CoilCannon" && a.HardPointUsable) Log.Line($":::::[{wDef.HardPoint.PartName}]:::::");
+            baseDps = BaseDamage * realShotsPerSec * avgArmorModifier;
+            areaDps = 0; //TODO: Add back in some way
+            detDps = (GetDetDmg(a) * realShotsPerSec) * avgArmorModifier;
+
+            if (hasShrapnel)//Add damage from fragments
+            {
+                var sAmmo = wDef.Ammos[ShrapnelId];
+                var fragments = a.Fragment.Fragments;
+
+                Vector2 FragDmg = new Vector2(0, 0);
+                Vector2 patternDmg = new Vector2(0, 0);
+
+                FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a, a.Fragment.Fragments);
+                
+
+                //Log.Line($"Total Fragment Dmg -- {FragDmg}");
+
+                //TODO: fix when fragDmg is split
+                baseDps += FragDmg.X;
+                //baseDps += (sAmmo.BaseDamage * fragments) * realShotsPerSec;
+                detDps += FragDmg.Y;
+                //detDps += (GetDetDmg(sAmmo) * fragments) * realShotsPerSec;
+            }
+
+
+
             if (a.Pattern.Enable) //make into function
             {
                 Vector2 totalPatternDamage = new Vector2();
@@ -714,53 +741,55 @@ namespace CoreSystems.Support
                             //Log.Line($"||:::PatternAmmo [{patternAmmo.AmmoRound}| Pattern dmg {tempFragDmg}]");
 
                             totalPatternDamage += tempFragDmg + tempDmg;
-                            totalPatternDamage *= patternAmmo.Pattern.PatternSteps == 0 ? 1 : patternAmmo.Pattern.PatternSteps;
-                            // = GetShrapnelDamage(fragmentAmmo, parentAmmo.Fragment.Fragments, shotsPerSec, parentFragments);
-
-
+                            
                         }
-
-
-
 
                     }
 
                 }
-                var leng = (float)1 / a.Pattern.Patterns.Length;
-                //Log.Line($"||:::PatternAmmo Avg Damage [{totalPatternDamage * leng} || DPS:{(totalPatternDamage * leng) * realShotsPerSec} {realShotsPerSec}]");
 
-                baseDps = (totalPatternDamage.X * leng) * realShotsPerSec * avgArmorModifier;
-                areaDps = 0; //TODO: Add back in some way
-                detDps = (totalPatternDamage.Y * leng) * realShotsPerSec * avgArmorModifier;
+                var numPatterns = a.Pattern.Patterns.Length;
+                var stepModifier = a.Pattern.PatternSteps;
+
+                totalPatternDamage *= realShotsPerSec * avgArmorModifier; //convert to DPS of combined patterns
+
+                if (numPatterns != a.Pattern.PatternSteps) stepModifier = a.Pattern.PatternSteps == 0 ? 1 : a.Pattern.PatternSteps;
+
+                if (!a.Pattern.SkipParent)
+                {
+                    numPatterns++;
+                    
+                    totalPatternDamage.X += baseDps;
+                    totalPatternDamage.Y += detDps;
+                    
+                    totalPatternDamage /= numPatterns; //get average dps of all patterns and base ammo
+                    totalPatternDamage *= stepModifier; //Multiply with how many
+
+                    baseDps = totalPatternDamage.X;
+                    areaDps = 0; //TODO: Add back in some way
+                    detDps = totalPatternDamage.Y;
+                    
+                }
+                else
+                {
+
+                    totalPatternDamage /= numPatterns;
+                    totalPatternDamage *= stepModifier;
+
+                    baseDps = totalPatternDamage.X;
+                    areaDps = 0; //TODO: Add back in some way
+                    detDps = totalPatternDamage.Y;
+                    
+                }
+
 
             }
-            else
-            {
-                baseDps = BaseDamage * realShotsPerSec * avgArmorModifier;
-                areaDps = 0; //TODO: Add back in some way
-                detDps = (GetDetDmg(a) * realShotsPerSec) * avgArmorModifier;
+            
 
-            }
+
             if (mexLogLevel >= 1) Log.Line($"Got Area damage={ByBlockHitDamage} det={GetDetDmg(a)} @ {realShotsPerSec} areadps={areaDps} basedps={baseDps} detdps={detDps}");
-            if (hasShrapnel)
-            {
-                var sAmmo = wDef.Ammos[ShrapnelId];
-                var fragments = a.Fragment.Fragments;
+            
 
-                Vector2 FragDmg = new Vector2(0, 0);
-                Vector2 patternDmg = new Vector2(0, 0);
-
-                FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a, a.Fragment.Fragments);
-                //TODO: Add pattern average damage
-
-                //Log.Line($"Total Fragment Dmg -- {FragDmg}");
-
-                //TODO: fix when fragDmg is split
-                baseDps += FragDmg.X;
-                //baseDps += (sAmmo.BaseDamage * fragments) * realShotsPerSec;
-                detDps += FragDmg.Y;
-                //detDps += (GetDetDmg(sAmmo) * fragments) * realShotsPerSec;
-            }
             peakDps = (baseDps + areaDps + detDps);
             effectiveDps = (float)(peakDps * effectiveModifier);
             dpsWoInaccuracy = (float)(effectiveModifier / inaccuracyScore) * peakDps;
