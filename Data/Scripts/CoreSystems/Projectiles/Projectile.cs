@@ -848,7 +848,6 @@ namespace CoreSystems.Projectiles
         {
             var randAzimuth = (Info.Random.NextDouble() * 1) * 2 * Math.PI;
             var randElevation = ((Info.Random.NextDouble() * 1) * 2 - 1) * 0.5 * Math.PI;
-
             var offsetAmount = roam ? 100 : Info.AmmoDef.Trajectory.Smarts.Inaccuracy;
             Vector3D randomDirection;
             Vector3D.CreateFromAzimuthAndElevation(randAzimuth, randElevation, out randomDirection); // this is already normalized

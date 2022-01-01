@@ -36,6 +36,10 @@ namespace CoreSystems.Support
             _x = seed << 3; _y = seed >> 3;
             _buffer = 0;
             _bufferMask = 0;
+
+            var temp1 = _y; _x ^= _x << 23; var temp2 = _x ^ _y ^ (_x >> 17) ^ (_y >> 26); _x = temp1; _y = temp2;
+            var tempX = _y; _x ^= _x << 23; var tempY = _x ^ _y ^ (_x >> 17) ^ (_y >> 26); var newSeed = tempY + _y; _x = tempX; _y = tempY;
+            _x = newSeed << 3; _y = newSeed >> 3;
         }
 
         /// <summary>

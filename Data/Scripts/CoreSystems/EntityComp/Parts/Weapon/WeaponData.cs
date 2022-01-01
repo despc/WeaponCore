@@ -75,6 +75,7 @@ namespace CoreSystems.Platform
                 }
                 else
                 {
+
                     Repo = new ProtoWeaponRepo
                     {
                         Values = new ProtoWeaponComp
@@ -87,6 +88,11 @@ namespace CoreSystems.Platform
                         Ammos = new ProtoWeaponAmmo[collection.Count],
 
                     };
+
+                    if (Comp.Session.IsCreative && Comp.Session.IsServer) {
+                        Repo.Values.Set.Overrides.Neutrals = true;
+                        Repo.Values.Set.Overrides.Biologicals = false;
+                    }
 
                     for (int i = 0; i < collection.Count; i++)
                     {

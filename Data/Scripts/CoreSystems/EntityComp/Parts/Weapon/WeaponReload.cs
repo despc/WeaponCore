@@ -152,13 +152,11 @@ namespace CoreSystems.Platform
                     }
                 }
                 
-
                 if (Loading && ClientMakeUpShots < 1 && LoadingWait && Reload.EndId > ClientEndId)
                     Reloaded(1);
 
                 return false;
             }
-
             ClientStartId = Reload.StartId;
             ClientMakeUpShots += ProtoWeaponAmmo.CurrentAmmo;
 
@@ -216,7 +214,7 @@ namespace CoreSystems.Platform
                 }
             }
 
-            var invalidStates = ProtoWeaponAmmo.CurrentAmmo != 0 || Loading || calledFromReload;
+            var invalidStates = ProtoWeaponAmmo.CurrentAmmo != 0 || Loading || calledFromReload || Reload.WaitForClient;
             return !invalidStates && ServerReload();
         }
 
@@ -360,7 +358,6 @@ namespace CoreSystems.Platform
                     if (ActiveAmmoDef.AmmoDef.Const.SlowFireFixedWeapon && System.Session.PlayerId == Comp.Data.Repo.Values.State.PlayerId)
                         System.Session.SendClientReady(this);
                 }
-
                 TargetData.WeaponRandom.TurretRandom = new XorShiftRandomStruct((ulong)(TargetData.WeaponRandom.CurrentSeed + (Reload.EndId + 1000000)));
                 EventTriggerStateChanged(EventTriggers.Reloading, false);
                 LastLoadedTick = Comp.Session.Tick;

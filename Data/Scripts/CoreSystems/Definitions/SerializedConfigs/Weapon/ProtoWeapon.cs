@@ -3,6 +3,7 @@ using System.ComponentModel;
 using CoreSystems.Platform;
 using CoreSystems.Support;
 using ProtoBuf;
+using Sandbox.ModAPI;
 using VRageMath;
 using static CoreSystems.Support.WeaponDefinition.TargetingDef;
 using static CoreSystems.Support.CoreComponent;
