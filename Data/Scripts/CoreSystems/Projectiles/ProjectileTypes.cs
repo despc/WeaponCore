@@ -406,49 +406,51 @@ namespace CoreSystems.Support
             for (int i = 0; i < p.Info.AmmoDef.Fragment.Fragments; i++)
             {
                 var frag = fragPool.Get();
-                frag.System = p.Info.System;
-                frag.Ai = p.Info.Ai;
-                var aConst = p.Info.AmmoDef.Const;
-                frag.AmmoDef = p.Info.System.AmmoTypes[aConst.ShrapnelId].AmmoDef;
+                var info = p.Info;
+                var target = info.Target;
+                frag.System = info.System;
+                frag.Ai = info.Ai;
+                var aConst = info.AmmoDef.Const;
+                frag.AmmoDef = info.System.AmmoTypes[aConst.ShrapnelId].AmmoDef;
 
-                frag.TargetEntity = p.Info.Target.TargetEntity;
-                frag.IsFakeTarget = p.Info.Target.IsFakeTarget;
-                frag.TargetProjectile = p.Info.Target.Projectile;
+                frag.TargetEntity = target.TargetEntity;
+                frag.IsFakeTarget = target.IsFakeTarget;
+                frag.TargetProjectile = target.Projectile;
 
-                frag.Overrides = p.Info.Overrides;
-                frag.WeaponId = p.Info.PartId;
-                frag.MuzzleId = p.Info.MuzzleId;
-                frag.CoreEntity = p.Info.Target.CoreEntity;
-                frag.CoreParent = p.Info.Target.CoreParent;
-                frag.CoreCube = p.Info.Target.CoreCube;
-                frag.CoreIsCube = p.Info.Target.CoreIsCube;
-                frag.Guidance = p.Info.EnableGuidance;
-                frag.Radial = p.Info.AmmoDef.Const.FragRadial;
+                frag.Overrides = info.Overrides;
+                frag.WeaponId = info.PartId;
+                frag.MuzzleId = info.MuzzleId;
+                frag.CoreEntity = target.CoreEntity;
+                frag.CoreParent = target.CoreParent;
+                frag.CoreCube = target.CoreCube;
+                frag.CoreIsCube = target.CoreIsCube;
+                frag.Guidance = info.EnableGuidance;
+                frag.Radial = aConst.FragRadial;
 
                 if (aConst.HasFragmentOffset)
                 {
                     if (aConst.HasNegFragmentOffset)
-                        frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) - (p.Info.Direction * aConst.FragmentOffset);
+                        frag.Origin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) - (info.Direction * aConst.FragmentOffset);
                     else
-                        frag.Origin = (!Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position) + (p.Info.Direction * aConst.FragmentOffset);
+                        frag.Origin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) + (info.Direction * aConst.FragmentOffset);
                 }
                 else 
-                    frag.Origin = !Vector3D.IsZero(p.Info.Hit.LastHit) ? p.Info.Hit.LastHit : p.Position;
+                    frag.Origin = !Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position;
 
-                frag.OriginUp = p.Info.OriginUp;
-                frag.Random = new XorShiftRandomStruct(p.Info.Random.NextUInt64());
-                frag.DoDamage = p.Info.DoDamage;
+                frag.OriginUp = info.OriginUp;
+                frag.Random = new XorShiftRandomStruct(info.Random.NextUInt64());
+                frag.DoDamage = info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
-                frag.Velocity = !p.Info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;
+                frag.Velocity = !info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;
                 frag.DeadSphere = p.DeadSphere;
-                frag.LockOnFireState = p.Info.LockOnFireState;
-                frag.IgnoreShield = p.Info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
-                var dirMatrix = Matrix.CreateFromDir(p.Info.Direction);
-                var posValue = p.Info.AmmoDef.Const.FragDegrees;
+                frag.LockOnFireState = info.LockOnFireState;
+                frag.IgnoreShield = info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
+                var dirMatrix = Matrix.CreateFromDir(info.Direction);
+                var posValue = aConst.FragDegrees;
                 posValue *= 0.5f;
                 var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial);
                 var randomFloat2 = (float)(frag.Random.NextDouble() * MathHelper.TwoPi);
-                var mutli = p.Info.AmmoDef.Fragment.Reverse ? -1 : 1;
+                var mutli = info.AmmoDef.Fragment.Reverse ? -1 : 1;
 
                 var shrapnelDir = Vector3.TransformNormal(mutli  * -new Vector3(
                     MyMath.FastSin(randomFloat1) * MyMath.FastCos(randomFloat2),
@@ -461,11 +463,11 @@ namespace CoreSystems.Support
                 if (frag.AmmoDef.Const.PrimeModel && frag.AmmoDef.Const.PrimeEntityPool.Count > 0)
                     frag.PrimeEntity = frag.AmmoDef.Const.PrimeEntityPool.Get();
 
-                if (frag.AmmoDef.Const.TriggerModel && p.Info.System.Session.TriggerEntityPool.Count > 0)
-                    frag.TriggerEntity = p.Info.System.Session.TriggerEntityPool.Get();
+                if (frag.AmmoDef.Const.TriggerModel && info.System.Session.TriggerEntityPool.Count > 0)
+                    frag.TriggerEntity = info.System.Session.TriggerEntityPool.Get();
 
-                if (frag.AmmoDef.Const.PrimeModel && frag.PrimeEntity == null || frag.AmmoDef.Const.TriggerModel && frag.TriggerEntity == null) 
-                    p.Info.System.Session.FragmentsNeedingEntities.Add(frag);
+                if (frag.AmmoDef.Const.PrimeModel && frag.PrimeEntity == null || frag.AmmoDef.Const.TriggerModel && frag.TriggerEntity == null)
+                    info.System.Session.FragmentsNeedingEntities.Add(frag);
 
                 Sharpnel.Add(frag);
             }
