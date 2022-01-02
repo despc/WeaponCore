@@ -57,8 +57,6 @@ namespace CoreSystems.Projectiles
                 if (Session.WaterApiLoaded && p.Info.MyPlanet != null)
                     Session.WaterMap.TryGetValue(p.Info.MyPlanet.EntityId, out water);
 
-                p.Info.ShieldKeepBypass = false;
-
                 for (int i = 0; i < collectionCount; i++) {
 
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];

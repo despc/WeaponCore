@@ -383,21 +383,23 @@ namespace CoreSystems.Projectiles
             {
                 var p = ActiveProjetiles[i];
                 if (p.SphereCheck) {
-                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && p.Info.System.Session.Tick60)
+                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
 
                     if (!p.UseEntityCache)
                         MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
                 }
                 else if (p.LineCheck) {
-                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && p.Info.System.Session.Tick60) p.CheckForNearVoxel(60);
+                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60) p.CheckForNearVoxel(60);
 
                     if (!p.UseEntityCache)
                         MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref p.Beam, p.MySegmentList, p.PruneQuery);
                 }
 
                 p.CheckType = p.UseEntityCache && p.SphereCheck ? CheckTypes.CachedSphere : p.UseEntityCache ? CheckTypes.CachedRay : p.SphereCheck ? CheckTypes.Sphere : CheckTypes.Ray;
+                
                 p.Info.ShieldBypassed = p.Info.ShieldKeepBypass;
+                p.Info.ShieldKeepBypass = false;
 
                 if (p.Info.Target.IsProjectile || p.UseEntityCache && p.Info.Ai.NearByEntityCache.Count > 0 || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0) {
                     ValidateHits.Add(p);
