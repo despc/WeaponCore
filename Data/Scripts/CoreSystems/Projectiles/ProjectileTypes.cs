@@ -441,7 +441,7 @@ namespace CoreSystems.Support
                 frag.Random = new XorShiftRandomStruct(info.Random.NextUInt64());
                 frag.DoDamage = info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
-                frag.Velocity = !info.AmmoDef.Fragment.DropVelocity ? p.Velocity : Vector3D.Zero;
+                frag.Velocity = !aConst.FragDropVelocity ? p.Velocity : Vector3D.Zero;
                 frag.DeadSphere = p.DeadSphere;
                 frag.LockOnFireState = info.LockOnFireState;
                 frag.IgnoreShield = info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
@@ -450,7 +450,7 @@ namespace CoreSystems.Support
                 posValue *= 0.5f;
                 var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial);
                 var randomFloat2 = (float)(frag.Random.NextDouble() * MathHelper.TwoPi);
-                var mutli = info.AmmoDef.Fragment.Reverse ? -1 : 1;
+                var mutli = aConst.FragReverse ? -1 : 1;
 
                 var shrapnelDir = Vector3.TransformNormal(mutli  * -new Vector3(
                     MyMath.FastSin(randomFloat1) * MyMath.FastCos(randomFloat2),

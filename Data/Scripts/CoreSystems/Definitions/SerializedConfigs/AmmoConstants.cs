@@ -187,6 +187,8 @@ namespace CoreSystems.Support
         public readonly bool SlowFireFixedWeapon;
         public readonly bool HasNegFragmentOffset;
         public readonly bool HasFragmentOffset;
+        public readonly bool FragReverse;
+        public readonly bool FragDropVelocity;
         public readonly bool LongTrail;
         public readonly bool ShortTrail;
         public readonly bool TinyTrail;
@@ -329,6 +331,8 @@ namespace CoreSystems.Support
             FragmentOffset = Math.Abs(ammo.AmmoDef.Fragment.Offset);
             FragRadial = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Radial, 0, 360));
             FragDegrees = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Degrees, 0, 360));
+            FragReverse = ammo.AmmoDef.Fragment.Reverse;
+            FragDropVelocity = ammo.AmmoDef.Fragment.DropVelocity;
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
