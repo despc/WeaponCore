@@ -72,6 +72,7 @@ namespace CoreSystems.Support
         internal bool IsVirtual;
         internal bool InPlanetGravity;
         internal bool ShieldBypassed;
+        internal bool ShieldKeepBypass;
         internal bool ShieldInLine;
         internal float ShieldResistMod = 1f;
         internal float ShieldBypassMod = 1f;
@@ -154,6 +155,7 @@ namespace CoreSystems.Support
             InPlanetGravity = false;
             ShieldBypassed = false;
             ShieldInLine = false;
+            ShieldKeepBypass = false;
             TriggerGrowthSteps = 0;
             PartId = 0;
             MuzzleId = 0;

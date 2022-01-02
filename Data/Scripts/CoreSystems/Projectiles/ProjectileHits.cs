@@ -57,6 +57,8 @@ namespace CoreSystems.Projectiles
                 if (Session.WaterApiLoaded && p.Info.MyPlanet != null)
                     Session.WaterMap.TryGetValue(p.Info.MyPlanet.EntityId, out water);
 
+                p.Info.ShieldKeepBypass = false;
+
                 for (int i = 0; i < collectionCount; i++) {
 
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];
@@ -128,7 +130,7 @@ namespace CoreSystems.Projectiles
                     var checkShield = Session.ShieldApiLoaded && Session.ShieldHash == ent.DefinitionId?.SubtypeId && ent.Render.Visible;
                     MyTuple<IMyTerminalBlock, MyTuple<bool, bool, float, float, float, int>, MyTuple<MatrixD, MatrixD>>? shieldInfo = null;
 
-                    if (checkShield && !p.Info.ShieldBypassed && !p.Info.EwarActive || p.Info.EwarActive && (p.Info.AmmoDef.Const.EwarType == Dot || p.Info.AmmoDef.Const.EwarType == Emp))
+                    if (checkShield && !p.Info.EwarActive || p.Info.EwarActive && (p.Info.AmmoDef.Const.EwarType == Dot || p.Info.AmmoDef.Const.EwarType == Emp))
                     {
                         shieldInfo = Session.SApi.MatchEntToShieldFastExt(ent, true);
                         if (shieldInfo != null && (firingCube == null || !firingCube.CubeGrid.IsSameConstructAs(shieldInfo.Value.Item1.CubeGrid) && !goCritical))
@@ -143,7 +145,9 @@ namespace CoreSystems.Projectiles
                                 if (p.Info.Target.IsProjectile && Vector3D.Transform(p.Info.Target.Projectile.Position, shieldInfo.Value.Item3.Item1).LengthSquared() <= 1)
                                     projetileInShield = true;
 
-                                if (dist != null && (dist.Value < p.Beam.Length || p.Info.EwarActive))
+                                var shieldIntersect = dist != null && (dist.Value < p.Beam.Length || p.Info.EwarActive);
+                                p.Info.ShieldKeepBypass = shieldIntersect;
+                                if (shieldIntersect && !p.Info.ShieldBypassed)
                                 {
 
                                     hitEntity = HitEntityPool.Get();

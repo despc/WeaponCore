@@ -291,10 +291,7 @@ namespace CoreSystems
                             w.Reloaded(1);
 
                         if (DedicatedServer && w.Reload.WaitForClient && !w.Loading && (wComp.Data.Repo.Values.State.PlayerId <= 0 || Tick - w.LastLoadedTick > 60))
-                        {
-                            Log.Line($"force WaitForClient false");
                             SendWeaponReload(w, true);
-                        }
 
                         ///
                         /// Update Weapon Hud Info
