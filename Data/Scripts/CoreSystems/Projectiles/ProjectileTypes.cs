@@ -445,7 +445,6 @@ namespace CoreSystems.Support
                 frag.DeadSphere = p.DeadSphere;
                 frag.LockOnFireState = info.LockOnFireState;
                 frag.IgnoreShield = info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
-                var dirMatrix = Matrix.CreateFromDir(info.Direction);
                 var posValue = aConst.FragDegrees;
                 posValue *= 0.5f;
                 var randomFloat1 = (float)(frag.Random.NextDouble() * posValue) + (frag.Radial);
@@ -455,7 +454,7 @@ namespace CoreSystems.Support
                 var shrapnelDir = Vector3.TransformNormal(mutli  * -new Vector3(
                     MyMath.FastSin(randomFloat1) * MyMath.FastCos(randomFloat2),
                     MyMath.FastSin(randomFloat1) * MyMath.FastSin(randomFloat2),
-                    MyMath.FastCos(randomFloat1)), dirMatrix);
+                    MyMath.FastCos(randomFloat1)), Matrix.CreateFromDir(info.Direction));
 
                 frag.Direction = shrapnelDir;
                 frag.PrimeEntity = null;
@@ -481,49 +480,54 @@ namespace CoreSystems.Support
             {
                 var frag = Sharpnel[i];
                 session = frag.System.Session;
-                var p = frag.System.Session.Projectiles.ProjectilePool.Count > 0 ? frag.System.Session.Projectiles.ProjectilePool.Pop() : new Projectile();
-                p.Info.System = frag.System;
-                p.Info.Ai = frag.Ai;
-                p.Info.Id = frag.System.Session.Projectiles.CurrentProjectileId++;
-                p.Info.AmmoDef = frag.AmmoDef;
-                p.Info.PrimeEntity = frag.PrimeEntity;
-                p.Info.TriggerEntity = frag.TriggerEntity;
-                p.Info.Target.TargetEntity = frag.TargetEntity;
-                p.Info.Target.IsFakeTarget = frag.IsFakeTarget;
-                p.Info.Target.Projectile = frag.TargetProjectile;
-                p.Info.Target.IsProjectile = frag.TargetProjectile != null;
-                p.Info.Target.CoreEntity = frag.CoreEntity;
-                p.Info.Target.CoreParent = frag.CoreParent;
-                p.Info.Target.CoreCube = frag.CoreCube;
-                p.Info.Target.CoreIsCube = frag.CoreIsCube;
-                p.Info.Overrides = frag.Overrides;
-                p.Info.IsShrapnel = true;
-                p.Info.EnableGuidance = frag.Guidance;
-                p.Info.PartId = frag.WeaponId;
-                p.Info.MuzzleId = frag.MuzzleId;
-                p.Info.UniqueMuzzleId = frag.System.Session.UniqueMuzzleId.Id;
-                p.Info.Origin = frag.Origin;
-                p.Info.OriginUp = frag.OriginUp;
-                p.Info.Random = frag.Random;
-                p.Info.DoDamage = frag.DoDamage;
-                p.Info.BaseDamagePool = frag.AmmoDef.Const.BaseDamage;
+                var p = session.Projectiles.ProjectilePool.Count > 0 ? session.Projectiles.ProjectilePool.Pop() : new Projectile();
+                var info = p.Info;
+                info.System = frag.System;
+                info.Ai = frag.Ai;
+                info.Id = session.Projectiles.CurrentProjectileId++;
+
+                var aDef = frag.AmmoDef;
+                var aConst = aDef.Const;
+                info.AmmoDef = aDef;
+                info.PrimeEntity = frag.PrimeEntity;
+                info.TriggerEntity = frag.TriggerEntity;
+                var target = info.Target;
+                target.TargetEntity = frag.TargetEntity;
+                target.IsFakeTarget = frag.IsFakeTarget;
+                target.Projectile = frag.TargetProjectile;
+                target.IsProjectile = frag.TargetProjectile != null;
+                target.CoreEntity = frag.CoreEntity;
+                target.CoreParent = frag.CoreParent;
+                target.CoreCube = frag.CoreCube;
+                target.CoreIsCube = frag.CoreIsCube;
+                info.Overrides = frag.Overrides;
+                info.IsShrapnel = true;
+                info.EnableGuidance = frag.Guidance;
+                info.PartId = frag.WeaponId;
+                info.MuzzleId = frag.MuzzleId;
+                info.UniqueMuzzleId = session.UniqueMuzzleId.Id;
+                info.Origin = frag.Origin;
+                info.OriginUp = frag.OriginUp;
+                info.Random = frag.Random;
+                info.DoDamage = frag.DoDamage;
+                info.BaseDamagePool = aConst.BaseDamage;
                 p.PredictedTargetPos = frag.PredictedTargetPos;
-                p.Info.Direction = frag.Direction;
+                info.Direction = frag.Direction;
                 p.DeadSphere = frag.DeadSphere;
                 p.StartSpeed = frag.Velocity;
-                p.Info.LockOnFireState = frag.LockOnFireState;
-                p.Info.MaxTrajectory = frag.AmmoDef.Const.MaxTrajectory;
-                p.Info.ShotFade = 0;
-                p.Info.ShieldBypassed = frag.IgnoreShield;
+                info.LockOnFireState = frag.LockOnFireState;
+                info.MaxTrajectory = aConst.MaxTrajectory;
+                info.ShotFade = 0;
+                info.ShieldBypassed = frag.IgnoreShield;
 
-                frag.System.Session.Projectiles.ActiveProjetiles.Add(p);
+                session.Projectiles.ActiveProjetiles.Add(p);
                 p.Start();
 
-                if (p.Info.AmmoDef.Const.Health > 0 && !p.Info.AmmoDef.Const.IsBeamWeapon)
-                    frag.System.Session.Projectiles.AddTargets.Add(p);
+                if (aConst.Health > 0 && !aConst.IsBeamWeapon)
+                    session.Projectiles.AddTargets.Add(p);
 
 
-                frag.System.Session.Projectiles.FragmentPool.Return(frag);
+                session.Projectiles.FragmentPool.Return(frag);
             }
 
             session?.Projectiles.ShrapnelPool.Return(this);
