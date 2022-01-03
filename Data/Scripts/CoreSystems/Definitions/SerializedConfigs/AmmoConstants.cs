@@ -857,12 +857,15 @@ namespace CoreSystems.Support
 
         private Vector2 FragDamageLoopCheck(WeaponDefinition wDef, float shotsPerSec, Vector2 FragDmg, int pastI, AmmoDef parentAmmo, int parentFragments)
         {
+
+            pastI++; //max fragment depth
+        
             //Log.Line($"Found Ammos= {wDef.Ammos.Length}");
             for (int j = 0; j < wDef.Ammos.Length; j++)
             {
                 //Log.Line($"Found J= {j}");
                 var fragmentAmmo = wDef.Ammos[j];
-                if (fragmentAmmo.AmmoRound.Equals(parentAmmo.Fragment.AmmoRound))
+                if (fragmentAmmo.AmmoRound.Equals(parentAmmo.Fragment.AmmoRound) && pastI < 10)
                 {
                     //Log.Line($"Found [{pastI}|{j}] Fragment= {fragmentAmmo.Fragment.AmmoRound}");
                     //Log.Line($"::::{fragmentAmmo.AmmoRound} got a parent with:{parentFragments} fragments");
@@ -871,10 +874,11 @@ namespace CoreSystems.Support
 
                     FragDmg += tempDmg;
                     parentFragments *= fragmentAmmo.Fragment.Fragments;
-                    FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, j, fragmentAmmo, parentFragments);
+                    FragDmg = FragDamageLoopCheck(wDef, shotsPerSec, FragDmg, pastI, fragmentAmmo, parentFragments);
 
 
                 }
+                //if(pastI==10)Log.Line($"Ammo Reached Max Fragment Depth of {pastI}");
             }
 
             return FragDmg;
