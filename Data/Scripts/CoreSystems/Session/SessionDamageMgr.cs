@@ -1009,42 +1009,24 @@ namespace CoreSystems
                 switch (axishit.AbsMaxComponent())//sort out which "face" was hit and coming/going along that axis
                 {                   
                     case 1://hit face perp to y
-                        if (localline.Direction.Y <= 0f)
-                        { 
+
                             min2.Y = rootPos.Y - maxdepth + 1;
                             max2.Y = rootPos.Y + maxdepth - 1;
-                        }
-                        else
-                        { 
-                            min2.Y = rootPos.Y + maxdepth - 1;
-                            max2.Y = rootPos.Y - maxdepth + 1;
-                        }
+
                         break;
 
                     case 2://hit face perp to x
-                        if (localline.Direction.X <= 0f)
-                        { 
+
                             min2.X = rootPos.X - maxdepth + 1;
                             max2.X = rootPos.X + maxdepth - 1;        
-                        }
-                        else
-                        { 
-                            min2.X = rootPos.X + maxdepth -1;
-                            max2.X = rootPos.X - maxdepth +1;
-                        }
+
                         break;
 
                     case 0://Hit face is perp to z
-                        if (localline.Direction.Z <= 0f)
-                        {
+
                             min2.Z = rootPos.Z - maxdepth + 1;
                             max2.Z = rootPos.Z + maxdepth - 1;
-                        }
-                        else
-                        { 
-                            min2.Z = rootPos.Z + maxdepth - 1;
-                            max2.Z = rootPos.Z - maxdepth + 1;
-                        }
+
                         break;
                 }
             }
