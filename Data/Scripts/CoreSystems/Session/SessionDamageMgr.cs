@@ -281,7 +281,7 @@ namespace CoreSystems
 
             //Global & modifiers
             var canDamage = t.DoDamage;
-            _destroyedSlims.Clear();
+            //_destroyedSlims.Clear();
             _destroyedSlimsClient.Clear();
             var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
             var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer;
@@ -566,6 +566,7 @@ namespace CoreSystems
 
                         var rootStep = k == 0 && j == 0 && !detActive;
                         var primaryDamage = rootStep && block == rootBlock && !detActive;//limits application to first run w/AOE, suppresses with detonation
+
                         var baseScale = damageScale * directDamageScale;
                         var scaledDamage = (float)(basePool * baseScale);
                         var aoeScaledDmg = (float)((aoeDamageFall * (detActive ? detDamageScale : areaDamageScale)) * damageScale);
@@ -629,7 +630,11 @@ namespace CoreSystems
                                     //Log.Line($"Aoedmgpool {aoeDamage}  scaleddmg {aoeScaledDmg}");
                                 }
                             }
+ 
                             scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
+
+                            if (!aoeIsPool && scaledDamage > blockHp)
+                                deadBlock = true;
                         }
 
 
@@ -961,11 +966,11 @@ namespace CoreSystems
                 var rootbox = new BoundingBoxD(root.Min-1, root.Max+1);
                 if (rootbox.Contains(localfrom) == ContainmentType.Contains)
                 {
-                rootPos = (Vector3I)localfrom;//used for frag generated inside root block
+                    rootPos = (Vector3I)localfrom;//used for frag generated inside root block
                 }
                 else
                 {
-                rootPos = (Vector3I)localto;//used for most cases
+                    rootPos = (Vector3I)localto;//used for most cases
                 }
             }
 
@@ -1062,37 +1067,37 @@ namespace CoreSystems
                                 if (grid.TryGetCube(vector3I, out cube))
                                 {
 
-                                var slim = (IMySlimBlock)cube.CubeBlock;
-                                if (slim.IsDestroyed)
-                                    continue;
+                                    var slim = (IMySlimBlock)cube.CubeBlock;
+                                    if (slim.IsDestroyed)
+                                        continue;
 
-                                var distArray = damageBlockCache[hitdist];
+                                    var distArray = damageBlockCache[hitdist];
 
-                                var slimmin = slim.Min;
-                                var slimmax = slim.Max;
-                                if (slimmax != slimmin)//Block larger than 1x1x1
-                                {
-                                    var hitblkbound = new BoundingBoxI(slimmin, slimmax);
-                                    var rootposbound = new BoundingBoxI(rootPos, rootPos);
-                                    rootposbound.IntersectWith(ref hitblkbound);
-                                    rootposbound.Inflate(1);
-                                    if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
+                                    var slimmin = slim.Min;
+                                    var slimmax = slim.Max;
+                                    if (slimmax != slimmin)//Block larger than 1x1x1
+                                    {
+                                        var hitblkbound = new BoundingBoxI(slimmin, slimmax);
+                                        var rootposbound = new BoundingBoxI(rootPos, rootPos);
+                                        rootposbound.IntersectWith(ref hitblkbound);
+                                        rootposbound.Inflate(1);
+                                        if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
+                                        {
+                                            distArray.Add(slim);
+                                            foundSomething = true;
+                                            if (hitdist > maxDbc) maxDbc = hitdist;
+                                            if (showHits) slim.Dithering = 0.50f;
+                                        }
+
+
+                                    }
+                                    else//Happy normal 1x1x1
                                     {
                                         distArray.Add(slim);
                                         foundSomething = true;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
-                                        if (showHits) slim.Dithering = 0.50f;
+                                        if(showHits)slim.Dithering = 0.50f;
                                     }
-
-
-                                }
-                                else//Happy normal 1x1x1
-                                {
-                                    distArray.Add(slim);
-                                    foundSomething = true;
-                                    if (hitdist > maxDbc) maxDbc = hitdist;
-                                    if(showHits)slim.Dithering = 0.50f;
-                                }
                             }
                         }
                     }
