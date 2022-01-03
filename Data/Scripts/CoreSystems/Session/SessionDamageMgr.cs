@@ -636,8 +636,6 @@ namespace CoreSystems
                                 deadBlock = true;
                         }
 
-                        if (!aoeIsPool && scaledDamage > blockHp)
-                            deadBlock = true;
                         //Kill block if needed, from any source
                         if (deadBlock)
                         {
