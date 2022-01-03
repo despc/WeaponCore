@@ -455,7 +455,6 @@ namespace CoreSystems
 
                         }
                     }
-
                     for (int k = 0; k < dbc.Count; k++)
                     {
                         var block = dbc[k];
@@ -632,7 +631,8 @@ namespace CoreSystems
                             scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
                         }
 
-
+                        if (!aoeIsPool && scaledDamage > blockHp)
+                            deadBlock = true;
                         //Kill block if needed, from any source
                         if (deadBlock)
                         {
@@ -679,7 +679,7 @@ namespace CoreSystems
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = (float)(blockHp - realDmg);
                         }
 
-                        var endCycle = (!foundAoeBlocks && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0)) || objectsHit >= maxObjects;
+                        var endCycle = (!foundAoeBlocks && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0.5d)) || objectsHit >= maxObjects;
 
                         //doneskies
                         if (endCycle)
