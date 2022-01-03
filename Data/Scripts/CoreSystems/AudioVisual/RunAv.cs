@@ -171,6 +171,7 @@ namespace CoreSystems.Support
                 var av = AvShots[i];
                 if (av.OnScreen != AvShot.Screen.None) _onScreens++;
                 var refreshed = av.LastTick == Session.Tick;
+                var aConst = av.AmmoDef.Const;
 
                 if (refreshed && av.Tracer != AvShot.TracerState.Off && av.OnScreen != AvShot.Screen.None)
                 {
@@ -184,21 +185,21 @@ namespace CoreSystems.Support
                         segColor *= fade;
                     }
 
-                    if (!av.AmmoDef.Const.OffsetEffect)
+                    if (!aConst.OffsetEffect)
                     {
                         if (av.Tracer != AvShot.TracerState.Shrink)
                         {
-                            if (av.AmmoDef.Const.TracerMode == AmmoConstants.Texture.Normal)
-                                MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[0], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
-                            else if (av.AmmoDef.Const.TracerMode != AmmoConstants.Texture.Resize)
-                                MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[av.TextureIdx], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
+                            if (aConst.TracerMode == AmmoConstants.Texture.Normal)
+                                MyTransparentGeometry.AddLineBillboard(aConst.TracerTextures[0], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
+                            else if (aConst.TracerMode != AmmoConstants.Texture.Resize)
+                                MyTransparentGeometry.AddLineBillboard(aConst.TracerTextures[av.TextureIdx], color, av.TracerBack, av.VisualDir, (float)av.VisualLength, (float)av.TracerWidth);
                             else
                             {
 
                                 var seg = av.AmmoDef.AmmoGraphics.Lines.Tracer.Segmentation;
                                 var stepPos = av.TracerBack;
-                                var segTextureCnt = av.AmmoDef.Const.SegmentTextures.Length;
-                                var gapTextureCnt = av.AmmoDef.Const.TracerTextures.Length;
+                                var segTextureCnt = aConst.SegmentTextures.Length;
+                                var gapTextureCnt = aConst.TracerTextures.Length;
                                 var segStepLen = seg.SegmentLength / segTextureCnt;
                                 var gapStepLen = seg.SegmentGap / gapTextureCnt;
                                 var gapEnabled = gapStepLen > 0;
@@ -234,7 +235,7 @@ namespace CoreSystems.Support
                                     var notLast = travel + rawLen < av.VisualLength;
                                     var len = notLast ? rawLen : av.VisualLength - travel;
                                     var clampStep = !gap ? MathHelperD.Clamp((int)((len / segStepLen) + 0.5) - 1, 0, segTextureCnt - 1) : MathHelperD.Clamp((int)((len / gapStepLen) + 0.5) - 1, 0, gapTextureCnt - 1);
-                                    var material = !gap ? av.AmmoDef.Const.SegmentTextures[(int)clampStep] : av.AmmoDef.Const.TracerTextures[(int)clampStep];
+                                    var material = !gap ? aConst.SegmentTextures[(int)clampStep] : aConst.TracerTextures[(int)clampStep];
 
                                     MyTransparentGeometry.AddLineBillboard(material, dyncColor, stepPos, av.VisualDir, (float)len, (float)width);
                                     if (!notLast)
@@ -268,7 +269,7 @@ namespace CoreSystems.Support
                             Vector3 dir = (toBeam - fromBeam);
                             var length = dir.Length();
                             var normDir = dir / length;
-                            MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TracerTextures[0], color, fromBeam, normDir, length, (float)av.TracerWidth);
+                            MyTransparentGeometry.AddLineBillboard(aConst.TracerTextures[0], color, fromBeam, normDir, length, (float)av.TracerWidth);
 
                             if (Vector3D.DistanceSquared(av.OffsetMatrix.Translation, toBeam) > av.TracerLengthSqr) break;
                         }
@@ -290,7 +291,7 @@ namespace CoreSystems.Support
                 if (av.Trail != AvShot.TrailState.Off)
                 {
                     var steps = av.DecayTime;
-                    var widthScaler = !av.AmmoDef.AmmoGraphics.Lines.Trail.UseColorFade;
+                    var widthScaler = !aConst.TrailColorFade;
                     var remove = false;
                     for (int j = glowCnt - 1; j >= 0; j--)
                     {
@@ -302,13 +303,13 @@ namespace CoreSystems.Support
                         if (av.OnScreen != AvShot.Screen.None)
                         {
                             var reduction = (av.GlowShrinkSize * glow.Step);
-                            var width = widthScaler ? (av.AmmoDef.Const.TrailWidth - reduction) * av.TrailScaler : av.AmmoDef.Const.TrailWidth * av.TrailScaler;
-                            var color = av.AmmoDef.AmmoGraphics.Lines.Trail.Color;
+                            var width = widthScaler ? (aConst.TrailWidth - reduction) * av.TrailScaler : aConst.TrailWidth * av.TrailScaler;
+                            var color = aConst.TrailColor;
 
                             if (!widthScaler)
                                 color *= MathHelper.Clamp(1f - reduction, 0.01f, 1f);
 
-                            MyTransparentGeometry.AddLineBillboard(av.AmmoDef.Const.TrailTextures[0], color, glow.Line.From, glow.Line.Direction, (float)glow.Line.Length, width);
+                            MyTransparentGeometry.AddLineBillboard(aConst.TrailTextures[0], color, glow.Line.From, glow.Line.Direction, (float)glow.Line.Length, width);
                         }
 
                         if (++glow.Step >= steps)

@@ -257,7 +257,8 @@ namespace CoreSystems.Support
             {
                 var d = s.Projectiles.DeferedAvDraw[x];
                 var a = d.AvShot;
-                var lineEffect = a.AmmoDef.Const.Trail || a.AmmoDef.Const.DrawLine;
+                var aConst = a.AmmoDef.Const;
+                var lineEffect = aConst.Trail || aConst.DrawLine;
                 var saveHit = d.Hit;
                 ++a.LifeTime;
                 a.LastTick = s.Tick;
@@ -267,7 +268,7 @@ namespace CoreSystems.Support
                 a.ShortEstTravel = MathHelperD.Clamp((a.EstTravel - a.StepSize) + a.ShortStepSize, 0, double.MaxValue);
 
                 a.VisualLength = d.VisualLength;
-                if (a.SmartOn || a.AmmoDef.Const.IsBeamWeapon && a.AmmoDef.Const.ConvergeBeams)
+                if (a.SmartOn || aConst.IsBeamWeapon && aConst.ConvergeBeams)
                     a.VisualDir = d.Direction;
                 else if (a.LifeTime == 1)
                     a.VisualDir = a.OriginDir;
@@ -286,12 +287,12 @@ namespace CoreSystems.Support
                 {
                     a.ModelSphereCurrent.Center = a.TracerFront;
                     if (a.Triggered)
-                        a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.EwarRadius;
+                        a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < aConst.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : aConst.EwarRadius;
 
                     if (s.Camera.IsInFrustum(ref a.ModelSphereCurrent))
                         a.OnScreen = Screen.ModelOnly;
                 }
-                else if (lineEffect || a.AmmoDef.Const.AmmoParticle)
+                else if (lineEffect || aConst.AmmoParticle)
                 {
                     var rayTracer = new RayD(a.TracerBack, a.VisualDir);
                     var rayTrail = new RayD(a.TracerFront + (-a.VisualDir * a.ShortEstTravel), a.VisualDir);
@@ -299,15 +300,15 @@ namespace CoreSystems.Support
                     double? dist;
                     s.CameraFrustrum.Intersects(ref rayTracer, out dist);
 
-                    if (a.AmmoDef.Const.AlwaysDraw || dist != null && dist <= a.VisualLength)
+                    if (aConst.AlwaysDraw || dist != null && dist <= a.VisualLength)
                         a.OnScreen = Screen.Tracer;
-                    else if (a.AmmoDef.Const.Trail)
+                    else if (aConst.Trail)
                     {
                         s.CameraFrustrum.Intersects(ref rayTrail, out dist);
                         if (dist != null && dist <= a.ShortEstTravel + a.ShortStepSize + a.MaxGlowLength)
                             a.OnScreen = Screen.Trail;
                     }
-                    if (a.OnScreen != Screen.None && !a.TrailActivated && a.AmmoDef.Const.Trail) a.TrailActivated = true;
+                    if (a.OnScreen != Screen.None && !a.TrailActivated && aConst.Trail) a.TrailActivated = true;
 
                     if (a.OnScreen == Screen.None && a.TrailActivated) a.OnScreen = Screen.Trail;
 
@@ -315,7 +316,7 @@ namespace CoreSystems.Support
                     {
                         a.ModelSphereCurrent.Center = a.TracerFront;
                         if (a.Triggered)
-                            a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < a.AmmoDef.Const.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : a.AmmoDef.Const.EwarRadius;
+                            a.ModelSphereCurrent.Radius = d.TriggerGrowthSteps < aConst.EwarRadius ? a.TriggerMatrix.Scale.AbsMax() : aConst.EwarRadius;
 
                         if (a.OnScreen == Screen.None && s.Camera.IsInFrustum(ref a.ModelSphereCurrent))
                             a.OnScreen = Screen.ModelOnly;
@@ -344,13 +345,13 @@ namespace CoreSystems.Support
                     a.HitVelocity = a.Hit.HitVelocity;
                     a.Hitting = !a.ShrinkInited && a.ProEnded;
                     a.HitEffects();
-                    a.LastHit = a.System.Session.Tick;
+                    a.LastHit = s.Tick;
                 }
                 a.LastStep = a.Hitting || MyUtils.IsZero(a.MaxTrajectory - a.ShortEstTravel, 1E-01F);
 
-                if (a.AmmoDef.Const.DrawLine)
+                if (aConst.DrawLine)
                 {
-                    if (a.AmmoDef.Const.IsBeamWeapon || !saveHit && MyUtils.IsZero(a.MaxTracerLength - a.VisualLength, 1E-01F))
+                    if (aConst.IsBeamWeapon || !saveHit && MyUtils.IsZero(a.MaxTracerLength - a.VisualLength, 1E-01F))
                     {
                         a.Tracer = TracerState.Full;
                     }
@@ -383,7 +384,7 @@ namespace CoreSystems.Support
                 {
                     if (a.Tracer == TracerState.Shrink && !a.ShrinkInited)
                         a.Shrink();
-                    else if (a.AmmoDef.Const.IsBeamWeapon && a.AmmoDef.Const.HitParticle && !(a.MuzzleId != 0 && (a.AmmoDef.Const.ConvergeBeams || a.AmmoDef.Const.OneHitParticle)))
+                    else if (aConst.IsBeamWeapon && aConst.HitParticle && !(a.MuzzleId != 0 && (aConst.ConvergeBeams || aConst.OneHitParticle)))
                     {
                         MyParticleEffect effect;
                         if (a.Hitting)
@@ -392,14 +393,14 @@ namespace CoreSystems.Support
                             s.CameraFrustrum.Contains(ref a.Hit.SurfaceHit, out containment);
                             if (containment != ContainmentType.Disjoint) a.RunBeam();
                         }
-                        else if (a.System.Session.Av.BeamEffects.TryGetValue(a.UniqueMuzzleId, out effect))
+                        else if (s.Av.BeamEffects.TryGetValue(a.UniqueMuzzleId, out effect))
                         {
                             effect.Stop();
-                            a.System.Session.Av.BeamEffects.Remove(a.UniqueMuzzleId);
+                            s.Av.BeamEffects.Remove(a.UniqueMuzzleId);
                         }
                     }
 
-                    if (a.AmmoDef.Const.OffsetEffect)
+                    if (aConst.OffsetEffect)
                         a.PrepOffsetEffect(a.TracerFront, a.VisualDir, a.VisualLength);
                 }
 
@@ -407,7 +408,7 @@ namespace CoreSystems.Support
                 if (a.Trail != TrailState.Off && !backAndGrowing && lineOnScreen)
                     a.RunGlow(ref a.EmptyShrink, false, saveHit);
 
-                if (a.AmmoDef.Const.AmmoParticle && a.Active)
+                if (aConst.AmmoParticle && a.Active)
                 {
                     if (a.OnScreen != Screen.None)
                     {
@@ -418,7 +419,7 @@ namespace CoreSystems.Support
                         a.DisposeAmmoEffect(false, true);
                 }
 
-                if (a.AmmoDef.Const.FieldParticle && a.Active)
+                if (aConst.FieldParticle && a.Active)
                 {
                     if (a.OnScreen != Screen.None)
                     {

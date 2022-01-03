@@ -95,6 +95,7 @@ namespace CoreSystems.Support
         public readonly MyStringId[] SegmentTextures;
         public readonly MyPhysicalInventoryItem AmmoItem;
         public readonly MyPhysicalInventoryItem EjectItem;
+        public readonly Vector4 TrailColor;
         public readonly EwarType EwarType;
         public readonly Texture TracerMode;
         public readonly Texture TrailMode;
@@ -128,6 +129,7 @@ namespace CoreSystems.Support
         public readonly bool VoxelDamage;
         public readonly bool OffsetEffect;
         public readonly bool Trail;
+        public readonly bool TrailColorFade;
         public readonly bool IsMine;
         public readonly bool IsField;
         public readonly bool AmmoParticle;
@@ -398,6 +400,8 @@ namespace CoreSystems.Support
             TinyTrail = DecayTime <= 5;
             ShortTrail = !TinyTrail && DecayTime <= 10;
             RareTrail = DecayTime > 0 && ShotsPerSec * 60 <= 6;
+            TrailColorFade = ammo.AmmoDef.AmmoGraphics.Lines.Trail.UseColorFade;
+            TrailColor = ammo.AmmoDef.AmmoGraphics.Lines.Trail.Color;
 
             MaxOffset = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
             MinOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
