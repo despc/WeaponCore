@@ -219,10 +219,17 @@ namespace CoreSystems.Projectiles
                         p.TravelMagnitude = info.Age != 0 ? p.Velocity * StepConst : p.InitalStep;
                         p.Position += p.TravelMagnitude;
 
-                        var fragTime = aConst.TimedFragments && aConst.FragStartTime > info.Age && info.Age - info.LastFragTime >= aConst.FragInterval;
-                        var fragTrigger = fragTime && (!aConst.HasFragProximity || target.TargetEntity != null && Vector3D.DistanceSquared(target.TargetEntity.PositionComp.WorldAABB.Center, p.Position) < aConst.FragProximity * aConst.FragProximity);
-                        if (fragTrigger)
-                            p.SpawnShrapnel();
+                        if (aConst.TimedFragments && aConst.FragStartTime > info.Age && info.Age - info.LastFragTime >= aConst.FragInterval)
+                        {
+                            if (!aConst.HasFragProximity)
+                                p.SpawnShrapnel();
+                            else if (target.TargetEntity != null)
+                            {
+                                var inflatedSize = aConst.FragProximity + target.TargetEntity.PositionComp.LocalVolume.Radius;
+                                if (Vector3D.DistanceSquared(target.TargetEntity.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
+                                    p.SpawnShrapnel();
+                            }
+                        }
                     }
 
                     info.PrevDistanceTraveled = info.DistanceTraveled;

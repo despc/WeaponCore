@@ -13,72 +13,81 @@ namespace CoreSystems.Projectiles
             {
                 var gen = NewProjectiles[i];
                 var w = gen.Muzzle.Weapon;
+                var comp = w.Comp;
+                var repo = comp.Data.Repo;
+                var ai = comp.Ai;
+                var wTarget = w.Target;
+
                 var a = gen.AmmoDef;
+                var weaponAmmoDef = w.ActiveAmmoDef.AmmoDef;
+                var aConst = a.Const;
                 var t = gen.Type;
                 var virts = gen.NewVirts;
                 var muzzle = gen.Muzzle;
-                var aimed = w.Comp.Data.Repo.Values.State.PlayerId == w.Comp.Session.PlayerId || w.Comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
+                var aimed = repo.Values.State.PlayerId == Session.PlayerId || comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
 
                 var patternCycle = gen.PatternCycle;
-                var targetable = w.ActiveAmmoDef.AmmoDef.Const.Health > 0 && !w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon;
+                var targetable = weaponAmmoDef.Const.Health > 0 && !weaponAmmoDef.Const.IsBeamWeapon;
                 var p = Session.Projectiles.ProjectilePool.Count > 0 ? Session.Projectiles.ProjectilePool.Pop() : new Projectile();
-                p.Info.Id = Session.Projectiles.CurrentProjectileId++;
-                p.Info.System = w.System;
-                p.Info.Ai = w.Comp.Ai;
-                p.Info.AimedShot = aimed;
-                p.Info.AmmoDef = a;
-                p.Info.DoDamage = w.System.Session.IsServer && (!a.Const.ClientPredictedAmmo || t == Kind.Client || w.Comp.Data.Repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
+                var info = p.Info;
+                var target = info.Target;
+                info.Id = Session.Projectiles.CurrentProjectileId++;
+                info.System = w.System;
+                info.Ai = comp.Ai;
+                info.AimedShot = aimed;
+                info.AmmoDef = a;
+                info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
 
-                p.Info.Overrides = w.Comp.Data.Repo.Values.Set.Overrides;
-                p.Info.Target.TargetEntity = t != Kind.Client ? w.Target.TargetEntity : gen.TargetEnt;
-                p.Info.Target.Projectile = w.Target.Projectile;
-                p.Info.Target.IsProjectile = w.Target.Projectile != null;
-                p.Info.Target.IsFakeTarget = w.Comp.FakeMode;
-                p.Info.Target.CoreCube = w.Comp.Cube;
-                p.Info.Target.CoreEntity = w.Comp.CoreEntity;
+                info.Overrides = repo.Values.Set.Overrides;
+                target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
+                target.Projectile = wTarget.Projectile;
+                target.IsProjectile = wTarget.Projectile != null;
+                target.IsFakeTarget = comp.FakeMode;
+                target.CoreCube = comp.Cube;
+                target.CoreEntity = comp.CoreEntity;
 
-                p.Info.DummyTargets = null;
-                if (w.Comp.FakeMode)
-                    w.Comp.Session.PlayerDummyTargets.TryGetValue(w.Comp.Data.Repo.Values.State.PlayerId, out p.Info.DummyTargets);
+                info.DummyTargets = null;
+                if (comp.FakeMode)
+                    Session.PlayerDummyTargets.TryGetValue(repo.Values.State.PlayerId, out info.DummyTargets);
 
-                p.Info.PartId = w.PartId;
-                p.Info.BaseDamagePool = a == w.ActiveAmmoDef.AmmoDef ? w.BaseDamage : a.Const.BaseDamage;
-                p.Info.EnableGuidance = w.Comp.Data.Repo.Values.Set.Guidance;
-                p.Info.WeaponCache = w.WeaponCache;
-                p.Info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
-                p.Info.LockOnFireState = (w.LockOnFireState || w.SkipAimChecks && w.Target.TargetEntity != null);
-                p.Info.ModOverride = w.Comp.ModOverride;
-                p.Info.ShooterVel = w.Comp.Ai.GridVel;
+                info.PartId = w.PartId;
+                info.BaseDamagePool = a == weaponAmmoDef ? w.BaseDamage : aConst.BaseDamage;
+                info.EnableGuidance = repo.Values.Set.Guidance;
+                info.WeaponCache = w.WeaponCache;
+                info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
+                info.LockOnFireState = (w.LockOnFireState || w.SkipAimChecks && wTarget.TargetEntity != null);
+                info.ModOverride = comp.ModOverride;
+                info.ShooterVel = ai.GridVel;
 
-                p.Info.OriginUp = t != Kind.Client ? w.MyPivotUp : gen.OriginUp;
-                p.Info.MaxTrajectory = t != Kind.Client ? a.Const.MaxTrajectoryGrows && w.FireCounter < a.Trajectory.MaxTrajectoryTime ? a.Const.TrajectoryStep * w.FireCounter : a.Const.MaxTrajectory : gen.MaxTrajectory;
-                p.Info.MuzzleId = t != Kind.Virtual ? muzzle.MuzzleId : -1;
-                p.Info.UniqueMuzzleId = muzzle.UniqueId;
-                p.Info.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : p.Info.WeaponCache.VirutalId;
-                p.Info.Origin = t != Kind.Client ? t != Kind.Virtual ? muzzle.Position : w.MyPivotPos : gen.Origin;
-                p.Info.Direction = t != Kind.Client ? t != Kind.Virtual ? gen.Direction : w.MyPivotFwd : gen.Direction;
+                info.OriginUp = t != Kind.Client ? w.MyPivotUp : gen.OriginUp;
+                info.MaxTrajectory = t != Kind.Client ? aConst.MaxTrajectoryGrows && w.FireCounter < a.Trajectory.MaxTrajectoryTime ? aConst.TrajectoryStep * w.FireCounter : aConst.MaxTrajectory : gen.MaxTrajectory;
+                info.MuzzleId = t != Kind.Virtual ? muzzle.MuzzleId : -1;
+                info.UniqueMuzzleId = muzzle.UniqueId;
+                info.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : info.WeaponCache.VirutalId;
+                info.Origin = t != Kind.Client ? t != Kind.Virtual ? muzzle.Position : w.MyPivotPos : gen.Origin;
+                info.Direction = t != Kind.Client ? t != Kind.Virtual ? gen.Direction : w.MyPivotFwd : gen.Direction;
                 
-                if (t == Kind.Client && !a.Const.IsBeamWeapon) 
+                if (t == Kind.Client && !aConst.IsBeamWeapon) 
                     p.Velocity = gen.Velocity;
                 
                 float shotFade;
-                if (a.Const.HasShotFade && !a.Const.VirtualBeams)
+                if (aConst.HasShotFade && !aConst.VirtualBeams)
                 {
                     if (patternCycle > a.AmmoGraphics.Lines.Tracer.VisualFadeStart)
-                        shotFade = MathHelper.Clamp(((patternCycle - a.AmmoGraphics.Lines.Tracer.VisualFadeStart)) * a.Const.ShotFadeStep, 0, 1);
+                        shotFade = MathHelper.Clamp(((patternCycle - a.AmmoGraphics.Lines.Tracer.VisualFadeStart)) * aConst.ShotFadeStep, 0, 1);
                     else if (w.System.DelayCeaseFire && w.CeaseFireDelayTick != Session.Tick)
-                        shotFade = MathHelper.Clamp(((Session.Tick - w.CeaseFireDelayTick) - a.AmmoGraphics.Lines.Tracer.VisualFadeStart) * a.Const.ShotFadeStep, 0, 1);
+                        shotFade = MathHelper.Clamp(((Session.Tick - w.CeaseFireDelayTick) - a.AmmoGraphics.Lines.Tracer.VisualFadeStart) * aConst.ShotFadeStep, 0, 1);
                     else shotFade = 0;
                 }
                 else shotFade = 0;
-                p.Info.ShotFade = shotFade;
-                p.PredictedTargetPos = w.Target.TargetPos;
+                info.ShotFade = shotFade;
+                p.PredictedTargetPos = wTarget.TargetPos;
                 p.DeadSphere.Center = w.MyPivotPos;
-                p.DeadSphere.Radius = w.Comp.Ai.AiType == Ai.AiTypes.Grid ? w.Comp.Ai.GridEntity.GridSizeHalf + 0.1 : 0.5f;
+                p.DeadSphere.Radius = ai.AiType == Ai.AiTypes.Grid ? ai.GridEntity.GridSizeHalf + 0.1 : 0.5f;
 
-                if (a.Const.FeelsGravity && w.System.Session.Tick - w.GravityTick > 60)
+                if (aConst.FeelsGravity && Session.Tick - w.GravityTick > 60)
                 {
-                    w.GravityTick = w.System.Session.Tick;
+                    w.GravityTick = Session.Tick;
                     float interference;
                     w.GravityPoint = Session.Physics.CalculateNaturalGravityAt(p.Position, out interference);
                 }
@@ -87,27 +96,27 @@ namespace CoreSystems.Projectiles
 
                 if (t != Kind.Virtual)
                 {
-                    p.Info.PrimeEntity = a.Const.PrimeModel ? a.Const.PrimeEntityPool.Get() : null;
-                    p.Info.TriggerEntity = a.Const.TriggerModel ? Session.TriggerEntityPool.Get() : null;
+                    info.PrimeEntity = aConst.PrimeModel ? aConst.PrimeEntityPool.Get() : null;
+                    info.TriggerEntity = aConst.TriggerModel ? Session.TriggerEntityPool.Get() : null;
 
                     if (targetable)
                         Session.Projectiles.AddTargets.Add(p);
                 }
                 else
                 {
-                    p.Info.WeaponCache.VirtualHit = false;
-                    p.Info.WeaponCache.Hits = 0;
-                    p.Info.WeaponCache.HitEntity.Entity = null;
+                    info.WeaponCache.VirtualHit = false;
+                    info.WeaponCache.Hits = 0;
+                    info.WeaponCache.HitEntity.Entity = null;
                     for (int j = 0; j < virts.Count; j++)
                     {
                         var v = virts[j];
                         p.VrPros.Add(v.Info);
-                        if (!a.Const.RotateRealBeam) p.Info.WeaponCache.VirutalId = 0;
+                        if (!a.Const.RotateRealBeam) info.WeaponCache.VirutalId = 0;
                         else if (v.Rotate)
                         {
-                            p.Info.Origin = v.Muzzle.Position;
-                            p.Info.Direction = v.Muzzle.Direction;
-                            p.Info.WeaponCache.VirutalId = v.VirtualId;
+                            info.Origin = v.Muzzle.Position;
+                            info.Direction = v.Muzzle.Direction;
+                            info.WeaponCache.VirutalId = v.VirtualId;
                         }
                     }
                     virts.Clear();
@@ -117,12 +126,12 @@ namespace CoreSystems.Projectiles
                 Session.Projectiles.ActiveProjetiles.Add(p);
                 p.Start();
 
-                p.Info.Monitors = w.Monitors;
-                if (p.Info.Monitors?.Count > 0)
+                info.Monitors = w.Monitors;
+                if (info.Monitors?.Count > 0)
                 {
                     Session.MonitoredProjectiles[p.Info.Id] = p;
-                    for (int j = 0; j < p.Info.Monitors.Count; j++)
-                        p.Info.Monitors[j].Invoke(w.Comp.Cube.EntityId, w.PartId, p.Info.Id, p.Info.Target.TargetId, p.Position, true);
+                    for (int j = 0; j < info.Monitors.Count; j++)
+                        p.Info.Monitors[j].Invoke(comp.Cube.EntityId, w.PartId, info.Id, target.TargetId, p.Position, true);
                 }
             }
             NewProjectiles.Clear();
