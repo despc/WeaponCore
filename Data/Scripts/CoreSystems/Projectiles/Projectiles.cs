@@ -18,18 +18,18 @@ namespace CoreSystems.Projectiles
         internal readonly Session Session;
         internal readonly MyConcurrentPool<List<NewVirtual>> VirtInfoPools = new MyConcurrentPool<List<NewVirtual>>(128, vInfo => vInfo.Clear());
         internal readonly MyConcurrentPool<ProInfo> VirtInfoPool = new MyConcurrentPool<ProInfo>(128, vInfo => vInfo.Clean());
-        internal readonly MyConcurrentPool<Fragments> ShrapnelPool = new MyConcurrentPool<Fragments>(32);
-        internal readonly MyConcurrentPool<Fragment> FragmentPool = new MyConcurrentPool<Fragment>(32);
+        internal readonly MyConcurrentPool<Fragments> ShrapnelPool = new MyConcurrentPool<Fragments>(128);
+        internal readonly MyConcurrentPool<Fragment> FragmentPool = new MyConcurrentPool<Fragment>(128);
         internal readonly MyConcurrentPool<HitEntity> HitEntityPool = new MyConcurrentPool<HitEntity>(32, hitEnt => hitEnt.Clean());
 
-        internal readonly ConcurrentCachingList<Projectile> FinalHitCheck = new ConcurrentCachingList<Projectile>(128);
-        internal readonly ConcurrentCachingList<Projectile> ValidateHits = new ConcurrentCachingList<Projectile>(128);
+        internal readonly ConcurrentCachingList<Projectile> FinalHitCheck = new ConcurrentCachingList<Projectile>(2048);
+        internal readonly ConcurrentCachingList<Projectile> ValidateHits = new ConcurrentCachingList<Projectile>(2048);
         internal readonly ConcurrentCachingList<DeferedVoxels> DeferedVoxels = new ConcurrentCachingList<DeferedVoxels>(128);
         internal readonly List<Projectile> AddTargets = new List<Projectile>();
-        internal readonly List<Fragments> ShrapnelToSpawn = new List<Fragments>(32);
+        internal readonly List<Fragments> ShrapnelToSpawn = new List<Fragments>(256);
         internal readonly List<Projectile> ActiveProjetiles = new List<Projectile>(2048);
-        internal readonly List<DeferedAv> DeferedAvDraw = new List<DeferedAv>(256);
-        internal readonly List<NewProjectile> NewProjectiles = new List<NewProjectile>(256);
+        internal readonly List<DeferedAv> DeferedAvDraw = new List<DeferedAv>(2048);
+        internal readonly List<NewProjectile> NewProjectiles = new List<NewProjectile>(2048);
         internal readonly Stack<Projectile> ProjectilePool = new Stack<Projectile>(2048);
 
         internal ulong CurrentProjectileId;
@@ -116,6 +116,7 @@ namespace CoreSystems.Projectiles
                 var info = p.Info;
                 var aConst = info.AmmoDef.Const;
                 var target = info.Target;
+                var targetEnt = target.TargetEntity;
                 var ai = p.Info.Ai;
                 ++info.Age;
                 ++ai.MyProjectiles;
@@ -138,7 +139,7 @@ namespace CoreSystems.Projectiles
                     case ProjectileState.OneAndDone:
                     case ProjectileState.Depleted:
                     case ProjectileState.Detonate:
-                        if (p.Info.Age == 0 && p.State == ProjectileState.OneAndDone)
+                        if (info.Age == 0 && p.State == ProjectileState.OneAndDone)
                             break;
 
                         p.ProjectileClose();
@@ -147,8 +148,8 @@ namespace CoreSystems.Projectiles
                         continue;
                 }
 
-                if (p.Info.Target.IsProjectile)
-                    if (p.Info.Target.Projectile.State != ProjectileState.Alive)
+                if (target.IsProjectile)
+                    if (target.Projectile.State != ProjectileState.Alive)
                         p.UnAssignProjectile(true);
 
                 if (!p.AtMaxRange) {
@@ -165,7 +166,7 @@ namespace CoreSystems.Projectiles
 
                         if (MyUtils.IsValid(p.Gravity) && !MyUtils.IsZero(ref p.Gravity)) {
                             p.Velocity += (p.Gravity * aConst.GravityMultiplier) * Projectile.StepConst;
-                            Vector3D.Normalize(ref p.Velocity, out p.Info.Direction);
+                            Vector3D.Normalize(ref p.Velocity, out info.Direction);
                         }
                     }
 
@@ -223,10 +224,10 @@ namespace CoreSystems.Projectiles
                         {
                             if (!aConst.HasFragProximity)
                                 p.SpawnShrapnel();
-                            else if (target.TargetEntity != null)
+                            else if (targetEnt != null)
                             {
-                                var inflatedSize = aConst.FragProximity + target.TargetEntity.PositionComp.LocalVolume.Radius;
-                                if (Vector3D.DistanceSquared(target.TargetEntity.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
+                                var inflatedSize = aConst.FragProximity + targetEnt.PositionComp.LocalVolume.Radius;
+                                if (Vector3D.DistanceSquared(targetEnt.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
                                     p.SpawnShrapnel();
                             }
                         }
@@ -275,7 +276,7 @@ namespace CoreSystems.Projectiles
 
                             p.FieldTime--;
                             if (aConst.IsMine && !p.MineSeeking && !p.MineActivated) {
-                                if (p.EnableAv) info.AvShot.Cloaked = p.Info.AmmoDef.Trajectory.Mines.Cloak;
+                                if (p.EnableAv) info.AvShot.Cloaked = info.AmmoDef.Trajectory.Mines.Cloak;
                                 p.MineSeeking = true;
                             }
                         }
@@ -286,18 +287,20 @@ namespace CoreSystems.Projectiles
                 if (aConst.Ewar)
                     p.RunEwar();
 
-                if (!info.IsShrapnel && !p.DynamicGuidance && target.TargetEntity != null)
+                if (!info.IsShrapnel && !p.DynamicGuidance && targetEnt != null)
                 {
-                    var distSqrToTarget = Vector3D.DistanceSquared(target.TargetEntity.PositionComp.WorldAABB.Center, p.Position);
+                    var targetCenter = targetEnt.PositionComp.WorldAABB.Center;
+                    double distSqrToTarget;
+                    Vector3D.DistanceSquared(ref targetCenter, ref p.Position, out distSqrToTarget);
                     if (distSqrToTarget < info.ClosestDistSqrToTarget || info.ClosestDistSqrToTarget < 0)
                     {
                         info.ClosestDistSqrToTarget = distSqrToTarget;
-                        info.PrevTargetPos = target.TargetEntity.PositionComp.WorldAABB.Center;
+                        info.PrevTargetPos = targetCenter;
                     }
                     else if (info.ClosestDistSqrToTarget > 0 && info.ClosestDistSqrToTarget < distSqrToTarget)
                     {
                         info.ClosestDistSqrToTarget = 0;
-                        info.WeaponCache.MissDistance = (p.Info.PrevTargetPos - p.LastPosition).Length();
+                        info.WeaponCache.MissDistance = (info.PrevTargetPos - p.LastPosition).Length();
                     }
                 }
             }

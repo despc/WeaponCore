@@ -12,14 +12,14 @@ namespace CoreSystems.Support
 {
     class RunAv
     {
-        internal readonly MyConcurrentPool<AvShot> AvShotPool = new MyConcurrentPool<AvShot>(128, shot => shot.Close());
+        internal readonly MyConcurrentPool<AvShot> AvShotPool = new MyConcurrentPool<AvShot>(1024, shot => shot.Close());
         internal readonly MyConcurrentPool<AvEffect> AvEffectPool = new MyConcurrentPool<AvEffect>(128, barrel => barrel.Clean());
         internal readonly List<AvEffect> Effects1 = new List<AvEffect>(128);
         internal readonly List<AvEffect> Effects2 = new List<AvEffect>(128);
         internal readonly List<ParticleEvent> ParticlesToProcess = new List<ParticleEvent>(128);
         internal readonly Dictionary<ulong, MyParticleEffect> BeamEffects = new Dictionary<ulong, MyParticleEffect>();
 
-        internal readonly List<AvShot> AvShots = new List<AvShot>(128);
+        internal readonly List<AvShot> AvShots = new List<AvShot>(1024);
         internal readonly List<HitSounds> RunningSounds = new List<HitSounds>(128);
         internal readonly Stack<AfterGlow> Glows = new Stack<AfterGlow>();
         internal readonly Stack<MyEntity3DSoundEmitter> FireEmitters = new Stack<MyEntity3DSoundEmitter>();

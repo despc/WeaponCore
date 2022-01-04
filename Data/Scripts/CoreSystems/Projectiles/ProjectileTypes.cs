@@ -407,18 +407,30 @@ namespace CoreSystems.Support
         internal List<Fragment> Sharpnel = new List<Fragment>();
         internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool)
         {
+            var info = p.Info;
+            var target = info.Target;
+            var aConst = info.AmmoDef.Const;
+            var ammoDef = info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+
+            Vector3D newOrigin;
+            if (aConst.HasFragmentOffset) {
+                if (aConst.HasNegFragmentOffset)
+                    newOrigin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) - (info.Direction * aConst.FragmentOffset);
+                else
+                    newOrigin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) + (info.Direction * aConst.FragmentOffset);
+            }
+            else
+                newOrigin = !Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position;
+
+            ++info.SpawnDepth;
             for (int i = 0; i < p.Info.AmmoDef.Fragment.Fragments; i++)
             {
                 var frag = fragPool.Get();
-                var info = p.Info;
-                var target = info.Target;
                 frag.System = info.System;
                 frag.Ai = info.Ai;
-                var aConst = info.AmmoDef.Const;
-                frag.AmmoDef = info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+                frag.AmmoDef = ammoDef;
                 
-                frag.Depth = ++info.SpawnDepth;
-
+                frag.Depth = info.SpawnDepth;
                 frag.TargetEntity = target.TargetEntity;
                 frag.IsFakeTarget = target.IsFakeTarget;
                 frag.TargetProjectile = target.Projectile;
@@ -433,16 +445,7 @@ namespace CoreSystems.Support
                 frag.Guidance = info.EnableGuidance;
                 frag.Radial = aConst.FragRadial;
 
-                if (aConst.HasFragmentOffset)
-                {
-                    if (aConst.HasNegFragmentOffset)
-                        frag.Origin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) - (info.Direction * aConst.FragmentOffset);
-                    else
-                        frag.Origin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) + (info.Direction * aConst.FragmentOffset);
-                }
-                else 
-                    frag.Origin = !Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position;
-
+                frag.Origin = newOrigin;
                 frag.OriginUp = info.OriginUp;
                 frag.Random = new XorShiftRandomStruct(info.Random.NextUInt64());
                 frag.DoDamage = info.DoDamage;
@@ -516,6 +519,7 @@ namespace CoreSystems.Support
                 info.OriginUp = frag.OriginUp;
                 info.Random = frag.Random;
                 info.DoDamage = frag.DoDamage;
+                info.SpawnDepth = frag.Depth;
                 info.BaseDamagePool = aConst.BaseDamage;
                 p.PredictedTargetPos = frag.PredictedTargetPos;
                 info.Direction = frag.Direction;
