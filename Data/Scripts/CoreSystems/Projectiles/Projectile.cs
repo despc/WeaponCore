@@ -340,8 +340,9 @@ namespace CoreSystems.Projectiles
             }
         }
 
-        private void SpawnShrapnel()
+        internal void SpawnShrapnel()
         {
+            Info.LastFragTime = Info.Age;
             var shrapnel = Info.System.Session.Projectiles.ShrapnelPool.Get();
             shrapnel.Init(this, Info.System.Session.Projectiles.FragmentPool);
             Info.System.Session.Projectiles.ShrapnelToSpawn.Add(shrapnel);

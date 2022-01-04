@@ -207,6 +207,7 @@ namespace CoreSystems.Support
         public readonly bool EndOfLifeAv;
         public readonly bool EndOfLifeAoe;
         public readonly bool TimedFragments;
+        public readonly bool HasFragProximity;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -343,7 +344,7 @@ namespace CoreSystems.Support
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
             Fragments(ammo, out HasFragmentOffset, out HasNegFragmentOffset, out FragmentOffset, out FragRadial, out FragDegrees, out FragReverse, out FragDropVelocity, out FragMaxChildren, out FragIgnoreArming, out FragOnArmed, out FragOnEnd);
-            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragProximity);
+            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragProximity, out HasFragProximity);
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
@@ -509,13 +510,14 @@ namespace CoreSystems.Support
             fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && FragmentId > -1;
         }
 
-        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out double proximity)
+        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out double proximity, out bool hasProximity)
         {
             timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
             interval = ammo.AmmoDef.Fragment.TimedSpawns.Interval;
             maxSpawns = ammo.AmmoDef.Fragment.TimedSpawns.MaxSpawns;
             proximity = ammo.AmmoDef.Fragment.TimedSpawns.MinProximity;
+            hasProximity = proximity > 0;
         }
 
         private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int patternIndex, out bool guidedDetected)

@@ -49,6 +49,7 @@ namespace CoreSystems.Support
         internal int FireCounter;
         internal int AiVersion;
         internal int SpawnDepth;
+        internal int LastFragTime;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
         internal double DistanceTraveled;
@@ -169,6 +170,7 @@ namespace CoreSystems.Support
             FireCounter = 0;
             AiVersion = 0;
             UniqueMuzzleId = 0;
+            LastFragTime = 0;
             ClosestDistSqrToTarget = double.MinValue; 
             ShieldResistMod = 1f;
             ShieldBypassMod = 1f;
