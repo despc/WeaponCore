@@ -37,7 +37,7 @@ namespace CoreSystems
             var controlledEntity = ActiveCockPit ?? ActiveControlBlock ?? PlayerHandWeapon?.Owner;
             var topEntity = ActiveControlBlock != null ? controlledEntity?.GetTopMostParent() : controlledEntity;
 
-            if (topEntity != null && EntityToMasterAi.TryGetValue(topEntity, out TrackingAi) && !TrackingAi.MarkedForClose)
+            if (topEntity != null && EntityToMasterAi.TryGetValue(topEntity, out TrackingAi) && !TrackingAi.MarkedForClose && TrackingAi.Data.Repo != null)
             {
                 var camera = Session.CameraController?.Entity as MyCameraBlock;
                 if (camera == null || !GroupedCamera(camera))
@@ -55,7 +55,7 @@ namespace CoreSystems
             }
             else
             {
-                if (TrackingAi != null)
+                if (TrackingAi?.Data.Repo != null)
                 {
                     TrackingAi.Construct.Focus.ClientIsFocused(TrackingAi);
 

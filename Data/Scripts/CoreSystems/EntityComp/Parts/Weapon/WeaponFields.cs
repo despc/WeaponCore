@@ -345,22 +345,32 @@ namespace CoreSystems.Platform
             MiddleMuzzleIndex = Muzzles.Length > 1 ? Muzzles.Length / 2 - 1 : 0;
 
             AnimationsSet = comp.Session.CreateWeaponAnimationSet(system, parts);
-            foreach (var set in AnimationsSet)
-            {
-                foreach (var pa in set.Value)
-                {
-                    var modifiesCore = pa.Part == azimuthPart || pa.Part == elevationPart || pa.Part == spinPart || pa.Part == entity;
-                    if (modifiesCore && (pa.HasMovement || pa.MovesPivotPos))
-                    {
-                        Comp.AnimationsModifyCoreParts = true;
-                        if (!System.Session.DedicatedServer && System.Session.PerformanceWarning.Add(Comp.SubTypeId))
-                            Log.Line($"{Comp.SubtypeName} - {System.PartName} - Animation modifies core subparts, performance impact");
-                    }
 
-                    comp.AllAnimations.Add(pa);
-                    AnimationLookup.Add(pa.AnimationId, pa);
+            try
+            {
+                foreach (var set in AnimationsSet)
+                {
+                    foreach (var pa in set.Value)
+                    {
+                        var modifiesCore = pa.Part == azimuthPart || pa.Part == elevationPart || pa.Part == spinPart ||
+                                           pa.Part == entity;
+                        if (modifiesCore && (pa.HasMovement || pa.MovesPivotPos))
+                        {
+                            Comp.AnimationsModifyCoreParts = true;
+                            if (!System.Session.DedicatedServer &&
+                                System.Session.PerformanceWarning.Add(Comp.SubTypeId))
+                                Log.Line(
+                                    $"{Comp.SubtypeName} - {System.PartName} - Animation modifies core subparts, performance impact");
+                        }
+
+                        comp.AllAnimations.Add(pa);
+                        AnimationLookup.Add(pa.AnimationId, pa);
+                    }
                 }
             }
+            catch (Exception ex) { Log.Line($"Exception in {comp.SubtypeName} AnimationsSet: {ex}", null, true); }
+
+
 
             ParticleEvents = comp.Session.CreateWeaponParticleEvents(system, parts);
 
