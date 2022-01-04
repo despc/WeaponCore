@@ -841,6 +841,7 @@ namespace CoreSystems.Support
                     InvCurve,
                     Squeeze,
                     Pooled,
+                    Exponential,
                 }
 
                 public enum AoeShape

@@ -1046,6 +1046,9 @@ namespace CoreSystems.Support
                 case "Squeeze":
                     falloffModifier = blocksHit * 0.22d;
                     break;
+                case "Exponential":
+                    falloffModifier = blocksHit * 0.29d;
+                    break;
                 default:
                     falloffModifier = 1;
                     break;
