@@ -71,7 +71,6 @@ namespace CoreSystems.Projectiles
         internal bool MoveToAndActivate;
         internal bool LockedTarget;
         internal bool DynamicGuidance;
-        internal bool GenerateShrapnel;
         internal bool LinePlanetCheck;
         internal bool SmartsOn;
         internal bool MineSeeking;
@@ -118,7 +117,6 @@ namespace CoreSystems.Projectiles
             AccelDir = Info.Direction;
             var cameraStart = Info.System.Session.CameraPos;
             Vector3D.DistanceSquared(ref cameraStart, ref Info.Origin, out DistanceFromCameraSqr);
-            GenerateShrapnel = Info.AmmoDef.Const.ShrapnelId > -1;
             var probability = Info.AmmoDef.AmmoGraphics.VisualProbability;
             EnableAv = !Info.AmmoDef.Const.VirtualBeams && !Info.System.Session.DedicatedServer && DistanceFromCameraSqr <= Info.System.Session.SyncDistSqr && (probability >= 1 || probability >= MyUtils.GetRandomDouble(0.0f, 1f));
             ModelState = EntityState.None;
@@ -888,9 +886,8 @@ namespace CoreSystems.Projectiles
 
         internal void ProjectileClose()
         {
-            var detInfo = Info.AmmoDef.AreaOfDamage.EndOfLife;
-            var detonate = detInfo.Enable && (!detInfo.ArmOnlyOnHit || Info.ObjectsHit > 0);
-            if (GenerateShrapnel && Info.Age >= Info.AmmoDef.Const.MinArmingTime && (!detInfo.Enable || detonate))
+            var aConst = Info.AmmoDef.Const;
+            if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
                 SpawnShrapnel();
 
             for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
@@ -904,8 +901,7 @@ namespace CoreSystems.Projectiles
 
             State = ProjectileState.Dead;
 
-            var afInfo = Info.AmmoDef.AreaOfDamage;
-            var detExp = !afInfo.EndOfLife.NoVisuals && detonate;
+            var detExp = aConst.EndOfLifeAv && (!aConst.ArmOnlyOnHit || Info.ObjectsHit > 0);
 
             if (EnableAv)
             {

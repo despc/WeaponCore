@@ -780,14 +780,25 @@ namespace CoreSystems.Api
                 {
                     [ProtoMember(1)] internal string AmmoRound;
                     [ProtoMember(2)] internal int Fragments;
-                    [ProtoMember(3)] internal float ForwardDegrees;
+                    [ProtoMember(3)] internal float Radial;
                     [ProtoMember(4)] internal float BackwardDegrees;
                     [ProtoMember(5)] internal float Degrees;
                     [ProtoMember(6)] internal bool Reverse;
-                    [ProtoMember(7)] internal bool RandomizeDir;
+                    [ProtoMember(7)] internal bool IgnoreArming;
                     [ProtoMember(8)] internal bool DropVelocity;
                     [ProtoMember(9)] internal float Offset;
-                    [ProtoMember(10)] internal float Radial;
+                    [ProtoMember(10)] internal int MaxChildren;
+                    [ProtoMember(11)] internal TimedSpawnDef TimedSpawns;
+
+                    [ProtoContract]
+                    public struct TimedSpawnDef
+                    {
+                        [ProtoMember(1)] internal bool Enable;
+                        [ProtoMember(2)] internal int Interval;
+                        [ProtoMember(3)] internal int StartTime;
+                        [ProtoMember(4)] internal int MaxSpawns;
+                        [ProtoMember(5)] internal double MinProximity;
+                    }
                 }
 
                 [ProtoContract]

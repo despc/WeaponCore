@@ -572,26 +572,24 @@ namespace CoreSystems
                         bool deadBlock = false;
 
                         //Check for end of primary life
-                        if (scaledDamage <= blockHp && primaryDamage)
+                        if (primaryDamage && scaledDamage <= blockHp)
                         {
                             basePool = 0;
                             t.BaseDamagePool = basePool;
                             detRequested = hasDet;
-                            //Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
+                            objectsHit++;
                             if (hitMass > 0)//apply force
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
                                 if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
                             }
+                            //Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
                         }
-                        else
+                        else if (primaryDamage)
                         {
-                            if (primaryDamage)
-                            {                       
-                                deadBlock = true;
-                                basePool -= (float)(blockHp / baseScale);  //check for accuracy?
-                                objectsHit++;
-                            }
+                            deadBlock = true;
+                            basePool -= (float)(blockHp / baseScale);  //check for accuracy?
+                            objectsHit++;
                         }
 
                         //AOE damage logic applied to aoeDamageFall
@@ -630,7 +628,7 @@ namespace CoreSystems
                                 }
                             }
  
-                            scaledDamage += aoeScaledDmg;//pile in calc'd AOE dmg
+                            scaledDamage = aoeScaledDmg;
 
                             if (!aoeIsPool && scaledDamage > blockHp)
                                 deadBlock = true;

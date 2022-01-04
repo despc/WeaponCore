@@ -48,6 +48,7 @@ namespace CoreSystems.Support
         internal int Age;
         internal int FireCounter;
         internal int AiVersion;
+        internal int SpawnDepth;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
         internal double DistanceTraveled;
@@ -157,6 +158,7 @@ namespace CoreSystems.Support
             ShieldInLine = false;
             ShieldKeepBypass = false;
             TriggerGrowthSteps = 0;
+            SpawnDepth = 0;
             PartId = 0;
             MuzzleId = 0;
             Age = 0;
@@ -411,7 +413,9 @@ namespace CoreSystems.Support
                 frag.System = info.System;
                 frag.Ai = info.Ai;
                 var aConst = info.AmmoDef.Const;
-                frag.AmmoDef = info.System.AmmoTypes[aConst.ShrapnelId].AmmoDef;
+                frag.AmmoDef = info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+                
+                frag.Depth = ++info.SpawnDepth;
 
                 frag.TargetEntity = target.TargetEntity;
                 frag.IsFakeTarget = target.IsFakeTarget;
@@ -556,6 +560,7 @@ namespace CoreSystems.Support
         public BoundingSphereD DeadSphere;
         public int WeaponId;
         public int MuzzleId;
+        public int Depth;
         public XorShiftRandomStruct Random;
         public bool Guidance;
         public bool DoDamage;

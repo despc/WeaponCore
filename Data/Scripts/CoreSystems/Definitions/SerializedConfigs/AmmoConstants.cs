@@ -112,7 +112,7 @@ namespace CoreSystems.Support
         public readonly int PulseChance;
         public readonly int PulseGrowTime;
         public readonly int EnergyMagSize;
-        public readonly int ShrapnelId = -1;
+        public readonly int FragmentId = -1;
         public readonly int MaxChaseTime;
         public readonly int MagazineSize;
         public readonly int PatternIndexCnt;
@@ -120,6 +120,11 @@ namespace CoreSystems.Support
         public readonly int MagsToLoad;
         public readonly int MaxAmmo;
         public readonly int DecayTime;
+        public readonly int FragMaxChildren;
+        public readonly int FragStartTime;
+        public readonly int FragInterval;
+        public readonly int MaxFrags;
+
         public readonly bool HasEjectEffect;
         public readonly bool Pulse;
         public readonly bool PrimeModel;
@@ -191,11 +196,17 @@ namespace CoreSystems.Support
         public readonly bool HasFragmentOffset;
         public readonly bool FragReverse;
         public readonly bool FragDropVelocity;
+        public readonly bool FragOnEnd;
+        public readonly bool ArmOnlyOnHit;
+        public readonly bool FragIgnoreArming;
+        public readonly bool FragOnArmed;
         public readonly bool LongTrail;
         public readonly bool ShortTrail;
         public readonly bool TinyTrail;
         public readonly bool RareTrail;
-
+        public readonly bool EndOfLifeAv;
+        public readonly bool EndOfLifeAoe;
+        public readonly bool TimedFragments;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -251,6 +262,7 @@ namespace CoreSystems.Support
         public readonly double MaxOffset;
         public readonly double MinOffsetLength;
         public readonly double MaxOffsetLength;
+        public readonly double FragProximity;
 
         internal AmmoConstants(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session, WeaponSystem system, int ammoIndex)
         {
@@ -286,7 +298,7 @@ namespace CoreSystems.Support
                     guidedAmmo = true;
 
                 if (ammoType.AmmoRound.Equals(ammo.AmmoDef.Fragment.AmmoRound))
-                    ShrapnelId = i;
+                    FragmentId = i;
             }
 
             LoadModifiers(session, ammo, out AmmoModsFound);
@@ -306,6 +318,7 @@ namespace CoreSystems.Support
             AmmoParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Ammo.Name);
             HitParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name);
             HitParticleStr = ammo.AmmoDef.AmmoGraphics.Particles.Hit.Name;
+            EndOfLifeAv = !ammo.AmmoDef.AreaOfDamage.EndOfLife.NoVisuals && ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable;
 
             DrawLine = ammo.AmmoDef.AmmoGraphics.Lines.Tracer.Enable;
             LineColorVariance = ammo.AmmoDef.AmmoGraphics.Lines.ColorVariance.Start > 0 && ammo.AmmoDef.AmmoGraphics.Lines.ColorVariance.End > 0;
@@ -324,17 +337,13 @@ namespace CoreSystems.Support
 
             MaxChaseTime = ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime > 0 ? ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime : int.MaxValue;
             MaxObjectsHit = ammo.AmmoDef.ObjectsHit.MaxObjectsHit > 0 ? ammo.AmmoDef.ObjectsHit.MaxObjectsHit : int.MaxValue;
+            ArmOnlyOnHit = ammo.AmmoDef.AreaOfDamage.EndOfLife.ArmOnlyOnHit;
 
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
-            HasFragmentOffset = !MyUtils.IsZero(ammo.AmmoDef.Fragment.Offset);
-            HasNegFragmentOffset = ammo.AmmoDef.Fragment.Offset < 0;
-            FragmentOffset = Math.Abs(ammo.AmmoDef.Fragment.Offset);
-            FragRadial = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Radial, 0, 360));
-            FragDegrees = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Degrees, 0, 360));
-            FragReverse = ammo.AmmoDef.Fragment.Reverse;
-            FragDropVelocity = ammo.AmmoDef.Fragment.DropVelocity;
+            Fragments(ammo, out HasFragmentOffset, out HasNegFragmentOffset, out FragmentOffset, out FragRadial, out FragDegrees, out FragReverse, out FragDropVelocity, out FragMaxChildren, out FragIgnoreArming, out FragOnArmed, out FragOnEnd);
+            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragProximity);
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
@@ -353,7 +362,7 @@ namespace CoreSystems.Support
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.Ewar.Field.Particle.Name);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
-            AreaEffects(ammo.AmmoDef, out ByBlockHitDepth, out EndOfLifeDepth, out EwarType, out ByBlockHitDamage, out ByBlockHitRadius, out EndOfLifeDamage, out EndOfLifeRadius, out EwarStrength, out LargestHitSize, out EwarRadius, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb);
+            AreaEffects(ammo.AmmoDef, out ByBlockHitDepth, out EndOfLifeDepth, out EwarType, out ByBlockHitDamage, out ByBlockHitRadius, out EndOfLifeDamage, out EndOfLifeRadius, out EwarStrength, out LargestHitSize, out EwarRadius, out Ewar, out NonAntiSmartEwar, out EwarTriggerRange, out MinArmingTime, out AoeMaxAbsorb, out DetMaxAbsorb, out EndOfLifeAoe);
             Beams(ammo.AmmoDef, out IsBeamWeapon, out VirtualBeams, out RotateRealBeam, out ConvergeBeams, out OneHitParticle, out OffsetEffect);
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
@@ -378,10 +387,10 @@ namespace CoreSystems.Support
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
             var predictionEligible = session.IsClient || session.DedicatedServer;
 
-            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && ShrapnelId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
+            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && FragmentId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
-                Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {ShrapnelId}");
+                Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {FragmentId}");
 
             SlowFireFixedWeapon = system.TurretMovement == WeaponSystem.TurretType.Fixed && (RealShotsPerMin <= 120 || Reloadable && system.WConst.ReloadTime >= 120);
 
@@ -484,6 +493,31 @@ namespace CoreSystems.Support
             alwaysDraw = (Trail || HasShotFade) && RealShotsPerSec < 0.1;
         }
 
+        private void Fragments(WeaponSystem.AmmoType ammo, out bool hasFragmentOffset, out bool hasNegFragmentOffset, out float fragmentOffset, out float fragRadial, out float fragDegrees, out bool fragReverse, out bool fragDropVelocity, out int fragMaxChildren, out bool fragIgnoreArming, out bool fragOnArmed, out bool fragOnEnd)
+        {
+
+            hasFragmentOffset = !MyUtils.IsZero(ammo.AmmoDef.Fragment.Offset);
+            hasNegFragmentOffset = ammo.AmmoDef.Fragment.Offset < 0;
+            fragmentOffset = Math.Abs(ammo.AmmoDef.Fragment.Offset);
+            fragRadial = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Radial, 0, 360));
+            fragDegrees = MathHelper.ToRadians(MathHelper.Clamp(ammo.AmmoDef.Fragment.Degrees, 0, 360));
+            fragReverse = ammo.AmmoDef.Fragment.Reverse;
+            fragDropVelocity = ammo.AmmoDef.Fragment.DropVelocity;
+            fragMaxChildren = ammo.AmmoDef.Fragment.MaxChildren > 0 ? ammo.AmmoDef.Fragment.MaxChildren : int.MaxValue;
+            fragIgnoreArming = ammo.AmmoDef.Fragment.IgnoreArming;
+            fragOnArmed = ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable && ArmOnlyOnHit && !FragIgnoreArming && FragmentId > -1;
+            fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && FragmentId > -1;
+        }
+
+        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out double proximity)
+        {
+            timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable;
+            startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
+            interval = ammo.AmmoDef.Fragment.TimedSpawns.Interval;
+            maxSpawns = ammo.AmmoDef.Fragment.TimedSpawns.MaxSpawns;
+            proximity = ammo.AmmoDef.Fragment.TimedSpawns.MinProximity;
+        }
+
         private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int patternIndex, out bool guidedDetected)
         {
             var pattern = ammo.AmmoDef.Pattern;
@@ -557,7 +591,7 @@ namespace CoreSystems.Support
         {
             var s = system;
             var a = ammoDef.AmmoDef;
-            var hasShrapnel = ShrapnelId > -1;
+            var hasShrapnel = FragmentId > -1;
             var l = wDef.HardPoint.Loading;
 
 
@@ -701,7 +735,7 @@ namespace CoreSystems.Support
 
             if (hasShrapnel)//Add damage from fragments
             {
-                var sAmmo = wDef.Ammos[ShrapnelId];
+                var sAmmo = wDef.Ammos[FragmentId];
                 var fragments = a.Fragment.Fragments;
 
                 Vector2 FragDmg = new Vector2(0, 0);
@@ -1058,7 +1092,7 @@ namespace CoreSystems.Support
             pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
-        private void AreaEffects(AmmoDef ammoDef, out float byBlockHitDepth, out float endOfLifeDepth, out EwarType ewarType, out float byBlockHitDamage, out double byBlockHitRadius, out float endOfLifeDamage, out float endOfLifeRadius, out double ewarEffectStrength, out double largestHitSize, out double ewarEffectSize, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb)
+        private void AreaEffects(AmmoDef ammoDef, out float byBlockHitDepth, out float endOfLifeDepth, out EwarType ewarType, out float byBlockHitDamage, out double byBlockHitRadius, out float endOfLifeDamage, out float endOfLifeRadius, out double ewarEffectStrength, out double largestHitSize, out double ewarEffectSize, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb, out bool endOfLifeAoe)
         {
             ewarType = ammoDef.Ewar.Type;
 
@@ -1094,7 +1128,7 @@ namespace CoreSystems.Support
             endOfLifeDepth = ammoDef.AreaOfDamage.EndOfLife.Depth <= 0 ? (float)ammoDef.AreaOfDamage.EndOfLife.Radius: ammoDef.AreaOfDamage.EndOfLife.Depth;
             aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : float.MaxValue;
             detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : float.MaxValue;
-
+            endOfLifeAoe = ammoDef.AreaOfDamage.EndOfLife.Enable;
         }
 
         private MyConcurrentPool<MyEntity> Models(AmmoDef ammoDef, WeaponDefinition wDef, out bool primeModel, out bool triggerModel, out string primeModelPath)

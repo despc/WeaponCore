@@ -322,8 +322,7 @@ namespace CoreSystems.Projectiles
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.EndOfLifeRadius;
 
-                    var dInfo = aDef.AreaOfDamage.EndOfLife;
-                    if (p.MoveToAndActivate || dInfo.Enable && info.Age >= dInfo.MinArmingTime && (!dInfo.ArmOnlyOnHit || info.ObjectsHit > 0)) {
+                    if (p.MoveToAndActivate || aConst.EndOfLifeAoe && info.Age >= aConst.MinArmingTime && (!aConst.ArmOnlyOnHit || info.ObjectsHit > 0)) {
 
                         if (!p.UseEntityCache)
                             MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
