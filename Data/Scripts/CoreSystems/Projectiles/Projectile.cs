@@ -610,7 +610,7 @@ namespace CoreSystems.Projectiles
                 var maxSteps = Info.AmmoDef.Const.PulseGrowTime;
                 if (Info.TriggerGrowthSteps < areaSize)
                 {
-                    var expansionPerTick = areaSize / maxSteps;
+                    var expansionPerTick = areaSize / maxSteps+1;//sets a minimum of 1 tick to expand, to prevent a divide by zero below.  If left at zero, bubble renders significantly smaller
                     var nextSize = ++Info.TriggerGrowthSteps * expansionPerTick;
                     if (nextSize <= areaSize)
                     {

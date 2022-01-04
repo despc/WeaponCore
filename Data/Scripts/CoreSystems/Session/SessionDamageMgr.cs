@@ -157,6 +157,9 @@ namespace CoreSystems
                     case Falloff.Squeeze: //Damage is highest at furthest point from impact, to create a spall or crater
                         unscaledDetDmg *= detradius * 0.22f;
                         break;
+                    case Falloff.Exponential: //Damage is highest at furthest point from impact, to create a spall or crater
+                        unscaledDetDmg *= detradius * 0.29f;
+                        break;
                 }
             
             }
@@ -187,6 +190,9 @@ namespace CoreSystems
                         break;
                     case Falloff.Squeeze: //Damage is highest at furthest point from impact, to create a spall or crater
                         unscaledAoeDmg *= aoeRadius * 0.22f;
+                        break;
+                    case Falloff.Exponential: //Damage is highest at furthest point from impact, to create a spall or crater
+                        unscaledAoeDmg *= aoeRadius * 0.29f;
                         break;
                 }
 
@@ -451,6 +457,9 @@ namespace CoreSystems
                                 break;
                             case Falloff.Pooled:
                                 aoeDamageFall = aoeDamage;
+                                break;
+                            case Falloff.Exponential:
+                                aoeDamageFall = 1 / (j + 1) * aoeDamage;
                                 break;
 
                         }

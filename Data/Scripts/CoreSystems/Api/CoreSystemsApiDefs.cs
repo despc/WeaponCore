@@ -848,6 +848,7 @@ namespace CoreSystems.Api
                         InvCurve,
                         Squeeze,
                         Pooled,
+                        Exponential,
                     }
 
                     public enum AoeShape
