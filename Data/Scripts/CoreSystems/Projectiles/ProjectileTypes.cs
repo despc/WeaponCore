@@ -406,7 +406,7 @@ namespace CoreSystems.Support
     internal class Fragments
     {
         internal List<Fragment> Sharpnel = new List<Fragment>();
-        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, bool proximity)
+        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, bool aimTarget)
         {
             var info = p.Info;
             var target = info.Target;
@@ -424,6 +424,7 @@ namespace CoreSystems.Support
                 newOrigin = !Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position;
 
             ++info.SpawnDepth;
+
             for (int i = 0; i < p.Info.AmmoDef.Fragment.Fragments; i++)
             {
                 var frag = fragPool.Get();
@@ -464,7 +465,7 @@ namespace CoreSystems.Support
                 var shrapnelDir = Vector3.TransformNormal(mutli  * -new Vector3(
                     MyMath.FastSin(randomFloat1) * MyMath.FastCos(randomFloat2),
                     MyMath.FastSin(randomFloat1) * MyMath.FastSin(randomFloat2),
-                    MyMath.FastCos(randomFloat1)), Matrix.CreateFromDir(info.Direction));
+                    MyMath.FastCos(randomFloat1)), Matrix.CreateFromDir(!aimTarget ? info.Direction : Vector3D.Normalize(target.TargetEntity.PositionComp.WorldAABB.Center - newOrigin)));
 
                 frag.Direction = shrapnelDir;
                 frag.PrimeEntity = null;

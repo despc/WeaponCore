@@ -350,7 +350,7 @@ namespace CoreSystems.Projectiles
             
             var projectiles = Info.System.Session.Projectiles;
             var shrapnel = projectiles.ShrapnelPool.Get();
-            shrapnel.Init(this, projectiles.FragmentPool, timedSpawn && aCosnt.HasFragProximity);
+            shrapnel.Init(this, projectiles.FragmentPool, timedSpawn && aCosnt.HasFragProximity && aCosnt.FragPointAtTarget);
             projectiles.ShrapnelToSpawn.Add(shrapnel);
         }
 
