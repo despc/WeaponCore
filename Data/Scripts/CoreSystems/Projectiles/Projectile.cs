@@ -342,13 +342,16 @@ namespace CoreSystems.Projectiles
 
         internal void SpawnShrapnel(bool timedSpawn = true)
         {
-            if (timedSpawn && ++Info.Frags == Info.AmmoDef.Const.MaxFrags && Info.AmmoDef.Const.FragParentDies)
+            var aCosnt = Info.AmmoDef.Const;
+            if (timedSpawn && ++Info.Frags == aCosnt.MaxFrags && aCosnt.FragParentDies)
                 EarlyEnd = true;
 
             Info.LastFragTime = Info.Age;
-            var shrapnel = Info.System.Session.Projectiles.ShrapnelPool.Get();
-            shrapnel.Init(this, Info.System.Session.Projectiles.FragmentPool);
-            Info.System.Session.Projectiles.ShrapnelToSpawn.Add(shrapnel);
+            
+            var projectiles = Info.System.Session.Projectiles;
+            var shrapnel = projectiles.ShrapnelPool.Get();
+            shrapnel.Init(this, projectiles.FragmentPool, timedSpawn && aCosnt.HasFragProximity);
+            projectiles.ShrapnelToSpawn.Add(shrapnel);
         }
 
         internal bool NewTarget()

@@ -406,7 +406,7 @@ namespace CoreSystems.Support
     internal class Fragments
     {
         internal List<Fragment> Sharpnel = new List<Fragment>();
-        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool)
+        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, bool proximity)
         {
             var info = p.Info;
             var target = info.Target;
