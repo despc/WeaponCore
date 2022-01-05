@@ -237,9 +237,13 @@ namespace CoreSystems.Platform
                 if (PartState.Overheated && PartState.Heat <= (System.MaxHeat * System.WepCoolDown))
                 {
                     EventTriggerStateChanged(EventTriggers.Overheated, false);
-                    PartState.Overheated = false;
-                    if (System.Session.MpActive && System.Session.IsServer)
-                        System.Session.SendState(Comp);
+                    if (System.Session.IsServer)
+                    {
+                        PartState.Overheated = false;
+                        if (System.Session.MpActive)
+                            System.Session.SendState(Comp);
+                    }
+
                 }
 
                 if (PartState.Heat > 0)

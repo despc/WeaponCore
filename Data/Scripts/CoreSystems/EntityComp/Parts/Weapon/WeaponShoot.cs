@@ -312,7 +312,7 @@ namespace CoreSystems.Platform
                 var burstDelay = (uint)System.Values.HardPoint.Loading.DelayAfterBurst;
                 ShootTick = System.Values.HardPoint.Loading.DelayAfterBurst > TicksPerShot ? System.Session.Tick + burstDelay : System.Session.Tick + TicksPerShot;
 
-                 if (System.Values.HardPoint.Loading.GiveUpAfter)
+                if (System.Values.HardPoint.Loading.GiveUpAfter)
                      GiveUpTarget();
             }
             else if (System.AlwaysFireFull)
@@ -341,9 +341,13 @@ namespace CoreSystems.Platform
             EventTriggerStateChanged(EventTriggers.Overheated, true);
 
             var wasOver = PartState.Overheated;
-            PartState.Overheated = true;
-            if (System.Session.MpActive && System.Session.IsServer && !wasOver)
-                System.Session.SendState(Comp);
+            if (System.Session.IsServer)
+            {
+                PartState.Overheated = true;
+                if (System.Session.MpActive && !wasOver)
+                    System.Session.SendState(Comp);
+            }
+
         }
 
         private void UnSetPreFire()
