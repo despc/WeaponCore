@@ -587,7 +587,7 @@ namespace CoreSystems
                             t.BaseDamagePool = basePool;
                             detRequested = hasDet;
                             objectsHit++;
-                            if (hitMass > 0)//apply force
+                            if (hitMass > 0 && i == 0)//apply force
                             {
                                 var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
                                 if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
