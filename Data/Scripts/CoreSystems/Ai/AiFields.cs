@@ -161,7 +161,6 @@ namespace CoreSystems.Support
         internal int MyProjectiles;
         internal int NearByEntities;
         internal int NearByEntitiesTmp;
-        internal int ProInMinCacheRange;
         internal int WeaponsTracking;
 
         internal double MaxTargetingRange;

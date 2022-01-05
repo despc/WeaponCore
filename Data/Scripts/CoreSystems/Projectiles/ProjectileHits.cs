@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using CoreSystems.Support;
-using Jakaria;
 using Sandbox.Common.ObjectBuilders;
-using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage;
@@ -26,7 +23,8 @@ namespace CoreSystems.Projectiles
         {
             var vhCount = ValidateHits.Count;
             var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
-            var stride = vhCount < minCount ? 100000 : 48;
+            var targetStride = vhCount / 20;
+            var stride = vhCount < minCount ? 100000 : targetStride > 48 ? targetStride : 48;
 
             MyAPIGateway.Parallel.For(0, ValidateHits.Count, x => {
 
@@ -302,8 +300,12 @@ namespace CoreSystems.Projectiles
 
                             hitEntity.EventType = Voxel;
                         }
-                        else if (voxelState == VoxelIntersectBranch.DeferedMissUpdate || voxelState == VoxelIntersectBranch.DeferFullCheck)
-                            DeferedVoxels.Add(new DeferedVoxels { Projectile = p, Branch = voxelState, Voxel = voxel });
+                        else if (voxelState == VoxelIntersectBranch.DeferedMissUpdate || voxelState == VoxelIntersectBranch.DeferFullCheck) {
+                            lock (DeferedVoxels)
+                            {
+                                DeferedVoxels.Add(new DeferedVoxels { Projectile = p, Branch = voxelState, Voxel = voxel });
+                            }
+                        }
                     }
                     else if (ent.Physics != null && !ent.Physics.IsPhantom && !ent.IsPreview && grid != null)
                     {
@@ -450,15 +452,17 @@ namespace CoreSystems.Projectiles
                 else if (p.CheckType == Projectile.CheckTypes.Sphere)
                     entityCollection.Clear();
 
-                if (p.FinalizeIntersection) FinalHitCheck.Add(p);
+                if (p.FinalizeIntersection) {
+                    lock (FinalHitCheck)
+                        FinalHitCheck.Add(p);
+                }
 
             }, stride);
-            ValidateHits.ClearImmediate();
+            ValidateHits.Clear();
         }
 
         internal void DeferedVoxelCheck()
         {
-            DeferedVoxels.ApplyAdditions();
             for (int i = 0; i < DeferedVoxels.Count; i++)
             {
 
@@ -545,15 +549,18 @@ namespace CoreSystems.Projectiles
                 hitEntity.EventType = Voxel;
                 p.Info.HitList.Add(hitEntity);
             }
-            DeferedVoxels.ClearImmediate();
+            DeferedVoxels.Clear();
         }
         internal void FinalizeHits()
         {
-            FinalHitCheck.ApplyAdditions();
-            for (int i = 0; i < FinalHitCheck.Count; i++)
-            {
+            var vhCount = FinalHitCheck.Count;
+            var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
+            var targetStride = vhCount / 20;
+            var stride = vhCount < minCount ? 100000 : targetStride > 48 ? targetStride : 48;
 
-                var p = FinalHitCheck[i];
+            MyAPIGateway.Parallel.For(0, FinalHitCheck.Count, x =>
+            {
+                var p = FinalHitCheck[x];
 
                 p.Intersecting = GenerateHitInfo(p);
 
@@ -584,16 +591,17 @@ namespace CoreSystems.Projectiles
 
                         var intersectOrigin = isBeam ? new Vector3D(p.Beam.From + (info.Direction * distToTarget)) : p.LastPosition;
 
-                        Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.System.WeaponIdHash, aConst.AmmoIdxPos, (float)(isBeam ? info.MaxTrajectory : distToTarget));
+                        Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.System.WeaponIdHash, aConst.AmmoIdxPos, (float) (isBeam ? info.MaxTrajectory : distToTarget));
                         info.AimedShot = false; //to prevent hits on another grid from triggering again
                     }
-                    Session.Hits.Add(p);
-                    continue;
+                    lock(Session.Hits)
+                        Session.Hits.Add(p);
+                    return;
                 }
 
                 info.HitList.Clear();
-            }
-            FinalHitCheck.ClearImmediate();
+            },stride);
+            FinalHitCheck.Clear();
         }
 
         internal void ProjectileHit(Projectile attacker, Projectile target, bool lineCheck, ref LineD beam)
@@ -732,17 +740,14 @@ namespace CoreSystems.Projectiles
 
                 MyEntity ent;
                 HitEntity hitEnt;
-                HitEntity otherHit;
                 if (isX)
                 {
                     hitEnt = x;
-                    otherHit = y;
                     ent = hitEnt.Entity;
                 }
                 else
                 {
                     hitEnt = y;
-                    otherHit = x;
                     ent = hitEnt.Entity;
                 }
 
@@ -776,10 +781,8 @@ namespace CoreSystems.Projectiles
                     }
                     else
                     {
-
                         if (hitEnt.SphereCheck || info.EwarActive && eWarPulse)
                         {
-
                             var ewarActive = hitEnt.EventType == Field || hitEnt.EventType == Effect;
 
                             var hitPos = !ewarActive ? hitEnt.PruneSphere.Center + (hitEnt.Intersection.Direction * hitEnt.PruneSphere.Radius) : hitEnt.PruneSphere.Center;
@@ -808,7 +811,6 @@ namespace CoreSystems.Projectiles
                                 MatrixD transform = grid.WorldMatrix;
                                 if (firstBlock != null && !firstBlock.IsDestroyed && (hitEnt.Info.Target.CoreCube == null || firstBlock != hitEnt.Info.Target.CoreCube.SlimBlock))
                                 {
-
                                     hitEnt.Blocks.Add(firstBlock);
                                     if (closestBlockFound) continue;
                                     MyOrientedBoundingBoxD obb;

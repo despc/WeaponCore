@@ -23,7 +23,6 @@ namespace CoreSystems
                 /// GridAi update section
                 ///
                 ai.MyProjectiles = 0;
-                ai.ProInMinCacheRange = 0;
                 ai.AccelChecked = false;
                 var activeTurret = false;
 

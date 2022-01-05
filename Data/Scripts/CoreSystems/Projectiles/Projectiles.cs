@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using CoreSystems.Support;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Collections;
 using VRage.Game;
+using VRage.Library.Threading;
 using VRage.Utils;
 using VRageMath;
 using static CoreSystems.Projectiles.Projectile;
@@ -20,16 +22,16 @@ namespace CoreSystems.Projectiles
         internal readonly MyConcurrentPool<ProInfo> VirtInfoPool = new MyConcurrentPool<ProInfo>(128, vInfo => vInfo.Clean());
         internal readonly MyConcurrentPool<Fragments> ShrapnelPool = new MyConcurrentPool<Fragments>(128);
         internal readonly MyConcurrentPool<Fragment> FragmentPool = new MyConcurrentPool<Fragment>(128);
-        internal readonly MyConcurrentPool<HitEntity> HitEntityPool = new MyConcurrentPool<HitEntity>(32, hitEnt => hitEnt.Clean());
+        internal readonly MyConcurrentPool<HitEntity> HitEntityPool = new MyConcurrentPool<HitEntity>(512, hitEnt => hitEnt.Clean());
 
-        internal readonly ConcurrentCachingList<Projectile> FinalHitCheck = new ConcurrentCachingList<Projectile>(2048);
-        internal readonly ConcurrentCachingList<Projectile> ValidateHits = new ConcurrentCachingList<Projectile>(2048);
-        internal readonly ConcurrentCachingList<DeferedVoxels> DeferedVoxels = new ConcurrentCachingList<DeferedVoxels>(128);
+        internal readonly List<DeferedVoxels> DeferedVoxels = new List<DeferedVoxels>(128);
+        internal readonly List<Projectile> FinalHitCheck = new List<Projectile>(512);
+        internal readonly List<Projectile> ValidateHits = new List<Projectile>(1024);
         internal readonly List<Projectile> AddTargets = new List<Projectile>();
-        internal readonly List<Fragments> ShrapnelToSpawn = new List<Fragments>(256);
+        internal readonly List<Fragments> ShrapnelToSpawn = new List<Fragments>(128);
         internal readonly List<Projectile> ActiveProjetiles = new List<Projectile>(2048);
-        internal readonly List<DeferedAv> DeferedAvDraw = new List<DeferedAv>(2048);
-        internal readonly List<NewProjectile> NewProjectiles = new List<NewProjectile>(2048);
+        internal readonly List<DeferedAv> DeferedAvDraw = new List<DeferedAv>(1024);
+        internal readonly List<NewProjectile> NewProjectiles = new List<NewProjectile>(512);
         internal readonly Stack<Projectile> ProjectilePool = new Stack<Projectile>(2048);
 
         internal ulong CurrentProjectileId;
@@ -67,7 +69,7 @@ namespace CoreSystems.Projectiles
                 CheckHits();
             Session.StallReporter.End();
 
-            if (!ValidateHits.IsEmpty) {
+            if (ValidateHits.Count > 0) {
 
                 Session.StallReporter.Start($"InitialHitCheck: {ValidateHits.Count} - beamCount:{_beamCount}", 11);
                 InitialHitCheck();
@@ -220,14 +222,15 @@ namespace CoreSystems.Projectiles
                         p.TravelMagnitude = info.Age != 0 ? p.Velocity * StepConst : p.InitalStep;
                         p.Position += p.TravelMagnitude;
 
-                        if (aConst.TimedFragments && aConst.FragStartTime > info.Age && info.Age - info.LastFragTime >= aConst.FragInterval)
+                        if (aConst.TimedFragments && info.Age >= aConst.FragStartTime && info.Age - info.LastFragTime >= aConst.FragInterval && info.Frags <= aConst.MaxFrags)
                         {
                             if (!aConst.HasFragProximity)
                                 p.SpawnShrapnel();
                             else if (targetEnt != null)
                             {
-                                var inflatedSize = aConst.FragProximity + targetEnt.PositionComp.LocalVolume.Radius;
-                                if (Vector3D.DistanceSquared(targetEnt.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
+                                var topEnt = targetEnt.GetTopMostParent();
+                                var inflatedSize = aConst.FragProximity + topEnt.PositionComp.LocalVolume.Radius;
+                                if (Vector3D.DistanceSquared(topEnt.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
                                     p.SpawnShrapnel();
                             }
                         }
@@ -238,7 +241,6 @@ namespace CoreSystems.Projectiles
                     double distChanged;
                     Vector3D.Dot(ref info.Direction, ref p.TravelMagnitude, out distChanged);
                     info.DistanceTraveled += Math.Abs(distChanged);
-                    if (info.DistanceTraveled <= 500) ++ai.ProInMinCacheRange;
 
                     if (p.DynamicGuidance) {
                         if (p.PruningProxyId != -1) {
@@ -324,9 +326,6 @@ namespace CoreSystems.Projectiles
                 if (aConst.IsBeamWeapon)
                     ++_beamCount;
 
-                if (ai.ProInMinCacheRange > 99999 && !ai.AccelChecked)
-                    ai.ComputeAccelSphere();
-
                 p.UseEntityCache = ai.AccelChecked && info.DistanceTraveled <= ai.NearByEntitySphere.Radius && !ai.MarkedForClose;
                 var triggerRange = aConst.EwarTriggerRange > 0 && !info.EwarAreaPulse ? aConst.EwarTriggerRange : 0;
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
@@ -398,7 +397,8 @@ namespace CoreSystems.Projectiles
 
             var apCount = ActiveProjetiles.Count;
             var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
-            var stride = apCount < minCount ? 100000 : 48;
+            var targetStride = apCount / 20;
+            var stride = apCount < minCount ? 100000 : targetStride > 48 ? targetStride : 48;
 
             MyAPIGateway.Parallel.For(0, apCount, i =>
             {
@@ -424,14 +424,14 @@ namespace CoreSystems.Projectiles
                 info.ShieldKeepBypass = false;
 
                 if (info.Target.IsProjectile || p.UseEntityCache && info.Ai.NearByEntityCache.Count > 0 || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0) {
-                    ValidateHits.Add(p);
+                    lock (ValidateHits) 
+                        ValidateHits.Add(p);
                 }
                 else if (p.MineSeeking && !p.MineTriggered && info.Age - p.ChaseAge > 600)
                 {
                     p.Asleep = true;
                 }
             }, stride);
-            ValidateHits.ApplyAdditions();
         }
 
         private void UpdateAv()

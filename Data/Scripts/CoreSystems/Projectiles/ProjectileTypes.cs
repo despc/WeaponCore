@@ -49,6 +49,7 @@ namespace CoreSystems.Support
         internal int FireCounter;
         internal int AiVersion;
         internal int SpawnDepth;
+        internal int Frags;
         internal int LastFragTime;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
@@ -161,6 +162,7 @@ namespace CoreSystems.Support
             TriggerGrowthSteps = 0;
             SpawnDepth = 0;
             PartId = 0;
+            Frags = 0;
             MuzzleId = 0;
             Age = 0;
             ProjectileDisplacement = 0;
@@ -217,7 +219,6 @@ namespace CoreSystems.Support
 
         public readonly List<IMySlimBlock> Blocks = new List<IMySlimBlock>(16);
         public readonly List<Vector3I> Vector3ICache = new List<Vector3I>(16);
-        public readonly HashSet<HitEntity> SubGrids = new HashSet<HitEntity>();
         public MyEntity Entity;
         internal Projectile Projectile;
         public ProInfo Info;
