@@ -340,9 +340,11 @@ namespace CoreSystems.Projectiles
             }
         }
 
-        internal void SpawnShrapnel()
+        internal void SpawnShrapnel(bool timedSpawn = true)
         {
-            ++Info.Frags;
+            if (timedSpawn && ++Info.Frags == Info.AmmoDef.Const.MaxFrags && Info.AmmoDef.Const.FragParentDies)
+                EarlyEnd = true;
+
             Info.LastFragTime = Info.Age;
             var shrapnel = Info.System.Session.Projectiles.ShrapnelPool.Get();
             shrapnel.Init(this, Info.System.Session.Projectiles.FragmentPool);
@@ -890,7 +892,7 @@ namespace CoreSystems.Projectiles
         {
             var aConst = Info.AmmoDef.Const;
             if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
-                SpawnShrapnel();
+                SpawnShrapnel(false);
 
             for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
             Watchers.Clear();

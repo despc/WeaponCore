@@ -801,7 +801,8 @@ namespace CoreSystems.Support
                     [ProtoMember(2)] internal int Interval;
                     [ProtoMember(3)] internal int StartTime;
                     [ProtoMember(4)] internal int MaxSpawns;
-                    [ProtoMember(5)] internal double MinProximity;
+                    [ProtoMember(5)] internal double Proximity;
+                    [ProtoMember(6)] internal bool ParentDies;
                 }
             }
 
