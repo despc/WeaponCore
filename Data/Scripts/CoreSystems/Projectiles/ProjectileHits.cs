@@ -60,8 +60,6 @@ namespace CoreSystems.Projectiles
                     Session.WaterMap.TryGetValue(info.MyPlanet.EntityId, out water);
 
                 for (int i = 0; i < collectionCount; i++) {
-                    Log.Line($"Initial Hit Collection Checking...");
-
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];
 
                     var grid = ent as MyCubeGrid;
@@ -408,8 +406,6 @@ namespace CoreSystems.Projectiles
                     }
                 }
                                 
-                //if (target.IsProjectile && !aConst.NonAntiSmartEwar && !projetileInShield)
-
                 if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;

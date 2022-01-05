@@ -818,8 +818,6 @@ namespace CoreSystems
 
         private static void DamageProjectile(HitEntity hitEnt, ProInfo attacker)
         {
-            Log.Line($"Hit Projectile");
-
             var pTarget = hitEnt.Projectile;
             if (pTarget == null) return;
             attacker.ObjectsHit++;
