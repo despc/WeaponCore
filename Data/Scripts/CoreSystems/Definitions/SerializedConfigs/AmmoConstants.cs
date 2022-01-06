@@ -18,6 +18,7 @@ using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaOfDamageDef;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.ShapeDef.Shapes;
 using static CoreSystems.Settings.CoreSettings.ServerSettings;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.DamageScaleDef;
+using static CoreSystems.Support.WeaponDefinition.AmmoDef.FragmentDef.TimedSpawnDef;
 using static CoreSystems.Support.ValueProcessors;
 
 namespace CoreSystems.Support
@@ -99,6 +100,7 @@ namespace CoreSystems.Support
         public readonly EwarType EwarType;
         public readonly Texture TracerMode;
         public readonly Texture TrailMode;
+        public readonly PointTypes FragPointType;
         public readonly string ModelPath;
         public readonly string HitParticleStr;
         public readonly string DetParticleStr;
@@ -351,7 +353,7 @@ namespace CoreSystems.Support
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
             Fragments(ammo, out HasFragmentOffset, out HasNegFragmentOffset, out FragmentOffset, out FragRadial, out FragDegrees, out FragReverse, out FragDropVelocity, out FragMaxChildren, out FragIgnoreArming, out FragOnArmed, out FragOnEnd);
-            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragGroupSize, out FragGroupDelay, out FragProximity, out HasFragProximity, out FragParentDies, out FragPointAtTarget, out HasFragGroup);
+            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragGroupSize, out FragGroupDelay, out FragProximity, out HasFragProximity, out FragParentDies, out FragPointAtTarget, out HasFragGroup, out FragPointType);
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
@@ -516,7 +518,7 @@ namespace CoreSystems.Support
             fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && FragmentId > -1;
         }
 
-        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup)
+        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out AmmoDef.FragmentDef.TimedSpawnDef.PointTypes pointType)
         {
             timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
@@ -529,6 +531,7 @@ namespace CoreSystems.Support
             groupSize = ammo.AmmoDef.Fragment.TimedSpawns.GroupSize;
             groupDelay = ammo.AmmoDef.Fragment.TimedSpawns.GroupDelay;
             hasGroup = groupSize > 0 && groupDelay > 0;
+            pointType = ammo.AmmoDef.Fragment.TimedSpawns.PointType;
         }
 
         private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int patternIndex, out bool guidedDetected)

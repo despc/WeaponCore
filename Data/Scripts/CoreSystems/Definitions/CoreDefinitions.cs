@@ -798,6 +798,13 @@ namespace CoreSystems.Support
                 [ProtoContract]
                 public struct TimedSpawnDef
                 {
+                    public enum PointTypes
+                    {
+                        Direct,
+                        Lead,
+                        Predict,
+                    }
+
                     [ProtoMember(1)] internal bool Enable;
                     [ProtoMember(2)] internal int Interval;
                     [ProtoMember(3)] internal int StartTime;
@@ -807,6 +814,7 @@ namespace CoreSystems.Support
                     [ProtoMember(7)] internal bool PointAtTarget;
                     [ProtoMember(8)] internal int GroupSize;
                     [ProtoMember(9)] internal int GroupDelay;
+                    [ProtoMember(10)] internal PointTypes PointType;
                 }
             }
 
