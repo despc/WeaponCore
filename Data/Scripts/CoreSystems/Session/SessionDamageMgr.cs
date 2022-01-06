@@ -990,7 +990,7 @@ namespace CoreSystems
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, gmax);
             foundSomething = false;
 
-            if (maxdepth < maxradius)
+            if (depth < radius)
             {
                 var localline = new LineD(localfrom, localto);
                 
