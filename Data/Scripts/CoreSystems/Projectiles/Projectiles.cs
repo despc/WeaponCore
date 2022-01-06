@@ -172,6 +172,21 @@ namespace CoreSystems.Projectiles
                         }
                     }
 
+                    if (aConst.TimedFragments && info.Age >= aConst.FragStartTime && info.Age - info.LastFragTime >= aConst.FragInterval && info.Frags <= aConst.MaxFrags)
+                    {
+                        if (!aConst.HasFragGroup || info.Frags == 0 || info.Frags % aConst.FragGroupSize != 0 || info.Age - info.LastFragTime > aConst.FragGroupDelay)
+                        {
+                            if (!aConst.HasFragProximity)
+                                p.SpawnShrapnel();
+                            else if (targetEnt != null)
+                            {
+                                var topEnt = targetEnt.GetTopMostParent();
+                                var inflatedSize = aConst.FragProximity + topEnt.PositionComp.LocalVolume.Radius;
+                                if (Vector3D.DistanceSquared(topEnt.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
+                                    p.SpawnShrapnel();
+                            }
+                        }
+                    }
 
                     if (p.DeltaVelocityPerTick > 0 && !info.EwarAreaPulse) {
 
@@ -221,19 +236,6 @@ namespace CoreSystems.Projectiles
 
                         p.TravelMagnitude = info.Age != 0 ? p.Velocity * StepConst : p.InitalStep;
                         p.Position += p.TravelMagnitude;
-
-                        if (aConst.TimedFragments && info.Age >= aConst.FragStartTime && info.Age - info.LastFragTime >= aConst.FragInterval && info.Frags <= aConst.MaxFrags)
-                        {
-                            if (!aConst.HasFragProximity)
-                                p.SpawnShrapnel();
-                            else if (targetEnt != null)
-                            {
-                                var topEnt = targetEnt.GetTopMostParent();
-                                var inflatedSize = aConst.FragProximity + topEnt.PositionComp.LocalVolume.Radius;
-                                if (Vector3D.DistanceSquared(topEnt.PositionComp.WorldAABB.Center, p.Position) <= inflatedSize * inflatedSize)
-                                    p.SpawnShrapnel();
-                            }
-                        }
                     }
 
                     info.PrevDistanceTraveled = info.DistanceTraveled;
@@ -252,6 +254,7 @@ namespace CoreSystems.Projectiles
                         }
                     }
                 }
+
                 if (p.ModelState == EntityState.Exists) {
 
                     var up = MatrixD.Identity.Up;

@@ -557,6 +557,7 @@ namespace CoreSystems.Api
                 [ProtoMember(24)] internal AreaOfDamageDef AreaOfDamage;
                 [ProtoMember(25)] internal EwarDef Ewar;
                 [ProtoMember(26)] internal bool IgnoreVoxels;
+                [ProtoMember(27)] internal bool Synchronize;
 
                 [ProtoContract]
                 public struct DamageScaleDef
@@ -800,6 +801,8 @@ namespace CoreSystems.Api
                         [ProtoMember(5)] internal double Proximity;
                         [ProtoMember(6)] internal bool ParentDies;
                         [ProtoMember(7)] internal bool PointAtTarget;
+                        [ProtoMember(8)] internal int GroupSize;
+                        [ProtoMember(9)] internal int GroupDelay;
                     }
                 }
 
