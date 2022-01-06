@@ -172,9 +172,9 @@ namespace CoreSystems.Projectiles
                         }
                     }
 
-                    if (aConst.TimedFragments && info.Age >= aConst.FragStartTime && info.Age - info.LastFragTime >= aConst.FragInterval && info.Frags <= aConst.MaxFrags)
+                    if (aConst.TimedFragments && info.SpawnDepth < aConst.FragMaxChildren && info.Age >= aConst.FragStartTime && info.Age - info.LastFragTime >= aConst.FragInterval && info.Frags <= aConst.MaxFrags)
                     {
-                        if (!aConst.HasFragGroup || info.Frags == 0 || info.Frags % aConst.FragGroupSize != 0 || info.Age - info.LastFragTime > aConst.FragGroupDelay)
+                        if (!aConst.HasFragGroup || info.Frags == 0 || info.Frags % aConst.FragGroupSize != 0 || info.Age - info.LastFragTime >= aConst.FragGroupDelay)
                         {
                             if (!aConst.HasFragProximity)
                                 p.SpawnShrapnel();

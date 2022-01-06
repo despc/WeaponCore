@@ -344,7 +344,10 @@ namespace CoreSystems.Projectiles
         {
             var aCosnt = Info.AmmoDef.Const;
             if (timedSpawn && ++Info.Frags == aCosnt.MaxFrags && aCosnt.FragParentDies)
+            {
                 EarlyEnd = true;
+                Log.Line($"die");
+            }
 
             Info.LastFragTime = Info.Age;
             
