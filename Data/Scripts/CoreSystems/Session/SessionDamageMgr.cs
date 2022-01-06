@@ -820,7 +820,6 @@ namespace CoreSystems
         {
             var pTarget = hitEnt.Projectile;
             if (pTarget == null) return;
-
             attacker.ObjectsHit++;
             var objHp = pTarget.Info.BaseHealthPool;
             var integrityCheck = attacker.AmmoDef.DamageScales.MaxIntegrity > 0;
@@ -882,7 +881,7 @@ namespace CoreSystems
                             sTarget.Info.BaseHealthPool = 0;
                             sTarget.State = Projectile.ProjectileState.Destroy;
                         }
-                        else sTarget.Info.BaseHealthPool -= attacker.AmmoDef.Const.Health;
+                        else sTarget.Info.BaseHealthPool -= scaledDamage;
                     }
                 }
             }

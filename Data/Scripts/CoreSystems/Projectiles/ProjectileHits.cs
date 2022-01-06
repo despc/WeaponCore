@@ -46,7 +46,6 @@ namespace CoreSystems.Projectiles
 
                 bool projetileInShield = false;
                 var tick = Session.Tick;
-
                 var useEntityCollection = p.CheckType != Projectile.CheckTypes.Ray;
                 var entityCollection = p.UseEntityCache ? ai.NearByEntityCache : p.MyEntityList;
                 var collectionCount = !useEntityCollection ? p.MySegmentList.Count : entityCollection.Count;
@@ -61,7 +60,6 @@ namespace CoreSystems.Projectiles
                     Session.WaterMap.TryGetValue(info.MyPlanet.EntityId, out water);
 
                 for (int i = 0; i < collectionCount; i++) {
-
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];
 
                     var grid = ent as MyCubeGrid;
@@ -407,8 +405,8 @@ namespace CoreSystems.Projectiles
                         info.HitList.Add(hitEntity);
                     }
                 }
-
-                if (target.IsProjectile && !aConst.NonAntiSmartEwar && !projetileInShield)
+                                
+                if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;
                     var hitTolerance = detonate ? aConst.EndOfLifeRadius : aConst.ByBlockHitRadius > aConst.CollisionSize ? aConst.ByBlockHitRadius : aConst.CollisionSize;
@@ -432,7 +430,6 @@ namespace CoreSystems.Projectiles
                     var dVec = Vector3D.Zero;
                     var eVec = Vector3.Zero;
                     */
-
                     if (rayCheck || sphere.Intersects(testSphere))
                     {
                         /*
