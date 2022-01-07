@@ -35,7 +35,6 @@ namespace CoreSystems.Support
         internal Vector3D Origin;
         internal Vector3D OriginUp;
         internal Vector3D Direction;
-        internal Vector3D PrevProjectilePos;
         internal Vector3D PrevTargetPos;
         internal Hit Hit;
         internal XorShiftRandomStruct Random;
@@ -66,12 +65,10 @@ namespace CoreSystems.Support
         internal bool EnableGuidance = true;
         internal bool EwarAreaPulse;
         internal bool EwarActive;
-        internal bool ModelOnly;
         internal bool LockOnFireState;
         internal bool ModOverride;
         internal bool AimedShot;
         internal bool DoDamage;
-        internal bool IsVirtual;
         internal bool InPlanetGravity;
         internal bool ShieldBypassed;
         internal bool ShieldKeepBypass;
@@ -83,7 +80,6 @@ namespace CoreSystems.Support
 
         internal void InitVirtual(Weapon weapon, AmmoDef ammodef, MyEntity primeEntity, MyEntity triggerEntity, Weapon.Muzzle muzzle, double maxTrajectory, float shotFade)
         {
-            IsVirtual = true;
             System = weapon.System;
             Ai = weapon.BaseComp.Ai;
             MyPlanet = weapon.BaseComp.Ai.MyPlanet;
@@ -150,7 +146,6 @@ namespace CoreSystems.Support
             IsShrapnel = false;
             EwarAreaPulse = false;
             EwarActive = false;
-            ModelOnly = false;
             LockOnFireState = false;
             AimedShot = false;
             DoDamage = false;
@@ -181,7 +176,6 @@ namespace CoreSystems.Support
             ShooterVel = Vector3D.Zero;
             TriggerMatrix = MatrixD.Identity;
             PrevTargetPos = Vector3D.Zero;
-            PrevProjectilePos = Vector3D.Zero;
         }
     }
 

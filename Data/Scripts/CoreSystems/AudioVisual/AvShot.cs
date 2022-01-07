@@ -184,7 +184,6 @@ namespace CoreSystems.Support
             ShotFade = info.ShotFade;
             FireCounter = info.FireCounter;
             ShrinkInited = false;
-            ModelOnly = info.ModelOnly;
             OriginDir = originDir;
 
             var defaultDecayTime = AmmoDef.Const.DecayTime;
