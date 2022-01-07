@@ -14,9 +14,7 @@ using VRageMath;
 using static CoreSystems.Support.WeaponDefinition;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.EwarDef;
-using static CoreSystems.Support.WeaponDefinition.AmmoDef.AreaOfDamageDef;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.ShapeDef.Shapes;
-using static CoreSystems.Settings.CoreSettings.ServerSettings;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.DamageScaleDef;
 using static CoreSystems.Support.WeaponDefinition.AmmoDef.FragmentDef.TimedSpawnDef;
 using static CoreSystems.Support.ValueProcessors;
@@ -518,7 +516,7 @@ namespace CoreSystems.Support
             fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && FragmentId > -1;
         }
 
-        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out AmmoDef.FragmentDef.TimedSpawnDef.PointTypes pointType)
+        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out PointTypes pointType)
         {
             timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
