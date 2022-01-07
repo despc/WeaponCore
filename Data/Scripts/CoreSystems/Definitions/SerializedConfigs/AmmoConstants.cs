@@ -1144,7 +1144,7 @@ namespace CoreSystems.Support
             largestHitSize = Math.Max(byBlockHitRadius, Math.Max(endOfLifeRadius, ewarEffectSize));
 
             eWar = ammoDef.Ewar.Enable;
-            nonAntiSmart = ewarType != EwarType.AntiSmart;
+            nonAntiSmart = !eWar || ewarType != EwarType.AntiSmart;
             eWarTriggerRange = eWar && Pulse && ammoDef.Ewar.Field.TriggerRange > 0 ? ammoDef.Ewar.Field.TriggerRange : 0;
             minArmingTime = ammoDef.AreaOfDamage.EndOfLife.MinArmingTime;
             byBlockHitDepth = ammoDef.AreaOfDamage.ByBlockHit.Depth <= 0 ? (float)ammoDef.AreaOfDamage.ByBlockHit.Radius: ammoDef.AreaOfDamage.ByBlockHit.Depth;
