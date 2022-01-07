@@ -67,7 +67,7 @@ namespace CoreSystems.Projectiles
         internal bool LockedTarget;
         internal bool DynamicGuidance;
         internal bool LinePlanetCheck;
-        internal bool SmartsOn;
+        internal bool IsSmart;
         internal bool MineSeeking;
         internal bool MineActivated;
         internal bool MineTriggered;
@@ -84,6 +84,7 @@ namespace CoreSystems.Projectiles
         internal bool SphereCheck;
         internal bool LineCheck;
         internal bool Asleep;
+        internal bool IsDrone;
         internal enum CheckTypes
         {
             Ray,
@@ -160,14 +161,16 @@ namespace CoreSystems.Projectiles
             Info.InPlanetGravity = Info.Ai.InPlanetGravity;
             Info.Ai.ProjectileTicker = Info.Ai.Session.Tick;
 
+            IsDrone = guidance == GuidanceType.DroneAdvanced;
+
             if (guidance == GuidanceType.Smart && DynamicGuidance)
             {
-                SmartsOn = true;
+                IsSmart = true;
                 SmartSlot = Info.Random.Range(0, 10);
             }
             else
             {
-                SmartsOn = false;
+                IsSmart = false;
                 SmartSlot = 0;
             }
 
@@ -184,7 +187,7 @@ namespace CoreSystems.Projectiles
             else OriginTargetPos = Vector3D.Zero;
             LockedTarget = !Vector3D.IsZero(OriginTargetPos);
 
-            if (SmartsOn && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
+            if (IsSmart && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
             {
                 OffSetTarget();
             }
@@ -192,6 +195,7 @@ namespace CoreSystems.Projectiles
             {
                 TargetOffSet = Vector3D.Zero;
             }
+
             PrevTargetOffset = Vector3D.Zero;
 
             var targetSpeed = (float)(!aConst.IsBeamWeapon ? aConst.DesiredProjectileSpeed : Info.MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND);
@@ -283,7 +287,7 @@ namespace CoreSystems.Projectiles
             {
                 var originDir = !Info.IsShrapnel ? AccelDir : Info.Direction;
                 Info.AvShot = session.Av.AvShotPool.Get();
-                Info.AvShot.Init(Info, SmartsOn, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
+                Info.AvShot.Init(Info, IsSmart, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
                 Info.AvShot.SetupSounds(DistanceFromCameraSqr); //Pool initted sounds per Projectile type... this is expensive
                 if (aConst.HitParticle && !aConst.IsBeamWeapon || aConst.EndOfLifeAoe && !ammoDef.AreaOfDamage.EndOfLife.NoVisuals)
                 {
@@ -495,9 +499,9 @@ namespace CoreSystems.Projectiles
             if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
             {
 
-                SmartsOn = true;
+                IsSmart = true;
 
-                if (SmartsOn && Info.AmmoDef.Const.TargetOffSet && LockedTarget)
+                if (IsSmart && Info.AmmoDef.Const.TargetOffSet && LockedTarget)
                 {
                     OffSetTarget();
                 }
@@ -508,6 +512,29 @@ namespace CoreSystems.Projectiles
             }
 
             TravelMagnitude = Velocity * StepConst;
+        }
+        internal void RunDrone(MyEntity targetEnt)
+        {
+            if (targetEnt != null)
+            {
+                var topEnt = targetEnt.GetTopMostParent();
+                if (targetEnt.MarkedForClose)
+                    Log.Line($"entity is marked for close");
+                else if (topEnt.MarkedForClose)
+                    Log.Line($"top entity is marked for close");
+
+                var topPos = topEnt.PositionComp.WorldAABB.Center;
+                var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);
+                if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
+                {
+                    Velocity = (Info.OriginUp * MaxSpeed);
+                    Info.Direction = Vector3D.Normalize(Velocity);
+                    AccelDir = Info.Direction;
+                }
+                else
+                    Velocity = Vector3D.Normalize(targetEnt.PositionComp.WorldAABB.Center - Position) * MaxSpeed;
+            }
+            else Log.Line($"drone target is null");
         }
 
         internal void RunSmart()
@@ -887,7 +914,7 @@ namespace CoreSystems.Projectiles
         {
             if (MineTriggered)
             {
-                SmartsOn = false;
+                IsSmart = false;
                 Info.DistanceTraveled = double.MaxValue;
                 FieldTime = 0;
                 return;
@@ -904,8 +931,8 @@ namespace CoreSystems.Projectiles
 
             if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
             {
-                SmartsOn = false;
-                SmartsOn = false;
+                IsSmart = false;
+                IsSmart = false;
                 SmartSlot = 0;
                 TargetOffSet = Vector3D.Zero;
             }

@@ -186,11 +186,15 @@ namespace CoreSystems.Projectiles
                                     p.SpawnShrapnel();
                             }
                         }
+
+                        if (aConst.AmmoSkipAccel && p.IsDrone)
+                            p.RunDrone(targetEnt);
                     }
 
-                    if (aConst.DeltaVelocityPerTick > 0 && !info.EwarAreaPulse) {
+                    if (!aConst.AmmoSkipAccel && !info.EwarAreaPulse) {
 
-                        if (p.SmartsOn) p.RunSmart();
+                        if (p.IsSmart) p.RunSmart();
+                        else if (p.IsDrone) p.RunDrone(targetEnt);
                         else {
 
                             var accel = true;
@@ -455,7 +459,7 @@ namespace CoreSystems.Projectiles
                         var vs = vp.AvShot;
 
                         vp.TracerLength = info.TracerLength;
-                        vs.Init(vp, p.SmartsOn, p.AccelInMetersPerSec * StepConst, p.MaxSpeed, ref p.AccelDir);
+                        vs.Init(vp, p.IsSmart, p.AccelInMetersPerSec * StepConst, p.MaxSpeed, ref p.AccelDir);
 
                         if (info.BaseDamagePool <= 0 || p.State == ProjectileState.Depleted)
                             vs.ProEnded = true;

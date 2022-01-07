@@ -50,7 +50,6 @@ namespace CoreSystems.Platform
                     if (!Comp.Ai.Construct.Focus.GetPriorityTarget(Comp.Ai, out focusTarget, out focusId) || Comp.Ai.Construct.Data.Repo.FocusData.Locked[focusId] == FocusData.LockModes.None)
                         return;
                 }
-
                 if (PosChangedTick != Comp.Session.Tick)
                     UpdatePivotPos();
 
