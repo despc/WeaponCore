@@ -161,7 +161,7 @@ namespace CoreSystems.Projectiles
             Info.InPlanetGravity = Info.Ai.InPlanetGravity;
             Info.Ai.ProjectileTicker = Info.Ai.Session.Tick;
 
-            IsDrone = guidance == GuidanceType.DroneAdvanced;
+            IsDrone = guidance == GuidanceType.DroneAdvanced && aConst.TimedFragments;
 
             if (guidance == GuidanceType.Smart && DynamicGuidance)
             {
