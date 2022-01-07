@@ -406,12 +406,11 @@ namespace CoreSystems.Support
     internal class Fragments
     {
         internal List<Fragment> Sharpnel = new List<Fragment>();
-        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, ref Vector3D pointDir)
+        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, AmmoDef ammoDef, ref Vector3D pointDir)
         {
             var info = p.Info;
             var target = info.Target;
             var aConst = info.AmmoDef.Const;
-            var ammoDef = info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
 
             Vector3D newOrigin;
             if (aConst.HasFragmentOffset) {

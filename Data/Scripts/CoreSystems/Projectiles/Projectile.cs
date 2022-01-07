@@ -343,25 +343,80 @@ namespace CoreSystems.Projectiles
 
         internal void SpawnShrapnel(bool timedSpawn = true)
         {
-            var aCosnt = Info.AmmoDef.Const;
-            var fireOnTarget = timedSpawn && aCosnt.HasFragProximity && aCosnt.FragPointAtTarget;
+            var aConst = Info.AmmoDef.Const;
+            var fireOnTarget = timedSpawn && aConst.HasFragProximity && aConst.FragPointAtTarget;
+            var fragAmmoDef = Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
 
             Vector3D pointDir;
             if (!fireOnTarget)
                 pointDir = Info.Direction;
-            else if (!TrajectoryEstimation(out pointDir) && aCosnt.FragPointType == PointTypes.Predict)
+            else if (!TrajectoryEstimation(fragAmmoDef, out pointDir))
                 return;
+            Log.Line($"{aConst.FragPointType} - {fireOnTarget} - {timedSpawn} - {aConst.HasFragProximity} - {aConst.FragPointAtTarget} - {pointDir} - {Info.Direction}");
 
-            if (timedSpawn && ++Info.Frags == aCosnt.MaxFrags && aCosnt.FragParentDies)
+            if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
                 EarlyEnd = true;
 
             Info.LastFragTime = Info.Age;
             
             var projectiles = Info.System.Session.Projectiles;
             var shrapnel = projectiles.ShrapnelPool.Get();
-            shrapnel.Init(this, projectiles.FragmentPool, ref pointDir);
+            shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref pointDir);
             projectiles.ShrapnelToSpawn.Add(shrapnel);
         }
+
+        internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, out Vector3D targetDirection)
+        {
+            if (Info.Target.TargetEntity.GetTopMostParent()?.Physics?.LinearVelocity == null)
+            {
+                targetDirection = Vector3D.Zero;
+                return false;
+            }
+
+            var targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
+            var targetVel = Info.Target.TargetEntity.GetTopMostParent().Physics.LinearVelocity;
+            var shooterPos = Position;
+            var shooterVel = Velocity;
+
+            var projectileMaxSpeed = ammoDef.Const.DesiredProjectileSpeed;
+            Vector3D deltaPos = targetPos - shooterPos;
+            Vector3D deltaVel = targetVel - shooterVel;
+            Vector3D deltaPosNorm;
+            if (Vector3D.IsZero(deltaPos)) deltaPosNorm = Vector3D.Zero;
+            else if (Vector3D.IsUnit(ref deltaPos)) deltaPosNorm = deltaPos;
+            else Vector3D.Normalize(ref deltaPos, out deltaPosNorm);
+
+            double closingSpeed;
+            Vector3D.Dot(ref deltaVel, ref deltaPosNorm, out closingSpeed);
+
+            Vector3D closingVel = closingSpeed * deltaPosNorm;
+            Vector3D lateralVel = deltaVel - closingVel;
+            double projectileMaxSpeedSqr = projectileMaxSpeed * projectileMaxSpeed;
+            double ttiDiff = projectileMaxSpeedSqr - lateralVel.LengthSquared();
+
+            if (ttiDiff < 0)
+            {
+                targetDirection = Info.Direction;
+                return false;
+            }
+
+            double projectileClosingSpeed = Math.Sqrt(ttiDiff) - closingSpeed;
+
+            double closingDistance;
+            Vector3D.Dot(ref deltaPos, ref deltaPosNorm, out closingDistance);
+
+            double timeToIntercept = ttiDiff < 0 ? 0 : closingDistance / projectileClosingSpeed;
+
+            if (timeToIntercept < 0)
+            {
+                targetDirection = Info.Direction;
+                return false;
+            }
+
+            targetDirection = Vector3D.Normalize((targetPos + timeToIntercept * (targetVel - shooterVel)) - shooterPos);
+            return true;
+        }
+
 
         internal bool NewTarget()
         {
@@ -899,48 +954,6 @@ namespace CoreSystems.Projectiles
                 Info.Target.Projectile = null;
             }
         }
-
-        internal bool TrajectoryEstimation(out Vector3D targetPos)
-        {
-            var ammoDef = Info.AmmoDef;
-            targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
-            var targetVel = Info.Target.TargetEntity.GetTopMostParent()?.Physics?.LinearVelocity ?? Vector3.Zero;
-            var shooterPos = Position;
-
-            var shooterVel = Velocity;
-            var projectileMaxSpeed = ammoDef.Const.DesiredProjectileSpeed;
-            Vector3D deltaPos = targetPos - shooterPos;
-            Vector3D deltaVel = targetVel - shooterVel;
-            Vector3D deltaPosNorm;
-            if (Vector3D.IsZero(deltaPos)) deltaPosNorm = Vector3D.Zero;
-            else if (Vector3D.IsUnit(ref deltaPos)) deltaPosNorm = deltaPos;
-            else Vector3D.Normalize(ref deltaPos, out deltaPosNorm);
-
-            double closingSpeed;
-            Vector3D.Dot(ref deltaVel, ref deltaPosNorm, out closingSpeed);
-
-            Vector3D closingVel = closingSpeed * deltaPosNorm;
-            Vector3D lateralVel = deltaVel - closingVel;
-            double projectileMaxSpeedSqr = projectileMaxSpeed * projectileMaxSpeed;
-            double ttiDiff = projectileMaxSpeedSqr - lateralVel.LengthSquared();
-
-            if (ttiDiff < 0)
-                return false;
-
-            double projectileClosingSpeed = Math.Sqrt(ttiDiff) - closingSpeed;
-
-            double closingDistance;
-            Vector3D.Dot(ref deltaPos, ref deltaPosNorm, out closingDistance);
-
-            double timeToIntercept = ttiDiff < 0 ? 0 : closingDistance / projectileClosingSpeed;
-
-            if (timeToIntercept < 0)
-                return false;
-
-            targetPos += timeToIntercept * (targetVel - shooterVel);
-            return true;
-        }
-
 
         internal void ProjectileClose()
         {
