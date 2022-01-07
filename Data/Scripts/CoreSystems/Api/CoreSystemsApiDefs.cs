@@ -1107,6 +1107,7 @@ namespace CoreSystems.Api
                         DetectTravelTo,
                         DetectSmart,
                         DetectFixed,
+                        DroneAdvanced,
                     }
 
                     [ProtoMember(1)] internal float MaxTrajectory;

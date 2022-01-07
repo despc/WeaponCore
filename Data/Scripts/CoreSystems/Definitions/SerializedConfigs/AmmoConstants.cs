@@ -255,6 +255,7 @@ namespace CoreSystems.Support
         public readonly float GravityMultiplier;
         public readonly float EndOfLifeDepth;
         public readonly float ByBlockHitDepth;
+        public readonly float DeltaVelocityPerTick;
         public readonly double LargestHitSize;
         public readonly double EwarRadius;
         public readonly double EwarStrength;
@@ -272,7 +273,7 @@ namespace CoreSystems.Support
         public readonly double MinOffsetLength;
         public readonly double MaxOffsetLength;
         public readonly double FragProximity;
-
+        public readonly double SmartOffsetSqr;
         internal AmmoConstants(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session, WeaponSystem system, int ammoIndex)
         {
 
@@ -344,6 +345,7 @@ namespace CoreSystems.Support
             TargetLossTime = ammo.AmmoDef.Trajectory.TargetLossTime > 0 ? ammo.AmmoDef.Trajectory.TargetLossTime : int.MaxValue;
             CanZombie = TargetLossTime > 0 && TargetLossTime != int.MaxValue && !IsMine;
             MaxLifeTime = ammo.AmmoDef.Trajectory.MaxLifeTime > 0 ? ammo.AmmoDef.Trajectory.MaxLifeTime : int.MaxValue;
+            DeltaVelocityPerTick = ammo.AmmoDef.Trajectory.AccelPerSec * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
 
             MaxChaseTime = ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime > 0 ? ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime : int.MaxValue;
             MaxObjectsHit = ammo.AmmoDef.ObjectsHit.MaxObjectsHit > 0 ? ammo.AmmoDef.ObjectsHit.MaxObjectsHit : int.MaxValue;
@@ -361,7 +363,7 @@ namespace CoreSystems.Support
 
             AmmoSkipAccel = ammo.AmmoDef.Trajectory.AccelPerSec <= 0;
             FeelsGravity = ammo.AmmoDef.Trajectory.GravityMultiplier > 0;
-
+            SmartOffsetSqr = ammo.AmmoDef.Trajectory.Smarts.Inaccuracy * ammo.AmmoDef.Trajectory.Smarts.Inaccuracy;
             HasBackKickForce = ammo.AmmoDef.BackKickForce > 0;
             MaxLateralThrust = MathHelperD.Clamp(ammo.AmmoDef.Trajectory.Smarts.MaxLateralThrust, 0.000001, 1);
 
@@ -377,7 +379,6 @@ namespace CoreSystems.Support
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
-
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
             ComputeAmmoPattern(ammo, wDef, guidedAmmo, out AmmoPattern, out PatternIndexCnt, out GuidedAmmoDetected);

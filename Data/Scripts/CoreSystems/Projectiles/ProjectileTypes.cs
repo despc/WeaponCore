@@ -47,7 +47,6 @@ namespace CoreSystems.Support
         internal int ObjectsHit;
         internal int Age;
         internal int FireCounter;
-        internal int AiVersion;
         internal int SpawnDepth;
         internal int Frags;
         internal int LastFragTime;
@@ -170,7 +169,6 @@ namespace CoreSystems.Support
             ShotFade = 0;
             TracerLength = 0;
             FireCounter = 0;
-            AiVersion = 0;
             UniqueMuzzleId = 0;
             LastFragTime = 0;
             ClosestDistSqrToTarget = double.MinValue; 

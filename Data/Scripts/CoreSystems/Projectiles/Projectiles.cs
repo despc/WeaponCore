@@ -156,7 +156,7 @@ namespace CoreSystems.Projectiles
 
                 if (!p.AtMaxRange) {
 
-                    if (p.FeelsGravity) {
+                    if (aConst.FeelsGravity) {
 
                         if ((info.Age % 60 == 0 || (p.FakeGravityNear || p.EntitiesNear) && info.Age % 10 == 0) && info.Age > 0) {
 
@@ -188,7 +188,7 @@ namespace CoreSystems.Projectiles
                         }
                     }
 
-                    if (p.DeltaVelocityPerTick > 0 && !info.EwarAreaPulse) {
+                    if (aConst.DeltaVelocityPerTick > 0 && !info.EwarAreaPulse) {
 
                         if (p.SmartsOn) p.RunSmart();
                         else {
@@ -231,7 +231,7 @@ namespace CoreSystems.Projectiles
                     }
                     else {
 
-                        if (p.ConstantSpeed || p.VelocityLengthSqr > 0)
+                        if (aConst.AmmoSkipAccel || p.VelocityLengthSqr > 0)
                             p.LastPosition = p.Position;
 
                         p.TravelMagnitude = info.Age != 0 ? p.Velocity * StepConst : p.InitalStep;

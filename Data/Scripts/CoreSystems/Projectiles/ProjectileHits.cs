@@ -191,7 +191,7 @@ namespace CoreSystems.Projectiles
                     if (voxel != null && voxel == voxel?.RootVoxel && !ignoreVoxels)
                     {
 
-                        if ((ent == info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance || p.CachedPlanetHit)) || !p.LinePlanetCheck && isBeam)
+                        if ((ent == info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance)) || !p.LinePlanetCheck && isBeam)
                             continue;
 
                         VoxelIntersectBranch voxelState = VoxelIntersectBranch.None;
