@@ -347,12 +347,20 @@ namespace CoreSystems.Projectiles
             var fireOnTarget = timedSpawn && aConst.HasFragProximity && aConst.FragPointAtTarget;
             var fragAmmoDef = Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
 
+            Vector3D newOrigin;
+            if (!aConst.HasFragmentOffset)
+                newOrigin = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
+            else {
+                var pos = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
+                var offSet = (Info.Direction * aConst.FragmentOffset);
+                newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
+            }
+
             Vector3D pointDir;
             if (!fireOnTarget)
                 pointDir = Info.Direction;
-            else if (!TrajectoryEstimation(fragAmmoDef, out pointDir))
+            else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
                 return;
-            Log.Line($"{aConst.FragPointType} - {fireOnTarget} - {timedSpawn} - {aConst.HasFragProximity} - {aConst.FragPointAtTarget} - {pointDir} - {Info.Direction}");
 
             if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
                 EarlyEnd = true;
@@ -361,12 +369,13 @@ namespace CoreSystems.Projectiles
             
             var projectiles = Info.System.Session.Projectiles;
             var shrapnel = projectiles.ShrapnelPool.Get();
-            shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref pointDir);
+            shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
             projectiles.ShrapnelToSpawn.Add(shrapnel);
         }
 
-        internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, out Vector3D targetDirection)
+        internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, ref Vector3D shooterPos, out Vector3D targetDirection)
         {
+            var aConst = Info.AmmoDef.Const;
             if (Info.Target.TargetEntity.GetTopMostParent()?.Physics?.LinearVelocity == null)
             {
                 targetDirection = Vector3D.Zero;
@@ -374,9 +383,16 @@ namespace CoreSystems.Projectiles
             }
 
             var targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
+
+            if (aConst.FragPointType == PointTypes.Direct)
+            {
+                targetDirection = Vector3D.Normalize(targetPos - Position);
+                return true;
+            }
+
+
             var targetVel = Info.Target.TargetEntity.GetTopMostParent().Physics.LinearVelocity;
-            var shooterPos = Position;
-            var shooterVel = Velocity;
+            var shooterVel = !Info.AmmoDef.Const.FragDropVelocity ? Velocity : Vector3D.Zero;
 
             var projectileMaxSpeed = ammoDef.Const.DesiredProjectileSpeed;
             Vector3D deltaPos = targetPos - shooterPos;
@@ -397,7 +413,7 @@ namespace CoreSystems.Projectiles
             if (ttiDiff < 0)
             {
                 targetDirection = Info.Direction;
-                return false;
+                return aConst.FragPointType == PointTypes.Direct;
             }
 
             double projectileClosingSpeed = Math.Sqrt(ttiDiff) - closingSpeed;
@@ -409,11 +425,18 @@ namespace CoreSystems.Projectiles
 
             if (timeToIntercept < 0)
             {
+                
+                if (aConst.FragPointType == PointTypes.Lead)
+                {
+                    targetDirection = Vector3D.Normalize((targetPos + timeToIntercept * (targetVel - shooterVel)) - shooterPos);
+                    return true;
+                }
+                
                 targetDirection = Info.Direction;
                 return false;
             }
 
-            targetDirection = Vector3D.Normalize((targetPos + timeToIntercept * (targetVel - shooterVel)) - shooterPos);
+            targetDirection = Vector3D.Normalize(targetPos + timeToIntercept * (targetVel - shooterVel * 1) - shooterPos);
             return true;
         }
 

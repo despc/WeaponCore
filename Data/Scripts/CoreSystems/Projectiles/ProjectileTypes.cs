@@ -406,21 +406,11 @@ namespace CoreSystems.Support
     internal class Fragments
     {
         internal List<Fragment> Sharpnel = new List<Fragment>();
-        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, AmmoDef ammoDef, ref Vector3D pointDir)
+        internal void Init(Projectile p, MyConcurrentPool<Fragment> fragPool, AmmoDef ammoDef, ref Vector3D newOrigin, ref Vector3D pointDir)
         {
             var info = p.Info;
             var target = info.Target;
             var aConst = info.AmmoDef.Const;
-
-            Vector3D newOrigin;
-            if (aConst.HasFragmentOffset) {
-                if (aConst.HasNegFragmentOffset)
-                    newOrigin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) - (info.Direction * aConst.FragmentOffset);
-                else
-                    newOrigin = (!Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position) + (info.Direction * aConst.FragmentOffset);
-            }
-            else
-                newOrigin = !Vector3D.IsZero(info.Hit.LastHit) ? info.Hit.LastHit : p.Position;
 
             ++info.SpawnDepth;
 
