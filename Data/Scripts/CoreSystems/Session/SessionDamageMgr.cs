@@ -335,7 +335,6 @@ namespace CoreSystems
             //Generics used for both AOE and detonation
             var aoeFalloff = Falloff.NoFalloff;
             var aoeShape = AoeShape.Diamond;
-
             var hasAoe = t.AmmoDef.AreaOfDamage.ByBlockHit.Enable; 
             var hasDet = t.AmmoDef.AreaOfDamage.EndOfLife.Enable && t.Age >= t.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime;
 
@@ -364,6 +363,8 @@ namespace CoreSystems
                 var aoeDamage = 0f;
                 var aoeRadius = 0d;
                 var aoeIsPool = false;
+                var aoeHits = 0;
+
 
                 if (hasAoe && !detRequested)//load in AOE vars
                 {
@@ -410,7 +411,6 @@ namespace CoreSystems
                 }
 
                 var maxAoeDistance = 0;
-                var foundAoeBlocks = false;
 
                 if (!detRequested)
                     DamageBlockCache[0].Add(rootBlock);
@@ -418,7 +418,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits);
+                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, aoeShape, showHits, out aoeHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -491,9 +491,6 @@ namespace CoreSystems
                         {
                             if (blockDmgModifier < 0.000000001f || gridDamageModifier < 0.000000001f)
                                 blockHp = float.MaxValue;
-                            else
-                                blockHp = (blockHp / blockDmgModifier / gridDamageModifier);
-
 
                             if (d.MaxIntegrity > 0 && blockHp > d.MaxIntegrity)
                             {
@@ -597,7 +594,7 @@ namespace CoreSystems
                         else if (primaryDamage)
                         {
                             deadBlock = true;
-                            basePool -= (float)(blockHp / baseScale);  //check for accuracy?
+                            basePool -= (float)(blockHp / baseScale); 
                             objectsHit++;
                         }
 
@@ -606,8 +603,7 @@ namespace CoreSystems
                         {
                             if (aoeIsPool)
                             {
-
-                                if (aoeAbsorb<= 0)// pooled without AOE absorb limit
+                                if (aoeAbsorb <= 0 )// pooled without AOE absorb limit
                                 {
                                     if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
                                     {
@@ -618,7 +614,8 @@ namespace CoreSystems
                                         aoeScaledDmg = (float)blockHp;
                                         deadBlock = true;
                                     }
-                                    aoeDamage -= aoeScaledDmg;
+                                    aoeDamage -= aoeScaledDmg/(float)damageScale;
+
                                 }
                                 else // pooled with AOE absorb limit
                                 {
@@ -632,11 +629,11 @@ namespace CoreSystems
                                         aoeScaledDmg = (float)blockHp;
                                         deadBlock = true;
                                     }
-                                    aoeDamage -= aoeScaledDmg;
+                                    aoeDamage -= aoeScaledDmg/(float)damageScale;
                                     //Log.Line($"Aoedmgpool {aoeDamage}  scaleddmg {aoeScaledDmg}");
                                 }
                             }
- 
+                            aoeDmgTally += aoeScaledDmg;
                             scaledDamage = aoeScaledDmg;
 
                             if (!aoeIsPool && scaledDamage > blockHp)
@@ -656,6 +653,9 @@ namespace CoreSystems
                             else
                                 _destroyedSlims.Add(block);
                         }
+
+                       //Log.Line($"Blockhit {block} Pri: {primaryDamage}  AOE Raw Dmg {aoeDamage}  AOE Falloff Mult{aoeDamageFall} Final Scaled Dmg {scaledDamage} of blockHP {blockHp}  " +
+     //$"Mults- LG {d.Grids.Large} SG {d.Grids.Small} Armor {d.Armor.Armor} Nonarmor {d.Armor.NonArmor} LA {d.Armor.Light} HA {d.Armor.Heavy}");
 
                         //Apply damage
                         if (canDamage)
@@ -689,7 +689,8 @@ namespace CoreSystems
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = (float)(blockHp - realDmg);
                         }
 
-                        var endCycle = (!foundAoeBlocks && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0.5d)) || objectsHit >= maxObjects;
+                        var endCycle = (aoeHits == 0 && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0.5d)) || objectsHit >= maxObjects;
+                        if (showHits && primaryDamage) Log.Line($"Primary: RootBlock {rootBlock} hit for {scaledDamage} damage of {blockHp} block HP total");
 
                         //doneskies
                         if (endCycle)
@@ -719,6 +720,8 @@ namespace CoreSystems
 
                 for (int l = 0; l < blockStages; l++)
                     DamageBlockCache[l].Clear();
+                if (showHits && !detActive && hasAoe) Log.Line($"BBH: RootBlock {rootBlock} hit, AOE dmg: {aoeDmgTally} Blocks Splashed: {aoeHits} Blocks Killed: {destroyed} ");
+                if (showHits && detActive && aoeDmgTally>0) Log.Line($"EOL: RootBlock {rootBlock} hit, AOE dmg: {aoeDmgTally} Blocks Splashed: {aoeHits} Blocks Killed: {destroyed} ");
 
             }
 
@@ -750,6 +753,7 @@ namespace CoreSystems
                 t.BaseDamagePool = basePool;
                 t.ObjectsHit = objectsHit;
             }
+
 
             hitEnt.Blocks.Clear();
         }
@@ -957,17 +961,18 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
             var rootPos = root.Position; //local cube grid
             var localfrom = grid.WorldToGridScaledLocal(direction.From);
             var localto = grid.WorldToGridScaledLocal(direction.To);
-
+            var gridsize = grid.GridSizeR;
+            aoeHits = 0;
             if (root.Min != root.Max)//non 1x1x1 impact point
             {
-                var rootbox = new BoundingBoxD(root.Min-1, root.Max+1);
+                var rootbox = new BoundingBoxD(gridsize==2?root.Min-2:root.Min-1, gridsize==2?root.Max+2:root.Max+1);
                 if (rootbox.Contains(localfrom) == ContainmentType.Contains)
                 {
                     rootPos = (Vector3I)localfrom;//used for frag generated inside root block
@@ -978,9 +983,9 @@ namespace CoreSystems
                 }
             }
 
-            //Log.Line($"Raw rootpos{root.Position}  rootpos {rootPos}  localfrom{localfrom}  min{root.Min} max{root.Max}"); 
-            radius *= grid.GridSizeR;  //GridSizeR is 0.4 for LG
-            depth *= grid.GridSizeR;
+            //Log.Line($"Raw rootpos{root.Position} gridsizer{grid.GridSizeR} rootpos {rootPos}  localfrom{localfrom} localto{localto}  min{root.Min} max{root.Max}"); 
+            radius *= gridsize;  //GridSizeR is 0.4 for LG, 2.0 for SG
+            depth *= gridsize;
             var gmin = grid.Min;
             var gmax = grid.Max;
             int maxradius = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
@@ -988,7 +993,6 @@ namespace CoreSystems
             int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
             Vector3I min2 = Vector3I.Max(rootPos - maxradius, gmin);
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, gmax);
-            foundSomething = false;
 
             if (depth < radius)
             {
@@ -1088,7 +1092,7 @@ namespace CoreSystems
                                         if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
                                         {
                                             distArray.Add(slim);
-                                            foundSomething = true;
+                                            aoeHits++;
                                             if (hitdist > maxDbc) maxDbc = hitdist;
                                             if (showHits) slim.Dithering = 0.50f;
                                         }
@@ -1098,7 +1102,7 @@ namespace CoreSystems
                                     else//Happy normal 1x1x1
                                     {
                                         distArray.Add(slim);
-                                        foundSomething = true;
+                                        aoeHits++;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
                                         if(showHits)slim.Dithering = 0.50f;
                                     }
