@@ -55,6 +55,7 @@ namespace CoreSystems.Support
         private const string FallOffMinMultStr = "FallOffMinMultipler";
         private const string ShieldBypassStr = "ShieldBypass";
         private const string MassStr = "Mass";
+        private const string HealthHitModStr = "HealthHitModifier";
 
         private readonly Dictionary<string, BaseProcessor> _modifierMap = new Dictionary<string, BaseProcessor>()
         {
@@ -78,6 +79,7 @@ namespace CoreSystems.Support
             {FallOffMinMultStr, new FloatProcessor() },
             {ShieldBypassStr, new FloatProcessor() },
             {MassStr, new FloatProcessor() },
+            {HealthHitModStr, new DoubleProcessor() },
         };
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
@@ -1220,7 +1222,8 @@ namespace CoreSystems.Support
             }
             selfDamage = d.SelfDamage;
             voxelDamage = d.DamageVoxels;
-            healthHitModifer = d.HealthHitModifier > 0 ? d.HealthHitModifier : 1;
+            var healthHitModiferRaw = AmmoModsFound && _modifierMap[HealthHitModStr].HasData() ? _modifierMap[HealthHitModStr].GetAsDouble : d.HealthHitModifier;
+            healthHitModifer = healthHitModiferRaw > 0 ? healthHitModiferRaw : 1;
             voxelHitModifer = d.VoxelHitModifier > 0 ? d.VoxelHitModifier : 1;
         }
 
