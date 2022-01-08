@@ -117,6 +117,7 @@ namespace CoreSystems.Platform
                         var dummy = Dummies[current];
                         var newInfo = dummy.Info;
                         muzzle.Direction = newInfo.Direction;
+                        muzzle.UpDirection = newInfo.UpDirection;
                         muzzle.Position = newInfo.Position;
                         muzzle.LastUpdateTick = tick;
                     }

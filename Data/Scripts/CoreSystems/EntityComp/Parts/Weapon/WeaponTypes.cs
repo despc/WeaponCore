@@ -127,6 +127,7 @@ namespace CoreSystems.Platform
             internal Weapon Weapon;
             internal Vector3D Position;
             internal Vector3D Direction;
+            internal Vector3D UpDirection;
             internal Vector3D DeviatedDir;
             internal uint LastUpdateTick;
             internal uint LastAv1Tick;

@@ -40,6 +40,8 @@ namespace CoreSystems.Support
         private MatrixD? _cachedDummyMatrix;
         internal Vector3D CachedPos;
         internal Vector3D CachedDir;
+        internal Vector3D CachedUpDir;
+
         private readonly string[] _path;
         private readonly Dictionary<string, IMyModelDummy> _tmp1 = new Dictionary<string, IMyModelDummy>();
         private readonly Dictionary<string, IMyModelDummy> _tmp2 = new Dictionary<string, IMyModelDummy>();
@@ -118,9 +120,12 @@ namespace CoreSystems.Support
                 var dummyMatrix = _cachedDummyMatrix ?? MatrixD.Identity;
                 var localPos = dummyMatrix.Translation;
                 var localDir = dummyMatrix.Forward;
+                var localUpDir = dummyMatrix.Up;
+
                 CachedPos = Vector3D.Transform(localPos, _cachedSubpart.PositionComp.WorldMatrixRef);
                 CachedDir = Vector3D.TransformNormal(localDir, _cachedSubpart.PositionComp.WorldMatrixRef);
-                return new DummyInfo { Position = CachedPos, Direction = CachedDir, ParentMatrix = _cachedSubpart.PositionComp.WorldMatrixRef, Entity = _entity, LocalPosition = localPos, DummyMatrix = dummyMatrix};
+                CachedUpDir = Vector3D.TransformNormal(localUpDir, _cachedSubpart.PositionComp.WorldMatrixRef);
+                return new DummyInfo { Position = CachedPos, Direction = CachedDir, UpDirection = CachedUpDir, ParentMatrix = _cachedSubpart.PositionComp.WorldMatrixRef, Entity = _entity, LocalPosition = localPos, DummyMatrix = dummyMatrix};
             }
         }
 
@@ -129,6 +134,7 @@ namespace CoreSystems.Support
             public Vector3D Position;
             public Vector3D LocalPosition;
             public Vector3D Direction;
+            public Vector3D UpDirection;
             public MatrixD ParentMatrix;
             public MatrixD DummyMatrix;
             public MyEntity Entity;

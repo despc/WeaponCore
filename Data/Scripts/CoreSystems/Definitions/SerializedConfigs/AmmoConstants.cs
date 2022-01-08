@@ -216,6 +216,7 @@ namespace CoreSystems.Support
         public readonly bool FragPointAtTarget;
         public readonly bool ProjectileSync;
         public readonly bool HasFragGroup;
+        public readonly bool HasFragment;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -312,6 +313,8 @@ namespace CoreSystems.Support
                     FragmentId = i;
             }
 
+            HasFragment = FragmentId > -1;
+
             LoadModifiers(session, ammo, out AmmoModsFound);
             float shieldBypassRaw;
             GetModifiableValues(ammo.AmmoDef, out BaseDamage, out Health, out GravityMultiplier, out MaxTrajectory, out EnergyBaseDmg, out EnergyAreaDmg, out EnergyDetDmg, out EnergyShieldDmg, out ShieldModifier, out FallOffDistance, out FallOffMinMultiplier, out Mass, out shieldBypassRaw);
@@ -398,7 +401,7 @@ namespace CoreSystems.Support
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
             var predictionEligible = session.IsClient || session.DedicatedServer;
 
-            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && FragmentId == -1 && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
+            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && !HasFragment && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
                 Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {FragmentId}");
@@ -515,13 +518,13 @@ namespace CoreSystems.Support
             fragDropVelocity = ammo.AmmoDef.Fragment.DropVelocity;
             fragMaxChildren = ammo.AmmoDef.Fragment.MaxChildren > 0 ? ammo.AmmoDef.Fragment.MaxChildren : int.MaxValue;
             fragIgnoreArming = ammo.AmmoDef.Fragment.IgnoreArming;
-            fragOnArmed = ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable && ArmOnlyOnHit && !FragIgnoreArming && FragmentId > -1;
-            fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && FragmentId > -1;
+            fragOnArmed = ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable && ArmOnlyOnHit && !FragIgnoreArming && HasFragment;
+            fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && HasFragment;
         }
 
         private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out PointTypes pointType)
         {
-            timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable;
+            timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable && HasFragment;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
             interval = ammo.AmmoDef.Fragment.TimedSpawns.Interval;
             maxSpawns = ammo.AmmoDef.Fragment.TimedSpawns.MaxSpawns;
@@ -608,7 +611,7 @@ namespace CoreSystems.Support
         {
             var s = system;
             var a = ammoDef.AmmoDef;
-            var hasShrapnel = FragmentId > -1;
+            var hasShrapnel = HasFragment;
             var l = wDef.HardPoint.Loading;
 
 

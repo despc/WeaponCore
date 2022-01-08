@@ -12,7 +12,8 @@ namespace CoreSystems.Projectiles
             for (int i = 0; i < NewProjectiles.Count; i++)
             {
                 var gen = NewProjectiles[i];
-                var w = gen.Muzzle.Weapon;
+                var muzzle = gen.Muzzle;
+                var w = muzzle.Weapon;
                 var comp = w.Comp;
                 var repo = comp.Data.Repo;
                 var ai = comp.Ai;
@@ -23,7 +24,6 @@ namespace CoreSystems.Projectiles
                 var aConst = a.Const;
                 var t = gen.Type;
                 var virts = gen.NewVirts;
-                var muzzle = gen.Muzzle;
                 var aimed = repo.Values.State.PlayerId == Session.PlayerId || comp.TypeSpecific == CoreComponent.CompTypeSpecific.Phantom;
 
                 var patternCycle = gen.PatternCycle;
@@ -59,7 +59,7 @@ namespace CoreSystems.Projectiles
                 info.ModOverride = comp.ModOverride;
                 info.ShooterVel = ai.GridVel;
 
-                info.OriginUp = t != Kind.Client ? w.MyPivotUp : gen.OriginUp;
+                info.OriginUp = t != Kind.Client ? muzzle.UpDirection : gen.OriginUp;
                 info.MaxTrajectory = t != Kind.Client ? aConst.MaxTrajectoryGrows && w.FireCounter < a.Trajectory.MaxTrajectoryTime ? aConst.TrajectoryStep * w.FireCounter : aConst.MaxTrajectory : gen.MaxTrajectory;
                 info.MuzzleId = t != Kind.Virtual ? muzzle.MuzzleId : -1;
                 info.UniqueMuzzleId = muzzle.UniqueId;
