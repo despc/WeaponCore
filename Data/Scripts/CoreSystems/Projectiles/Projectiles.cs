@@ -261,9 +261,8 @@ namespace CoreSystems.Projectiles
 
                 if (p.ModelState == EntityState.Exists) {
 
-                    var up = MatrixD.Identity.Up;
                     MatrixD matrix;
-                    MatrixD.CreateWorld(ref p.Position, ref info.Direction, ref up, out matrix);
+                    MatrixD.CreateWorld(ref p.Position, ref info.Direction, ref info.OriginUp, out matrix);
 
                     if (aConst.PrimeModel)
                         info.AvShot.PrimeMatrix = matrix;
