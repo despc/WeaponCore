@@ -411,6 +411,7 @@ namespace CoreSystems
                 }
 
                 var maxAoeDistance = 0;
+                var foundAoeBlocks = false;
 
                 if (!detRequested)
                     DamageBlockCache[0].Add(rootBlock);
@@ -418,7 +419,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, aoeShape, showHits, out aoeHits);
+                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -491,6 +492,8 @@ namespace CoreSystems
                         {
                             if (blockDmgModifier < 0.000000001f || gridDamageModifier < 0.000000001f)
                                 blockHp = float.MaxValue;
+                            else
+                                blockHp = (blockHp / blockDmgModifier / gridDamageModifier);
 
                             if (d.MaxIntegrity > 0 && blockHp > d.MaxIntegrity)
                             {
@@ -689,7 +692,7 @@ namespace CoreSystems
                             else if (block.Integrity - realDmg > 0) _slimHealthClient[block] = (float)(blockHp - realDmg);
                         }
 
-                        var endCycle = (aoeHits == 0 && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb || aoeDamage <= 0.5d)) || objectsHit >= maxObjects;
+                        var endCycle = (!foundAoeBlocks && basePool <= 0) || (!rootStep && (aoeDmgTally >= aoeAbsorb && aoeAbsorb != 0 || aoeDamage <= 0.5d)) || objectsHit >= maxObjects;
                         if (showHits && primaryDamage) Log.Line($"Primary: RootBlock {rootBlock} hit for {scaledDamage} damage of {blockHp} block HP total");
 
                         //doneskies
@@ -705,7 +708,7 @@ namespace CoreSystems
                             }
 
                             if (detActive) {
-                                //Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
@@ -961,7 +964,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
+        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -993,6 +996,7 @@ namespace CoreSystems
             int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
             Vector3I min2 = Vector3I.Max(rootPos - maxradius, gmin);
             Vector3I max2 = Vector3I.Min(rootPos + maxradius, gmax);
+            foundSomething = false;
 
             if (depth < radius)
             {
@@ -1092,6 +1096,7 @@ namespace CoreSystems
                                         if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
                                         {
                                             distArray.Add(slim);
+                                            foundSomething = true;
                                             aoeHits++;
                                             if (hitdist > maxDbc) maxDbc = hitdist;
                                             if (showHits) slim.Dithering = 0.50f;
@@ -1102,6 +1107,7 @@ namespace CoreSystems
                                     else//Happy normal 1x1x1
                                     {
                                         distArray.Add(slim);
+                                        foundSomething = true;
                                         aoeHits++;
                                         if (hitdist > maxDbc) maxDbc = hitdist;
                                         if(showHits)slim.Dithering = 0.50f;
