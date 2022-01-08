@@ -1150,8 +1150,8 @@ namespace CoreSystems.Support
             minArmingTime = ammoDef.AreaOfDamage.EndOfLife.MinArmingTime;
             byBlockHitDepth = ammoDef.AreaOfDamage.ByBlockHit.Depth <= 0 ? (float)ammoDef.AreaOfDamage.ByBlockHit.Radius: ammoDef.AreaOfDamage.ByBlockHit.Depth;
             endOfLifeDepth = ammoDef.AreaOfDamage.EndOfLife.Depth <= 0 ? (float)ammoDef.AreaOfDamage.EndOfLife.Radius: ammoDef.AreaOfDamage.EndOfLife.Depth;
-            aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : float.MaxValue;
-            detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : float.MaxValue;
+            aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : 0;
+            detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : 0;
             endOfLifeAoe = ammoDef.AreaOfDamage.EndOfLife.Enable;
         }
 

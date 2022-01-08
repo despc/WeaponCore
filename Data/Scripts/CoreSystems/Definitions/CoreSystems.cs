@@ -301,8 +301,8 @@ namespace CoreSystems.Support
                     ammoDef.AreaOfDamage.ByBlockHit.Enable = true;
                     ammoDef.AreaOfDamage.ByBlockHit.Damage = currentDamage;
                     ammoDef.AreaOfDamage.ByBlockHit.Radius = currentRadius;
-                    ammoDef.AreaOfDamage.ByBlockHit.Depth = (float)currentRadius;
-                    ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Pooled;
+                    ammoDef.AreaOfDamage.ByBlockHit.Depth = 1;
+                    ammoDef.AreaOfDamage.ByBlockHit.Falloff = Falloff.Exponential;
                 }
             }
 
@@ -311,7 +311,7 @@ namespace CoreSystems.Support
                 ammoDef.AreaOfDamage.EndOfLife.Enable = true;
                 ammoDef.AreaOfDamage.EndOfLife.Damage = ammoDef.AreaEffect.Detonation.DetonationDamage;
                 ammoDef.AreaOfDamage.EndOfLife.Radius = ammoDef.AreaEffect.Detonation.DetonationRadius;
-                ammoDef.AreaOfDamage.EndOfLife.Depth = ammoDef.AreaEffect.Detonation.DetonationRadius;
+                ammoDef.AreaOfDamage.EndOfLife.Depth = 1;
                 ammoDef.AreaOfDamage.EndOfLife.MinArmingTime = ammoDef.AreaEffect.Detonation.MinArmingTime;
                 ammoDef.AreaOfDamage.EndOfLife.ArmOnlyOnHit = ammoDef.AreaEffect.Detonation.ArmOnlyOnHit;
                 ammoDef.AreaOfDamage.EndOfLife.CustomParticle = ammoDef.AreaEffect.Explosions.CustomParticle;
@@ -319,7 +319,7 @@ namespace CoreSystems.Support
                 ammoDef.AreaOfDamage.EndOfLife.ParticleScale = ammoDef.AreaEffect.Explosions.Scale;
                 ammoDef.AreaOfDamage.EndOfLife.NoVisuals = ammoDef.AreaEffect.Explosions.NoVisuals;
                 ammoDef.AreaOfDamage.EndOfLife.NoSound = ammoDef.AreaEffect.Explosions.NoSound;
-                ammoDef.AreaOfDamage.EndOfLife.Falloff = Falloff.Pooled;
+                ammoDef.AreaOfDamage.EndOfLife.Falloff = Falloff.Exponential;
             }
 
             if (!oldDamageType && oldType != AmmoDef.AreaDamageDef.AreaEffectType.Disabled)
