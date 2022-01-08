@@ -460,7 +460,7 @@ namespace CoreSystems
                                 aoeDamageFall = aoeDamage;
                                 break;
                             case Falloff.Exponential:
-                                aoeDamageFall = 1 / (j + 1) * aoeDamage;
+                                aoeDamageFall = 1d / (j + 1) * aoeDamage;
                                 break;
 
                         }
@@ -597,7 +597,8 @@ namespace CoreSystems
                         else if (primaryDamage)
                         {
                             deadBlock = true;
-                            basePool -= (float)(blockHp / baseScale); 
+                            var scale = baseScale == 0d ? 0.0000001 : baseScale;
+                            basePool -= (float)(blockHp / scale); 
                             objectsHit++;
                         }
 
@@ -606,6 +607,8 @@ namespace CoreSystems
                         {
                             if (aoeIsPool)
                             {
+                                var scale = damageScale == 0d ? 0.0000001 : damageScale;
+
                                 if (aoeAbsorb <= 0 )// pooled without AOE absorb limit
                                 {
                                     if (aoeDamage < aoeScaledDmg && blockHp >= aoeDamage)//If remaining pool is less than calc'd damage, only apply remainder of pool
@@ -617,7 +620,7 @@ namespace CoreSystems
                                         aoeScaledDmg = (float)blockHp;
                                         deadBlock = true;
                                     }
-                                    aoeDamage -= aoeScaledDmg/(float)damageScale;
+                                    aoeDamage -= (float)(aoeScaledDmg / scale);
 
                                 }
                                 else // pooled with AOE absorb limit
@@ -632,7 +635,7 @@ namespace CoreSystems
                                         aoeScaledDmg = (float)blockHp;
                                         deadBlock = true;
                                     }
-                                    aoeDamage -= aoeScaledDmg/(float)damageScale;
+                                    aoeDamage -= (float)(aoeScaledDmg / scale);
                                     //Log.Line($"Aoedmgpool {aoeDamage}  scaleddmg {aoeScaledDmg}");
                                 }
                             }
@@ -708,7 +711,7 @@ namespace CoreSystems
                             }
 
                             if (detActive) {
-                                Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                if (showHits) Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
