@@ -764,7 +764,7 @@ namespace CoreSystems.Support
                 FragDmg = FragDamageLoopCheck(wDef, realShotsPerSec, FragDmg, 0, a, a.Fragment.Fragments);
                 
 
-                //Log.Line($"Total Fragment Dmg -- {FragDmg}");
+                //if(wDef.HardPoint.Other.Debug)Log.Line($"Total Fragment Dmg -- {FragDmg}");
 
                 //TODO: fix when fragDmg is split
                 baseDps += FragDmg.X;
@@ -925,6 +925,25 @@ namespace CoreSystems.Support
                     //Log.Line($"::::{fragmentAmmo.AmmoRound} got a parent with:{parentFragments} fragments");
                     var tempDmg = GetShrapnelDamage(fragmentAmmo, parentFragments, shotsPerSec, parentFragments);
                     //Log.Line($"Per frag Damage {tempDmg/parentFragments} frags {parentFragments}||Total Frag Damage:{tempDmg}");
+                    var fragFrags = 1.0f;
+                    if(parentAmmo.Fragment.Fragments>0) fragFrags = parentAmmo.Fragment.Fragments;
+                    if (parentAmmo.Fragment.TimedSpawns.Enable)
+                    {
+                        Log.Line($"Experimental DPS Calc| Ammo: {parentAmmo.Fragment.AmmoRound}");
+                        //Log.Line($"Found Special Ammo= {parentFragments}");
+                        var b = parentAmmo.Fragment.TimedSpawns;
+                        
+                        float cycleTime = (b.Interval*(b.GroupSize-1)) + b.GroupDelay;
+                        tempDmg *= (1.0f/((cycleTime/60))) * b.GroupSize;
+
+                        Log.Line($"Ammo/Drone Dps: {tempDmg} at {(1.0f / ((cycleTime / 60) )) * b.GroupSize* parentFragments} shots/s");
+                        //Log.Line($"Block Dps: {tempDmg* shotsPerSec} at {(1.0f / ((cycleTime / 60))) * b.GroupSize * parentFragments* shotsPerSec} shots/s");
+                        //fragFrags = b.GroupSize;
+                        fragFrags = (1.0f / ((cycleTime / 60))) * b.GroupSize;
+
+                    }
+
+
 
                     FragDmg += tempDmg;
                     parentFragments *= fragmentAmmo.Fragment.Fragments;
