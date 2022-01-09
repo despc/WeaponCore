@@ -551,7 +551,7 @@ namespace CoreSystems
 
             for (int i = 0; i < fats.Count; i++)
             {
-                var block = fats[i].SlimBlock;
+                var block = (IMySlimBlock)fats[i].SlimBlock;
                 cubes.Add(new HitEntity.RootBlocks {Block = block, QueryPos = block.Position});
             }
 

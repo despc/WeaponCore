@@ -15,7 +15,7 @@ using static CoreSystems.Support.Ai;
 using CollisionLayers = Sandbox.Engine.Physics.MyPhysics.CollisionLayers;
 namespace CoreSystems.Support
 {
-    internal class ProInfo
+    public class ProInfo
     {
         internal readonly Target Target = new Target(null, true);
         internal readonly List<HitEntity> HitList = new List<HitEntity>(4);
@@ -197,7 +197,7 @@ namespace CoreSystems.Support
 
     public class HitEntity
     {
-        internal enum Type
+        public enum Type
         {
             Shield,
             Grid,
