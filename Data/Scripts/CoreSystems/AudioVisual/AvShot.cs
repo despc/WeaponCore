@@ -1027,14 +1027,14 @@ namespace CoreSystems.Support
                         System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos });
                     }
 
-                    if (AmmoDef.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
+                    if (a.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
                     {
                         var matrix = MatrixD.CreateTranslation(pos);
 
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
-                            detEffect.UserScale = AmmoDef.AreaOfDamage.EndOfLife.ParticleScale;
+                            detEffect.UserScale = a.AreaOfDamage.EndOfLife.ParticleScale;
 
                             if (hit)
                                 detEffect.Velocity = Hit.HitVelocity;
