@@ -368,7 +368,8 @@ namespace CoreSystems.Projectiles
                                         }
 
                                         hitEntity.HitPos = hitInfo?.Position ?? p.Beam.From;
-                                        hitEntity.Blocks.Add(grid.GetCubeBlock(hitEntity.Vector3ICache[0]));
+                                        var posI = hitEntity.Vector3ICache[0];
+                                        hitEntity.Blocks.Add(new HitEntity.RootBlocks { Block = grid.GetCubeBlock(hitEntity.Vector3ICache[0]), QueryPos = posI});
                                     }
                                 }
                             }
@@ -697,7 +698,7 @@ namespace CoreSystems.Projectiles
                 if (grid != null)
                 {
                     if (aConst.VirtualBeams)
-                        hitBlock = hitEntity.Blocks[0];
+                        hitBlock = hitEntity.Blocks[0].Block;
 
                     IHitInfo hitInfo = null;
                     if (Session.HandlesInput && hitEntity.HitPos.HasValue && Vector3D.DistanceSquared(hitEntity.HitPos.Value, Session.CameraPos) < 22500 && Session.CameraFrustrum.Contains(hitEntity.HitPos.Value) != ContainmentType.Disjoint)
@@ -801,14 +802,16 @@ namespace CoreSystems.Projectiles
                         {
 
                             var closestBlockFound = false;
+                            IMySlimBlock lastBlockHit = null;
                             for (int j = 0; j < hitEnt.Vector3ICache.Count; j++)
                             {
-
-                                var firstBlock = grid.GetCubeBlock(hitEnt.Vector3ICache[j]) as IMySlimBlock;
+                                var posI = hitEnt.Vector3ICache[j];
+                                var firstBlock = grid.GetCubeBlock(posI) as IMySlimBlock;
                                 MatrixD transform = grid.WorldMatrix;
-                                if (firstBlock != null && !firstBlock.IsDestroyed && (hitEnt.Info.Target.CoreCube == null || firstBlock != hitEnt.Info.Target.CoreCube.SlimBlock))
+                                if (firstBlock != null && firstBlock != lastBlockHit && !firstBlock.IsDestroyed && (hitEnt.Info.Target.CoreCube == null || firstBlock != hitEnt.Info.Target.CoreCube.SlimBlock))
                                 {
-                                    hitEnt.Blocks.Add(firstBlock);
+                                    lastBlockHit = firstBlock;
+                                    hitEnt.Blocks.Add(new HitEntity.RootBlocks {Block = firstBlock, QueryPos = posI});
                                     if (closestBlockFound) continue;
                                     MyOrientedBoundingBoxD obb;
                                     var fat = firstBlock.FatBlock;
@@ -899,7 +902,7 @@ namespace CoreSystems.Projectiles
         }
 
         //TODO: In order to fix SphereShapes collisions with grids, this needs to be adjusted to take into account the Beam of the projectile
-        internal static void GetAndSortBlocksInSphere(WeaponDefinition.AmmoDef ammoDef, WeaponSystem system, MyCubeGrid grid, BoundingSphereD sphere, bool fatOnly, List<IMySlimBlock> blocks)
+        internal static void GetAndSortBlocksInSphere(WeaponDefinition.AmmoDef ammoDef, WeaponSystem system, MyCubeGrid grid, BoundingSphereD sphere, bool fatOnly, List<HitEntity.RootBlocks> blocks)
         {
             var matrixNormalizedInv = grid.PositionComp.WorldMatrixNormalizedInv;
             Vector3D result;
@@ -916,7 +919,7 @@ namespace CoreSystems.Projectiles
                     {
                         switch (fieldType)
                         {
-                            case WeaponDefinition.AmmoDef.EwarDef.EwarType.JumpNull:
+                            case JumpNull:
                                 if (!(cube is MyJumpDrive)) continue;
                                 break;
                             case EnergySink:
@@ -941,7 +944,7 @@ namespace CoreSystems.Projectiles
                         var block = cube.SlimBlock as IMySlimBlock;
                         if (!new BoundingBox(block.Min * grid.GridSize - grid.GridSizeHalf, block.Max * grid.GridSize + grid.GridSizeHalf).Intersects(localSphere))
                             continue;
-                        blocks.Add(block);
+                        blocks.Add(new HitEntity.RootBlocks {Block = block, QueryPos = block.Position});
                     }
                 }
             }
@@ -953,15 +956,18 @@ namespace CoreSystems.Projectiles
                 Session.GetBlocksInsideSphereFast(grid, ref sphere, true, tmpList);
 
                 for (int i = 0; i < tmpList.Count; i++)
-                    blocks.Add(tmpList[i]);
+                {
+                    var block = tmpList[i];
+                    blocks.Add(new HitEntity.RootBlocks { Block = block, QueryPos = block.Position});
+                }
 
                 system.Session.SlimPool.Return(tmpList);
             }
 
             blocks.Sort((a, b) =>
             {
-                var aPos = grid.GridIntegerToWorld(a.Position);
-                var bPos = grid.GridIntegerToWorld(b.Position);
+                var aPos = grid.GridIntegerToWorld(a.Block.Position);
+                var bPos = grid.GridIntegerToWorld(b.Block.Position);
                 return Vector3D.DistanceSquared(aPos, hitPos).CompareTo(Vector3D.DistanceSquared(bPos, hitPos));
             });
         }

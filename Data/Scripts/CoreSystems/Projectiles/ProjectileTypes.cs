@@ -195,7 +195,7 @@ namespace CoreSystems.Support
         internal VoxelIntersectBranch Branch;
     }
 
-    internal class HitEntity
+    public class HitEntity
     {
         internal enum Type
         {
@@ -209,7 +209,7 @@ namespace CoreSystems.Support
             Effect,
         }
 
-        public readonly List<IMySlimBlock> Blocks = new List<IMySlimBlock>(16);
+        public readonly List<RootBlocks> Blocks = new List<RootBlocks>(16);
         public readonly List<Vector3I> Vector3ICache = new List<Vector3I>(16);
         public MyEntity Entity;
         internal Projectile Projectile;
@@ -245,6 +245,12 @@ namespace CoreSystems.Support
             DamageOverTime = false;
             PulseTrigger = false;
             SelfHit = false;
+        }
+
+        public struct RootBlocks
+        {
+            public IMySlimBlock Block;
+            public Vector3I QueryPos;
         }
     }
 

@@ -387,7 +387,8 @@ namespace CoreSystems
                     aoeIsPool = aoeFalloff == Falloff.Pooled;
                 }
 
-                rootBlock = hitEnt.Blocks[i];
+                var rootInfo = hitEnt.Blocks[i];
+                rootBlock = rootInfo.Block;
                 if (!detRequested)
                 {
                     if (IsServer && _destroyedSlims.Contains(rootBlock) || IsClient && _destroyedSlimsClient.Contains(rootBlock)) continue;
@@ -419,7 +420,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootBlock, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
+                    RadiantAoe(rootInfo, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -967,25 +968,28 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(IMySlimBlock root, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
+        public void RadiantAoe(HitEntity.RootBlocks rootInfo, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
         {
             //Log.Line($"Start");
            //var watch = System.Diagnostics.Stopwatch.StartNew();
+           var root = rootInfo.Block;
             var rootPos = root.Position; //local cube grid
             var localfrom = grid.WorldToGridScaledLocal(direction.From);
-            var localto = grid.WorldToGridScaledLocal(direction.To);
+            //var localto = grid.WorldToGridScaledLocal(direction.To);
+            var localto = rootInfo.QueryPos;
             var gridsize = grid.GridSizeR;
+            var smallGrid = grid.GridSizeEnum == MyCubeSize.Small;
             aoeHits = 0;
             if (root.Min != root.Max)//non 1x1x1 impact point
             {
-                var rootbox = new BoundingBoxD(gridsize==2?root.Min-2:root.Min-1, gridsize==2?root.Max+2:root.Max+1);
+                var rootbox = new BoundingBoxI(smallGrid ? root.Min -2 : root.Min -1, smallGrid ? root.Max +2 : root.Max +1);
                 if (rootbox.Contains(localfrom) == ContainmentType.Contains)
                 {
                     rootPos = (Vector3I)localfrom;//used for frag generated inside root block
                 }
                 else
                 {
-                    rootPos = (Vector3I)localto;//used for most cases
+                    rootPos = localto;//used for most cases
                 }
             }
 

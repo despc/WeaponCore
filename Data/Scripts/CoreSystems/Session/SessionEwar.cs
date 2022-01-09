@@ -200,7 +200,7 @@ namespace CoreSystems
         }
 
 
-        private void ComputeEffects(MyCubeGrid grid, AmmoDef ammoDef, double damagePool, ref double healthPool, long attackerId, int sysmteId, List<IMySlimBlock> blocks)
+        private void ComputeEffects(MyCubeGrid grid, AmmoDef ammoDef, double damagePool, ref double healthPool, long attackerId, int sysmteId, List<HitEntity.RootBlocks> blocks)
         {
             var largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
             var eWarInfo = ammoDef.Ewar;
@@ -211,8 +211,9 @@ namespace CoreSystems
             var maxTick = stack ? (uint)(nextTick + (duration * maxStack)) : nextTick + duration;
             var fieldType = ammoDef.Ewar.Type;
             var sync = MpActive && (DedicatedServer || IsServer);
-            foreach (var block in blocks)
+            foreach (var rootBlock in blocks)
             {
+                var block = rootBlock.Block;
                 var cubeBlock = block.FatBlock;
                 if (damagePool <= 0 || healthPool <= 0) break;
                 IMyFunctionalBlock funcBlock = null;
@@ -542,18 +543,22 @@ namespace CoreSystems
             return myTerminalBlock?.SlimBlock != null && !myTerminalBlock.SlimBlock.IsDestroyed && !myTerminalBlock.MarkedForClose && !myTerminalBlock.Closed && !myTerminalBlock.CubeGrid.MarkedForClose && myTerminalBlock.IsFunctional && myTerminalBlock.InScene;
         }
 
-        private readonly List<IMySlimBlock> _tmpEffectCubes = new List<IMySlimBlock>();
-        internal static void GetCubesForEffect(Ai ai, MyCubeGrid grid, Vector3D hitPos, EwarType effectType, List<IMySlimBlock> cubes)
+        private readonly List<HitEntity.RootBlocks> _tmpEffectCubes = new List<HitEntity.RootBlocks>();
+        internal static void GetCubesForEffect(Ai ai, MyCubeGrid grid, Vector3D hitPos, EwarType effectType, List<HitEntity.RootBlocks> cubes)
         {
             var fats = QueryBlockCaches(ai, grid, effectType);
             if (fats == null) return;
 
-            for (int i = 0; i < fats.Count; i++) cubes.Add(fats[i].SlimBlock);
+            for (int i = 0; i < fats.Count; i++)
+            {
+                var block = fats[i].SlimBlock;
+                cubes.Add(new HitEntity.RootBlocks {Block = block, QueryPos = block.Position});
+            }
 
             cubes.Sort((a, b) =>
             {
-                var aPos = grid.GridIntegerToWorld(a.Position);
-                var bPos = grid.GridIntegerToWorld(b.Position);
+                var aPos = grid.GridIntegerToWorld(a.Block.Position);
+                var bPos = grid.GridIntegerToWorld(b.Block.Position);
                 return Vector3D.DistanceSquared(aPos, hitPos).CompareTo(Vector3D.DistanceSquared(bPos, hitPos));
             });
         }
