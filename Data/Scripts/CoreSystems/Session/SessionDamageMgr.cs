@@ -674,7 +674,8 @@ namespace CoreSystems
                             }
                             catch
                             {
-                                //Log.Line($"[DoDamage crash] detRequested:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxAoeDistance:{maxAoeDistance} - foundAoeBlocks:{foundAoeBlocks} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
+                                //Actual debug log line
+                                Log.Line($"[DoDamage crash] detRequested:{detRequested} - detActive:{detActive} - i:{i} - j:{j} - k:{k} - maxAoeDistance:{maxAoeDistance} - foundAoeBlocks:{foundAoeBlocks} - scaledDamage:{scaledDamage} - blockHp:{blockHp} - AccumulatedDamage:{block.AccumulatedDamage} - gridMarked:{block.CubeGrid.MarkedForClose}({grid.MarkedForClose})[{rootBlock.CubeGrid.MarkedForClose}] - sameAsRoot:{rootBlock.CubeGrid == block.CubeGrid}");
                                 foreach (var l in DamageBlockCache)
                                     l.Clear();
 
@@ -712,7 +713,7 @@ namespace CoreSystems
                             }
 
                             if (detActive) {
-                                if (showHits) Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
+                                //Log.Line($"[EARLY-EXIT] by detActive - aoeDmg:{aoeDamage} <= 0 --- {aoeDmgTally} >= {aoeAbsorb} -- foundAoeBlocks:{foundAoeBlocks} -- primaryExit:{!foundAoeBlocks && basePool <= 0} - objExit:{objectsHit >= maxObjects}");
                                 earlyExit = true;
                                 break;
                             }
@@ -971,29 +972,16 @@ namespace CoreSystems
         public void RadiantAoe(HitEntity.RootBlocks rootInfo, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
         {
             //Log.Line($"Start");
-           //var watch = System.Diagnostics.Stopwatch.StartNew();
-           var root = rootInfo.Block;
-            var rootPos = root.Position; //local cube grid
+            //var watch = System.Diagnostics.Stopwatch.StartNew();
+            var root = rootInfo.Block;
+            var rootHitPos = rootInfo.QueryPos; //local cube grid
             var localfrom = grid.WorldToGridScaledLocal(direction.From);
-            //var localto = grid.WorldToGridScaledLocal(direction.To);
-            var localto = rootInfo.QueryPos;
+            var localto = grid.WorldToGridScaledLocal(direction.To);
             var gridsize = grid.GridSizeR;
             var smallGrid = grid.GridSizeEnum == MyCubeSize.Small;
             aoeHits = 0;
-            if (root.Min != root.Max)//non 1x1x1 impact point
-            {
-                var rootbox = new BoundingBoxI(smallGrid ? root.Min -2 : root.Min -1, smallGrid ? root.Max +2 : root.Max +1);
-                if (rootbox.Contains(localfrom) == ContainmentType.Contains)
-                {
-                    rootPos = (Vector3I)localfrom;//used for frag generated inside root block
-                }
-                else
-                {
-                    rootPos = localto;//used for most cases
-                }
-            }
 
-            //Log.Line($"Raw rootpos{root.Position} gridsizer{grid.GridSizeR} rootpos {rootPos}  localfrom{localfrom} localto{localto}  min{root.Min} max{root.Max}"); 
+            //Log.Line($"Raw rootpos{root.Position} localctr{rootInfo.QueryPos} rootpos {rootPos}  localfrom{localfrom} localto{localto}  min{root.Min} max{root.Max}"); 
             radius *= gridsize;  //GridSizeR is 0.4 for LG, 2.0 for SG
             depth *= gridsize;
             var gmin = grid.Min;
@@ -1001,25 +989,25 @@ namespace CoreSystems
             int maxradius = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
             int i, j, k;
             int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
-            Vector3I min2 = Vector3I.Max(rootPos - maxradius, gmin);
-            Vector3I max2 = Vector3I.Min(rootPos + maxradius, gmax);
+            Vector3I min2 = Vector3I.Max(rootHitPos - maxradius, gmin);
+            Vector3I max2 = Vector3I.Min(rootHitPos + maxradius, gmax);
             foundSomething = false;
 
             if (depth < radius)
             {
                 var localline = new LineD(localfrom, localto);
                 
-                var bmin = new Vector3D(rootPos) - 0.51d;//Check if this needs to be adjusted for small grid
-                var bmax = new Vector3D(rootPos) + 0.51d;
+                var bmin = new Vector3D(rootHitPos) - 0.51d;//Check if this needs to be adjusted for small grid
+                var bmax = new Vector3D(rootHitPos) + 0.51d;
 
-                var xplane = new BoundingBox(bmin, new Vector3(bmax.X, bmax.Y, bmin.Z));
-                var yplane = new BoundingBox(bmin, new Vector3(bmax.X, bmin.Y, bmax.Z));
-                var zplane = new BoundingBox(bmin, new Vector3(bmin.X, bmax.Y, bmax.Z));
-                var xmplane = new BoundingBox(bmax, new Vector3(bmin.X, bmin.Y, bmax.Z));
-                var ymplane = new BoundingBox(bmax, new Vector3(bmin.X, bmax.Y, bmin.Z));
-                var zmplane = new BoundingBox(bmax, new Vector3(bmax.X, bmin.Y, bmin.Z));
+                var xplane = new BoundingBoxD(bmin, new Vector3(bmax.X, bmax.Y, bmin.Z));
+                var yplane = new BoundingBoxD(bmin, new Vector3(bmax.X, bmin.Y, bmax.Z));
+                var zplane = new BoundingBoxD(bmin, new Vector3(bmin.X, bmax.Y, bmax.Z));
+                var xmplane = new BoundingBoxD(bmax, new Vector3(bmin.X, bmin.Y, bmax.Z));
+                var ymplane = new BoundingBoxD(bmax, new Vector3(bmin.X, bmax.Y, bmin.Z));
+                var zmplane = new BoundingBoxD(bmax, new Vector3(bmax.X, bmin.Y, bmin.Z));
 
-                var hitray = new Ray(localto, -localline.Direction);
+                var hitray = new RayD(localto, -localline.Direction);
 
                 var xhit = (hitray.Intersects(xplane) ?? 0) + (hitray.Intersects(xmplane) ?? 0);
                 var yhit = (hitray.Intersects(yplane) ?? 0) + (hitray.Intersects(ymplane) ?? 0);
@@ -1034,22 +1022,22 @@ namespace CoreSystems
                 {                   
                     case 1://hit face perp to y
 
-                            min2.Y = rootPos.Y - maxdepth + 1;
-                            max2.Y = rootPos.Y + maxdepth - 1;
+                            min2.Y = rootHitPos.Y - maxdepth + 1;
+                            max2.Y = rootHitPos.Y + maxdepth - 1;
 
                         break;
 
                     case 2://hit face perp to x
 
-                            min2.X = rootPos.X - maxdepth + 1;
-                            max2.X = rootPos.X + maxdepth - 1;        
+                            min2.X = rootHitPos.X - maxdepth + 1;
+                            max2.X = rootHitPos.X + maxdepth - 1;        
 
                         break;
 
                     case 0://Hit face is perp to z
 
-                            min2.Z = rootPos.Z - maxdepth + 1;
-                            max2.Z = rootPos.Z + maxdepth - 1;
+                            min2.Z = rootHitPos.Z - maxdepth + 1;
+                            max2.Z = rootHitPos.Z + maxdepth - 1;
 
                         break;
                 }
@@ -1070,10 +1058,10 @@ namespace CoreSystems
                             switch(shape)
                             {
                                 case AoeShape.Diamond:
-                                    hitdist = Vector3I.DistanceManhattan(rootPos, vector3I);
+                                    hitdist = Vector3I.DistanceManhattan(rootHitPos, vector3I);
                                     break;
                                 case AoeShape.Round:
-                                    hitdist = (int)Math.Round(Math.Sqrt((rootPos.X - vector3I.X) * (rootPos.X - vector3I.X) + (rootPos.Y - vector3I.Y) * (rootPos.Y - vector3I.Y) + (rootPos.Z - vector3I.Z) * (rootPos.Z - vector3I.Z)));
+                                    hitdist = (int)Math.Round(Math.Sqrt((rootHitPos.X - vector3I.X) * (rootHitPos.X - vector3I.X) + (rootHitPos.Y - vector3I.Y) * (rootHitPos.Y - vector3I.Y) + (rootHitPos.Z - vector3I.Z) * (rootHitPos.Z - vector3I.Z)));
                                     break;
                                 default:
                                     hitdist = int.MaxValue;
@@ -1097,10 +1085,10 @@ namespace CoreSystems
                                     if (slimmax != slimmin)//Block larger than 1x1x1
                                     {
                                         var hitblkbound = new BoundingBoxI(slimmin, slimmax);
-                                        var rootposbound = new BoundingBoxI(rootPos, rootPos);
-                                        rootposbound.IntersectWith(ref hitblkbound);
-                                        rootposbound.Inflate(1);
-                                        if (rootposbound.Contains(vector3I) == ContainmentType.Contains)
+                                        var rootHitPosbound = new BoundingBoxI(rootHitPos, rootHitPos);
+                                        rootHitPosbound.IntersectWith(ref hitblkbound);
+                                        rootHitPosbound.Inflate(1);
+                                        if (rootHitPosbound.Contains(vector3I) == ContainmentType.Contains)
                                         {
                                             distArray.Add(slim);
                                             foundSomething = true;
