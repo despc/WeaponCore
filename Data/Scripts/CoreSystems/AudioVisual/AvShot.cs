@@ -847,8 +847,7 @@ namespace CoreSystems.Support
                         var hitEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                         hitEmitter.Entity = Hit.Entity;
-                        var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
-
+                        var pos = System.Session.Tick - Hit.HitTick <= 1 && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
                         System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = pos });
 
                         HitSoundInitted = true;
@@ -1015,9 +1014,8 @@ namespace CoreSystems.Support
                 {
                     var a = AmmoDef;
                     var c = a.Const;
-
-                    var pos = Hit.HitTick == System.Session.Tick && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
-
+                    var hit = System.Session.Tick - Hit.HitTick <= 1 && !MyUtils.IsZero(Hit.SurfaceHit) && Hit.Entity != null;
+                    var pos = hit ? Hit.SurfaceHit : TracerFront;
                     if (!a.AreaOfDamage.EndOfLife.NoSound)
                     {
                         var pool = c.CustomSoundPairs;
@@ -1026,25 +1024,27 @@ namespace CoreSystems.Support
                         var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
                         detEmitter.Entity = Hit.Entity;
 
-                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos});
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos });
                     }
 
                     if (AmmoDef.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
                     {
                         var matrix = MatrixD.CreateTranslation(pos);
 
-
                         MyParticleEffect detEffect;
                         if (MyParticlesManager.TryCreateParticleEffect(a.Const.DetParticleStr, ref matrix, ref pos, uint.MaxValue, out detEffect))
                         {
                             detEffect.UserScale = AmmoDef.AreaOfDamage.EndOfLife.ParticleScale;
 
-                            detEffect.Velocity = Hit.HitVelocity;
+                            if (hit)
+                                detEffect.Velocity = Hit.HitVelocity;
+
 
                             if (detEffect.Loop)
                                 detEffect.Stop();
                         }
                     }
+
                 }
             }
 

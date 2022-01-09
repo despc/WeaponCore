@@ -712,7 +712,7 @@ namespace CoreSystems.Projectiles
                 }
                 else visualHitPos = hitEntity.HitPos;
 
-                info.Hit = new Hit { Block = hitBlock, Entity = hitEntity.Entity, LastHit = visualHitPos ?? Vector3D.Zero, SurfaceHit = visualHitPos ?? Vector3D.Zero, HitVelocity = p.LastHitEntVel ?? Vector3D.Zero, HitTick = Session.Tick };
+                info.Hit = new Hit { Block = hitBlock, Entity = hitEntity.Entity, LastHit = visualHitPos ?? Vector3D.Zero, SurfaceHit = visualHitPos ?? Vector3D.Zero, HitVelocity = p.LastHitEntVel ?? Vector3D.Zero, HitTick = Session.Tick};
                 if (p.EnableAv)
                 {
                     info.AvShot.LastHitShield = hitEntity.EventType == Shield;

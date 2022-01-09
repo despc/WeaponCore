@@ -420,7 +420,7 @@ namespace CoreSystems
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
-                    RadiantAoe(rootInfo, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
+                    RadiantAoe(ref rootInfo, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
                 var blockStages = maxAoeDistance + 1;
@@ -858,7 +858,7 @@ namespace CoreSystems
                 attacker.BaseDamagePool -= remaining;
                 pTarget.Info.BaseHealthPool = 0;
                 pTarget.State = Projectile.ProjectileState.Destroy;
-                if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
+                if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.Const.EndOfLifeAoe && attacker.Age >= attacker.AmmoDef.Const.MinArmingTime)
                     DetonateProjectile(hitEnt, attacker);
             }
             else
@@ -871,7 +871,7 @@ namespace CoreSystems
 
         private static void DetonateProjectile(HitEntity hitEnt, ProInfo attacker)
         {
-            if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.AreaOfDamage.EndOfLife.Enable && attacker.Age >= attacker.AmmoDef.AreaOfDamage.EndOfLife.MinArmingTime)
+            if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.Const.EndOfLifeAoe && attacker.Age >= attacker.AmmoDef.Const.MinArmingTime)
             {
                 var areaSphere = new BoundingSphereD(hitEnt.Projectile.Position, attacker.AmmoDef.Const.EndOfLifeRadius);
                 foreach (var sTarget in attacker.Ai.LiveProjectile)
@@ -969,7 +969,7 @@ namespace CoreSystems
             }
         }
 
-        public void RadiantAoe(HitEntity.RootBlocks rootInfo, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
+        public void RadiantAoe(ref HitEntity.RootBlocks rootInfo, MyCubeGrid grid, double radius, double depth, LineD direction, ref int maxDbc, out bool foundSomething, AoeShape shape, bool showHits,out int aoeHits) //added depth and angle
         {
             //Log.Line($"Start");
             //var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -978,7 +978,6 @@ namespace CoreSystems
             var localfrom = grid.WorldToGridScaledLocal(direction.From);
             var localto = grid.WorldToGridScaledLocal(direction.To);
             var gridsize = grid.GridSizeR;
-            var smallGrid = grid.GridSizeEnum == MyCubeSize.Small;
             aoeHits = 0;
 
             //Log.Line($"Raw rootpos{root.Position} localctr{rootInfo.QueryPos} rootpos {rootPos}  localfrom{localfrom} localto{localto}  min{root.Min} max{root.Max}"); 
@@ -987,7 +986,6 @@ namespace CoreSystems
             var gmin = grid.Min;
             var gmax = grid.Max;
             int maxradius = (int)Math.Floor(radius);  //changed to floor, experiment for precision/rounding bias
-            int i, j, k;
             int maxdepth = (int)Math.Ceiling(depth); //Meters to cube conversion.  Round up or down?
             Vector3I min2 = Vector3I.Max(rootHitPos - maxradius, gmin);
             Vector3I max2 = Vector3I.Min(rootHitPos + maxradius, gmax);
@@ -1000,12 +998,12 @@ namespace CoreSystems
                 var bmin = new Vector3D(rootHitPos) - 0.51d;//Check if this needs to be adjusted for small grid
                 var bmax = new Vector3D(rootHitPos) + 0.51d;
 
-                var xplane = new BoundingBoxD(bmin, new Vector3(bmax.X, bmax.Y, bmin.Z));
-                var yplane = new BoundingBoxD(bmin, new Vector3(bmax.X, bmin.Y, bmax.Z));
-                var zplane = new BoundingBoxD(bmin, new Vector3(bmin.X, bmax.Y, bmax.Z));
-                var xmplane = new BoundingBoxD(bmax, new Vector3(bmin.X, bmin.Y, bmax.Z));
-                var ymplane = new BoundingBoxD(bmax, new Vector3(bmin.X, bmax.Y, bmin.Z));
-                var zmplane = new BoundingBoxD(bmax, new Vector3(bmax.X, bmin.Y, bmin.Z));
+                var xplane = new BoundingBoxD(bmin, new Vector3D(bmax.X, bmax.Y, bmin.Z));
+                var yplane = new BoundingBoxD(bmin, new Vector3D(bmax.X, bmin.Y, bmax.Z));
+                var zplane = new BoundingBoxD(bmin, new Vector3D(bmin.X, bmax.Y, bmax.Z));
+                var xmplane = new BoundingBoxD(bmax, new Vector3D(bmin.X, bmin.Y, bmax.Z));
+                var ymplane = new BoundingBoxD(bmax, new Vector3D(bmin.X, bmax.Y, bmin.Z));
+                var zmplane = new BoundingBoxD(bmax, new Vector3D(bmax.X, bmin.Y, bmin.Z));
 
                 var hitray = new RayD(localto, -localline.Direction);
 
@@ -1046,6 +1044,7 @@ namespace CoreSystems
 
             var damageBlockCache = DamageBlockCache;
 
+            int i, j, k;
             for (i = min2.X; i <= max2.X; ++i)
             {
                 for (j = min2.Y; j <= max2.Y; ++j)

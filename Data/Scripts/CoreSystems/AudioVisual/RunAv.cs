@@ -119,7 +119,7 @@ namespace CoreSystems.Support
                         av.HitParticle = AvShot.ParticleState.Dirty;
                         if (av.OnScreen != AvShot.Screen.None)
                         {
-                            var pos = av.Hit.HitTick == Session.Tick && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
+                            var pos = Session.Tick - av.Hit.HitTick <= 1 && !MyUtils.IsZero(av.Hit.SurfaceHit) ? av.Hit.SurfaceHit : av.TracerFront;
                             var matrix = MatrixD.CreateTranslation(pos);
 
                             MyParticleEffect hitEffect;
