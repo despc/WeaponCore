@@ -794,7 +794,7 @@ namespace CoreSystems.Support
                 [ProtoMember(9)] internal float Offset;
                 [ProtoMember(10)] internal int MaxChildren;
                 [ProtoMember(11)] internal TimedSpawnDef TimedSpawns;
-                [ProtoMember(12)] internal bool FireSound;
+                [ProtoMember(12)] internal bool FireSound; // not used can remove
 
                 [ProtoContract]
                 public struct TimedSpawnDef
@@ -1098,6 +1098,7 @@ namespace CoreSystems.Support
                 [ProtoMember(6)] internal string PlayerHitSound;
                 [ProtoMember(7)] internal string FloatingHitSound;
                 [ProtoMember(8)] internal string ShieldHitSound;
+                [ProtoMember(9)] internal string FragmentSound;
             }
 
             [ProtoContract]

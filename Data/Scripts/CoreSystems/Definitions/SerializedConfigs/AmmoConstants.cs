@@ -178,6 +178,7 @@ namespace CoreSystems.Support
         public readonly bool HitSound;
         public readonly bool AltHitSounds;
         public readonly bool AmmoTravelSound;
+        public readonly bool FragmentSound;
         public readonly bool IsHybrid;
         public readonly bool IsTurretSelectable;
         public readonly bool CanZombie;
@@ -241,6 +242,7 @@ namespace CoreSystems.Support
         public readonly float DesiredProjectileSpeed;
         public readonly float HitSoundDistSqr;
         public readonly float AmmoTravelSoundDistSqr;
+        public readonly float FragSoundDistSqr;
         public readonly float AmmoSoundMaxDistSqr;
         public readonly float BaseDps;
         public readonly float AreaDps;
@@ -391,7 +393,7 @@ namespace CoreSystems.Support
             SmartsDelayDistSqr = (CollisionSize * ammo.AmmoDef.Trajectory.Smarts.TrackingDelay) * (CollisionSize * ammo.AmmoDef.Trajectory.Smarts.TrackingDelay);
             PrimeEntityPool = Models(ammo.AmmoDef, wDef, out PrimeModel, out TriggerModel, out ModelPath);
             Energy(ammo, system, wDef, out EnergyAmmo, out MustCharge, out Reloadable, out EnergyCost, out EnergyMagSize, out ChargSize, out BurstMode, out HasShotReloadDelay);
-            Sound(ammo.AmmoDef, session, out HitSound, out AltHitSounds, out AmmoTravelSound, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr);
+            Sound(ammo.AmmoDef, session, out HitSound, out AltHitSounds, out AmmoTravelSound, out FragmentSound, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr, out FragSoundDistSqr);
 
             MagazineSize = EnergyAmmo ? EnergyMagSize : MagazineDef.Capacity;
             MagsToLoad = wDef.HardPoint.Loading.MagsToLoad > 0 ? wDef.HardPoint.Loading.MagsToLoad : 1;
@@ -1281,32 +1283,45 @@ namespace CoreSystems.Support
             energyMagSize = 0;
         }
 
-        private void Sound(AmmoDef ammoDef, Session session, out bool hitSound, out bool altHitSounds, out bool ammoTravelSound, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr)
+        private void Sound(AmmoDef ammoDef, Session session, out bool hitSound, out bool altHitSounds, out bool ammoTravelSound, out bool fragSound, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float fragSoundDistSqr)
         {
-            hitSound = ammoDef.AmmoAudio.HitSound != string.Empty;
-            altHitSounds = true; //ammoDef.AmmoAudio.VoxelHitSound != string.Empty || ammoDef.AmmoAudio.PlayerHitSound != string.Empty || ammoDef.AmmoAudio.FloatingHitSound != string.Empty;
-            ammoTravelSound = ammoDef.AmmoAudio.TravelSound != string.Empty;
+            hitSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.HitSound);
+            ammoTravelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.TravelSound);
+            fragSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.FragmentSound);
             var hitSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.HitSound);
             var travelSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.TravelSound);
+            var fragSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.FragmentSound);
+
             hitSoundDistSqr = 0;
             ammoTravelSoundDistSqr = 0;
             ammoSoundMaxDistSqr = 0;
+            fragSoundDistSqr = 0;
+            altHitSounds = true;
+
             foreach (var def in session.SoundDefinitions)
             {
                 var id = def.Id.SubtypeId.String;
-                if (HitSound && (id == hitSoundStr || id == ammoDef.AmmoAudio.HitSound))
+                if (hitSound && (id == hitSoundStr || id == ammoDef.AmmoAudio.HitSound))
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
                     if (ob != null) hitSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
                     if (hitSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = hitSoundDistSqr;
                 }
-                else if (AmmoTravelSound && (id == travelSoundStr || id == ammoDef.AmmoAudio.TravelSound))
+                else if (ammoTravelSound && (id == travelSoundStr || id == ammoDef.AmmoAudio.TravelSound))
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
                     if (ob != null) ammoTravelSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
                     if (ammoTravelSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = ammoTravelSoundDistSqr;
                 }
+                else if (fragSound && (id == fragSoundStr || id == ammoDef.AmmoAudio.FragmentSound))
+                {
+                    var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
+                    if (ob != null) fragSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
+                    if (fragSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = fragSoundDistSqr;
+                }
             }
+            Log.Line($"{fragSound} - {ammoDef.AmmoRound} - {fragSoundDistSqr} - {ammoDef.AmmoAudio.FragmentSound}");
+
         }
 
         private MyEntity PrimeEntityActivator()

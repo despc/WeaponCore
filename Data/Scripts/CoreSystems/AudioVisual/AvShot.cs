@@ -875,14 +875,29 @@ namespace CoreSystems.Support
                 var hitSoundChance = AmmoDef.AmmoAudio.HitPlayChance;
                 HitSoundActive = (hitSoundChance >= 1 || hitSoundChance >= MyUtils.GetRandomDouble(0.0f, 1f));
             }
+            if (IsShrapnel)
+            {
+                if (AmmoDef.Const.FragmentSound && distanceFromCameraSqr <= AmmoDef.Const.FragSoundDistSqr)
+                {
+                    StartSoundActived = true;
+                    FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
-            if (FiringSoundState == WeaponSystem.FiringSoundState.PerShot && distanceFromCameraSqr < System.FiringSoundDistSqr && (!IsShrapnel || AmmoDef.Fragment.FireSound)) {
+                    FireEmitter.CanPlayLoopSounds = true;
+                    FireEmitter.Entity = PrimeEntity;
+
+                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.FiringSound, false);
+
+                    FireEmitter.SetPosition(Origin);
+                }
+            }
+            else if (FiringSoundState == WeaponSystem.FiringSoundState.PerShot && distanceFromCameraSqr <= System.FiringSoundDistSqr) {
                 StartSoundActived = true;
 
                 FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                 FireEmitter.CanPlayLoopSounds = true;
                 FireEmitter.Entity = CoreEntity;
+
                 FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.FiringSound, false);
 
                 FireEmitter.SetPosition(Origin);
