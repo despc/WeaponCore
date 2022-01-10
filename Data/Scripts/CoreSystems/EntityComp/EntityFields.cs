@@ -58,8 +58,9 @@ namespace CoreSystems.Support
         internal double MinDetectDistanceSqr = double.MaxValue;
         
         internal double TotalEffect;
-        internal double PreviousEffect;
-        internal double CurrentEffect;
+        internal double PreviousTotalEffect;
+        internal double AverageEffect;
+        internal double AddEffect;
 
         internal float CurrentHeat;
         internal float MaxHeat;

@@ -255,8 +255,10 @@ namespace CoreSystems
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
 
                     if (Tick60) {
-                        wComp.CurrentEffect = wComp.DamageAverage.Add((int)(wComp.TotalEffect - wComp.PreviousEffect));
-                        wComp.PreviousEffect = wComp.TotalEffect;
+                        var add = wComp.TotalEffect - wComp.PreviousTotalEffect;
+                        wComp.AddEffect = add > 0 ? add : wComp.AddEffect;
+                        wComp.AverageEffect = wComp.DamageAverage.Add((int)add);
+                        wComp.PreviousTotalEffect = wComp.TotalEffect;
                     }
 
                     ///

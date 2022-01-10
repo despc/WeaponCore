@@ -147,8 +147,9 @@ namespace CoreSystems.Support
             internal bool DroneAlert;
 
             internal double TotalEffect;
-            internal double PreviousEffect;
-            internal double CurrentEffect;
+            internal double PreviousTotalEffect;
+            internal double AddEffect;
+            internal double AverageEffect;
 
             internal enum RefreshCaller
             {
@@ -226,8 +227,10 @@ namespace CoreSystems.Support
 
             internal void UpdateEffect(uint tick)
             {
-                CurrentEffect = DamageAverage.Add((int)(TotalEffect - PreviousEffect));
-                PreviousEffect = TotalEffect;
+                var add = TotalEffect - PreviousTotalEffect;
+                AddEffect = add > 0 ? add : AddEffect;
+                AverageEffect = DamageAverage.Add((int)add);
+                PreviousTotalEffect = TotalEffect;
                 LastEffectUpdateTick = tick;
             }
 
@@ -389,9 +392,9 @@ namespace CoreSystems.Support
                 Data.Clean();
                 OptimalDps = 0;
                 BlockCount = 0;
-                CurrentEffect = 0;
+                AverageEffect = 0;
                 TotalEffect = 0;
-                PreviousEffect = 0;
+                PreviousTotalEffect = 0;
                 RootAi = null;
                 LargestAi = null;
                 Counter.Clear();
