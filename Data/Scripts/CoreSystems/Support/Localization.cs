@@ -137,7 +137,10 @@ namespace CoreSystems.Support
                         { "WeaponInfoBurst", "Burst" },
                         { "WeaponInfoDelay", "Delay" },
                         { "WeaponInfoReloading", "Reloading" },
-                        { "WeaponInfoLoS", "LoS" }
+                        { "WeaponInfoLoS", "LoS" },
+                        { "WeaponTotalEffect", "Damage" },
+                        { "WeaponTotalEffectAvgDps", "AvgDps" },
+
                     }
                 },
                {
@@ -268,7 +271,10 @@ namespace CoreSystems.Support
                         { "WeaponInfoBurst", "Очередь" },
                         { "WeaponInfoDelay", "Задержка" },
                         { "WeaponInfoReloading", "Перезарядка" },
-                        { "WeaponInfoLoS", "Прямая видимость" }
+                        { "WeaponInfoLoS", "Прямая видимость" },
+                        { "WeaponTotalEffect", "Повреждать" },
+                        { "WeaponTotalEffectAvgDps", "Средний урон в секунду" },
+
                     }
                 },
                 {
@@ -399,7 +405,10 @@ namespace CoreSystems.Support
                         { "WeaponInfoBurst", "爆发" },
                         { "WeaponInfoDelay", "延迟" },
                         { "WeaponInfoReloading", "装填中" },
-                        { "WeaponInfoLoS", "视线" }
+                        { "WeaponInfoLoS", "视线" },
+                        { "WeaponTotalEffect", "损害" },
+                        { "WeaponTotalEffectAvgDps", "每秒平均伤害" },
+
                     }
                 }
             };

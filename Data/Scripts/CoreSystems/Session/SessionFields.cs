@@ -372,6 +372,7 @@ namespace CoreSystems
         internal bool MiscLoaded;
         internal bool Tick10;
         internal bool Tick20;
+        internal bool Tick30;
         internal bool Tick60;
         internal bool Tick90;
         internal bool Tick120;

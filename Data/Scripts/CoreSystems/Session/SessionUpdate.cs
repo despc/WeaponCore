@@ -59,13 +59,21 @@ namespace CoreSystems
                     ai.BlockChangeArea.Max *= ai.GridEntity.GridSize;
                 }
 
-                if (IsServer) {
+                if (ai.Construct.RootAi?.Construct != null) 
+                {
+                    var rootConstruct = ai.Construct.RootAi.Construct;
+                    if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick)
+                        rootConstruct.UpdateEffect(Tick);
 
-                    if (ai.Construct.RootAi.Construct.NewInventoryDetected)
-                        ai.Construct.RootAi.Construct.CheckForMissingAmmo();
-                    else if (Tick60 && ai.Construct.RootAi.Construct.RecentItems.Count > 0)
-                        ai.Construct.RootAi.Construct.CheckEmptyWeapons();
+                    if (IsServer) 
+                    {
+                        if (rootConstruct.NewInventoryDetected)
+                            rootConstruct.CheckForMissingAmmo();
+                        else if (Tick60 && rootConstruct.RecentItems.Count > 0)
+                            rootConstruct.CheckEmptyWeapons();
+                    }
                 }
+
 
                 ///
                 /// Upgrade update section
@@ -244,6 +252,9 @@ namespace CoreSystems
 
                     var compManualMode = wComp.Data.Repo.Values.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
+
+                    if (Tick60)
+                        wComp.UpdateEffect();
 
                     ///
                     /// Weapon update section

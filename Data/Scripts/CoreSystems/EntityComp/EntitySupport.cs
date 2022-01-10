@@ -28,6 +28,13 @@ namespace CoreSystems.Support
             Session.CompsDelayedReInit.Remove(this);
         }
 
+        internal void UpdateEffect()
+        {
+            var currentDamage = TotalEffect - PreviousEffect;
+            PreviousEffect = TotalEffect;
+            CurrentEffect = DamageAverage.Add((int)currentDamage);
+        }
+
         internal void RemoveComp()
         {
             try {
@@ -67,8 +74,7 @@ namespace CoreSystems.Support
                             Ai.Data.Repo.ActiveTerminal = 0;
 
                         Ai testAi;
-                        CoreComponent comp;
-                        if (Ai.CompBase.TryRemove(CoreEntity, out comp))
+                        if (Ai.CompBase.Remove(CoreEntity))
                         {
                             if (Platform.State == CorePlatform.PlatformState.Ready)
                             {

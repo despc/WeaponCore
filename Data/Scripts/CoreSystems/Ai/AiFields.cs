@@ -32,7 +32,7 @@ namespace CoreSystems.Support
         internal readonly Constructs Construct = new Constructs();
         internal readonly FastResourceLock DbLock = new FastResourceLock();
 
-        internal readonly ConcurrentDictionary<MyEntity, CoreComponent> CompBase = new ConcurrentDictionary<MyEntity, CoreComponent>();
+        internal readonly Dictionary<MyEntity, CoreComponent> CompBase = new Dictionary<MyEntity, CoreComponent>();
         internal readonly Dictionary<Weapon.WeaponComponent, int> WeaponIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
         internal readonly Dictionary<Weapon.WeaponComponent, int> WeaponTrackIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
 
@@ -84,7 +84,6 @@ namespace CoreSystems.Support
         internal TargetStatus[] TargetState = new TargetStatus[2];
         internal readonly AiComponent AiComp;
         internal readonly AiCharger Charger;
-
         internal readonly Session Session;
         internal MyEntity TopEntity;
         internal MyCubeGrid GridEntity;

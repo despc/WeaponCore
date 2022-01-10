@@ -134,6 +134,7 @@ namespace CoreSystems.Support
             internal readonly Focus Focus = new Focus();
             internal readonly ConstructData Data = new ConstructData();
             internal readonly HashSet<MyEntity> PreviousTargets = new HashSet<MyEntity>();
+            internal readonly RunningAverage DamageAverage = new RunningAverage(10);
             internal float OptimalDps;
             internal int BlockCount;
             internal Ai RootAi;
@@ -141,7 +142,12 @@ namespace CoreSystems.Support
             internal bool NewInventoryDetected;
             internal int DroneCount;
             internal uint LastDroneTick;
+            internal uint LastEffectUpdateTick;
             internal bool DroneAlert;
+
+            internal double TotalEffect;
+            internal double PreviousEffect;
+            internal double CurrentEffect;
 
             internal enum RefreshCaller
             {
@@ -215,6 +221,14 @@ namespace CoreSystems.Support
                 Log.Line($"ConstructRefresh Failed main Ai no GridMap: {caller} - Marked: {ai.TopEntity?.MarkedForClose}");
                 RootAi = null;
                 LargestAi = null;
+            }
+
+            internal void UpdateEffect(uint tick)
+            {
+                var currentDamage = TotalEffect - PreviousEffect;
+                PreviousEffect = TotalEffect;
+                CurrentEffect = DamageAverage.Add((int)currentDamage);
+                LastEffectUpdateTick = tick;
             }
 
             internal void DroneCleanup()
@@ -375,6 +389,9 @@ namespace CoreSystems.Support
                 Data.Clean();
                 OptimalDps = 0;
                 BlockCount = 0;
+                CurrentEffect = 0;
+                TotalEffect = 0;
+                PreviousEffect = 0;
                 RootAi = null;
                 LargestAi = null;
                 Counter.Clear();
