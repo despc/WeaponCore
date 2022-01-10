@@ -253,8 +253,10 @@ namespace CoreSystems
                     var compManualMode = wComp.Data.Repo.Values.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
 
-                    if (Tick60)
-                        wComp.UpdateEffect();
+                    if (Tick60) {
+                        wComp.CurrentEffect = wComp.DamageAverage.Add((int)(wComp.TotalEffect - wComp.PreviousEffect));
+                        wComp.PreviousEffect = wComp.TotalEffect;
+                    }
 
                     ///
                     /// Weapon update section

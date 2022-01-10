@@ -225,9 +225,8 @@ namespace CoreSystems.Support
 
             internal void UpdateEffect(uint tick)
             {
-                var currentDamage = TotalEffect - PreviousEffect;
+                CurrentEffect = DamageAverage.Add((int)(TotalEffect - PreviousEffect));
                 PreviousEffect = TotalEffect;
-                CurrentEffect = DamageAverage.Add((int)currentDamage);
                 LastEffectUpdateTick = tick;
             }
 

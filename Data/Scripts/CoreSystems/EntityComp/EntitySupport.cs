@@ -28,13 +28,6 @@ namespace CoreSystems.Support
             Session.CompsDelayedReInit.Remove(this);
         }
 
-        internal void UpdateEffect()
-        {
-            var currentDamage = TotalEffect - PreviousEffect;
-            PreviousEffect = TotalEffect;
-            CurrentEffect = DamageAverage.Add((int)currentDamage);
-        }
-
         internal void RemoveComp()
         {
             try {
