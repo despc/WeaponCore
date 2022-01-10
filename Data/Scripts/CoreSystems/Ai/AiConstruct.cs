@@ -660,26 +660,28 @@ namespace CoreSystems.Support
             return false;
         }
 
-        internal bool ValidTargetFocused(Ai ai, Weapon w, MyEntity targetEntity)
+        internal bool ValidTargetFocused(Weapon w)
         {
-            var targets = ai.Construct.Data.Repo.FocusData?.Target;
+            var targets = w.Comp.Ai.Construct.Data.Repo.FocusData?.Target;
 
-            var block = targetEntity as MyCubeBlock;
+            var targetEnt = w.Target.TargetEntity;
 
-            if (targets != null && block != null)
+            if (targets != null && targetEnt != null)
             {
                 for (int i = 0; i < targets.Length; i++)
                 {
                     var tId = targets[i];
                     if (tId == 0) continue;
 
+                    var block = targetEnt as MyCubeBlock;
+
                     MyEntity target;
-                    if (MyEntities.TryGetEntityById(tId, out target) && target == block.CubeGrid)
+                    if (MyEntities.TryGetEntityById(tId, out target) && (block == null || target == block.CubeGrid))
                     {
                         if (w.System.LockOnFocus)
                         {
-                            var targetSphere = targetEntity.PositionComp.WorldVolume;
-                            targetSphere.Center = targetEntity.PositionComp.WorldAABB.Center;
+                            var targetSphere = targetEnt.PositionComp.WorldVolume;
+                            targetSphere.Center = targetEnt.PositionComp.WorldAABB.Center;
                             w.AimCone.ConeDir = w.MyPivotFwd;
                             w.AimCone.ConeTip = w.BarrelOrigin;
                             return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);

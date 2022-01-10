@@ -529,13 +529,7 @@ namespace CoreSystems.Platform
                 {
                     comp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 }
-                /*
-                else
-                {
-                    comp.Data.Repo.Values.State.PlayerId = -1;
-                    comp.Data.Repo.Values.State.Control = ProtoPhantomState.ControlMode.None;
-                }
-                */
+
                 if (resetTarget)
                     ClearTargets(comp);
             }

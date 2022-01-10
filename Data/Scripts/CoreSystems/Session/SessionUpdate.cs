@@ -210,47 +210,48 @@ namespace CoreSystems
                         wComp.DetectStateChanges();
                     }
 
-                    if (IsServer && wComp.Data.Repo.Values.State.PlayerId > 0 && !ai.Data.Repo.ControllingPlayers.ContainsKey(wComp.Data.Repo.Values.State.PlayerId))
+                    var wValues = wComp.Data.Repo.Values;
+                    if (IsServer && wValues.State.PlayerId > 0 && !ai.Data.Repo.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
 
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)
                         continue;
 
-                    var cMode = wComp.Data.Repo.Values.Set.Overrides.Control;
+                    var cMode = wValues.Set.Overrides.Control;
                     if (HandlesInput) {
 
-                        if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wComp.Data.Repo.Values.State.Control != ControlMode.Toolbar)
+                        if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wValues.State.Control != ControlMode.Toolbar)
                             wComp.RequestShootUpdate(TriggerClick, PlayerId);
 
-                        var wasTrack = wComp.Data.Repo.Values.State.TrackingReticle;
+                        var wasTrack = wValues.State.TrackingReticle;
 
-                        var isControllingPlayer = wComp.Data.Repo.Values.State.PlayerId == PlayerId;
-                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && wComp.Ai.Construct.RootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
+                        var isControllingPlayer = wValues.State.PlayerId == PlayerId;
+                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && ai.Construct.RootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
                         if (isControllingPlayer)
                         {
                             TargetUi.LastTrackTick = Tick;
                             if (MpActive && wasTrack != track)
                                 wComp.Session.SendTrackReticleUpdate(wComp, track);
                             else if (IsServer)
-                                wComp.Data.Repo.Values.State.TrackingReticle = track;
+                                wValues.State.TrackingReticle = track;
                         }
                     }
 
-                    wComp.ManualMode = wComp.Data.Repo.Values.State.TrackingReticle && cMode == ProtoWeaponOverrides.ControlModes.Manual;
+                    wComp.ManualMode = wValues.State.TrackingReticle && cMode == ProtoWeaponOverrides.ControlModes.Manual;
 
                     Ai.FakeTargets fakeTargets = null;
                     if (wComp.ManualMode || cMode == ProtoWeaponOverrides.ControlModes.Painter)
-                        PlayerDummyTargets.TryGetValue(wComp.Data.Repo.Values.State.PlayerId, out fakeTargets);
+                        PlayerDummyTargets.TryGetValue(wValues.State.PlayerId, out fakeTargets);
 
                     wComp.PainterMode = fakeTargets != null && cMode == ProtoWeaponOverrides.ControlModes.Painter && fakeTargets.PaintedTarget.EntityId != 0;
                     wComp.FakeMode = wComp.ManualMode || wComp.PainterMode;
                     wComp.WasControlled = wComp.UserControlled;
-                    wComp.UserControlled = wComp.Data.Repo.Values.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Auto || wComp.Data.Repo.Values.State.Control == ControlMode.Camera || fakeTargets != null && fakeTargets.PaintedTarget.EntityId != 0);
+                    wComp.UserControlled = wValues.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Auto || wValues.State.Control == ControlMode.Camera || fakeTargets != null && fakeTargets.PaintedTarget.EntityId != 0);
                     
-                    if (!PlayerMouseStates.TryGetValue(wComp.Data.Repo.Values.State.PlayerId, out wComp.InputState))
+                    if (!PlayerMouseStates.TryGetValue(wValues.State.PlayerId, out wComp.InputState))
                         wComp.InputState = DefaultInputStateData;
 
-                    var compManualMode = wComp.Data.Repo.Values.State.Control == ControlMode.Camera || wComp.ManualMode;
+                    var compManualMode = wValues.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
 
                     if (Tick60) {
@@ -264,11 +265,11 @@ namespace CoreSystems
                     for (int j = 0; j < wComp.Platform.Weapons.Count; j++) {
 
                         var w = wComp.Platform.Weapons[j];
-                        var comp = w.Comp;
+
                         if (w.PartReadyTick > Tick) {
 
                             if (w.Target.HasTarget && !IsClient)
-                                w.Target.Reset(comp.Session.Tick, States.WeaponNotReady);
+                                w.Target.Reset(Tick, States.WeaponNotReady);
                             continue;
                         }
                         if (w.AvCapable && Tick20) {
@@ -284,7 +285,8 @@ namespace CoreSystems
                         ///Check Reload
                         ///                        
 
-                        if (w.ActiveAmmoDef.AmmoDef.Const.Reloadable && !w.System.DesignatorWeapon && !w.Loading) { // does this need StayCharged?
+                        var aConst = w.ActiveAmmoDef.AmmoDef.Const;
+                        if (aConst.Reloadable && !w.System.DesignatorWeapon && !w.Loading) { // does this need StayCharged?
 
                             if (IsServer)
                             {
@@ -302,7 +304,7 @@ namespace CoreSystems
                         else if (w.Loading && (IsServer && Tick >= w.ReloadEndTick || IsClient && w.Reload.EndId > w.ClientEndId))
                             w.Reloaded(1);
 
-                        if (DedicatedServer && w.Reload.WaitForClient && !w.Loading && (wComp.Data.Repo.Values.State.PlayerId <= 0 || Tick - w.LastLoadedTick > 60))
+                        if (DedicatedServer && w.Reload.WaitForClient && !w.Loading && (wValues.State.PlayerId <= 0 || Tick - w.LastLoadedTick > 60))
                             SendWeaponReload(w, true);
 
                         ///
@@ -317,7 +319,7 @@ namespace CoreSystems
                         //if (w.System.PartType != HardwareType.BlockWeapon)
                             //continue;
 
-                        if (w.CriticalReaction && !wComp.CloseCondition && (wComp.Data.Repo.Values.Set.Overrides.Armed || wComp.Data.Repo.Values.State.CountingDown || wComp.Data.Repo.Values.State.CriticalReaction))
+                        if (w.CriticalReaction && !wComp.CloseCondition && (wValues.Set.Overrides.Armed || wValues.State.CountingDown || wValues.State.CriticalReaction))
                             w.CriticalMonitor();
 
                         if (w.Target.ClientDirty)
@@ -326,19 +328,17 @@ namespace CoreSystems
                         ///
                         /// Check target for expire states
                         /// 
-                        var noAmmo = w.NoMagsToLoad && w.ProtoWeaponAmmo.CurrentAmmo == 0 && w.ActiveAmmoDef.AmmoDef.Const.Reloadable && !w.System.DesignatorWeapon && Tick - w.LastMagSeenTick > 600;
+                        var noAmmo = w.NoMagsToLoad && w.ProtoWeaponAmmo.CurrentAmmo == 0 && aConst.Reloadable && !w.System.DesignatorWeapon && Tick - w.LastMagSeenTick > 600;
                         if (w.Target.HasTarget) {
 
-                            //if (w.PosChangedTick != Tick)
-                            //    w.UpdatePivotPos();
                             
                             if (!IsClient && noAmmo)
                                 w.Target.Reset(Tick, States.Expired);
-                            else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !comp.FakeMode || comp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
-                                w.Target.Reset(Tick, States.Expired, !comp.ManualMode);
-                            else if (!IsClient && w.Target.TargetEntity != null && (comp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose))
+                            else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !wComp.FakeMode || wComp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
+                                w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
+                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || wValues.Set.Overrides.FocusTargets && !ai.Construct.Focus.ValidTargetFocused(w)))
                                 w.Target.Reset(Tick, States.Expired);
-                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && w.SkipAimChecks && !ai.Construct.Focus.ValidTargetFocused(ai, w, w.Target.TargetEntity))
+                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && w.SkipAimChecks && !ai.Construct.Focus.ValidTargetFocused(w))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -347,7 +347,7 @@ namespace CoreSystems
                             else if (w.TurretController) {
 
                                 if (!advOptimize && !Weapon.TrackingTarget(w, w.Target, out w.TargetLock) && !IsClient && w.Target.ExpiredTick != Tick)
-                                    w.Target.Reset(Tick, States.LostTracking, !comp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
+                                    w.Target.Reset(Tick, States.LostTracking, !wComp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
                             }
                             else {
 
@@ -356,7 +356,7 @@ namespace CoreSystems
 
                                     if (!w.TrackTarget && !IsClient) {
 
-                                        if ((comp.TrackingWeapon.Target.Projectile != w.Target.Projectile || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive || comp.TrackingWeapon.Target.TargetEntity != w.Target.TargetEntity || comp.TrackingWeapon.Target.IsFakeTarget != w.Target.IsFakeTarget))
+                                        if ((wComp.TrackingWeapon.Target.Projectile != w.Target.Projectile || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive || wComp.TrackingWeapon.Target.TargetEntity != w.Target.TargetEntity || wComp.TrackingWeapon.Target.IsFakeTarget != w.Target.IsFakeTarget))
                                             w.Target.Reset(Tick, States.Expired);
                                         else
                                             w.TargetLock = true;
@@ -369,16 +369,16 @@ namespace CoreSystems
                             }
                         }
 
-                        w.ProjectilesNear = enemyProjectiles && w.System.TrackProjectile && w.Comp.Data.Repo.Values.Set.Overrides.Projectiles && !w.Target.HasTarget && (w.Target.TargetChanged || QCount == w.ShortLoadId );
+                        w.ProjectilesNear = enemyProjectiles && w.System.TrackProjectile && wValues.Set.Overrides.Projectiles && !w.Target.HasTarget && (w.Target.TargetChanged || QCount == w.ShortLoadId );
 
-                        if (comp.Data.Repo.Values.State.Control == ControlMode.Camera && UiInput.MouseButtonPressed)
+                        if (wValues.State.Control == ControlMode.Camera && UiInput.MouseButtonPressed)
                             w.Target.TargetPos = Vector3D.Zero;
 
                         ///
                         /// Queue for target acquire or set to tracking weapon.
                         /// 
-                        var seek = comp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!comp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick));
-                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !comp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && comp.Data.Repo.Values.State.Control != ControlMode.Camera)
+                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || (!noAmmo && !w.Target.HasTarget && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick));
+                        if (!IsClient && (seek || w.TrackTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;
                             AcquireTargets.Add(w);
@@ -391,20 +391,20 @@ namespace CoreSystems
                         /// Check weapon's turret to see if its time to go home
                         ///
 
-                        if (w.TurretController && !w.IsHome && !w.ReturingHome && !w.Target.HasTarget && Tick - w.Target.ResetTick > 239 && !comp.UserControlled && w.PartState.Action == TriggerOff)
+                        if (w.TurretController && !w.IsHome && !w.ReturingHome && !w.Target.HasTarget && Tick - w.Target.ResetTick > 239 && !wComp.UserControlled && w.PartState.Action == TriggerOff)
                             w.ScheduleWeaponHome();
 
                         ///
                         /// Determine if its time to shoot
                         ///
                         ///
-                        w.AiShooting = w.TargetLock && !comp.UserControlled && !w.System.SuppressFire;
+                        w.AiShooting = w.TargetLock && !wComp.UserControlled && !w.System.SuppressFire;
 
-                        var reloading = w.ActiveAmmoDef.AmmoDef.Const.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
+                        var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         var canShoot = !w.PartState.Overheated && !reloading && !w.System.DesignatorWeapon;
-                        var paintedTarget = comp.PainterMode && w.Target.IsFakeTarget && w.Target.IsAligned;
+                        var paintedTarget = wComp.PainterMode && w.Target.IsFakeTarget && w.Target.IsAligned;
                         var validShootStates = paintedTarget || w.PartState.Action == TriggerOn || w.PartState.Action == TriggerOnce || w.AiShooting && w.PartState.Action == TriggerOff;
-                        var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && comp.InputState.MouseButtonLeft;
+                        var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
                         var shoot = (validShootStates || manualShot || w.FinishShots || delayedFire);
                         w.LockOnFireState = shoot && (w.System.LockOnFocus && !w.Comp.ModOverride) && ai.Construct.Data.Repo.FocusData.HasFocus && ai.Construct.Focus.FocusInRange(w);
@@ -439,7 +439,7 @@ namespace CoreSystems
 
                         w.TargetLock = false;
 
-                        if (comp.Debug && !DedicatedServer)
+                        if (wComp.Debug && !DedicatedServer)
                             WeaponDebug(w);
                     }
                 }
