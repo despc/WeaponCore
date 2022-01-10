@@ -1320,8 +1320,6 @@ namespace CoreSystems.Support
                     if (fragSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = fragSoundDistSqr;
                 }
             }
-            Log.Line($"{fragSound} - {ammoDef.AmmoRound} - {fragSoundDistSqr} - {ammoDef.AmmoAudio.FragmentSound}");
-
         }
 
         private MyEntity PrimeEntityActivator()
