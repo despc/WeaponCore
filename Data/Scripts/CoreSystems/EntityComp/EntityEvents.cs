@@ -207,14 +207,14 @@ namespace CoreSystems.Support
                     stringBuilder.Append("\nWeapon modified by server!\n")
                         .Append("Report issues to server admins.\n");
 
-                stringBuilder.Append($"\n{Localization.GetText("WeaponInfoConstructDPS")}: " + Ai.EffectiveDps.ToString("0.0"))
-                    .Append($"\n                        ( " + Ai.PerfectDps.ToString("0.0") +" )")
+                stringBuilder.Append($"\n{Localization.GetText("WeaponInfoConstructDPS")}: " + Ai.EffectiveDps.ToString("e2"))
+                    .Append($"\n                        ( " + Ai.PerfectDps.ToString("e2") +" )")
                     .Append($"\n{Localization.GetText("WeaponInfoShotsPerSec")}: " + comp.RealShotsPerSec.ToString("0.00") + " (" + comp.ShotsPerSec.ToString("0.00") + ")")
                     .Append("\n")
-                    .Append($"\n{Localization.GetText("WeaponTotalEffect")}: " + comp.TotalEffect.ToString("0"))
-                    .Append($"\n              ( " + Ai.Construct.RootAi?.Construct.TotalEffect.ToString("0") + " )")
-                    .Append($"\n{Localization.GetText("WeaponTotalEffectAvgDps")}: " + comp.CurrentEffect.ToString("0"))
-                    .Append($"\n             ( " + Ai.Construct.RootAi?.Construct.CurrentEffect.ToString("0") + " )")
+                    .Append($"\n{Localization.GetText("WeaponTotalEffect")}: " + comp.TotalEffect.ToString("e2"))
+                    .Append($"\n              ( " + Ai.Construct.RootAi?.Construct.TotalEffect.ToString("e2") + " )")
+                    .Append($"\n{Localization.GetText("WeaponTotalEffectAvgDps")}: " + comp.CurrentEffect.ToString("N0"))
+                    .Append($"\n             ( " + Ai.Construct.RootAi?.Construct.CurrentEffect.ToString("N0") + " )")
 
                     .Append("\n")
                     .Append($"\n{Localization.GetText("WeaponInfoRealDps")}: " + comp.EffectiveDps.ToString("0.0"))

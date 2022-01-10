@@ -4,6 +4,7 @@ using CoreSystems.Platform;
 using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
 using static CoreSystems.FocusData;
@@ -676,7 +677,7 @@ namespace CoreSystems.Support
                     var block = targetEnt as MyCubeBlock;
 
                     MyEntity target;
-                    if (MyEntities.TryGetEntityById(tId, out target) && (block == null || target == block.CubeGrid))
+                    if (MyEntities.TryGetEntityById(tId, out target) && (target == targetEnt || block != null && target == block.CubeGrid))
                     {
                         if (w.System.LockOnFocus)
                         {
