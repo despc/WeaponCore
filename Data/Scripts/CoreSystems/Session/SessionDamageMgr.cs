@@ -116,6 +116,7 @@ namespace CoreSystems
             var areaDamage = info.AmmoDef.AreaOfDamage.ByBlockHit.Enable;
             var scaledBaseDamage = info.BaseDamagePool * damageScale;
             var scaledDamage = (scaledBaseDamage) * info.AmmoDef.Const.ShieldModifier * shieldDmgGlobal* info.ShieldResistMod* info.ShieldBypassMod;
+            var logDamage = info.System.WConst.DebugMode;
 
             var areafalloff = info.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
             var aoeMaxAbsorb = info.AmmoDef.Const.AoeMaxAbsorb;
@@ -165,7 +166,7 @@ namespace CoreSystems
             }
             var detonateDamage = detonateOnEnd && info.ShieldBypassMod >= 1 ? (unscaledDetDmg * info.AmmoDef.Const.ShieldModifier * areaDmgGlobal * shieldDmgGlobal) * info.ShieldResistMod : 0;
             //Log.Line($"detdmg {detonateDamage}  maxabsorb{detmaxabsorb}");
-            if (detonateDamage >= detmaxabsorb) detonateDamage = detmaxabsorb;
+            if (detonateDamage >= detmaxabsorb && detmaxabsorb > 0) detonateDamage = detmaxabsorb;
             //end of new detonation stuffs
 
             //radiant falloff scaling and capping by maxabsorb
@@ -198,9 +199,9 @@ namespace CoreSystems
 
             }
             var radiantDamage = areaDamage && info.ShieldBypassMod >= 1 ? (unscaledAoeDmg * info.AmmoDef.Const.ShieldModifier * areaDmgGlobal * shieldDmgGlobal) * info.ShieldResistMod : 0;
-            if (radiantDamage >= aoeMaxAbsorb) radiantDamage = aoeMaxAbsorb;
+            if (radiantDamage >= aoeMaxAbsorb && aoeMaxAbsorb > 0) radiantDamage = aoeMaxAbsorb;
             //end of new radiant stuffs
-
+            var priDamage = scaledDamage;
             scaledDamage += radiantDamage;
 
             if (heal)
@@ -229,7 +230,7 @@ namespace CoreSystems
                         }
                 }
             }
-            //Log.Line($"Shld hit:  Scaled pri & blockhit AOE {scaledDamage}   det dmg{detonateDamage}");
+            if (logDamage) Log.Line($"Shld hit: Primary dmg- {priDamage}    AOE dmg- {detonateDamage+radiantDamage}");
             var hitWave = info.AmmoDef.Const.RealShotsPerMin <= 120;
             var hit = SApi.PointAttackShieldCon(shield, hitEnt.HitPos.Value, info.Target.CoreEntity.EntityId, (float)scaledDamage, (float)detonateDamage, energy, hitWave);
             info.DamageDone += (scaledDamage + detonateDamage);
