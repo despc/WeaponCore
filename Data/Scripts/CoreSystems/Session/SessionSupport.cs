@@ -32,6 +32,7 @@ namespace CoreSystems
             Tick++;
             Tick10 = Tick % 10 == 0;
             Tick20 = Tick % 20 == 0;
+            Tick30 = Tick % 30 == 0;
             Tick60 = Tick % 60 == 0;
             Tick90 = Tick % 90 == 0;
             Tick120 = Tick % 120 == 0;

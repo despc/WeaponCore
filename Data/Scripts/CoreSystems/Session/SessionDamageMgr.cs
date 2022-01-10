@@ -233,6 +233,8 @@ namespace CoreSystems
             if (logDamage) Log.Line($"Shld hit: Primary dmg- {priDamage}    AOE dmg- {detonateDamage+radiantDamage}");
             var hitWave = info.AmmoDef.Const.RealShotsPerMin <= 120;
             var hit = SApi.PointAttackShieldCon(shield, hitEnt.HitPos.Value, info.Target.CoreEntity.EntityId, (float)scaledDamage, (float)detonateDamage, energy, hitWave);
+            info.DamageDone += (scaledDamage + detonateDamage);
+
             if (hit.HasValue)
             {
 
@@ -672,6 +674,7 @@ namespace CoreSystems
                             try
                             {
                                 block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
+                                t.DamageDone += scaledDamage;
                             }
                             catch
                             {
@@ -687,6 +690,7 @@ namespace CoreSystems
                         else
                         {
                             var realDmg = scaledDamage * gridDamageModifier * blockDmgModifier;
+                            t.DamageDone += scaledDamage;
 
                             if (_slimHealthClient.ContainsKey(block))
                             {
@@ -820,8 +824,11 @@ namespace CoreSystems
                 info.BaseDamagePool *= reduction;
             }
 
+            info.DamageDone += scaledDamage;
+
             if (info.DoDamage)
                 destObj.DoDamage(scaledDamage, !info.ShieldBypassed ? MyDamageType.Bullet : MyDamageType.Drill, sync, null, attackerId);
+
             if (info.AmmoDef.Const.Mass > 0)
             {
                 var speed = !info.AmmoDef.Const.IsBeamWeapon && info.AmmoDef.Const.DesiredProjectileSpeed > 0 ? info.AmmoDef.Const.DesiredProjectileSpeed : 1;
@@ -856,7 +863,10 @@ namespace CoreSystems
 
                 var safeObjHp = objHp <= 0 ? 0.0000001f : objHp;
                 var remaining = (scaledDamage / safeObjHp) / damageScale;
+                
+                attacker.DamageDone += remaining;
                 attacker.BaseDamagePool -= remaining;
+
                 pTarget.Info.BaseHealthPool = 0;
                 pTarget.State = Projectile.ProjectileState.Destroy;
                 if (attacker.AmmoDef.Const.EndOfLifeDamage > 0 && attacker.AmmoDef.Const.EndOfLifeAoe && attacker.Age >= attacker.AmmoDef.Const.MinArmingTime)
@@ -865,6 +875,8 @@ namespace CoreSystems
             else
             {
                 attacker.BaseDamagePool = 0;
+                attacker.DamageDone += scaledDamage;
+
                 pTarget.Info.BaseHealthPool -= scaledDamage;
                 DetonateProjectile(hitEnt, attacker);
             }
@@ -891,10 +903,16 @@ namespace CoreSystems
 
                         if (scaledDamage >= objHp)
                         {
+                            attacker.DamageDone += objHp;
                             sTarget.Info.BaseHealthPool = 0;
                             sTarget.State = Projectile.ProjectileState.Destroy;
                         }
-                        else sTarget.Info.BaseHealthPool -= scaledDamage;
+                        else
+                        {
+                            sTarget.Info.BaseHealthPool -= scaledDamage;
+                            attacker.DamageDone += scaledDamage;
+
+                        }
                     }
                 }
             }

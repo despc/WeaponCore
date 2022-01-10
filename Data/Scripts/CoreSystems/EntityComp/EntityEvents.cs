@@ -211,13 +211,21 @@ namespace CoreSystems.Support
                     .Append($"\n                        ( " + Ai.PerfectDps.ToString("0.0") +" )")
                     .Append($"\n{Localization.GetText("WeaponInfoShotsPerSec")}: " + comp.RealShotsPerSec.ToString("0.00") + " (" + comp.ShotsPerSec.ToString("0.00") + ")")
                     .Append("\n")
+                    .Append($"\n{Localization.GetText("WeaponTotalEffect")}: " + comp.TotalEffect.ToString("0"))
+                    .Append($"\n              ( " + Ai.Construct.RootAi?.Construct.TotalEffect.ToString("0") + " )")
+                    .Append($"\n{Localization.GetText("WeaponTotalEffectAvgDps")}: " + comp.CurrentEffect.ToString("0"))
+                    .Append($"\n             ( " + Ai.Construct.RootAi?.Construct.CurrentEffect.ToString("0") + " )")
+
+                    .Append("\n")
                     .Append($"\n{Localization.GetText("WeaponInfoRealDps")}: " + comp.EffectiveDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoPerfectDps")}: " + comp.PerfectDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoPeakDps")}: " + comp.PeakDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoBaseDps")}: " + comp.BaseDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoAreaDps")}: " + comp.AreaDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoExplode")}: " + comp.DetDps.ToString("0.0"))
-                    .Append($"\n{Localization.GetText("WeaponInfoCurrent")}: " + comp.CurrentDps.ToString("0.0") +" ("+ (comp.CurrentDps / comp.PeakDps).ToString("P") + ")");
+                    .Append($"\n{Localization.GetText("WeaponInfoCurrent")}: " + comp.CurrentDps.ToString("0") + " (" + (comp.CurrentDps / comp.PeakDps).ToString("P") + ")");
+
+
 
                 if (HeatPerSecond > 0)
                     stringBuilder.Append("\n__________________________________" )

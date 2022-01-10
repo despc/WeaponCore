@@ -206,8 +206,7 @@ namespace CoreSystems.Support
                     ((Weapon.WeaponComponent)this).OnAddedToSceneWeaponTasks(firstRun);
 
 
-                if (!Ai.CompBase.TryAdd(CoreEntity, this))
-                    Log.Line("failed to add cube to gridAi");
+                Ai.CompBase[CoreEntity] = this;
 
                 Ai.CompChange(true, this);
 

@@ -434,6 +434,7 @@ namespace CoreSystems.Support
             NearByEntities = 0;
             NearByEntitiesTmp = 0;
             MyProjectiles = 0;
+
             AccelChecked = false;
             PointDefense = false;
             FadeOut = false;

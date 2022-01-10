@@ -20,6 +20,7 @@ namespace CoreSystems.Support
         internal readonly List<int> ConsumableSelectionPartIds = new List<int>();
         internal List<Action<long, int, ulong, long, Vector3D, bool>>[] Monitors;
         internal bool InControlPanel => MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.ControlPanel;
+        internal readonly RunningAverage DamageAverage = new RunningAverage(10);
 
 
         internal bool InventoryInited;
@@ -55,6 +56,10 @@ namespace CoreSystems.Support
         internal double MaxDetectDistanceSqr = double.MinValue;
         internal double MinDetectDistance = double.MaxValue;
         internal double MinDetectDistanceSqr = double.MaxValue;
+        
+        internal double TotalEffect;
+        internal double PreviousEffect;
+        internal double CurrentEffect;
 
         internal float CurrentHeat;
         internal float MaxHeat;

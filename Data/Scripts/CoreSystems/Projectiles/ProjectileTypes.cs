@@ -57,6 +57,7 @@ namespace CoreSystems.Support
         internal double ClosestDistSqrToTarget = double.MaxValue;
         internal double TracerLength;
         internal double MaxTrajectory;
+        internal double DamageDone;
         internal float ShotFade;
         internal float BaseDamagePool;
         internal float BaseHealthPool;
@@ -159,6 +160,7 @@ namespace CoreSystems.Support
             Frags = 0;
             MuzzleId = 0;
             Age = 0;
+            DamageDone = 0;
             ProjectileDisplacement = 0;
             MaxTrajectory = 0;
             ShotFade = 0;

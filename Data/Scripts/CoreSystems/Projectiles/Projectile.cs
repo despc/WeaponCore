@@ -1025,8 +1025,16 @@ namespace CoreSystems.Projectiles
                 }
                 VrPros.Clear();
             }
+            
             if (DynamicGuidance && Info.System.Session.AntiSmartActive)
                 DynTrees.UnregisterProjectile(this);
+
+            var target = Info.Target;
+            CoreComponent comp;
+            if (Info.DamageDone > 0 && Info.Ai?.Construct.RootAi != null && target.CoreEntity != null && !Info.Ai.MarkedForClose && !target.CoreEntity.MarkedForClose && Info.Ai.CompBase.TryGetValue(target.CoreEntity, out comp)) {
+                Info.Ai.Construct.RootAi.Construct.TotalEffect += Info.DamageDone;
+                comp.TotalEffect += Info.DamageDone;
+            }
 
             PruningProxyId = -1;
             Info.Clean();

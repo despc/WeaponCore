@@ -79,7 +79,7 @@ namespace CoreSystems.Support
         internal ulong UniqueMuzzleId;
         internal int LifeTime;
         internal int MuzzleId;
-        internal int WeaponId;
+        internal int PartId;
         internal int TracerStep;
         internal int TracerSteps;
         internal int DecayTime;
@@ -175,7 +175,7 @@ namespace CoreSystems.Support
             MaxTracerLength = info.TracerLength;
             MuzzleId = info.MuzzleId;
             UniqueMuzzleId = info.UniqueMuzzleId;
-            WeaponId = info.PartId;
+            PartId = info.PartId;
             MaxSpeed = maxSpeed;
             MaxStepSize = MaxSpeed * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
             ShootVelStep = info.ShooterVel * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
