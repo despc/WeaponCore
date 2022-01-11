@@ -332,11 +332,36 @@ namespace CoreSystems.Projectiles
             }
         }
 
-        internal void SpawnShrapnel(bool timedSpawn = true)
+        internal void SpawnShrapnel(bool timedSpawn = true) // inception begins
         {
-            var aConst = Info.AmmoDef.Const;
+
+            var ammoDef = Info.AmmoDef;
+            var aConst = ammoDef.Const;
+            var patternIndex = aConst.FragPatternCount;
+            var pattern = ammoDef.Pattern;
+
+            if (aConst.FragmentPattern) 
+            {
+                if (pattern.Random) 
+                {
+                    if (pattern.TriggerChance >= 1 || pattern.TriggerChance >= Info.Random.NextDouble())
+                        patternIndex = Info.Random.Range(pattern.RandomMin, pattern.RandomMax);
+
+                    for (int w = 0; w < aConst.WeaponPatternCount; w++) {
+
+                        var y = Info.Random.Range(0, w + 1);
+                        aConst.PatternShuffleArray[w] = aConst.PatternShuffleArray[y];
+                        aConst.PatternShuffleArray[y] = w;
+                    }
+                }
+                else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.WeaponPatternCount) {
+                    patternIndex = pattern.PatternSteps;
+                    for (int p = 0; p < aConst.WeaponPatternCount; ++p)
+                        aConst.PatternShuffleArray[p] = (aConst.PatternShuffleArray[p] + patternIndex) % aConst.WeaponPatternCount;
+                }
+            }
+
             var fireOnTarget = timedSpawn && aConst.HasFragProximity && aConst.FragPointAtTarget;
-            var fragAmmoDef = Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
 
             Vector3D newOrigin;
             if (!aConst.HasFragmentOffset)
@@ -347,21 +372,30 @@ namespace CoreSystems.Projectiles
                 newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
             }
 
-            Vector3D pointDir;
-            if (!fireOnTarget)
-                pointDir = Info.Direction;
-            else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
+            var spawn = false;
+            for (int i = 0; i < patternIndex; i++)
+            {
+                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[aConst.PatternShuffleArray[i]] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+
+                Vector3D pointDir;
+                if (!fireOnTarget)
+                    pointDir = Info.Direction;
+                else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
+                    continue;
+                spawn = true;
+                var projectiles = Info.System.Session.Projectiles;
+                var shrapnel = projectiles.ShrapnelPool.Get();
+                shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
+                projectiles.ShrapnelToSpawn.Add(shrapnel);
+            }
+
+            if (!spawn)
                 return;
 
             if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
                 EarlyEnd = true;
 
             Info.LastFragTime = Info.Age;
-            
-            var projectiles = Info.System.Session.Projectiles;
-            var shrapnel = projectiles.ShrapnelPool.Get();
-            shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
-            projectiles.ShrapnelToSpawn.Add(shrapnel);
         }
 
         internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, ref Vector3D shooterPos, out Vector3D targetDirection)

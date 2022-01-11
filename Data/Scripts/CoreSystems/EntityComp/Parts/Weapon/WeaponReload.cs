@@ -60,8 +60,8 @@ namespace CoreSystems.Platform
 
         internal void PrepAmmoShuffle()
         {
-            if (AmmoShufflePattern.Length != ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt) 
-                Array.Resize(ref AmmoShufflePattern, ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt);
+            if (AmmoShufflePattern.Length != ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount) 
+                Array.Resize(ref AmmoShufflePattern, ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount);
 
             for (int i = 0; i < AmmoShufflePattern.Length; i++)
                 AmmoShufflePattern[i] = i;

@@ -822,6 +822,14 @@ namespace CoreSystems.Support
             [ProtoContract]
             public struct PatternDef
             {
+                public enum PatternModes
+                {
+                    Never,
+                    Weapon,
+                    Fragment,
+                    Both,
+                }
+
                 [ProtoMember(1)] internal string[] Patterns;
                 [ProtoMember(2)] internal bool Enable;
                 [ProtoMember(3)] internal float TriggerChance;
@@ -830,6 +838,7 @@ namespace CoreSystems.Support
                 [ProtoMember(6)] internal int RandomMin;
                 [ProtoMember(7)] internal int RandomMax;
                 [ProtoMember(8)] internal int PatternSteps;
+                [ProtoMember(9)] internal PatternModes Mode;
             }
 
             [ProtoContract]

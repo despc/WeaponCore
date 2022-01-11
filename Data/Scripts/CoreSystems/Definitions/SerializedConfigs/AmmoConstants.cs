@@ -89,6 +89,8 @@ namespace CoreSystems.Support
         public readonly Stack<MySoundPair> HitFloatingSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> TravelSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> CustomSoundPairs = new Stack<MySoundPair>();
+        public readonly int[] PatternShuffleArray;
+
         public readonly MyAmmoMagazineDefinition MagazineDef;
         public readonly AmmoDef[] AmmoPattern;
         public readonly MyStringId[] TracerTextures;
@@ -117,7 +119,8 @@ namespace CoreSystems.Support
         public readonly int FragmentId = -1;
         public readonly int MaxChaseTime;
         public readonly int MagazineSize;
-        public readonly int PatternIndexCnt;
+        public readonly int WeaponPatternCount;
+        public readonly int FragPatternCount;
         public readonly int AmmoIdxPos;
         public readonly int MagsToLoad;
         public readonly int MaxAmmo;
@@ -218,6 +221,8 @@ namespace CoreSystems.Support
         public readonly bool ProjectileSync;
         public readonly bool HasFragGroup;
         public readonly bool HasFragment;
+        public readonly bool FragmentPattern;
+        public readonly bool WeaponPattern;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -386,7 +391,7 @@ namespace CoreSystems.Support
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
-            ComputeAmmoPattern(ammo, wDef, guidedAmmo, out AmmoPattern, out PatternIndexCnt, out GuidedAmmoDetected);
+            ComputeAmmoPattern(ammo, wDef, guidedAmmo, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out PatternShuffleArray, out WeaponPattern, out FragmentPattern);
 
             DamageScales(ammo.AmmoDef, out DamageScaling, out FallOffScaling, out ArmorScaling, out CustomDamageScales, out CustomBlockDefinitionBasesToScales, out SelfDamage, out VoxelDamage, out HealthHitModifier, out VoxelHitModifier);
             CollisionShape(ammo.AmmoDef, out CollisionIsLine, out CollisionSize, out TracerLength);
@@ -540,13 +545,17 @@ namespace CoreSystems.Support
             pointType = ammo.AmmoDef.Fragment.TimedSpawns.PointType;
         }
 
-        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int patternIndex, out bool guidedDetected)
+        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out int[] patternShuffleArray, out bool weaponPattern ,out bool fragmentPattern)
         {
             var pattern = ammo.AmmoDef.Pattern;
             var indexPos = 0;
 
             int indexCount;
-            if (!pattern.Enable)
+
+            weaponPattern = pattern.Enable || pattern.Mode == AmmoDef.PatternDef.PatternModes.Both || pattern.Mode == AmmoDef.PatternDef.PatternModes.Weapon;
+            fragmentPattern = pattern.Mode == AmmoDef.PatternDef.PatternModes.Both || pattern.Mode == AmmoDef.PatternDef.PatternModes.Fragment;
+
+            if (!weaponPattern && !fragmentPattern)
                 indexCount = 1;
             else
             {
@@ -554,7 +563,9 @@ namespace CoreSystems.Support
                 if (!pattern.SkipParent) indexCount += 1;
             }
 
-            patternIndex = indexCount;
+            weaponPatternCount = weaponPattern ? indexCount : 1;
+
+            fragmentPatternCount = fragmentPattern ? indexCount : 1;
 
             ammoPattern = new AmmoDef[indexCount];
 
@@ -580,6 +591,8 @@ namespace CoreSystems.Support
                 }
             }
             guidedDetected = guidedAmmo;
+
+            patternShuffleArray = new int[indexCount];
         }
 
         internal void GetParticleInfo(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session)

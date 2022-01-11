@@ -162,27 +162,27 @@ namespace CoreSystems.Platform
                         #endregion
 
                         #region Pick ProtoWeaponAmmo Pattern
-                        var patternIndex = ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt;
+                        var patternIndex = ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount;
 
-                        if (pattern.Enable) {
+                        if (ActiveAmmoDef.AmmoDef.Const.WeaponPattern) {
 
                             if (pattern.Random) {
 
-                                if (pattern.TriggerChance >= rnd.TurretRandom.NextDouble() || pattern.TriggerChance >= 1) {
+                                if (pattern.TriggerChance >= 1 || pattern.TriggerChance >= rnd.TurretRandom.NextDouble()) {
                                     patternIndex = rnd.TurretRandom.Range(pattern.RandomMin, pattern.RandomMax);
                                 }
 
-                                for (int w = 0; w < ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt; w++) {
+                                for (int w = 0; w < ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount; w++) {
                                     var y = rnd.TurretRandom.Range(0, w + 1);
                                     AmmoShufflePattern[w] = AmmoShufflePattern[y];
                                     AmmoShufflePattern[y] = w;
                                 }
                             }
-                            else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt) {
+                            else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount) {
 
                                 patternIndex = pattern.PatternSteps;
-                                for (int p = 0; p < ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt; ++p)
-                                    AmmoShufflePattern[p] = (AmmoShufflePattern[p] + patternIndex) % ActiveAmmoDef.AmmoDef.Const.PatternIndexCnt;
+                                for (int p = 0; p < ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount; ++p)
+                                    AmmoShufflePattern[p] = (AmmoShufflePattern[p] + patternIndex) % ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount;
                             }
                         }
                         #endregion
