@@ -23,7 +23,6 @@ namespace CoreSystems
                 /// GridAi update section
                 ///
                 ai.MyProjectiles = 0;
-                ai.AccelChecked = false;
                 var activeTurret = false;
 
                 if (ai.MarkedForClose || !ai.AiInit || ai.TopEntity == null || ai.Construct.RootAi == null || ai.TopEntity.MarkedForClose)

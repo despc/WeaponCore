@@ -78,7 +78,6 @@ namespace CoreSystems.Projectiles
         internal bool FakeGravityNear;
         internal bool HadTarget;
         internal bool WasTracking;
-        internal bool UseEntityCache;
         internal bool Intersecting;
         internal bool FinalizeIntersection;
         internal bool SphereCheck;
@@ -547,6 +546,7 @@ namespace CoreSystems.Projectiles
 
             TravelMagnitude = Velocity * StepConst;
         }
+
         internal void RunDrone(MyEntity targetEnt)
         {
             if (targetEnt != null)
@@ -874,9 +874,7 @@ namespace CoreSystems.Projectiles
                     var grid = ent as MyCubeGrid;
                     var character = ent as IMyCharacter;
                     if (grid == null && character == null || ent.MarkedForClose || !ent.InScene) continue;
-                    Sandbox.ModAPI.Ingame.MyDetectedEntityInfo entInfo;
-                    bool peace;
-                    MyRelationsBetweenPlayerAndBlock newRelation;
+                    MyDetectedEntityInfo entInfo;
 
                     if (!Info.Ai.CreateEntInfo(ent, Info.Ai.AiOwner, out entInfo)) continue;
                     switch (entInfo.Relationship)

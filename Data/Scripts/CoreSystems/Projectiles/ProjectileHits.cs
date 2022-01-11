@@ -47,7 +47,7 @@ namespace CoreSystems.Projectiles
                 bool projetileInShield = false;
                 var tick = Session.Tick;
                 var useEntityCollection = p.CheckType != Projectile.CheckTypes.Ray;
-                var entityCollection = p.UseEntityCache ? ai.NearByEntityCache : p.MyEntityList;
+                var entityCollection = p.MyEntityList;
                 var collectionCount = !useEntityCollection ? p.MySegmentList.Count : entityCollection.Count;
                 var ray = new RayD(ref p.Beam.From, ref p.Beam.Direction);
                 var firingCube = target.CoreCube;
@@ -617,7 +617,10 @@ namespace CoreSystems.Projectiles
 
             hitEntity.Intersection = new LineD(attacker.LastPosition, attacker.LastPosition + (attacker.Info.Direction * dist));
             hitEntity.HitPos = hitEntity.Intersection.To;
-            attacker.Info.HitList.Add(hitEntity);
+
+            lock (attacker.Info.HitList)
+                attacker.Info.HitList.Add(hitEntity);
+
             attacker.FinalizeIntersection = true;
         }
 

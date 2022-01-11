@@ -76,7 +76,6 @@ namespace CoreSystems.Support
         internal readonly List<Ai> TargetAis = new List<Ai>(32);
         internal readonly List<TargetInfo> SortedTargets = new List<TargetInfo>();
         internal readonly List<DetectInfo> NewEntities = new List<DetectInfo>();
-        internal readonly List<MyEntity> NearByEntityCache = new List<MyEntity>();
 
         internal readonly Dictionary<MyEntity, TargetInfo> Targets = new Dictionary<MyEntity, TargetInfo>(32);
         internal readonly MyDefinitionId GId = MyResourceDistributorComponent.ElectricityId;
@@ -129,7 +128,6 @@ namespace CoreSystems.Support
         internal bool FadeOut;
         internal bool Concealed;
         internal bool RamProtection = true; 
-        internal bool AccelChecked;
         internal bool PlanetSurfaceInRange;
         internal bool InPlanetGravity;
         internal bool FirstRun = true;

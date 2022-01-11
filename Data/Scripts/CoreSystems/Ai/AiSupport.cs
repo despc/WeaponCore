@@ -185,21 +185,6 @@ namespace CoreSystems.Support
             return deck;
         }
 
-        internal void ComputeAccelSphere()
-        {
-            NearByEntityCache.Clear();
-            if (MarkedForClose) return;
-
-            AccelChecked = true;
-
-            var numOfEntities = NearByEntities > 0 ? NearByEntities : 1f;
-            var ratio = (MyProjectiles / numOfEntities) / 10f;
-            var checkVol = Math.Max(ratio > 1 ? ScanVolume.Radius : ScanVolume.Radius * ratio, 500f);
-            NearByEntitySphere = new BoundingSphereD(TopEntity.PositionComp.WorldAABB.Center, checkVol);
-            var qType = ClosestStaticSqr < (checkVol * 2) * (checkVol * 2) ? MyEntityQueryType.Both : MyEntityQueryType.Dynamic;
-            MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref NearByEntitySphere, NearByEntityCache, qType);
-        }
-
         internal List<Projectile> GetProCache()
         {
             if (LiveProjectileTick > _pCacheTick) {
@@ -435,7 +420,6 @@ namespace CoreSystems.Support
             NearByEntitiesTmp = 0;
             MyProjectiles = 0;
 
-            AccelChecked = false;
             PointDefense = false;
             FadeOut = false;
             SuppressMouseShoot = false;
