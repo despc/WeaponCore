@@ -662,11 +662,13 @@ namespace CoreSystems.Support
         internal readonly int RateOfFire;
         internal readonly int HeatPerShot;
 
+        internal bool SpinFree;
         internal bool DebugMode;
         internal bool HasServerOverrides;
 
         internal WeaponConstants(Session session, WeaponDefinition values)
         {
+            SpinFree = values.HardPoint.Loading.SpinFree;
             LoadModifiers(session, values, out HasServerOverrides);
             GetModifiableValues(values, out MaxTargetDistance, out MinTargetDistance, out RateOfFire, out ReloadTime, out DeviateShotAngleRads, out AimingToleranceRads, out IdlePower, out HeatSinkRate, out HeatPerShot, out DebugMode);
         }

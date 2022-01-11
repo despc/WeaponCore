@@ -52,25 +52,26 @@ namespace CoreSystems
                 if (ai.AiType == Ai.AiTypes.Grid && !ai.HasPower || enforcement.ServerSleepSupport && IsServer && ai.AwakeComps == 0 && ai.WeaponsTracking == 0 && ai.SleepingComps > 0 && !ai.CheckProjectiles && ai.AiSleep && !ai.DbUpdated) 
                     continue;
 
+                var construct = ai.Construct;
+                var focus = construct.Focus;
+                var rootAi = construct.RootAi;
+                var rootConstruct = rootAi.Construct;
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
                     ai.BlockChangeArea.Min *= ai.GridEntity.GridSize;
                     ai.BlockChangeArea.Max *= ai.GridEntity.GridSize;
                 }
 
-                if (ai.Construct.RootAi?.Construct != null) 
-                {
-                    var rootConstruct = ai.Construct.RootAi.Construct;
-                    if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick)
-                        rootConstruct.UpdateEffect(Tick);
 
-                    if (IsServer) 
-                    {
-                        if (rootConstruct.NewInventoryDetected)
-                            rootConstruct.CheckForMissingAmmo();
-                        else if (Tick60 && rootConstruct.RecentItems.Count > 0)
-                            rootConstruct.CheckEmptyWeapons();
-                    }
+                if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick && rootConstruct.TotalEffect > rootConstruct.PreviousTotalEffect)
+                    rootConstruct.UpdateEffect(Tick);
+
+                if (IsServer) 
+                {
+                    if (rootConstruct.NewInventoryDetected)
+                        rootConstruct.CheckForMissingAmmo();
+                    else if (Tick60 && rootConstruct.RecentItems.Count > 0)
+                        rootConstruct.CheckEmptyWeapons();
                 }
 
 
@@ -225,7 +226,7 @@ namespace CoreSystems
                         var wasTrack = wValues.State.TrackingReticle;
 
                         var isControllingPlayer = wValues.State.PlayerId == PlayerId;
-                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && ai.Construct.RootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
+                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && rootAi.Data.Repo.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
                         if (isControllingPlayer)
                         {
                             TargetUi.LastTrackTick = Tick;
@@ -311,7 +312,7 @@ namespace CoreSystems
                         ///
                         /// Update Weapon Hud Info
                         /// 
-                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.Loading || w.Reload.WaitForClient) && w.ShowReload || w.System.LockOnFocus && !w.Comp.ModOverride && ai.Construct.Data.Repo.FocusData.Locked[0] != FocusData.LockModes.Locked);
+                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.Loading || w.Reload.WaitForClient) && w.ShowReload || w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked[0] != FocusData.LockModes.Locked);
                         if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;
                             HudUi.WeaponsToDisplay.Add(w);
@@ -337,9 +338,9 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !wComp.FakeMode || wComp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
                                 w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
-                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || wValues.Set.Overrides.FocusTargets && !ai.Construct.Focus.ValidTargetFocused(w)))
+                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && wValues.Set.Overrides.FocusTargets && !focus.ValidTargetFocused(w)))
                                 w.Target.Reset(Tick, States.Expired);
-                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && w.SkipAimChecks && !ai.Construct.Focus.ValidTargetFocused(w))
+                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && w.SkipAimChecks && !focus.ValidTargetFocused(w))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -408,7 +409,7 @@ namespace CoreSystems
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
                         var shoot = (validShootStates || manualShot || w.FinishShots || delayedFire);
-                        w.LockOnFireState = shoot && (w.System.LockOnFocus && !w.Comp.ModOverride) && ai.Construct.Data.Repo.FocusData.HasFocus && ai.Construct.Focus.FocusInRange(w);
+                        w.LockOnFireState = shoot && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shoot && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
 
                         if (shotReady && ai.CanShoot) {
@@ -427,7 +428,7 @@ namespace CoreSystems
                                 w.StopShooting();
 
                             if (w.BarrelSpinning) {
-                                var spinDown = !(shotReady && ai.CanShoot && w.System.Values.HardPoint.Loading.SpinFree);
+                                var spinDown = !(shotReady && ai.CanShoot && w.System.WConst.SpinFree);
                                 w.SpinBarrel(spinDown);
                             }
                         }
@@ -475,13 +476,11 @@ namespace CoreSystems
                     var wComp = ai.TrackingComps[j];
                     for (int k = 0; k < wComp.Platform.Weapons.Count; k++)
                     {
-
                         var w = wComp.Platform.Weapons[k];
                         if (!w.TurretActive || !ai.AiInit || ai.MarkedForClose || ai.Concealed || w.Comp.Ai == null || ai.TopEntity == null || ai.Construct.RootAi == null || w.Comp.CoreEntity == null  || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || ai.TopEntity.MarkedForClose || wComp.CoreEntity.MarkedForClose || w.Comp.Platform.State != CorePlatform.PlatformState.Ready) continue;
 
                         if (!Weapon.TrackingTarget(w, w.Target, out w.TargetLock) && !IsClient && w.Target.ExpiredTick != Tick)
-                            w.Target.Reset(Tick, States.LostTracking,
-                                !w.Comp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
+                            w.Target.Reset(Tick, States.LostTracking, !w.Comp.ManualMode && (w.Target.CurrentState != States.RayCheckFailed && !w.Target.HasTarget));
                     }
                 }
 
