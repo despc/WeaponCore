@@ -260,7 +260,7 @@ namespace CoreSystems.Projectiles
 
                 if (p.State != ProjectileState.OneAndDone)
                 {
-                    if (info.Age > aConst.MaxLifeTime) {
+                    if (info.Age > aConst.MaxLifeTime || p.EarlyEnd) {
                         p.DistanceToTravelSqr = info.DistanceTraveled * info.DistanceTraveled;
                         p.EarlyEnd = true;
                     }
