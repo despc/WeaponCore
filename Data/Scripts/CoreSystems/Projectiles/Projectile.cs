@@ -395,7 +395,7 @@ namespace CoreSystems.Projectiles
             ++Info.SpawnDepth;
 
             if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
-                EarlyEnd = true;
+                DistanceToTravelSqr = Info.DistanceTraveled * Info.DistanceTraveled;
 
             Info.LastFragTime = Info.Age;
         }
