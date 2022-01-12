@@ -196,7 +196,6 @@ namespace CoreSystems.Projectiles
                         if (p.IsSmart) p.RunSmart();
                         else if (p.IsDrone) p.RunDrone(targetEnt);
                         else {
-
                             var accel = true;
                             Vector3D newVel;
                             if (p.FieldTime > 0) {
@@ -259,17 +258,6 @@ namespace CoreSystems.Projectiles
                     }
                 }
 
-                if (p.ModelState == EntityState.Exists) {
-
-                    MatrixD matrix;
-                    MatrixD.CreateWorld(ref p.Position, ref info.Direction, ref info.OriginUp, out matrix);
-
-                    if (aConst.PrimeModel)
-                        info.AvShot.PrimeMatrix = matrix;
-                    if (aConst.TriggerModel && info.TriggerGrowthSteps < aConst.EwarRadius) 
-                        info.TriggerMatrix = matrix;
-                }
-
                 if (p.State != ProjectileState.OneAndDone)
                 {
                     if (info.Age > aConst.MaxLifeTime) {
@@ -295,6 +283,32 @@ namespace CoreSystems.Projectiles
                 if (aConst.Ewar)
                     p.RunEwar();
 
+            }
+        }
+
+        private int _beamCount;
+        private void CheckHits()
+        {
+            _beamCount = 0;
+            var apCount = ActiveProjetiles.Count;
+            var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
+            var targetStride = apCount / 20;
+            var stride = apCount < minCount ? 100000 : targetStride > 48 ? targetStride : 48;
+
+            MyAPIGateway.Parallel.For(0, apCount, i =>
+            {
+                var p = ActiveProjetiles[i];
+
+                if ((int)p.State > 3 || p.Asleep)
+                    return;
+
+                var info = p.Info;
+                var ai = info.Ai;
+                var aDef = info.AmmoDef;
+                var aConst = aDef.Const;
+                var target = info.Target;
+                var targetEnt = target.TargetEntity;
+
                 if (!info.IsShrapnel && !p.DynamicGuidance && targetEnt != null)
                 {
                     var targetCenter = targetEnt.PositionComp.WorldAABB.Center;
@@ -311,29 +325,18 @@ namespace CoreSystems.Projectiles
                         info.WeaponCache.MissDistance = (info.PrevTargetPos - p.LastPosition).Length();
                     }
                 }
-            }
-        }
 
-        private int _beamCount;
-        private void CheckHits()
-        {
-            _beamCount = 0;
-            var apCount = ActiveProjetiles.Count;
-            var minCount = Session.Settings.Enforcement.BaseOptimizations ? 96 : 99999;
-            var targetStride = apCount / 20;
-            var stride = apCount < minCount ? 100000 : targetStride > 48 ? targetStride : 48;
+                if (p.ModelState == EntityState.Exists)
+                {
+                    MatrixD matrix;
+                    MatrixD.CreateWorld(ref p.Position, ref info.Direction, ref info.OriginUp, out matrix);
 
-            MyAPIGateway.Parallel.For(0, apCount, i => 
-            {
-                var p = ActiveProjetiles[i];
+                    if (aConst.PrimeModel)
+                        info.AvShot.PrimeMatrix = matrix;
+                    if (aConst.TriggerModel && info.TriggerGrowthSteps < aConst.EwarRadius)
+                        info.TriggerMatrix = matrix;
+                }
 
-                if ((int) p.State > 3 || p.Asleep)
-                    return;
-
-                var info = p.Info;
-                var ai = info.Ai;
-                var aDef = info.AmmoDef;
-                var aConst = aDef.Const;
                 if (aConst.IsBeamWeapon)
                     ++_beamCount;
 
@@ -341,13 +344,12 @@ namespace CoreSystems.Projectiles
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
                 p.Beam = useEwarSphere ? new LineD(p.Position + (-info.Direction * aConst.EwarTriggerRange), p.Position + (info.Direction * aConst.EwarTriggerRange)) : new LineD(p.LastPosition, p.Position);
 
-                if ((p.FieldTime <= 0 && p.State != ProjectileState.OneAndDone && info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr)) 
-                {
+                if ((p.FieldTime <= 0 && p.State != ProjectileState.OneAndDone && info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr)) {
 
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.EndOfLifeRadius;
 
-                    if (p.MoveToAndActivate || aConst.EndOfLifeAoe && info.Age >= aConst.MinArmingTime && (!aConst.ArmOnlyOnHit || info.ObjectsHit > 0)) 
+                    if (p.MoveToAndActivate || aConst.EndOfLifeAoe && info.Age >= aConst.MinArmingTime && (!aConst.ArmOnlyOnHit || info.ObjectsHit > 0))
                     {
                         MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
 
@@ -374,14 +376,14 @@ namespace CoreSystems.Projectiles
 
                 if (p.MineSeeking && !p.MineTriggered)
                     p.SeekEnemy();
-                else if (useEwarSphere) 
+                else if (useEwarSphere)
                 {
-                    if (info.EwarActive) 
+                    if (info.EwarActive)
                     {
                         p.PruneSphere = new BoundingSphereD(p.Position, 0).Include(new BoundingSphereD(p.LastPosition, 0));
                         var currentRadius = info.TriggerGrowthSteps < aConst.EwarRadius ? info.TriggerMatrix.Scale.AbsMax() : aConst.EwarRadius;
-
-                        if (p.PruneSphere.Radius < currentRadius) {
+                        if (p.PruneSphere.Radius < currentRadius)
+                        {
                             p.PruneSphere.Center = p.Position;
                             p.PruneSphere.Radius = currentRadius;
                         }
@@ -392,19 +394,19 @@ namespace CoreSystems.Projectiles
                     if (p.PruneSphere.Contains(p.DeadSphere) == ContainmentType.Disjoint)
                         p.SphereCheck = true;
                 }
-                else if (aConst.CollisionIsLine) 
+                else if (aConst.CollisionIsLine)
                 {
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.CollisionSize;
                     if (aConst.IsBeamWeapon || p.PruneSphere.Contains(p.DeadSphere) == ContainmentType.Disjoint)
                         p.LineCheck = true;
                 }
-                else 
+                else
                 {
                     p.SphereCheck = true;
                     p.PruneSphere = new BoundingSphereD(p.Position, 0).Include(new BoundingSphereD(p.LastPosition, 0));
-
-                    if (p.PruneSphere.Radius < aConst.CollisionSize) {
+                    if (p.PruneSphere.Radius < aConst.CollisionSize)
+                    {
                         p.PruneSphere.Center = p.Position;
                         p.PruneSphere.Radius = aConst.CollisionSize;
                     }
@@ -417,8 +419,8 @@ namespace CoreSystems.Projectiles
 
                     MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
                 }
-                else if (p.LineCheck) {
-
+                else if (p.LineCheck)
+                {
                     if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
 
@@ -430,11 +432,13 @@ namespace CoreSystems.Projectiles
                 info.ShieldBypassed = info.ShieldKeepBypass;
                 info.ShieldKeepBypass = false;
 
-                if (info.Target.IsProjectile || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0) {
+                if (info.Target.IsProjectile || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0)
+                {
                     lock (ValidateHits)
                         ValidateHits.Add(p);
                 }
-                else if (p.MineSeeking && !p.MineTriggered && info.Age - p.ChaseAge > 600) {
+                else if (p.MineSeeking && !p.MineTriggered && info.Age - p.ChaseAge > 600)
+                {
                     p.Asleep = true;
                 }
             },stride);
