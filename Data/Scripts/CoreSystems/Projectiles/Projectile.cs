@@ -339,6 +339,7 @@ namespace CoreSystems.Projectiles
             var patternIndex = aConst.FragPatternCount;
             var pattern = ammoDef.Pattern;
 
+
             if (aConst.FragmentPattern) 
             {
                 if (pattern.Random) 
@@ -346,17 +347,17 @@ namespace CoreSystems.Projectiles
                     if (pattern.TriggerChance >= 1 || pattern.TriggerChance >= Info.Random.NextDouble())
                         patternIndex = Info.Random.Range(pattern.RandomMin, pattern.RandomMax);
 
-                    for (int w = 0; w < aConst.WeaponPatternCount; w++) {
+                    for (int w = 0; w < aConst.FragPatternCount; w++) {
 
                         var y = Info.Random.Range(0, w + 1);
                         aConst.PatternShuffleArray[w] = aConst.PatternShuffleArray[y];
                         aConst.PatternShuffleArray[y] = w;
                     }
                 }
-                else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.WeaponPatternCount) {
+                else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.FragPatternCount) {
                     patternIndex = pattern.PatternSteps;
-                    for (int p = 0; p < aConst.WeaponPatternCount; ++p)
-                        aConst.PatternShuffleArray[p] = (aConst.PatternShuffleArray[p] + patternIndex) % aConst.WeaponPatternCount;
+                    for (int p = 0; p < aConst.FragPatternCount; ++p)
+                        aConst.PatternShuffleArray[p] = (aConst.PatternShuffleArray[p] + patternIndex) % aConst.FragPatternCount;
                 }
             }
 
@@ -372,10 +373,10 @@ namespace CoreSystems.Projectiles
             }
 
             var spawn = false;
+
             for (int i = 0; i < patternIndex; i++)
             {
                 var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[aConst.PatternShuffleArray[i]] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
-
                 Vector3D pointDir;
                 if (!fireOnTarget)
                     pointDir = Info.Direction;

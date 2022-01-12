@@ -349,9 +349,7 @@ namespace CoreSystems.Projectiles
 
                     if (p.MoveToAndActivate || aConst.EndOfLifeAoe && info.Age >= aConst.MinArmingTime && (!aConst.ArmOnlyOnHit || info.ObjectsHit > 0)) 
                     {
-
-                        MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList,
-                            p.PruneQuery);
+                        MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
 
                         if (info.System.TrackProjectile)
                             foreach (var lp in ai.LiveProjectile)
@@ -417,8 +415,7 @@ namespace CoreSystems.Projectiles
                     if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
 
-                    MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList,
-                        p.PruneQuery);
+                    MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
                 }
                 else if (p.LineCheck) {
 

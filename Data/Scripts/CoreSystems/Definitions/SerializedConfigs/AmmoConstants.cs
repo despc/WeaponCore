@@ -554,6 +554,7 @@ namespace CoreSystems.Support
 
             weaponPattern = pattern.Enable || pattern.Mode == AmmoDef.PatternDef.PatternModes.Both || pattern.Mode == AmmoDef.PatternDef.PatternModes.Weapon;
             fragmentPattern = pattern.Mode == AmmoDef.PatternDef.PatternModes.Both || pattern.Mode == AmmoDef.PatternDef.PatternModes.Fragment;
+            var enabled = weaponPattern || fragmentPattern;
 
             if (!weaponPattern && !fragmentPattern)
                 indexCount = 1;
@@ -569,10 +570,10 @@ namespace CoreSystems.Support
 
             ammoPattern = new AmmoDef[indexCount];
 
-            if (!pattern.Enable || !pattern.SkipParent)
+            if (!enabled || !pattern.SkipParent)
                 ammoPattern[indexPos++] = ammo.AmmoDef;
 
-            if (pattern.Enable)
+            if (enabled)
             {
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
                 {
@@ -790,7 +791,7 @@ namespace CoreSystems.Support
 
 
 
-            if (a.Pattern.Enable) //make into function
+            if (a.Pattern.Enable || a.Pattern.Mode != AmmoDef.PatternDef.PatternModes.Never) //make into function
             {
                 Vector2 totalPatternDamage = new Vector2();
                 //Log.Line($"||:::Ammo [{a.AmmoRound} got {a.Pattern.Patterns.Length} patterns]");
