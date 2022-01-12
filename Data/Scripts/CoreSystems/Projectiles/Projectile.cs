@@ -392,6 +392,8 @@ namespace CoreSystems.Projectiles
             if (!spawn)
                 return;
 
+            ++Info.SpawnDepth;
+
             if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
                 EarlyEnd = true;
 

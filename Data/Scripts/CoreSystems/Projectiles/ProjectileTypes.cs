@@ -412,8 +412,6 @@ namespace CoreSystems.Support
             var target = info.Target;
             var aConst = info.AmmoDef.Const;
 
-            ++info.SpawnDepth;
-
             for (int i = 0; i < p.Info.AmmoDef.Fragment.Fragments; i++)
             {
                 var frag = fragPool.Get();
@@ -421,7 +419,7 @@ namespace CoreSystems.Support
                 frag.Ai = info.Ai;
                 frag.AmmoDef = ammoDef;
                 
-                frag.Depth = info.SpawnDepth;
+                frag.Depth = info.SpawnDepth + 1;
                 frag.TargetEntity = target.TargetEntity;
                 frag.IsFakeTarget = target.IsFakeTarget;
                 frag.TargetProjectile = target.Projectile;
