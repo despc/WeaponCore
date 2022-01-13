@@ -107,6 +107,10 @@ namespace CoreSystems.Projectiles
             var session = Info.System.Session;
             var ammoDef = Info.AmmoDef;
             var aConst = ammoDef.Const;
+
+            if (aConst.FragmentPattern)
+                Info.PatternShuffle = aConst.PatternShuffleArray.Count > 0 ? aConst.PatternShuffleArray.Pop() : new int[aConst.FragPatternCount];
+
             PrevVelocity = Vector3D.Zero;
             OffsetDir = Vector3D.Zero;
             Position = Info.Origin;

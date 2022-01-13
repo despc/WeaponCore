@@ -38,9 +38,6 @@ namespace CoreSystems.Projectiles
                 info.AmmoDef = a;
                 info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
                 
-                if (aConst.FragmentPattern)
-                    info.PatternShuffle = aConst.PatternShuffleArray.Count > 0 ? aConst.PatternShuffleArray.Pop() : new int[aConst.FragPatternCount];
-
                 info.Overrides = repo.Values.Set.Overrides;
                 target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
                 target.Projectile = wTarget.Projectile;
