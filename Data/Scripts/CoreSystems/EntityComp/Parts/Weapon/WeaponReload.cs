@@ -30,7 +30,6 @@ namespace CoreSystems.Platform
             PrepAmmoShuffle();
 
             RequiresTarget = ActiveAmmoDef.AmmoDef.Const.RequiresTarget || System.TrackTargets;
-
             if (!ActiveAmmoDef.AmmoDef.Const.EnergyAmmo)
                 Reload.CurrentMags = Comp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom ? Comp.CoreInventory.GetItemAmount(ActiveAmmoDef.AmmoDefinitionId).ToIntSafe() : int.MaxValue;
             

@@ -58,7 +58,7 @@ namespace CoreSystems.Projectiles
                 info.EnableGuidance = repo.Values.Set.Guidance;
                 info.WeaponCache = w.WeaponCache;
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
-                info.LockOnFireState = (w.LockOnFireState || aConst.SkipAimChecks && wTarget.TargetEntity != null);
+                info.LockOnFireState = (w.LockOnFireState || !aConst.TargetOverrideDetected && wTarget.TargetEntity != null);
                 info.ModOverride = comp.ModOverride;
                 info.ShooterVel = ai.GridVel;
 

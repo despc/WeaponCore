@@ -211,6 +211,7 @@ namespace CoreSystems
                     }
 
                     var wValues = wComp.Data.Repo.Values;
+                    var focusTargets = wValues.Set.Overrides.FocusTargets;
                     if (IsServer && wValues.State.PlayerId > 0 && !ai.Data.Repo.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
 
@@ -338,9 +339,7 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !wComp.FakeMode || wComp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
                                 w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
-                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && wValues.Set.Overrides.FocusTargets && !focus.ValidTargetFocused(w)))
-                                w.Target.Reset(Tick, States.Expired);
-                            else if (Tick20 && !IsClient && w.Target.TargetEntity != null && aConst.SkipAimChecks && !focus.ValidTargetFocused(w))
+                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidTargetFocused(w) || Tick60 && !focusTargets && !w.TurretController && w.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -381,7 +380,8 @@ namespace CoreSystems
                         /// 
                         
 
-                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || w.RequiresTarget  & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
+                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || w.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
+                        
                         if (!IsClient && (seek || w.RequiresTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;

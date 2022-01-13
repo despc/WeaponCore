@@ -7,6 +7,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
+using VRageMath;
 using static CoreSystems.FocusData;
 namespace CoreSystems.Support
 {
@@ -682,15 +683,29 @@ namespace CoreSystems.Support
                     MyEntity target;
                     if (MyEntities.TryGetEntityById(tId, out target) && (target == targetEnt || block != null && target == block.CubeGrid))
                     {
-                        if (w.System.LockOnFocus)
+                        var worldVolume = target.PositionComp.WorldVolume;
+                        var targetPos = worldVolume.Center;
+                        var tRadius = worldVolume.Radius;
+                        var maxRangeSqr = tRadius + w.MaxTargetDistance;
+                        var minRangeSqr = tRadius + w.MinTargetDistance;
+
+                        maxRangeSqr *= maxRangeSqr;
+                        minRangeSqr *= minRangeSqr;
+                        double rangeToTarget;
+                        Vector3D.DistanceSquared(ref targetPos, ref w.MyPivotPos, out rangeToTarget);
+                        
+                        if (rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr)
                         {
-                            var targetSphere = targetEnt.PositionComp.WorldVolume;
-                            targetSphere.Center = targetEnt.PositionComp.WorldAABB.Center;
-                            w.AimCone.ConeDir = w.MyPivotFwd;
-                            w.AimCone.ConeTip = w.BarrelOrigin;
-                            return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);
+                            if (w.System.LockOnFocus)
+                            {
+                                var targetSphere = targetEnt.PositionComp.WorldVolume;
+                                targetSphere.Center = targetEnt.PositionComp.WorldAABB.Center;
+                                w.AimCone.ConeDir = w.MyPivotFwd;
+                                w.AimCone.ConeTip = w.BarrelOrigin;
+                                return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);
+                            }
+                            return true;
                         }
-                        return true;
                     }
                 }
             }

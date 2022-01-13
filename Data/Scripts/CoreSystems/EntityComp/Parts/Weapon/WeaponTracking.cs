@@ -431,6 +431,23 @@ namespace CoreSystems.Platform
             return _losAngle;
         }
 
+        public bool TargetInRange(MyEntity target)
+        {
+            var worldVolume = target.PositionComp.WorldVolume;
+            var targetPos = worldVolume.Center;
+            var tRadius = worldVolume.Radius;
+            var maxRangeSqr = tRadius + MaxTargetDistance;
+            var minRangeSqr = tRadius + MinTargetDistance;
+
+            maxRangeSqr *= maxRangeSqr;
+            minRangeSqr *= minRangeSqr;
+
+            double rangeToTarget;
+            Vector3D.DistanceSquared(ref targetPos, ref MyPivotPos, out rangeToTarget);
+
+            return rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr;
+        }
+
         public bool SmartLos()
         {
             _losAngle = 11;

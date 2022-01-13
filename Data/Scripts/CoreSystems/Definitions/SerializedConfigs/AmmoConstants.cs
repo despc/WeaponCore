@@ -89,7 +89,7 @@ namespace CoreSystems.Support
         public readonly Stack<MySoundPair> HitFloatingSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> TravelSoundPairs = new Stack<MySoundPair>();
         public readonly Stack<MySoundPair> CustomSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<int[]> PatternShuffleArray;
+        public readonly Stack<int[]> PatternShuffleArray = new Stack<int[]>();
 
         public readonly MyAmmoMagazineDefinition MagazineDef;
         public readonly AmmoDef[] AmmoPattern;
@@ -403,7 +403,7 @@ namespace CoreSystems.Support
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
-            ComputeAmmoPattern(ammo, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out PatternShuffleArray, out WeaponPattern, out FragmentPattern);
+            ComputeAmmoPattern(ammo, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
 
             DamageScales(ammo.AmmoDef, out DamageScaling, out FallOffScaling, out ArmorScaling, out CustomDamageScales, out CustomBlockDefinitionBasesToScales, out SelfDamage, out VoxelDamage, out HealthHitModifier, out VoxelHitModifier);
             CollisionShape(ammo.AmmoDef, out CollisionIsLine, out CollisionSize, out TracerLength);
@@ -557,7 +557,7 @@ namespace CoreSystems.Support
             pointType = ammo.AmmoDef.Fragment.TimedSpawns.PointType;
         }
 
-        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out Stack<int[]> patternShuffleArray, out bool weaponPattern, out bool fragmentPattern)
+        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out bool weaponPattern, out bool fragmentPattern)
         {
             var pattern = ammo.AmmoDef.Pattern;
             var indexPos = 0;
@@ -610,9 +610,8 @@ namespace CoreSystems.Support
             guidedDetected = guidedAmmo;
             hasAntiSmart = antiSmart;
             hasTargetOverride = targetOverride;
-            patternShuffleArray = new Stack<int[]>(indexCount);
 
-            requiresTarget = guidedAmmo &&!targetOverride;
+            requiresTarget = guidedAmmo && !targetOverride;
         }
 
         internal void GetParticleInfo(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session)
