@@ -140,7 +140,8 @@ namespace CoreSystems.Support
                         { "WeaponInfoLoS", "LoS" },
                         { "WeaponTotalEffect", "Damage" },
                         { "WeaponTotalEffectAvgDps", "AvgDps" },
-
+                        { "TerminalOverrideTitle", "Override" },
+                        { "TerminalOverrideTooltip", "Allow dumb firing weapons that otherwise require a target" },
                     }
                 },
                {

@@ -791,7 +791,7 @@ namespace CoreSystems
 
                     var w = wa.Part as Weapon;
 
-                    var remove = w != null && (w.Target.HasTarget || !w.TrackTarget) || wa.Part.BaseComp.IsAsleep || !wa.Part.BaseComp.IsWorking || w == null;
+                    var remove = w != null && (w.Target.HasTarget || !w.System.HasRequiresTarget) || wa.Part.BaseComp.IsAsleep || !wa.Part.BaseComp.IsWorking || w == null;
 
                     if (remove)
                     {

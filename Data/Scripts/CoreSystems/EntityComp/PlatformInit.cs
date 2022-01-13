@@ -704,7 +704,9 @@ namespace CoreSystems.Platform
             w.BaseComp.HasArming = w.BaseComp.HasArming || w.System.Values.HardPoint.HardWare.CriticalReaction.Enable && w.System.Values.HardPoint.HardWare.CriticalReaction.TerminalControls;
             w.BaseComp.IsBomb = w.System.Values.HardPoint.HardWare.CriticalReaction.Enable && !w.Comp.Platform.Structure.MultiParts;
             w.BaseComp.OverrideLeads = w.BaseComp.OverrideLeads || w.System.Values.HardPoint.Ai.OverrideLeads;
-            w.Comp.HasTracking = w.Comp.HasTracking || w.System.Values.HardPoint.Ai.TrackTargets || w.System.Values.HardPoint.Ai.LockOnFocus;
+            w.Comp.HasTracking = w.Comp.HasTracking || w.System.TrackTargets;
+            w.Comp.HasRequireTarget = w.Comp.HasRequireTarget || w.System.HasRequiresTarget;
+
             w.Comp.HasDelayToFire = w.Comp.HasDelayToFire || w.System.DelayToFire > 0;
             w.Comp.ShootSubmerged = w.Comp.ShootSubmerged || w.System.Values.HardPoint.CanShootSubmerged;
             w.BaseComp.HasServerOverrides = w.BaseComp.HasServerOverrides || w.System.WConst.HasServerOverrides;

@@ -31,6 +31,7 @@ namespace CoreSystems.Support
         internal MyPlanet MyPlanet;
         internal MyEntity MyShield;
         internal VoxelCache VoxelCache;
+        internal int[] PatternShuffle;
         internal Vector3D ShooterVel;
         internal Vector3D Origin;
         internal Vector3D OriginUp;
@@ -136,6 +137,16 @@ namespace CoreSystems.Support
                 System.Session.TriggerEntityPool.Return(TriggerEntity);
                 TriggerEntity = null;
             }
+
+            if (PatternShuffle != null)
+            {
+                for (int i = 0; i < PatternShuffle.Length; i++)
+                    PatternShuffle[i] = 0;
+
+                AmmoDef.Const.PatternShuffleArray.Push(PatternShuffle);
+                PatternShuffle = null;
+            }
+
             AvShot = null;
             System = null;
             Ai = null;

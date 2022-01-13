@@ -25,11 +25,11 @@ namespace CoreSystems.Platform
             }
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
-            var guidance = ActiveAmmoDef.AmmoDef.Trajectory.Guidance;
-            SkipAimChecks = (guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart || guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.DroneAdvanced) && System.TurretMovement == WeaponSystem.TurretType.Fixed;
             if (string.IsNullOrEmpty(AmmoName)) 
                 AmmoName = ActiveAmmoDef.AmmoName;
             PrepAmmoShuffle();
+
+            RequiresTarget = ActiveAmmoDef.AmmoDef.Const.RequiresTarget || System.TrackTargets;
 
             if (!ActiveAmmoDef.AmmoDef.Const.EnergyAmmo)
                 Reload.CurrentMags = Comp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom ? Comp.CoreInventory.GetItemAmount(ActiveAmmoDef.AmmoDefinitionId).ToIntSafe() : int.MaxValue;
@@ -49,9 +49,9 @@ namespace CoreSystems.Platform
                 return;
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
-            var guidance = ActiveAmmoDef.AmmoDef.Trajectory.Guidance;
-            SkipAimChecks = (guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.Smart || guidance == WeaponDefinition.AmmoDef.TrajectoryDef.GuidanceType.DroneAdvanced) && System.TurretMovement == WeaponSystem.TurretType.Fixed;
             PrepAmmoShuffle();
+
+            RequiresTarget = ActiveAmmoDef.AmmoDef.Const.RequiresTarget || System.TrackTargets;
 
             UpdateRof();
             SetWeaponDps();

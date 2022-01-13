@@ -37,6 +37,9 @@ namespace CoreSystems.Projectiles
                 info.AimedShot = aimed;
                 info.AmmoDef = a;
                 info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
+                
+                if (aConst.FragmentPattern)
+                    info.PatternShuffle = aConst.PatternShuffleArray.Count > 0 ? aConst.PatternShuffleArray.Pop() : new int[aConst.FragPatternCount];
 
                 info.Overrides = repo.Values.Set.Overrides;
                 target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
@@ -55,7 +58,7 @@ namespace CoreSystems.Projectiles
                 info.EnableGuidance = repo.Values.Set.Guidance;
                 info.WeaponCache = w.WeaponCache;
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
-                info.LockOnFireState = (w.LockOnFireState || w.SkipAimChecks && wTarget.TargetEntity != null);
+                info.LockOnFireState = (w.LockOnFireState || aConst.SkipAimChecks && wTarget.TargetEntity != null);
                 info.ModOverride = comp.ModOverride;
                 info.ShooterVel = ai.GridVel;
 

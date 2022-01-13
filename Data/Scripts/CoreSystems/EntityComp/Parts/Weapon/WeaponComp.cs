@@ -39,6 +39,7 @@ namespace CoreSystems.Platform
             internal bool HasRofSlider;
             internal bool ShootSubmerged;
             internal bool HasTracking;
+            internal bool HasRequireTarget;
 
             internal WeaponComponent(Session session, MyEntity coreEntity, MyDefinitionId id)
             {
@@ -166,7 +167,7 @@ namespace CoreSystems.Platform
                     if (weapon.ProtoWeaponAmmo.CurrentAmmo > weapon.ActiveAmmoDef.AmmoDef.Const.MaxAmmo)
                         weapon.ProtoWeaponAmmo.CurrentAmmo = weapon.ActiveAmmoDef.AmmoDef.Const.MaxAmmo;
 
-                    if (Session.IsServer && weapon.TrackTarget)
+                    if (Session.IsServer && weapon.System.HasRequiresTarget)
                         Session.AcqManager.Monitor(weapon.Acquire);
                 }
 
@@ -504,6 +505,9 @@ namespace CoreSystems.Platform
                         break;
                     case "Debug":
                         o.Debug = enabled;
+                        break;
+                    case "Override":
+                        o.Override = enabled;
                         break;
                 }
 

@@ -442,7 +442,7 @@ namespace CoreSystems
         [ProtoMember(19)] public long LeadGroup;
         [ProtoMember(20)] public bool Armed;
         [ProtoMember(21)] public long ArmedTimer;
-
+        [ProtoMember(22)] public bool Override;
 
         public void Sync(ProtoWeaponOverrides syncFrom)
         {
@@ -464,6 +464,7 @@ namespace CoreSystems
             Repel = syncFrom.Repel;
             CameraChannel = syncFrom.CameraChannel;
             Debug = syncFrom.Debug;
+            Override = syncFrom.Override;
             LeadGroup = syncFrom.LeadGroup;
             Armed = syncFrom.Armed;
             ArmedTimer = syncFrom.ArmedTimer;

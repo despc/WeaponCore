@@ -200,6 +200,22 @@ namespace CoreSystems
             Weapon.WeaponComponent.RequestSetValue(comp, "Debug", value, comp.Session.PlayerId);
         }
 
+        internal static bool GetOverride(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
+            return comp.Data.Repo.Values.Set.Overrides.Override;
+        }
+
+        internal static void RequestOverride(IMyTerminalBlock block, bool newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var value = newValue ? 1 : 0;
+            Weapon.WeaponComponent.RequestSetValue(comp, "Override", value, comp.Session.PlayerId);
+        }
+
         internal static bool GetUnowned(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;

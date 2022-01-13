@@ -127,7 +127,7 @@ namespace CoreSystems
                             ai.SortedTargets.Add(targetInfo);
                             ai.Targets[ent] = targetInfo;
 
-                            var checkFocus = ai.Construct.Data.Repo.FocusData.HasFocus && targetInfo.Target?.EntityId == ai.Construct.Data.Repo.FocusData.Target[0] || targetInfo.Target?.EntityId == ai.Construct.Data.Repo.FocusData.Target[1];
+                            var checkFocus = ai.Construct.Data.Repo.FocusData.HasFocus && (targetInfo.Target?.EntityId == ai.Construct.Data.Repo.FocusData.Target[0] || targetInfo.Target?.EntityId == ai.Construct.Data.Repo.FocusData.Target[1]);
 
                             if (targetInfo.Drone)
                                 ai.DetectionInfo.DroneAdd(ai, targetInfo);

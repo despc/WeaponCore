@@ -683,7 +683,7 @@ namespace CoreSystems.Platform
         public void ManualShootRayCallBack(IHitInfo hitInfo)
         {
             Casting = false;
-            var masterWeapon = TrackTarget ? this : Comp.TrackingWeapon;
+            var masterWeapon = System.TrackTargets ? this : Comp.TrackingWeapon;
 
             var grid = hitInfo.HitEntity as MyCubeGrid;
             if (grid != null)
@@ -766,7 +766,7 @@ namespace CoreSystems.Platform
             }
 
             var tick = Comp.Session.Tick;
-            var masterWeapon = TrackTarget || Comp.TrackingWeapon == null ? this : Comp.TrackingWeapon;
+            var masterWeapon = System.TrackTargets || Comp.TrackingWeapon == null ? this : Comp.TrackingWeapon;
 
             if (System.Values.HardPoint.Other.MuzzleCheck)
             {

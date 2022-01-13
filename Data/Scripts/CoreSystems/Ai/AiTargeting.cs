@@ -90,7 +90,8 @@ namespace CoreSystems.Support
             var session = w.Comp.Session;
             var ai = comp.Ai;
             session.TargetRequests++;
-
+            var ammoDef = w.ActiveAmmoDef.AmmoDef;
+            var aConst = ammoDef.Const;
             var barrelPos = w.BarrelOrigin;
             var weaponPos = w.BarrelOrigin + (w.MyPivotFwd * w.MuzzleDistToBarrelCenter);
             var target = w.NewTarget;
@@ -107,7 +108,7 @@ namespace CoreSystems.Support
             var stationOnly = moveMode == ProtoWeaponOverrides.MoveModes.Moored;
             BoundingSphereD waterSphere = new BoundingSphereD(Vector3D.Zero, 1f);
             WaterData water = null;
-            if (session.WaterApiLoaded && !w.ActiveAmmoDef.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
+            if (session.WaterApiLoaded && !ammoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
                 waterSphere = new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius);
             var numOfTargets = ai.SortedTargets.Count;
             var deck = GetDeck(ref target.TargetDeck, ref target.TargetPrevDeckLen, 0, numOfTargets, ai.DetectionInfo.DroneCount, ref w.TargetData.WeaponRandom.AcquireRandom);
@@ -150,10 +151,10 @@ namespace CoreSystems.Support
                     {
 
                         var validEstimate = true;
-                        newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon && w.ActiveAmmoDef.AmmoDef.Const.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
+                        newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!aConst.IsBeamWeapon && aConst.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
                         var targetSphere = info.Target.PositionComp.WorldVolume;
                         targetSphere.Center = newCenter;
-                        if (!validEstimate || !w.SkipAimChecks && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
+                        if (!validEstimate || !aConst.SkipAimChecks && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
                     }
                     else if (!Weapon.CanShootTargetObb(w, info.Target, targetLinVel, targetAccel, out newCenter)) continue;
 
@@ -306,6 +307,7 @@ namespace CoreSystems.Support
             var forceFoci = overRides.FocusTargets;
             var session = w.Comp.Session;
             var ai = comp.Ai;
+            var aConst = w.ActiveAmmoDef.AmmoDef.Const;
             session.TargetRequests++;
             var barrelPos = w.BarrelOrigin;
             var weaponPos = w.BarrelOrigin + (w.MyPivotFwd * w.MuzzleDistToBarrelCenter);
@@ -355,7 +357,7 @@ namespace CoreSystems.Support
                 {
                     var focusTarget = hasOffset && x < offset;
                     var lastOffset = offset - 1;
-                    if (!focusTarget && (attemptReset || w.SkipAimChecks)) break;
+                    if (!focusTarget && (attemptReset || aConst.SkipAimChecks)) break;
                     TargetInfo info = null;
                     if (forceTarget && !focusTarget) info = gridInfo;
                     else
@@ -401,11 +403,11 @@ namespace CoreSystems.Support
                         {
 
                             var validEstimate = true;
-                            newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!w.ActiveAmmoDef.AmmoDef.Const.IsBeamWeapon && w.ActiveAmmoDef.AmmoDef.Const.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
+                            newCenter = w.System.Prediction != HardPointDef.Prediction.Off && (!aConst.IsBeamWeapon && aConst.DesiredProjectileSpeed > 0) ? Weapon.TrajectoryEstimation(w, targetCenter, targetLinVel, targetAccel, out validEstimate) : targetCenter;
                             var targetSphere = info.Target.PositionComp.WorldVolume;
                             targetSphere.Center = newCenter;
 
-                            if (!validEstimate || (!w.SkipAimChecks || w.System.LockOnFocus) && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
+                            if (!validEstimate || (!aConst.SkipAimChecks || w.System.LockOnFocus) && !MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone)) continue;
                         }
                         else if (!Weapon.CanShootTargetObb(w, info.Target, targetLinVel, targetAccel, out newCenter)) continue;
 
@@ -525,7 +527,7 @@ namespace CoreSystems.Support
 
             var entSphere = topEnt.PositionComp.WorldVolume;
             var distToEnt = MyUtils.GetSmallestDistanceToSphere(ref weaponPos, ref entSphere);
-            var turretCheck = w != null && !w.SkipAimChecks;
+            var weaponCheck = w?.ActiveAmmoDef != null && !w.ActiveAmmoDef.AmmoDef.Const.SkipAimChecks;
             var topBlocks = system.Values.Targeting.TopBlocks;
             var lastBlocks = topBlocks > 10 && distToEnt < 1000 ? topBlocks : 10;
             var isPriroity = false;
@@ -559,7 +561,7 @@ namespace CoreSystems.Support
 
             for (int i = 0; i < totalBlocks; i++)
             {
-                if (turretCheck && (blocksChecked > lastBlocks || isPriroity && (blocksSighted > 100 || blocksChecked > 50 && system.Session.RandomRayCasts > 500 || blocksChecked > 25 && system.Session.RandomRayCasts > 1000)))
+                if (weaponCheck && (blocksChecked > lastBlocks || isPriroity && (blocksSighted > 100 || blocksChecked > 50 && system.Session.RandomRayCasts > 500 || blocksChecked > 25 && system.Session.RandomRayCasts > 1000)))
                     break;
 
                 var card = deck[i];
@@ -571,7 +573,7 @@ namespace CoreSystems.Support
 
                 var blockPos = block.CubeGrid.GridIntegerToWorld(block.Position);
                 double rayDist;
-                if (turretCheck)
+                if (weaponCheck)
                 {
                     double distSqr;
                     Vector3D.DistanceSquared(ref blockPos, ref weaponPos, out distSqr);
@@ -655,7 +657,7 @@ namespace CoreSystems.Support
             var testPos = currentPos;
             var top5 = target.Top5;
             IHitInfo hitInfo = null;
-
+            var weaponCheck = w?.ActiveAmmoDef != null && !w.ActiveAmmoDef.AmmoDef.Const.SkipAimChecks;
             for (int i = 0; i < cubes.Count + top5Count; i++)
             {
 
@@ -684,7 +686,7 @@ namespace CoreSystems.Support
                     if (best)
                     {
 
-                        if (w != null && !w.SkipAimChecks)
+                        if (weaponCheck)
                         {
 
                             ai.Session.CanShoot++;

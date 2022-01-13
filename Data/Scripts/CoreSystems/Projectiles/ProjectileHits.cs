@@ -578,22 +578,24 @@ namespace CoreSystems.Projectiles
                         if (info.Hit.Entity is MyCubeGrid) info.WeaponCache.HitBlock = info.Hit.Block;
                     }
 
-                    if (Session.IsClient && info.AimedShot && aConst.ClientPredictedAmmo && !info.IsShrapnel)
+                    lock (Session.Hits)
                     {
-                        var isBeam = aConst.IsBeamWeapon;
-                        var vel = isBeam ? Vector3D.Zero : !MyUtils.IsZero(p.Velocity) ? p.Velocity : p.PrevVelocity;
+                        if (Session.IsClient && info.AimedShot && aConst.ClientPredictedAmmo && !info.IsShrapnel)
+                        {
+                            var isBeam = aConst.IsBeamWeapon;
+                            var vel = isBeam ? Vector3D.Zero : !MyUtils.IsZero(p.Velocity) ? p.Velocity : p.PrevVelocity;
 
-                        var firstHitEntity = info.HitList[0];
-                        var hitDist = firstHitEntity.HitDist ?? info.MaxTrajectory;
-                        var distToTarget = aConst.IsBeamWeapon ? hitDist : info.MaxTrajectory - info.DistanceTraveled;
+                            var firstHitEntity = info.HitList[0];
+                            var hitDist = firstHitEntity.HitDist ?? info.MaxTrajectory;
+                            var distToTarget = aConst.IsBeamWeapon ? hitDist : info.MaxTrajectory - info.DistanceTraveled;
 
-                        var intersectOrigin = isBeam ? new Vector3D(p.Beam.From + (info.Direction * distToTarget)) : p.LastPosition;
+                            var intersectOrigin = isBeam ? new Vector3D(p.Beam.From + (info.Direction * distToTarget)) : p.LastPosition;
 
-                        Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.System.WeaponIdHash, aConst.AmmoIdxPos, (float) (isBeam ? info.MaxTrajectory : distToTarget));
-                        info.AimedShot = false; //to prevent hits on another grid from triggering again
-                    }
-                    lock(Session.Hits)
+                            Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.System.WeaponIdHash, aConst.AmmoIdxPos, (float)(isBeam ? info.MaxTrajectory : distToTarget));
+                            info.AimedShot = false; //to prevent hits on another grid from triggering again
+                        }
                         Session.Hits.Add(p);
+                    }
                     return;
                 }
 

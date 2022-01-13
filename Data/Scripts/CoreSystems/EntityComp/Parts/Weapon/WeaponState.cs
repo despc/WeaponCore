@@ -201,7 +201,7 @@ namespace CoreSystems.Platform
         internal void WakeTargets()
         {
             LastTargetTick = Comp.Session.Tick;
-            if (System.Session.IsServer && TrackTarget)
+            if (System.Session.IsServer && System.HasRequiresTarget)
             {
                 if (Acquire.Monitoring)
                     System.Session.AcqManager.Refresh(Acquire);

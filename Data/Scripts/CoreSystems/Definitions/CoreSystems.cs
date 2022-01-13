@@ -153,6 +153,8 @@ namespace CoreSystems.Support
         public readonly bool TrackCharacters;
         public readonly bool TrackMeteors;
         public readonly bool TrackNeutrals;
+        public readonly bool TrackTargets;
+        public readonly bool HasRequiresTarget;
         public readonly bool DesignatorWeapon;
         public readonly bool DelayCeaseFire;
         public readonly bool AlwaysFireFull;
@@ -167,7 +169,6 @@ namespace CoreSystems.Support
         public readonly bool NoSubParts;
         public readonly bool HasSpinPart;
         public readonly bool DebugMode;
-
         public readonly double MaxTargetSpeed;
         public readonly double AzStep;
         public readonly double ElStep;
@@ -261,6 +262,9 @@ namespace CoreSystems.Support
             for (int i = 0; i < AmmoTypes.Length; i++) // remap old configs
                 RemapLegacy(AmmoTypes[i].AmmoDef);
 
+            TrackTargets = Values.HardPoint.Ai.TrackTargets;
+
+            var requiresTarget = TrackTargets;
             for (int i = 0; i < AmmoTypes.Length; i++)
             {
 
@@ -269,7 +273,7 @@ namespace CoreSystems.Support
                 if (ammo.AmmoDef.Const.GuidedAmmoDetected)
                     HasGuidedAmmo = true;
 
-                if (ammo.AmmoDef.Const.EwarType == AmmoDef.EwarDef.EwarType.AntiSmart)
+                if (ammo.AmmoDef.Const.AntiSmartDetected)
                     HasAntiSmart = true;
 
                 if (ammo.AmmoDef.Const.IsTurretSelectable)
@@ -277,7 +281,13 @@ namespace CoreSystems.Support
 
                 if (ammo.AmmoDef.Const.ChargSize > ApproximatePeakPower)
                     ApproximatePeakPower = ammo.AmmoDef.Const.ChargSize;
+
+                if (ammo.AmmoDef.Const.RequiresTarget)
+                    requiresTarget = true;
             }
+
+            HasRequiresTarget = requiresTarget;
+
             HasAmmoSelection = ammoSelections > 1;
             HardPointSoundSetup(out WeaponReloadSound, out HardPointRotationSound, out BarrelRotationSound, out NoAmmoSound, out PreFireSound, out HardPointAvMaxDistSqr, out FiringSound);
             HardPointSoundDistMaxSqr(AmmoTypes, out FiringSoundDistSqr, out ReloadSoundDistSqr, out BarrelSoundDistSqr, out HardPointSoundDistSqr, out NoAmmoSoundDistSqr, out HardPointAvMaxDistSqr);

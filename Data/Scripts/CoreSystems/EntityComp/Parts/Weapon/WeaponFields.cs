@@ -179,7 +179,6 @@ namespace CoreSystems.Platform
         internal bool Rotating;
         internal bool TurretAttached;
         internal bool TurretController;
-        internal bool TrackTarget;
         internal bool AiShooting;
         internal bool IsShooting;
         internal bool PlayTurretAv;
@@ -201,7 +200,7 @@ namespace CoreSystems.Platform
         internal bool ParentIsSubpart;
         internal bool CheckInventorySystem = true;
         internal bool PlayingHardPointSound;
-        internal bool SkipAimChecks;
+        internal bool RequiresTarget;
         internal bool ShotReady
         {
             get
@@ -312,7 +311,6 @@ namespace CoreSystems.Platform
             PrimaryWeaponGroup = PartId % 2 == 0;
             TurretAttached = System.Values.HardPoint.Ai.TurretAttached;
             TurretController = System.Values.HardPoint.Ai.TurretController;
-            TrackTarget = System.Values.HardPoint.Ai.TrackTargets;
 
             AimOffset = System.Values.HardPoint.HardWare.Offset;
             FixedOffset = System.Values.HardPoint.HardWare.FixedOffset;
@@ -326,7 +324,7 @@ namespace CoreSystems.Platform
             if (Comp.Platform.Structure.PrimaryPart == partId)
                 comp.TrackingWeapon = this;
 
-            if (TurretAttached && !TrackTarget)
+            if (TurretAttached && !System.TrackTargets)
                 Target = comp.TrackingWeapon.Target;
             else Target = new Target(this, true);
 

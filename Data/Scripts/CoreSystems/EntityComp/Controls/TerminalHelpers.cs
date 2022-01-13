@@ -87,6 +87,8 @@ namespace CoreSystems.Control
         internal static void CreateGenericControls<T>(Session session) where T : IMyTerminalBlock
         {
             AddOnOffSwitchNoAction<T>(session,  "Debug", Localization.GetText("TerminalDebugTitle"), Localization.GetText("TerminalDebugTooltip"), BlockUi.GetDebug, BlockUi.RequestDebug, true, GuidedAmmoNoTurret);
+            AddOnOffSwitchNoAction<T>(session, "Override", Localization.GetText("TerminalOverrideTitle"), Localization.GetText("TerminalOverrideTooltip"), BlockUi.GetOverride, BlockUi.RequestOverride, true, OverrideTarget);
+
             Separator<T>(session, "WC_sep4", HasTracking);
             AddOnOffSwitchNoAction<T>(session,  "Shoot", Localization.GetText("TerminalShootTitle"), Localization.GetText("TerminalShootTooltip"), BlockUi.GetShoot, BlockUi.RequestSetShoot, true, IsNotBomb);
 
@@ -188,7 +190,7 @@ namespace CoreSystems.Control
         internal static bool HasTracking(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (comp.HasTracking || comp.TrackingWeapon.System.HasGuidedAmmo);
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (comp.HasTracking || comp.HasRequireTarget);
         }
 
         internal static bool CanBeArmed(IMyTerminalBlock block)
@@ -263,6 +265,13 @@ namespace CoreSystems.Control
         {
             return GuidedAmmo(block) && NoTurret(block);
         }
+
+        internal static bool OverrideTarget(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.HasRequireTarget;
+        }
+
         internal static void SliderWriterRange(IMyTerminalBlock block, StringBuilder builder)
         {
             builder.Append(BlockUi.GetRange(block).ToString("N2"));
