@@ -30,11 +30,14 @@ namespace CoreSystems
 
                 var p = Hits[x];
                 var info = p.Info;
-                if (!info.DoDamage && IsServer)
-                    continue;
+
 
                 var maxObjects = info.AmmoDef.Const.MaxObjectsHit;
                 var phantom = info.AmmoDef.BaseDamage <= 0;
+
+                if (!info.DoDamage && IsServer)
+                    info.BaseDamagePool = 0;
+
                 var pInvalid = (int)p.State > 3;
                 var tInvalid = info.Target.IsProjectile && (int)info.Target.Projectile.State > 1;
                 if (tInvalid) info.Target.Reset(Tick, Target.States.ProjectileClosed);

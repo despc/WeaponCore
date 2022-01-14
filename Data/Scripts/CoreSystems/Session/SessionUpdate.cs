@@ -413,7 +413,7 @@ namespace CoreSystems
                         var shootRequest = (validShootStates || manualShot || w.FinishShots || delayedFire);
                         w.LockOnFireState = shootRequest && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shootRequest && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
-                        var shoot = shotReady && ai.CanShoot && (!w.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override);
+                        var shoot = shotReady && ai.CanShoot && (!w.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
                         if (shoot) {
 
                             if (MpActive && HandlesInput && !ManualShot)
