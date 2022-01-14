@@ -63,7 +63,7 @@ namespace CoreSystems
         internal readonly TargetCompare TargetCompare = new TargetCompare();
         internal readonly WaterApi WApi = new WaterApi();
 
-        internal static readonly HashSet<ulong> AuthorIds = new HashSet<ulong> { 76561197969691953, 76561198061737246, 76561198116813162 };
+        internal static readonly HashSet<ulong> AuthorIds = new HashSet<ulong> { 76561197969691953 };
         internal readonly MyStringHash ShieldBypassDamageType = MyStringHash.GetOrCompute("bypass");
         internal readonly MyConcurrentPool<ConcurrentDictionary<WeaponDefinition.TargetingDef.BlockTypes, ConcurrentCachingList<MyCubeBlock>>> BlockTypePool = new MyConcurrentPool<ConcurrentDictionary<WeaponDefinition.TargetingDef.BlockTypes, ConcurrentCachingList<MyCubeBlock>>>(64);
         internal readonly MyConcurrentPool<TargetInfo> TargetInfoPool = new MyConcurrentPool<TargetInfo>(256, info => info.Clean());
@@ -414,6 +414,7 @@ namespace CoreSystems
         internal bool DebugMod;
         internal bool AntiSmartActive;
         internal bool DirtyGrid;
+        internal bool AuthorConnected;
         internal readonly HashSet<ulong> BlackListedPlayers = new HashSet<ulong>()
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.

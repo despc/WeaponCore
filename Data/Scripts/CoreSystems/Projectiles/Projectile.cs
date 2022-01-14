@@ -374,6 +374,17 @@ namespace CoreSystems.Projectiles
                 newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
             }
 
+            if (aConst.HasAdvFragOffset)
+            {
+                MatrixD matrix;
+                MatrixD.CreateWorld(ref Position, ref Info.Direction, ref Info.OriginUp, out matrix);
+
+                Vector3D advOffSet;
+                var offSet = aConst.FragOffset;
+                Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
+                newOrigin += offSet;
+            }
+
             var spawn = false;
 
             for (int i = 0; i < patternIndex; i++)

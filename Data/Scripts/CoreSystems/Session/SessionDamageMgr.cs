@@ -30,6 +30,9 @@ namespace CoreSystems
 
                 var p = Hits[x];
                 var info = p.Info;
+                if (!info.DoDamage && IsServer)
+                    continue;
+
                 var maxObjects = info.AmmoDef.Const.MaxObjectsHit;
                 var phantom = info.AmmoDef.BaseDamage <= 0;
                 var pInvalid = (int)p.State > 3;
@@ -94,7 +97,7 @@ namespace CoreSystems
             Hits.Clear();
         }
 
-        private void DamageShield(HitEntity hitEnt, ProInfo info)
+        private void DamageShield(HitEntity hitEnt, ProInfo info) // silly levels of inlining due to mod profiler
         {
             var shield = hitEnt.Entity as IMyTerminalBlock;
             if (shield == null || !hitEnt.HitPos.HasValue) return;
@@ -290,6 +293,7 @@ namespace CoreSystems
 
             //Global & modifiers
             var canDamage = t.DoDamage;
+
             //_destroyedSlims.Clear();
             _destroyedSlimsClient.Clear();
             var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
@@ -420,12 +424,15 @@ namespace CoreSystems
                 if (!detRequested)
                     DamageBlockCache[0].Add(rootBlock);
 
+
+
                 if (hasAoe && !detRequested || hasDet && detRequested)
                 {
                     detRequested = false;
                     RadiantAoe(ref rootInfo, grid, aoeRadius, aoeDepth, direction, ref maxAoeDistance, out foundAoeBlocks, aoeShape, showHits, out aoeHits);
                     //Log.Line($"got blocks to distance: {maxAoeDistance} - wasDetonating:{detRequested} - aoeDamage:{aoeDamage}");
                 }
+
                 var blockStages = maxAoeDistance + 1;
 
                 for (int j = 0; j < blockStages; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
@@ -664,8 +671,6 @@ namespace CoreSystems
                                 _destroyedSlims.Add(block);
                         }
 
-                       //Log.Line($"Blockhit {block} Pri: {primaryDamage}  AOE Raw Dmg {aoeDamage}  AOE Falloff Mult{aoeDamageFall} Final Scaled Dmg {scaledDamage} of blockHP {blockHp}  " +
-     //$"Mults- LG {d.Grids.Large} SG {d.Grids.Small} Armor {d.Armor.Armor} Nonarmor {d.Armor.NonArmor} LA {d.Armor.Light} HA {d.Armor.Heavy}");
 
                         //Apply damage
                         if (canDamage)
@@ -992,7 +997,6 @@ namespace CoreSystems
         {
             //Log.Line($"Start");
             //var watch = System.Diagnostics.Stopwatch.StartNew();
-            var root = rootInfo.Block;
             var rootHitPos = rootInfo.QueryPos; //local cube grid
             var localfrom = grid.WorldToGridScaledLocal(direction.From);
             var localto = grid.WorldToGridScaledLocal(direction.To);

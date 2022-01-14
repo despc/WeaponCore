@@ -599,6 +599,10 @@ namespace CoreSystems
                     if (Session?.Player == null) return false;
                     MultiplayerId = MyAPIGateway.Multiplayer.MyId;
 
+
+                    if (AuthorIds.Contains(MultiplayerId))
+                        AuthorConnected = true;
+
                     if (BlackListedPlayers.Contains(MultiplayerId))
                     {
                         SuppressWc = true;

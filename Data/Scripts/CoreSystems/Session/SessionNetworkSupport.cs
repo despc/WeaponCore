@@ -656,6 +656,7 @@ namespace CoreSystems
             int weaponId;
             if (comp?.Ai?.TopEntity != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.Platform.Structure.HashToId.TryGetValue(systemId, out weaponId))
             {
+
                 PacketsToServer.Add(new FixedWeaponHitPacket
                 {
                     EntityId = triggerEntity.EntityId,
@@ -1152,8 +1153,11 @@ namespace CoreSystems
             if (authorsOffline)
             {
                 AuthLogging = false;
+                AuthorConnected = false;
                 return false;
             }
+
+            AuthorConnected = true;
 
             foreach (var a in ConnectedAuthors)
             {

@@ -791,6 +791,7 @@ namespace CoreSystems.Api
                     [ProtoMember(10)] internal int MaxChildren;
                     [ProtoMember(11)] internal TimedSpawnDef TimedSpawns;
                     [ProtoMember(12)] internal bool FireSound;
+                    [ProtoMember(13)] internal Vector3D AdvOffset;
 
                     [ProtoContract]
                     public struct TimedSpawnDef

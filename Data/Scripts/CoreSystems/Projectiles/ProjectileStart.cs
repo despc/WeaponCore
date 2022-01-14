@@ -37,7 +37,6 @@ namespace CoreSystems.Projectiles
                 info.AimedShot = aimed;
                 info.AmmoDef = a;
                 info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
-                
                 info.Overrides = repo.Values.Set.Overrides;
                 target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
                 target.Projectile = wTarget.Projectile;
