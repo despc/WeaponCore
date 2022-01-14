@@ -146,10 +146,9 @@ namespace CoreSystems.Projectiles
             PrevEndPointToCenterSqr = double.MaxValue;
 
             var trajectory = ammoDef.Trajectory;
-            var smarts = trajectory.Smarts;
             var guidance = trajectory.Guidance;
             CachedId = Info.MuzzleId == -1 ? Info.WeaponCache.VirutalId : Info.MuzzleId;
-            DynamicGuidance = guidance != GuidanceType.None && guidance != GuidanceType.TravelTo && !aConst.IsBeamWeapon && Info.EnableGuidance;
+            DynamicGuidance = guidance != GuidanceType.None && guidance != GuidanceType.TravelTo && !aConst.IsBeamWeapon;
             if (DynamicGuidance && session.AntiSmartActive) DynTrees.RegisterProjectile(this);
 
             Info.MyPlanet = Info.Ai.MyPlanet;
@@ -246,7 +245,7 @@ namespace CoreSystems.Projectiles
             }
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
-            PickTarget = (smarts.OverideTarget || Info.ModOverride && !LockedTarget) && !Info.Target.IsFakeTarget;
+            PickTarget = (aConst.OverrideTarget || Info.ModOverride && !LockedTarget) && !Info.Target.IsFakeTarget;
             if (PickTarget || LockedTarget) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;

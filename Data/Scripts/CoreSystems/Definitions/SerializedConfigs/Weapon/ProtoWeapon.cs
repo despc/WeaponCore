@@ -220,7 +220,7 @@ namespace CoreSystems
     [ProtoContract]
     public class ProtoWeaponSettings
     {
-        [ProtoMember(1), DefaultValue(true)] public bool Guidance = true;
+        //[ProtoMember(1), DefaultValue(true)] public bool Guidance = true;
         [ProtoMember(2), DefaultValue(1)] public int Overload = 1;
         [ProtoMember(3), DefaultValue(1)] public float DpsModifier = 1;
         [ProtoMember(4), DefaultValue(1)] public float RofModifier = 1;
@@ -235,7 +235,7 @@ namespace CoreSystems
 
         public void Sync(Weapon.WeaponComponent comp, ProtoWeaponSettings sync)
         {
-            Guidance = sync.Guidance;
+            //Guidance = sync.Guidance;
             Range = sync.Range;
             Weapon.WeaponComponent.SetRange(comp);
 

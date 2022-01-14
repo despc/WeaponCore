@@ -15,7 +15,7 @@ namespace CoreSystems.Control
     {
         internal static void AddUiControls<T>(Session session) where T : IMyTerminalBlock
         {
-            AddWeaponOnOff<T>(session, "Guidance", Localization.GetText("TerminalGuidanceTitle"), Localization.GetText("TerminalGuidanceTooltip"), Localization.GetText("TerminalSwitchOn"), Localization.GetText("TerminalSwitchOff"), BlockUi.GetGuidance, BlockUi.RequestSetGuidance, UiGuidance);
+            //AddWeaponOnOff<T>(session, "Guidance", Localization.GetText("TerminalGuidanceTitle"), Localization.GetText("TerminalGuidanceTooltip"), Localization.GetText("TerminalSwitchOn"), Localization.GetText("TerminalSwitchOff"), BlockUi.GetGuidance, BlockUi.RequestSetGuidance, UiGuidance);
 
             AddSliderDamage<T>(session, "Weapon Damage", Localization.GetText("TerminalWeaponDamageTitle"), Localization.GetText("TerminalWeaponDamageTooltip"), BlockUi.GetDps, BlockUi.RequestSetDps, UiStrengthSlider);
 
@@ -252,14 +252,14 @@ namespace CoreSystems.Control
             return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.Type == CoreComponent.CompType.Weapon && !comp.IsBomb && (!comp.HasTurret && !comp.OverrideLeads || comp.HasTurret && comp.OverrideLeads);
         }
 
-        internal static bool GuidedAmmo(IMyTerminalBlock block)
+        internal static bool GuidedAmmo(IMyTerminalBlock block, bool checkFixed = false)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.TrackingWeapon.System.HasGuidedAmmo;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.TrackingWeapon.System.HasGuidedAmmo && (!checkFixed || comp.TrackingWeapon.System.TurretMovement != WeaponSystem.TurretType.Fixed);
         }
         internal static bool TurretOrGuidedAmmo(IMyTerminalBlock block)
         {
-            return HasTurret(block) || GuidedAmmo(block);
+            return HasTurret(block) || GuidedAmmo(block, true);
         }
         internal static bool GuidedAmmoNoTurret(IMyTerminalBlock block)
         {

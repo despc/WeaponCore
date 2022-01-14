@@ -71,7 +71,7 @@ namespace CoreSystems
             }
 
         }
-
+        /*
         internal static void RequestSetGuidance(IMyTerminalBlock block, bool newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -85,7 +85,7 @@ namespace CoreSystems
             else
                 comp.Session.SendSetCompBoolRequest(comp, newValue, PacketType.RequestSetGuidance);
         }
-
+        */
         internal static void RequestSetOverload(IMyTerminalBlock block, bool newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -102,12 +102,14 @@ namespace CoreSystems
                 comp.Session.SendSetCompBoolRequest(comp, newValue, PacketType.RequestSetOverload);
         }
 
+        /*
         internal static bool GetGuidance(IMyTerminalBlock block, int wepId)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
             return comp.Data.Repo.Values.Set.Guidance;
         }
+        */
 
         internal static float GetDps(IMyTerminalBlock block)
         {

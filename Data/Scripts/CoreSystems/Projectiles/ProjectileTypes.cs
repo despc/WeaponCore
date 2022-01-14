@@ -64,7 +64,6 @@ namespace CoreSystems.Support
         internal float BaseHealthPool;
         internal float BaseEwarPool;
         internal bool IsShrapnel;
-        internal bool EnableGuidance = true;
         internal bool EwarAreaPulse;
         internal bool EwarActive;
         internal bool LockOnFireState;
@@ -182,7 +181,6 @@ namespace CoreSystems.Support
             ClosestDistSqrToTarget = double.MinValue; 
             ShieldResistMod = 1f;
             ShieldBypassMod = 1f;
-            EnableGuidance = true;
             Hit = new Hit();
             Direction = Vector3D.Zero;
             Origin = Vector3D.Zero;
@@ -442,7 +440,6 @@ namespace CoreSystems.Support
                 frag.CoreParent = target.CoreParent;
                 frag.CoreCube = target.CoreCube;
                 frag.CoreIsCube = target.CoreIsCube;
-                frag.Guidance = info.EnableGuidance;
                 frag.Radial = aConst.FragRadial;
 
                 frag.Origin = newOrigin;
@@ -511,7 +508,6 @@ namespace CoreSystems.Support
                 target.CoreIsCube = frag.CoreIsCube;
                 info.Overrides = frag.Overrides;
                 info.IsShrapnel = true;
-                info.EnableGuidance = frag.Guidance;
                 info.PartId = frag.WeaponId;
                 info.MuzzleId = frag.MuzzleId;
                 info.UniqueMuzzleId = session.UniqueMuzzleId.Id;
@@ -568,7 +564,6 @@ namespace CoreSystems.Support
         public int MuzzleId;
         public int Depth;
         public XorShiftRandomStruct Random;
-        public bool Guidance;
         public bool DoDamage;
         public bool LockOnFireState;
         public bool IgnoreShield;

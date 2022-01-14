@@ -52,7 +52,6 @@ namespace CoreSystems.Projectiles
 
                 info.PartId = w.PartId;
                 info.BaseDamagePool = a == weaponAmmoDef ? w.BaseDamage : aConst.BaseDamage;
-                info.EnableGuidance = repo.Values.Set.Guidance;
                 info.WeaponCache = w.WeaponCache;
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
                 info.LockOnFireState = (w.LockOnFireState || !aConst.TargetOverrideDetected && wTarget.TargetEntity != null);

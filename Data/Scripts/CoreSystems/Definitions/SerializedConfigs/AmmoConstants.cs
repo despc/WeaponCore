@@ -132,6 +132,7 @@ namespace CoreSystems.Support
         public readonly int FragGroupSize;
         public readonly int FragGroupDelay;
 
+        public readonly bool OverrideTarget;
         public readonly bool HasEjectEffect;
         public readonly bool Pulse;
         public readonly bool PrimeModel;
@@ -319,13 +320,14 @@ namespace CoreSystems.Support
             for (int i = 0; i < wDef.Ammos.Length; i++)
             {
                 var ammoType = wDef.Ammos[i];
-                if (ammoType.Trajectory.Guidance != None)
+                var hasGuidance = ammoType.Trajectory.Guidance != None;
+                if (hasGuidance)
                     guidedAmmo = true;
 
                 if (ammoType.Ewar.Type == EwarType.AntiSmart)
                     antiSmart = true;
 
-                if (ammoType.Trajectory.Smarts.OverideTarget)
+                if (hasGuidance && ammoType.Trajectory.Smarts.OverideTarget)
                     targetOverride = true;
 
                 if (ammoType.AmmoRound.Equals(ammo.AmmoDef.Fragment.AmmoRound))
@@ -372,7 +374,7 @@ namespace CoreSystems.Support
             MaxChaseTime = ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime > 0 ? ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime : int.MaxValue;
             MaxObjectsHit = ammo.AmmoDef.ObjectsHit.MaxObjectsHit > 0 ? ammo.AmmoDef.ObjectsHit.MaxObjectsHit : int.MaxValue;
             ArmOnlyOnHit = ammo.AmmoDef.AreaOfDamage.EndOfLife.ArmOnlyOnHit;
-
+            OverrideTarget = ammo.AmmoDef.Trajectory.Smarts.OverideTarget;
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
 
@@ -596,12 +598,13 @@ namespace CoreSystems.Support
                         if (aPattern.Equals(ammoDef.AmmoRound))
                         {
                             ammoPattern[indexPos++] = ammoDef;
-                            if (!guidedAmmo && ammoDef.Trajectory.Guidance != None)
+                            var hasGuidance = ammoDef.Trajectory.Guidance != None;
+                            if (!guidedAmmo && hasGuidance)
                                 guidedAmmo = true;
 
                             if (!antiSmart && ammoDef.Ewar.Type == EwarType.AntiSmart)
                                 antiSmart = true;
-                            if (!targetOverride && guidedAmmo && ammoDef.Trajectory.Smarts.OverideTarget)
+                            if (!targetOverride && hasGuidance && ammoDef.Trajectory.Smarts.OverideTarget)
                                 targetOverride = true;
                         }
                     }

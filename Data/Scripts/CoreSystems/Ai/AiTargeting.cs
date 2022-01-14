@@ -191,12 +191,14 @@ namespace CoreSystems.Support
 
         internal static bool ReacquireTarget(Projectile p)
         {
-            p.Info.System.Session.InnerStallReporter.Start("ReacquireTarget", 5);
-            p.ChaseAge = p.Info.Age;
-            var s = p.Info.System;
-            var ai = p.Info.Ai;
+            var info = p.Info;
+            var s = info.System;
+            var target = info.Target;
+            s.Session.InnerStallReporter.Start("ReacquireTarget", 5);
+            p.ChaseAge = info.Age;
+            var ai = info.Ai;
             var weaponPos = p.Position;
-            var overRides = p.Info.Overrides;
+            var overRides = info.Overrides;
             var attackNeutrals = overRides.Neutrals;
             var attackFriends = overRides.Friendly;
             var attackNoOwner = overRides.Unowned;
@@ -210,10 +212,10 @@ namespace CoreSystems.Support
             var fireOnStation = moveMode == ProtoWeaponOverrides.MoveModes.Any || moveMode == ProtoWeaponOverrides.MoveModes.Moored;
             var stationOnly = moveMode == ProtoWeaponOverrides.MoveModes.Moored;
             var acquired = false;
-            var lockedToTarget = p.Info.LockOnFireState;
+            var lockedToTarget = info.LockOnFireState;
             BoundingSphereD waterSphere = new BoundingSphereD(Vector3D.Zero, 1f);
             WaterData water = null;
-            if (s.Session.WaterApiLoaded && !p.Info.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && s.Session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
+            if (s.Session.WaterApiLoaded && !info.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && s.Session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
                 waterSphere = new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius);
             TargetInfo alphaInfo = null;
             TargetInfo betaInfo = null;
@@ -225,36 +227,42 @@ namespace CoreSystems.Support
             if (ai.Construct.Data.Repo.FocusData.Target[1] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[1], out fTarget) && ai.Targets.TryGetValue(fTarget, out betaInfo))
                 offset++;
 
-            var topTarget = lockedToTarget ? p.Info.Target.TargetEntity?.GetTopMostParent() ?? alphaInfo?.Target ?? betaInfo?.Target : null;
+            MyEntity topTarget = null;
+            if (lockedToTarget && target.TargetEntity != null) {
+                topTarget = target.TargetEntity.GetTopMostParent() ?? alphaInfo?.Target ?? betaInfo?.Target;
+                if (topTarget != null && topTarget.MarkedForClose)
+                    topTarget = null;
+            }
+
             var numOfTargets = ai.SortedTargets.Count;
             var hasOffset = offset > 0;
             var adjTargetCount = forceFoci && hasOffset ? offset : numOfTargets + offset;
-            var deck = GetDeck(ref p.Info.Target.TargetDeck, ref p.Info.Target.TargetPrevDeckLen, 0, numOfTargets, p.Info.System.Values.Targeting.TopTargets, ref p.Info.Random);
+            var deck = GetDeck(ref target.TargetDeck, ref target.TargetPrevDeckLen, 0, numOfTargets, p.Info.System.Values.Targeting.TopTargets, ref p.Info.Random);
 
             for (int i = 0; i < adjTargetCount; i++)
             {
                 var focusTarget = hasOffset && i < offset;
                 var lastOffset = offset - 1;
 
-                TargetInfo info;
-                if (i == 0 && alphaInfo != null) info = alphaInfo;
-                else if (i <= lastOffset && betaInfo != null) info = betaInfo;
-                else info = ai.SortedTargets[deck[i - offset]];
+                TargetInfo tInfo;
+                if (i == 0 && alphaInfo != null) tInfo = alphaInfo;
+                else if (i <= lastOffset && betaInfo != null) tInfo = betaInfo;
+                else tInfo = ai.SortedTargets[deck[i - offset]];
 
-                if (!focusTarget && info.OffenseRating <= 0 || focusTarget && !attackFriends && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Friends || info.Target == null || info.Target.MarkedForClose || hasOffset && i > lastOffset && (info.Target == alphaInfo?.Target || info.Target == betaInfo?.Target)) { continue; }
+                if (!focusTarget && tInfo.OffenseRating <= 0 || focusTarget && !attackFriends && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Friends || tInfo.Target == null || tInfo.Target.MarkedForClose || hasOffset && i > lastOffset && (tInfo.Target == alphaInfo?.Target || tInfo.Target == betaInfo?.Target)) { continue; }
 
-                if (!attackNeutrals && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership) continue;
+                if (!attackNeutrals && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership) continue;
 
-                if (movingMode && info.VelLenSqr < 1 || !fireOnStation && info.IsStatic || stationOnly && !info.IsStatic)
+                if (movingMode && tInfo.VelLenSqr < 1 || !fireOnStation && tInfo.IsStatic || stationOnly && !tInfo.IsStatic)
                     continue;
 
-                var character = info.Target as IMyCharacter;
+                var character = tInfo.Target as IMyCharacter;
                 if (character != null && (!s.TrackCharacters || !overRides.Biologicals)) continue;
 
-                var meteor = info.Target as MyMeteor;
+                var meteor = tInfo.Target as MyMeteor;
                 if (meteor != null && (!s.TrackMeteors || !overRides.Meteors)) continue;
 
-                var targetPos = info.Target.PositionComp.WorldAABB.Center;
+                var targetPos = tInfo.Target.PositionComp.WorldAABB.Center;
 
                 double distSqr;
                 Vector3D.DistanceSquared(ref targetPos, ref p.Position, out distSqr);
@@ -262,38 +270,38 @@ namespace CoreSystems.Support
                 if (distSqr > p.DistanceToTravelSqr)
                     continue;
 
-                var targetRadius = info.Target.PositionComp.LocalVolume.Radius;
-                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || topTarget != null && info.Target != topTarget) continue;
+                var targetRadius = tInfo.Target.PositionComp.LocalVolume.Radius;
+                if (targetRadius < minTargetRadius || targetRadius > maxTargetRadius && maxTargetRadius < 8192 || topTarget != null && tInfo.Target != topTarget) continue;
                 if (water != null)
                 {
                     if (new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius).Contains(new BoundingSphereD(targetPos, targetRadius)) == ContainmentType.Contains)
                         continue;
                 }
 
-                if (info.IsGrid)
+                if (tInfo.IsGrid)
                 {
 
-                    if (!s.TrackGrids || !overRides.Grids || !focusTarget && info.FatCount < 2 || Obstruction(ref info, ref targetPos, p)) continue;
+                    if (!s.TrackGrids || !overRides.Grids || !focusTarget && tInfo.FatCount < 2 || Obstruction(ref tInfo, ref targetPos, p)) continue;
 
-                    if (!AcquireBlock(p.Info.System, p.Info.Ai, p.Info.Target, info, weaponPos, null, ReAcquire, ref waterSphere, ref p.Info.Random, null, !focusTarget, overRides)) continue;
+                    if (!AcquireBlock(s, ai, target, tInfo, weaponPos, null, ReAcquire, ref waterSphere, ref info.Random, null, !focusTarget, overRides)) continue;
                     acquired = true;
                     break;
                 }
 
-                if (Obstruction(ref info, ref targetPos, p))
+                if (Obstruction(ref tInfo, ref targetPos, p))
                     continue;
 
                 double rayDist;
                 Vector3D.Distance(ref weaponPos, ref targetPos, out rayDist);
                 var shortDist = rayDist;
                 var origDist = rayDist;
-                var topEntId = info.Target.GetTopMostParent().EntityId;
-                p.Info.Target.Set(info.Target, targetPos, shortDist, origDist, topEntId);
+                var topEntId = tInfo.Target.GetTopMostParent().EntityId;
+                target.Set(tInfo.Target, targetPos, shortDist, origDist, topEntId);
                 acquired = true;
                 break;
             }
-            if (!acquired && !lockedToTarget) p.Info.Target.Reset(ai.Session.Tick, Target.States.NoTargetsSeen);
-            p.Info.System.Session.InnerStallReporter.End();
+            if (!acquired && !lockedToTarget) target.Reset(s.Session.Tick, Target.States.NoTargetsSeen);
+            s.Session.InnerStallReporter.End();
             return acquired;
         }
 
