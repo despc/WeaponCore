@@ -1105,7 +1105,7 @@ namespace CoreSystems.Support
                 else
                     FireEmitter.StopSound(false);
 
-                //System.Session.SoundsToClean.Add(new Session.CleanSound { Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
             }
 
             if (TravelEmitter != null) {
@@ -1122,7 +1122,7 @@ namespace CoreSystems.Support
                 else
                     TravelEmitter.StopSound(false);
 
-                //System.Session.SoundsToClean.Add(new Session.CleanSound { Force = true, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
             }
 
             if (AmmoEffect != null)

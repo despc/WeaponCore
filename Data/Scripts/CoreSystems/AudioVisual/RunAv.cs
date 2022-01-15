@@ -363,7 +363,7 @@ namespace CoreSystems.Support
                 av.Emitter.SetPosition(av.Position);
                 av.Emitter.PlaySound(av.SoundPair);
 
-                Session.SoundsToClean.Add(new Session.CleanSound { Hit = av.Hit, Emitter = av.Emitter, EmitterPool = PersistentEmitters, SoundPair = av.SoundPair, SoundPairPool = av.Pool, SpawnTick = Session.Tick });
+                Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = av.Emitter, EmitterPool = PersistentEmitters, SoundPair = av.SoundPair, SoundPairPool = av.Pool, SpawnTick = Session.Tick });
             }
             RunningSounds.Clear();
         }

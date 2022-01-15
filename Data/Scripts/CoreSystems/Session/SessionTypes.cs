@@ -892,7 +892,7 @@ namespace CoreSystems
             internal MySoundPair SoundPair;
             internal uint SpawnTick;
             internal bool Force;
-            internal bool Hit;
+            internal bool DelayedReturn;
         }
 
         public class WeaponAmmoMoveRequest

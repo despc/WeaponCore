@@ -416,10 +416,12 @@ namespace CoreSystems
             {
                 var sound = SoundsToClean[i];
                 var age = Tick - sound.SpawnTick;
-                if (force || age > 4 && (sound.Force || !sound.Emitter.IsPlaying) || sound.Hit && sound.Emitter.Loop && age > 180)
+                var delayedClean = sound.DelayedReturn && age > 600;
+                if (force || (age > 4 && (sound.Force || !sound.Emitter.IsPlaying)) || delayedClean)
                 {
-                    if (sound.Force || sound.Emitter.Loop) {
-                        sound.Emitter.StopSound(sound.Emitter.Loop);
+                    var loop = sound.Emitter.Loop;
+                    if (!delayedClean && (sound.Force || loop)) {
+                        sound.Emitter.StopSound(loop);
                     }
                     sound.Emitter.Entity = null;
                     sound.EmitterPool.Push(sound.Emitter);
