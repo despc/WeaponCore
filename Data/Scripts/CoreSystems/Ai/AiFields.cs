@@ -212,7 +212,7 @@ namespace CoreSystems.Support
                 IsGrid = AiType == AiTypes.Grid;
                 DeadSphereRadius = GridEntity?.GridSizeHalf + 0.1 ?? 1.35;
 
-                TopEntity.Flags |= (EntityFlags)(1 << 31);
+                topEntity.Flags |= (EntityFlags)(1 << 31);
                 Closed = false;
                 MarkedForClose = false;
 
@@ -235,7 +235,7 @@ namespace CoreSystems.Support
                 if (Session.IsClient)
                     Session.SendUpdateRequest(TopEntity.EntityId, PacketType.ClientAiAdd);
             }
-            catch (Exception ex) { Log.Line($"Exception in AiInit - TopEntityNull:{TopEntity == null} - GridEntityNull:{GridEntity == null} - AiType:{AiType}: {ex}", null, true); }
+            catch (Exception ex) { Log.Line($"Exception in AiInit - TopEntityNull:{topEntity == null} - enforcementNull:{session?.Settings?.Enforcement == null} - sessionNull: {session == null} - GridEntityNull:{GridEntity == null} - AiType:{AiType}: {ex}", null, true); }
         }
     }
 }

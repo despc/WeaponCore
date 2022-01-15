@@ -235,6 +235,7 @@ namespace CoreSystems.Support
         public Vector3D? HitPos;
         public double? HitDist;
         public Type EventType;
+        public int DamageMulti = 1;
 
         public void Clean()
         {
@@ -256,6 +257,7 @@ namespace CoreSystems.Support
             DamageOverTime = false;
             PulseTrigger = false;
             SelfHit = false;
+            DamageMulti = 1;
         }
 
         public struct RootBlocks

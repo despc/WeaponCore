@@ -49,7 +49,7 @@ namespace CoreSystems
 
                 Ai.TargetInfo tInfo;
                 if (info.Ai.Targets.TryGetValue(hitEnt.Entity, out tInfo) && tInfo.TargetAi?.ShieldBlock != null && info.System.Session.SApi.IsFortified(tInfo.TargetAi.ShieldBlock))
-                    massMulti = 10f;
+                    massMulti = 5f;
 
                 var forceDef = info.AmmoDef.Ewar.Force;
 

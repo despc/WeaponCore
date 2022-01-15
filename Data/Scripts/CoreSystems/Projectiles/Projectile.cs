@@ -374,17 +374,6 @@ namespace CoreSystems.Projectiles
                 newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
             }
 
-            if (aConst.HasAdvFragOffset)
-            {
-                MatrixD matrix;
-                MatrixD.CreateWorld(ref Position, ref Info.Direction, ref Info.OriginUp, out matrix);
-
-                Vector3D advOffSet;
-                var offSet = aConst.FragOffset;
-                Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
-                newOrigin += offSet;
-            }
-
             var spawn = false;
 
             for (int i = 0; i < patternIndex; i++)
@@ -396,6 +385,19 @@ namespace CoreSystems.Projectiles
                 else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
                     continue;
                 spawn = true;
+
+                if (fragAmmoDef.Const.HasAdvFragOffset)
+                {
+                    MatrixD matrix;
+                    MatrixD.CreateWorld(ref Position, ref Info.Direction, ref Info.OriginUp, out matrix);
+
+                    Vector3D advOffSet;
+                    var offSet = fragAmmoDef.Const.FragOffset;
+                    Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
+                    newOrigin += offSet;
+                }
+
+
                 var projectiles = Info.System.Session.Projectiles;
                 var shrapnel = projectiles.ShrapnelPool.Get();
                 shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);

@@ -77,7 +77,7 @@ namespace CoreSystems
                         continue;
                     }
 
-                    if (comp.IsBlock && !GridToInfoMap.ContainsKey(comp.TopEntity))
+                    if (comp.IsBlock && !GridToInfoMap.ContainsKey(comp.TopEntity) || IsClient && Settings?.Enforcement == null)
                         continue;
 
                     if (ShieldApiLoaded)

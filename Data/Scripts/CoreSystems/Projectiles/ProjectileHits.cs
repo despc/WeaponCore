@@ -59,6 +59,7 @@ namespace CoreSystems.Projectiles
                 if (Session.WaterApiLoaded && info.MyPlanet != null)
                     Session.WaterMap.TryGetValue(info.MyPlanet.EntityId, out water);
 
+                IMyTerminalBlock iShield = null;
                 for (int i = 0; i < collectionCount; i++) {
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];
 
@@ -134,55 +135,59 @@ namespace CoreSystems.Projectiles
                         shieldInfo = Session.SApi.MatchEntToShieldFastExt(ent, true);
                         if (shieldInfo != null && (firingCube == null || !firingCube.CubeGrid.IsSameConstructAs(shieldInfo.Value.Item1.CubeGrid) && !goCritical))
                         {
-
-                            var shrapnelSpawn = p.Info.IsShrapnel && p.Info.Age < 1;
-                            if (Vector3D.Transform(!shrapnelSpawn ? info.Origin : target.CoreEntity.PositionComp.WorldMatrixRef.Translation, shieldInfo.Value.Item3.Item1).LengthSquared() > 1)
+                            if (shieldInfo.Value.Item2.Item1)
                             {
-
-                                p.EntitiesNear = true;
-                                var dist = MathFuncs.IntersectEllipsoid(shieldInfo.Value.Item3.Item1, shieldInfo.Value.Item3.Item2, new RayD(p.Beam.From, p.Beam.Direction));
-                                if (target.IsProjectile && Vector3D.Transform(target.Projectile.Position, shieldInfo.Value.Item3.Item1).LengthSquared() <= 1)
-                                    projetileInShield = true;
-
-                                var shieldIntersect = dist != null && (dist.Value < p.Beam.Length || info.EwarActive);
-                                info.ShieldKeepBypass = shieldIntersect;
-                                if (shieldIntersect && !info.ShieldBypassed)
+                                var shrapnelSpawn = p.Info.IsShrapnel && p.Info.Age < 1;
+                                if (Vector3D.Transform(!shrapnelSpawn ? info.Origin : target.CoreEntity.PositionComp.WorldMatrixRef.Translation, shieldInfo.Value.Item3.Item1).LengthSquared() > 1)
                                 {
 
-                                    hitEntity = HitEntityPool.Get();
-                                    hitEntity.EventType = Shield;
-                                    var hitPos = p.Beam.From + (p.Beam.Direction * dist.Value);
-                                    hitEntity.HitPos = p.Beam.From + (p.Beam.Direction * dist.Value);
-                                    hitEntity.HitDist = dist;
-                                    if (shieldInfo.Value.Item2.Item2)
+                                    p.EntitiesNear = true;
+                                    var dist = MathFuncs.IntersectEllipsoid(shieldInfo.Value.Item3.Item1, shieldInfo.Value.Item3.Item2, new RayD(p.Beam.From, p.Beam.Direction));
+                                    if (target.IsProjectile && Vector3D.Transform(target.Projectile.Position, shieldInfo.Value.Item3.Item1).LengthSquared() <= 1)
+                                        projetileInShield = true;
+
+                                    var shieldIntersect = dist != null && (dist.Value < p.Beam.Length || info.EwarActive);
+                                    info.ShieldKeepBypass = shieldIntersect;
+                                    if (shieldIntersect && !info.ShieldBypassed)
                                     {
 
-                                        var faceInfo = Session.SApi.GetFaceInfo(shieldInfo.Value.Item1, hitPos);
-                                        var modifiedBypassMod = ((1 - aConst.ShieldDamageBypassMod) + faceInfo.Item5);
-                                        var validRange = modifiedBypassMod >= 0 && modifiedBypassMod <= 1 || faceInfo.Item1;
-                                        var notSupressed = validRange && modifiedBypassMod < 1 && faceInfo.Item5 < 1;
-                                        var bypassAmmo = shieldByPass && notSupressed;
-                                        var bypass = bypassAmmo || faceInfo.Item1;
+                                        hitEntity = HitEntityPool.Get();
+                                        hitEntity.EventType = Shield;
+                                        var hitPos = p.Beam.From + (p.Beam.Direction * dist.Value);
+                                        hitEntity.HitPos = p.Beam.From + (p.Beam.Direction * dist.Value);
+                                        hitEntity.HitDist = dist;
+                                        if (shieldInfo.Value.Item2.Item2)
+                                        {
 
-                                        info.ShieldResistMod = faceInfo.Item4;
+                                            var faceInfo = Session.SApi.GetFaceInfo(shieldInfo.Value.Item1, hitPos);
+                                            var modifiedBypassMod = ((1 - aConst.ShieldDamageBypassMod) + faceInfo.Item5);
+                                            var validRange = modifiedBypassMod >= 0 && modifiedBypassMod <= 1 || faceInfo.Item1;
+                                            var notSupressed = validRange && modifiedBypassMod < 1 && faceInfo.Item5 < 1;
+                                            var bypassAmmo = shieldByPass && notSupressed;
+                                            var bypass = bypassAmmo || faceInfo.Item1;
 
-                                        if (bypass)
+                                            info.ShieldResistMod = faceInfo.Item4;
+
+                                            if (bypass)
+                                            {
+                                                info.ShieldBypassed = true;
+                                                modifiedBypassMod = bypassAmmo && faceInfo.Item1 ? 0f : modifiedBypassMod;
+                                                info.ShieldBypassMod = bypassAmmo ? modifiedBypassMod : 0.15f;
+                                            }
+                                            else p.Info.ShieldBypassMod = 1f;
+                                        }
+                                        else if (shieldByPass)
                                         {
                                             info.ShieldBypassed = true;
-                                            modifiedBypassMod = bypassAmmo && faceInfo.Item1 ? 0f : modifiedBypassMod;
-                                            info.ShieldBypassMod = bypassAmmo ? modifiedBypassMod : 0.15f;
+                                            info.ShieldResistMod = 1f;
+                                            info.ShieldBypassMod = aConst.ShieldDamageBypassMod;
                                         }
-                                        else p.Info.ShieldBypassMod = 1f;
                                     }
-                                    else if (shieldByPass)
-                                    {
-                                        info.ShieldBypassed = true;
-                                        info.ShieldResistMod = 1f;
-                                        info.ShieldBypassMod = aConst.ShieldDamageBypassMod;
-                                    }
+                                    else continue;
                                 }
-                                else continue;
                             }
+                            else
+                                iShield = shieldInfo.Value.Item1;
                         }
                     }
 
@@ -377,7 +382,13 @@ namespace CoreSystems.Projectiles
                                 grid.RayCastCells(p.Beam.From, p.Beam.To, hitEntity.Vector3ICache, null, true, true);
 
                             if (!offensiveEwar)
+                            {
+
+                                if (iShield != null && grid != null && grid.IsSameConstructAs(iShield.CubeGrid))
+                                    hitEntity.DamageMulti = 4;
+
                                 hitEntity.EventType = Grid;
+                            }
                             else if (!info.EwarAreaPulse)
                                 hitEntity.EventType = Effect;
                             else

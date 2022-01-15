@@ -414,6 +414,13 @@ namespace CoreSystems
                         w.LockOnFireState = shootRequest && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shootRequest && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
                         var shoot = shotReady && ai.CanShoot && (!w.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
+                        /*
+                        var playerControlled = wValues.State.PlayerId == PlayerId;
+                        if (playerControlled && !w.Target.HasTarget)
+                            Log.Line($"no target");
+                        else if (playerControlled && !focus.EntityIsFocused(ai, w.Target.TargetEntity.GetTopMostParent()))
+                            Log.Line($"invalid target");
+                        */
                         if (shoot) {
 
                             if (MpActive && HandlesInput && !ManualShot)

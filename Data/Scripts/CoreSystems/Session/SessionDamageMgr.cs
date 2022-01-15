@@ -299,8 +299,9 @@ namespace CoreSystems
 
             //_destroyedSlims.Clear();
             _destroyedSlimsClient.Clear();
-            var directDmgGlobal = Settings.Enforcement.DirectDamageModifer;
-            var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer;
+
+            var directDmgGlobal = Settings.Enforcement.DirectDamageModifer * hitEnt.DamageMulti;
+            var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer * hitEnt.DamageMulti;
             var sync = MpActive && (DedicatedServer || IsServer);
             float gridDamageModifier = grid.GridGeneralDamageModifier;
             IMySlimBlock rootBlock = null;

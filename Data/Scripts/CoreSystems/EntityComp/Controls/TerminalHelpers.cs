@@ -150,7 +150,7 @@ namespace CoreSystems.Control
         {
 
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.HasGuidanceToggle;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.HasGuidance;
         }
 
         internal static bool TrackMeteors(IMyTerminalBlock block)
@@ -190,7 +190,7 @@ namespace CoreSystems.Control
         internal static bool HasTracking(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (comp.HasTracking || comp.HasRequireTarget);
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (comp.HasTracking || comp.HasGuidance);
         }
 
         internal static bool CanBeArmed(IMyTerminalBlock block)

@@ -108,6 +108,9 @@ namespace CoreSystems.Platform
 
         internal static void LeadTarget(Weapon weapon, MyEntity target, out Vector3D targetPos, out bool couldHit, out bool willHit)
         {
+            if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
+                weapon.UpdatePivotPos();
+
             var vel = target.Physics.LinearVelocity;
             var accel = target.Physics.LinearAcceleration;
             var trackingWeapon = weapon.TurretController || weapon.Comp.TrackingWeapon == null ? weapon : weapon.Comp.TrackingWeapon;
@@ -154,7 +157,8 @@ namespace CoreSystems.Platform
                     Vector3D.Rotate(ref constraintVector, ref weapon.WeaponConstMatrix, out constraintVector);
 
                     var testRay = new RayD(ref weapon.MyPivotPos, ref constraintVector);
-                    if (obb.Intersects(ref testRay) != null) canTrack = true;
+                    if (obb.Intersects(ref testRay) != null)
+                        canTrack = true;
 
                     if (weapon.Comp.Debug)
                         weapon.LimitLine = new LineD(weapon.MyPivotPos, weapon.MyPivotPos + (constraintVector * weapon.ActiveAmmoDef.AmmoDef.Const.MaxTrajectory));
@@ -758,6 +762,9 @@ namespace CoreSystems.Platform
         }
         private bool RayCheckTest()
         {
+            if (PosChangedTick != Comp.Session.Tick)
+                UpdatePivotPos();
+
             var scopeInfo = GetScope.Info;
             var trackingCheckPosition = ScopeDistToCheckPos > 0 ? scopeInfo.Position - (scopeInfo.Direction * ScopeDistToCheckPos) : scopeInfo.Position;
             

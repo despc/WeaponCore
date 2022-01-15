@@ -694,7 +694,7 @@ namespace CoreSystems.Platform
         internal void SetupWeaponUi(Weapon w)
         {
             var ui = w.System.Values.HardPoint.Ui;
-            w.Comp.HasGuidanceToggle = w.Comp.HasGuidanceToggle || ui.ToggleGuidance;
+            w.Comp.HasGuidance = w.Comp.HasGuidance || w.System.HasGuidedAmmo;
             //w.BaseComp.HasStrengthSlider = w.BaseComp.HasStrengthSlider || ui.DamageModifier; // this has exploits
             w.Comp.HasRofSlider = w.Comp.HasRofSlider || ui.RateOfFire;
             w.BaseComp.CanOverload = w.BaseComp.CanOverload || ui.EnableOverload ;
