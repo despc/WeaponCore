@@ -201,6 +201,8 @@ namespace CoreSystems.Platform
         internal bool CheckInventorySystem = true;
         internal bool PlayingHardPointSound;
         internal bool RequiresTarget;
+        internal bool VanillaTracking;
+
         internal bool ShotReady
         {
             get
@@ -381,6 +383,8 @@ namespace CoreSystems.Platform
             FuckMyLife();
             
             AiOnlyWeapon = Comp.TypeSpecific != CoreComponent.CompTypeSpecific.VanillaTurret || (Comp.TypeSpecific == CoreComponent.CompTypeSpecific.VanillaTurret && (azimuthPartName != "MissileTurretBase1" && elevationPartName != "MissileTurretBarrels" && azimuthPartName != "InteriorTurretBase1" && elevationPartName != "InteriorTurretBase2" && azimuthPartName != "GatlingTurretBase1" && elevationPartName != "GatlingTurretBase2"));
+
+            VanillaTracking = TurretAttached && !AiOnlyWeapon;
 
             CriticalReaction = Comp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom && System.Values.HardPoint.HardWare.CriticalReaction.Enable;
 

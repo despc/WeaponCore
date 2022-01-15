@@ -120,15 +120,34 @@ namespace CoreSystems.Platform
             }
         }
         
-        internal void UpdatePivotPos()
+        internal void UpdatePivotPos(bool force = false, bool positionEvent = false)
         {
             if (PosChangedTick == Comp.Session.Tick || Comp.IsBlock && AzimuthPart?.Parent == null || ElevationPart?.Entity == null || MuzzlePart?.Entity == null || Comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
             PosChangedTick = Comp.Session.Tick;
-            var azimuthMatrix = AzimuthPart.Entity.PositionComp.WorldMatrixRef;
-            var elevationMatrix = ElevationPart.Entity.PositionComp.WorldMatrixRef;
-            var weaponCenter = MuzzlePart.Entity.PositionComp.WorldAABB.Center;
+
+            var aLocalMatrix = AzimuthPart.Entity.PositionComp.LocalMatrixRef;
+            var aParent = AzimuthPart.Entity.Parent.WorldMatrix;
+            MatrixD azimuthMatrix;
+            MatrixD.Multiply(ref aLocalMatrix, ref aParent, out azimuthMatrix);
+
+            var eLocalMatrix = ElevationPart.Entity.PositionComp.LocalMatrixRef;
+            var eParent = ElevationPart.Entity.Parent.WorldMatrix;
+            MatrixD elevationMatrix;
+            MatrixD.Multiply(ref eLocalMatrix, ref eParent, out elevationMatrix);
+
+            var mLocalMatrix = MuzzlePart.Entity.PositionComp.LocalMatrixRef;
+            var mParent = MuzzlePart.Entity.Parent.WorldMatrix;
+            MatrixD muzzleMatrix;
+            MatrixD.Multiply(ref mLocalMatrix, ref mParent, out muzzleMatrix);
+            //var weaponCenter =  muzzleMatrix.Translation;
+            //var azimuthMatrix = AzimuthPart.Entity.PositionComp.WorldMatrixRef;
+            //var elevationMatrix = ElevationPart.Entity.PositionComp.WorldMatrixRef;
+            var localCenter = MuzzlePart.Entity.PositionComp.LocalAABB.Center;
+            //Log.Line($"{localCenter} - {Vector3D.Transform(localCenter, muzzleMatrix)}[{MuzzlePart.Entity.PositionComp.WorldAABB.Center}]");
+            Vector3D weaponCenter;
+            Vector3D.Transform(ref localCenter, ref muzzleMatrix, out weaponCenter);
             BarrelOrigin = weaponCenter;
-            
             var centerTestPos = azimuthMatrix.Translation;
             MyPivotUp = azimuthMatrix.Up;
             MyPivotFwd = elevationMatrix.Forward;
@@ -174,7 +193,7 @@ namespace CoreSystems.Platform
 
                 MyPivotPos += offSet;
             }
-            
+
             if (!Comp.Debug) return;
 
             MyCenterTestLine = new LineD(centerTestPos, centerTestPos + (MyPivotUp * 20));

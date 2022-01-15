@@ -94,7 +94,7 @@ namespace CoreSystems.Platform
                 for (int i = 0; i < Collection.Count; i++)
                 {
                     var w = Collection[i];
-                        w.UpdatePivotPos();
+                        w.UpdatePivotPos(true);
 
                     if (Session.IsClient)
                         w.Target.ClientDirty = true;

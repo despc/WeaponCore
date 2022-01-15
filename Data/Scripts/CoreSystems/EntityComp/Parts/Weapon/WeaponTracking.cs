@@ -18,6 +18,9 @@ namespace CoreSystems.Platform
     {
         internal static bool CanShootTarget(Weapon weapon, ref Vector3D targetCenter, Vector3D targetLinVel, Vector3D targetAccel, out Vector3D targetPos, bool checkSelfHit = false, MyEntity target = null)
         {
+            if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
+                weapon.UpdatePivotPos();
+
             var prediction = weapon.System.Values.HardPoint.AimLeadingPrediction;
             var trackingWeapon = weapon.TurretController ? weapon : weapon.Comp.TrackingWeapon;
             if (Vector3D.IsZero(targetLinVel, 5E-03)) targetLinVel = Vector3.Zero;
@@ -109,7 +112,7 @@ namespace CoreSystems.Platform
         internal static void LeadTarget(Weapon weapon, MyEntity target, out Vector3D targetPos, out bool couldHit, out bool willHit)
         {
             if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
-                weapon.UpdatePivotPos();
+                weapon.UpdatePivotPos(true);
 
             var vel = target.Physics.LinearVelocity;
             var accel = target.Physics.LinearAcceleration;
@@ -171,6 +174,10 @@ namespace CoreSystems.Platform
 
         internal static bool CanShootTargetObb(Weapon weapon, MyEntity entity, Vector3D targetLinVel, Vector3D targetAccel, out Vector3D targetPos)
         {
+
+            if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
+                weapon.UpdatePivotPos();
+
             var prediction = weapon.System.Values.HardPoint.AimLeadingPrediction;
             var trackingWeapon = weapon.TurretController ? weapon : weapon.Comp.TrackingWeapon;
 
@@ -230,6 +237,10 @@ namespace CoreSystems.Platform
 
         internal static bool TargetAligned(Weapon weapon, Target target, out Vector3D targetPos)
         {
+
+            if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
+                weapon.UpdatePivotPos();
+
             Vector3 targetLinVel = Vector3.Zero;
             Vector3 targetAccel = Vector3.Zero;
             Vector3D targetCenter;
@@ -358,7 +369,7 @@ namespace CoreSystems.Platform
             var isTracking = false;
 
             if (readyToTrack && w.PosChangedTick != w.Comp.Session.Tick)
-                    w.UpdatePivotPos();
+                    w.UpdatePivotPos(true);
 
             if (readyToTrack && baseData.State.Control != ProtoWeaponState.ControlMode.Camera)
             {

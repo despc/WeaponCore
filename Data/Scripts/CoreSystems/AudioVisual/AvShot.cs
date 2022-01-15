@@ -1094,12 +1094,35 @@ namespace CoreSystems.Support
             EndState = new AvClose();
 
             if (FireEmitter != null)
-                System.Session.SoundsToClean.Add(new Session.CleanSound { Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
-            
+            {
+                var loop = TravelEmitter.Loop;
+
+                if (loop)
+                {
+                    FireEmitter.StopSound(true);
+                    FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                }
+                else
+                    FireEmitter.StopSound(false);
+
+                //System.Session.SoundsToClean.Add(new Session.CleanSound { Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+            }
+
             if (TravelEmitter != null) {
                 
                 AmmoSound = false;
-                System.Session.SoundsToClean.Add(new Session.CleanSound { Force = true, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
+
+                var loop = TravelEmitter.Loop;
+
+                if (loop)
+                {
+                    TravelEmitter.StopSound(true);
+                    TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                }
+                else
+                    TravelEmitter.StopSound(false);
+
+                //System.Session.SoundsToClean.Add(new Session.CleanSound { Force = true, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
             }
 
             if (AmmoEffect != null)
