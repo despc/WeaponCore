@@ -893,6 +893,7 @@ namespace CoreSystems
             internal uint SpawnTick;
             internal bool Force;
             internal bool DelayedReturn;
+            internal bool JustClean;
         }
 
         public class WeaponAmmoMoveRequest

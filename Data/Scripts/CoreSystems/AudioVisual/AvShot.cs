@@ -801,7 +801,7 @@ namespace CoreSystems.Support
                 }
 
 
-                var hitSound = AmmoDef.Const.HitSound && (HitSoundActive && (distToCameraSqr < AmmoDef.Const.HitSoundDistSqr || !LastHitShield || AmmoDef.AmmoAudio.HitPlayShield));
+                var hitSound = AmmoDef.Const.HitSound && HitSoundActive && distToCameraSqr < AmmoDef.Const.HitSoundDistSqr && (!LastHitShield || AmmoDef.AmmoAudio.HitPlayShield);
                 if (hitSound) {
 
                     MySoundPair pair;
@@ -1031,7 +1031,7 @@ namespace CoreSystems.Support
                     var c = a.Const;
                     var hit = System.Session.Tick - Hit.HitTick <= 1 && !MyUtils.IsZero(Hit.SurfaceHit) && Hit.Entity != null;
                     var pos = hit ? Hit.SurfaceHit : TracerFront;
-                    if (!a.AreaOfDamage.EndOfLife.NoSound)
+                    if (a.Const.DetonationSound && Vector3D.DistanceSquared(System.Session.CameraPos, pos) < a.Const.DetonationSoundDistSqr)
                     {
                         var pool = c.CustomSoundPairs;
                         var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.Const.DetSoundStr, false);
@@ -1109,20 +1109,22 @@ namespace CoreSystems.Support
             }
 
             if (TravelEmitter != null) {
+                if (AmmoSound)
+                {
+                    var loop = TravelEmitter.Loop;
+                    if (loop)
+                    {
+                        TravelEmitter.StopSound(true);
+                        TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                    }
+                    else
+                        TravelEmitter.StopSound(false);
+                }
+                
+                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
                 
                 AmmoSound = false;
 
-                var loop = TravelEmitter.Loop;
-
-                if (loop)
-                {
-                    TravelEmitter.StopSound(true);
-                    TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
-                }
-                else
-                    TravelEmitter.StopSound(false);
-
-                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
             }
 
             if (AmmoEffect != null)
