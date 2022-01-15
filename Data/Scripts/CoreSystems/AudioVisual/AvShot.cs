@@ -1095,7 +1095,7 @@ namespace CoreSystems.Support
 
             if (FireEmitter != null)
             {
-                var loop = TravelEmitter.Loop;
+                var loop = FireEmitter.Loop;
 
                 if (loop)
                 {
