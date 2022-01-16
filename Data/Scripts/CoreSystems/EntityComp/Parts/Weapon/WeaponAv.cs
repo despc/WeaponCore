@@ -50,17 +50,24 @@ namespace CoreSystems.Platform
             }
         }
 
-        public void StopShootingAv(bool power)
+        public void StopShootingAv(bool burst)
         {
-            if (System.Values.HardPoint.Audio.FireSoundEndDelay > 0)
-                Comp.Session.FutureEvents.Schedule(StopFiringSound, null, System.Values.HardPoint.Audio.FireSoundEndDelay);
-            else StopFiringSound(false);
-            StopPreFiringSound();
-            if (AvCapable && RotateEmitter != null && RotateEmitter.IsPlaying) StopRotateSound();
-            if (!power) StopRotateSound();
+            var stopSounds = !burst || !System.WConst.FireSoundNoBurst;
+            
+            if (System.WConst.FireSoundEndDelay > 0 && stopSounds)
+                Comp.Session.FutureEvents.Schedule(StopFiringSound, null, System.WConst.FireSoundEndDelay);
+            else if (stopSounds) StopFiringSound(false);
 
-            if (HasHardPointSound)
-                StopHardPointSound();
+            if (stopSounds)
+            {
+                if (AvCapable && RotateEmitter != null && RotateEmitter.IsPlaying) StopRotateSound();
+                if (HasHardPointSound)
+                    StopHardPointSound();
+            }
+
+            BurstAvDelay = !stopSounds;
+
+            StopPreFiringSound();
 
             StopBarrelAvTick = Comp.Session.Tick;
 

@@ -114,7 +114,7 @@ namespace CoreSystems.Platform
 
         public void StartShooting()
         {
-            if (FiringEmitter != null) StartFiringSound();
+            if (FiringEmitter != null && !BurstAvDelay) StartFiringSound();
             if (!IsShooting && !System.DesignatorWeapon)
             {
                 EventTriggerStateChanged(EventTriggers.StopFiring, false);
@@ -125,7 +125,7 @@ namespace CoreSystems.Platform
             IsShooting = true;
         }
 
-        public void StopShooting(bool power = true)
+        public void StopShooting(bool burst = false)
         {
             if ((IsShooting || PreFired) && !System.DesignatorWeapon)
             {
@@ -135,7 +135,7 @@ namespace CoreSystems.Platform
             }
 
             if (System.Session.HandlesInput)
-                StopShootingAv(power);
+                StopShootingAv(burst);
 
             ResetShotState();
 

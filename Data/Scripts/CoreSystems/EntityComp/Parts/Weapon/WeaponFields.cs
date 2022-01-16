@@ -62,6 +62,7 @@ namespace CoreSystems.Platform
         private uint _spinUpTick;
         private uint _ticksBeforeSpinUp;
 
+        internal bool BurstAvDelay;
         internal bool HeatLoopRunning;
         internal bool PreFired;
         internal bool FinishShots;

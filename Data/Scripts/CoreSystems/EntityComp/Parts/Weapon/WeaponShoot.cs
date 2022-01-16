@@ -320,7 +320,7 @@ namespace CoreSystems.Platform
                 FinishShots = true;
 
             if (burstReset || genericReset)
-                StopShooting();
+                StopShooting(burstReset);
         }
 
         private void GiveUpTarget()

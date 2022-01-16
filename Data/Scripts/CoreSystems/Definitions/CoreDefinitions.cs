@@ -507,6 +507,7 @@ namespace CoreSystems.Support
                 [ProtoMember(6)] internal bool FiringSoundPerShot;
                 [ProtoMember(7)] internal string PreFiringSound;
                 [ProtoMember(8)] internal uint FireSoundEndDelay;
+                [ProtoMember(9)] internal bool FireSoundNoBurst;
             }
 
             [ProtoContract]
