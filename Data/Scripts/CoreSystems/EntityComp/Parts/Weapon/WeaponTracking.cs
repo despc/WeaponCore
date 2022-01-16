@@ -112,7 +112,7 @@ namespace CoreSystems.Platform
         internal static void LeadTarget(Weapon weapon, MyEntity target, out Vector3D targetPos, out bool couldHit, out bool willHit)
         {
             if (weapon.PosChangedTick != weapon.Comp.Session.Tick)
-                weapon.UpdatePivotPos(true);
+                weapon.UpdatePivotPos();
 
             var vel = target.Physics.LinearVelocity;
             var accel = target.Physics.LinearAcceleration;
@@ -369,7 +369,7 @@ namespace CoreSystems.Platform
             var isTracking = false;
 
             if (readyToTrack && w.PosChangedTick != w.Comp.Session.Tick)
-                    w.UpdatePivotPos(true);
+                    w.UpdatePivotPos();
 
             if (readyToTrack && baseData.State.Control != ProtoWeaponState.ControlMode.Camera)
             {

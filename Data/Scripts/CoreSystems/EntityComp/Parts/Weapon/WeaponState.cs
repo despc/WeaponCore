@@ -15,7 +15,7 @@ namespace CoreSystems.Platform
             try
             {
                 if (PosChangedTick != Comp.Session.Tick)
-                    UpdatePivotPos(true, true);
+                    UpdatePivotPos();
 
                 if (Comp.UserControlled) {
                     ReturingHome = false;

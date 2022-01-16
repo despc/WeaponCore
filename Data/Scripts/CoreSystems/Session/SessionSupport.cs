@@ -418,7 +418,7 @@ namespace CoreSystems
                 var age = Tick - sound.SpawnTick;
                 var delayedClean = sound.DelayedReturn && age > 600;
                 var justClean = sound.JustClean;
-                if (justClean || force || (age > 4 && (sound.Force || !sound.Emitter.IsPlaying)) || delayedClean)
+                if (justClean || force || !sound.Emitter.IsPlaying || (age > 4 && sound.Force || delayedClean))
                 {
                     var loop = sound.Emitter.Loop;
                     if (!justClean && !delayedClean && (sound.Force || loop)) {

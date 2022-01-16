@@ -443,7 +443,6 @@ namespace CoreSystems.Support
             var extStart = Back && firstStep && VisualLength < ShortStepSize;
             Vector3D frontPos;
             Vector3D backPos;
-
             var stopVel = shrinking || hit;
             var velStep = !stopVel ? ShootVelStep : Vector3D.Zero;
 
@@ -479,7 +478,7 @@ namespace CoreSystems.Support
                 {
                     var extend = extEnd && i == idxStart;
                     g.Parent = GlowSteps[i - 1];
-                    g.Line = new LineD(extend ? TracerFront + velStep : g.Parent.TailPos += velStep, extend ? g.Parent.TailPos : g.TailPos);
+                    g.Line = new LineD(extend ? g.Parent.TailPos: g.Parent.TailPos += velStep, extend ? TracerFront + velStep : g.TailPos);
                 }
                 else if (i != idxStart)
                     g.Line = new LineD(g.Line.From + velStep, g.TailPos);
@@ -1076,6 +1075,8 @@ namespace CoreSystems.Support
                     FireEmitter.StopSound(false);
 
                 System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+
+                FireEmitter = null;
             }
 
             if (TravelEmitter != null)
@@ -1095,11 +1096,8 @@ namespace CoreSystems.Support
                 System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
 
                 AmmoSound = false;
-
+                TravelEmitter = null;
             }
-
-            if (AmmoEffect != null)
-                DisposeAmmoEffect(true, false);
 
             if (PrimeEntity != null && PrimeEntity.InScene)
             {
@@ -1112,7 +1110,6 @@ namespace CoreSystems.Support
                 TriggerEntity.InScene = false;
                 TriggerEntity.Render.RemoveRenderObjects();
             }
-
 
             MarkForClose = true;
         }
@@ -1143,6 +1140,54 @@ namespace CoreSystems.Support
             // Reset only vars that are not always set
             Hit = new Hit();
             EndState = new AvClose();
+
+            if (FireEmitter != null)
+            {
+                var loop = FireEmitter.Loop;
+
+                if (loop)
+                {
+                    FireEmitter.StopSound(true);
+                    FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                }
+                else
+                    FireEmitter.StopSound(false);
+
+                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+            }
+
+            if (TravelEmitter != null) {
+                if (AmmoSound)
+                {
+                    var loop = TravelEmitter.Loop;
+                    if (loop)
+                    {
+                        TravelEmitter.StopSound(true);
+                        TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                    }
+                    else
+                        TravelEmitter.StopSound(false);
+                }
+                
+                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
+                
+                AmmoSound = false;
+            }
+
+            if (AmmoEffect != null)
+                DisposeAmmoEffect(true, false);
+
+            if (PrimeEntity != null && PrimeEntity.InScene)
+            {
+                PrimeEntity.InScene = false;
+                PrimeEntity.Render.RemoveRenderObjects();
+            }
+
+            if (Triggered && TriggerEntity != null && TriggerEntity.InScene)
+            {
+                TriggerEntity.InScene = false;
+                TriggerEntity.Render.RemoveRenderObjects();
+            }
 
             HitVelocity = Vector3D.Zero;
             TracerBack = Vector3D.Zero;

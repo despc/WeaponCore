@@ -120,7 +120,7 @@ namespace CoreSystems.Platform
             }
         }
         
-        internal void UpdatePivotPos(bool force = false, bool positionEvent = false)
+        internal void UpdatePivotPos()
         {
             if (PosChangedTick == Comp.Session.Tick || Comp.IsBlock && AzimuthPart?.Parent == null || ElevationPart?.Entity == null || MuzzlePart?.Entity == null || Comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 

@@ -661,7 +661,7 @@ namespace CoreSystems.Platform
                         if (weapon.AnimationsSet.ContainsKey(EventTriggers.TurnOff))
                             weapon.Comp.Session.FutureEvents.Schedule(weapon.TurnOffAv, null, 4);
                 }
-                weapon.UpdatePivotPos(true);
+                weapon.UpdatePivotPos();
             }
         }
 

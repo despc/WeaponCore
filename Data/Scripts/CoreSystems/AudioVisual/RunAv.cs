@@ -66,7 +66,7 @@ namespace CoreSystems.Support
             {
                 var av = AvShots[i];
 
-                var refreshed = av.LastTick == Session.Tick;
+                var refreshed = av.LastTick == Session.Tick && !av.MarkForClose;
                 if (refreshed)
                 {
                     if (av.PrimeEntity != null)
