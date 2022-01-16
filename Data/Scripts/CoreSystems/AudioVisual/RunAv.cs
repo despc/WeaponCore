@@ -546,12 +546,5 @@ namespace CoreSystems.Support
             internal Vector3D Position;
             internal bool Hit;
         }
-
-        internal struct DetonationRequest
-        {
-            internal WeaponDefinition.AmmoDef AmmoDef;
-            internal Vector3D Position;
-            internal MyEntity Entity;
-        }
     }
 }
