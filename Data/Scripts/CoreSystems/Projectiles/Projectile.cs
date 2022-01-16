@@ -567,6 +567,40 @@ namespace CoreSystems.Projectiles
 
         internal void RunDrone(MyEntity targetEnt)
         {
+            Vector3D newVel = new Vector3D();
+            var aConst = Info.AmmoDef.Const;
+            var tracking = aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr;
+            if (tracking)
+            {
+                var validEntity = !Info.Target.TargetEntity?.MarkedForClose ?? false;
+
+                var timeSlot = (Info.Age + SmartSlot) % 30 == 0;
+                var overMaxTargets = HadTarget && NewTargets > aConst.MaxTargets && aConst.MaxTargets != 0;
+
+                var fake = Info.Target.IsFakeTarget;
+
+                var validTarget = fake || Info.Target.IsProjectile || validEntity && !overMaxTargets;
+
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsShrapnel);
+
+                var gaveUpChase = !fake && Info.Age - ChaseAge > aConst.MaxChaseTime && HadTarget;
+                var isZombie = aConst.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
+                var seekNewTarget = timeSlot && HadTarget && !validEntity && !overMaxTargets;
+
+                var needsTarget = (PickTarget && timeSlot || seekNewTarget || gaveUpChase && validTarget || isZombie || seekFirstTarget);
+
+                if (needsTarget && NewTarget() || validTarget)
+                    TrackSmartTarget(fake);
+                else if (!SmartRoam())
+                    return;
+
+                ComputeSmartVelocity(out newVel);
+
+            }
+
+            UpdateSmartVelocity(newVel, tracking);
+
+            /*
             if (targetEnt != null)
             {
                 var topEnt = targetEnt.GetTopMostParent();
@@ -585,8 +619,196 @@ namespace CoreSystems.Projectiles
                 }
                 else
                     Velocity = Vector3D.Normalize(targetEnt.PositionComp.WorldAABB.Center - Position) * MaxSpeed;
+
             }
             else Log.Line($"drone target is null");
+            */
+
+        }
+
+        private void OffsetSmartVelocity(ref Vector3D commandedAccel)
+        {
+            var smarts = Info.AmmoDef.Trajectory.Smarts;
+            var offsetTime = smarts.OffsetTime;
+
+            if ((Info.Age % offsetTime == 0))
+            {
+                double angle = Info.Random.NextDouble() * MathHelper.TwoPi;
+                var up = Vector3D.CalculatePerpendicularVector(Info.Direction);
+                var right = Vector3D.Cross(Info.Direction, up);
+                OffsetDir = Math.Sin(angle) * up + Math.Cos(angle) * right;
+                OffsetDir *= smarts.OffsetRatio;
+            }
+
+            commandedAccel += AccelInMetersPerSec * OffsetDir;
+            commandedAccel = Vector3D.Normalize(commandedAccel) * AccelInMetersPerSec;
+
+        }
+
+        private void ComputeSmartVelocity(out Vector3D newVel)
+        {
+            var smarts = Info.AmmoDef.Trajectory.Smarts;
+
+            var missileToTarget = Vector3D.Normalize(PrevTargetPos - Position);
+            var relativeVelocity = PrevTargetVel - Velocity;
+            var normalMissileAcceleration = (relativeVelocity - (relativeVelocity.Dot(missileToTarget) * missileToTarget)) * smarts.Aggressiveness;
+
+            Vector3D commandedAccel;
+            if (Vector3D.IsZero(normalMissileAcceleration)) commandedAccel = (missileToTarget * AccelInMetersPerSec);
+            else
+            {
+
+                var maxLateralThrust = AccelInMetersPerSec * Math.Min(1, Math.Max(0, Info.AmmoDef.Const.MaxLateralThrust));
+                if (normalMissileAcceleration.LengthSquared() > maxLateralThrust * maxLateralThrust)
+                {
+                    Vector3D.Normalize(ref normalMissileAcceleration, out normalMissileAcceleration);
+                    normalMissileAcceleration *= maxLateralThrust;
+                }
+                commandedAccel = Math.Sqrt(Math.Max(0, AccelInMetersPerSec * AccelInMetersPerSec - normalMissileAcceleration.LengthSquared())) * missileToTarget + normalMissileAcceleration;
+            }
+
+            if (smarts.OffsetTime > 0)
+                OffsetSmartVelocity(ref commandedAccel);
+
+            newVel = Velocity + (commandedAccel * StepConst);
+            var accelDir = commandedAccel / AccelInMetersPerSec;
+
+            AccelDir = accelDir;
+
+            Vector3D.Normalize(ref newVel, out Info.Direction);
+        }
+
+        private bool SmartRoam()
+        {
+            var smarts = Info.AmmoDef.Trajectory.Smarts;
+            var roam = smarts.Roam;
+            PrevTargetPos = roam ? PredictedTargetPos : Position + (Info.Direction * Info.MaxTrajectory);
+
+            if (ZombieLifeTime++ > Info.AmmoDef.Const.TargetLossTime && !smarts.KeepAliveAfterTargetLoss && (smarts.NoTargetExpire || HadTarget))
+            {
+                DistanceToTravelSqr = Info.DistanceTraveled * Info.DistanceTraveled;
+                EarlyEnd = true;
+            }
+
+            if (roam && Info.Age - LastOffsetTime > 300 && HadTarget)
+            {
+
+                double dist;
+                Vector3D.DistanceSquared(ref Position, ref PrevTargetPos, out dist);
+                if (dist < Info.AmmoDef.Const.SmartOffsetSqr + VelocityLengthSqr && Vector3.Dot(Info.Direction, Position - PrevTargetPos) > 0)
+                {
+
+                    OffSetTarget(true);
+                    PrevTargetPos += TargetOffSet;
+                    PredictedTargetPos = PrevTargetPos;
+                }
+            }
+            else if (MineSeeking)
+            {
+                ResetMine();
+                return false;
+            }
+
+            return true;
+        }
+        private void UpdateSmartVelocity(Vector3D newVel, bool tracking)
+        {
+
+            if (!tracking)
+                Velocity += (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
+            VelocityLengthSqr = newVel.LengthSquared();
+
+            if (VelocityLengthSqr > MaxSpeedSqr) newVel = Info.Direction * MaxSpeed;
+            Velocity = newVel;
+        }
+
+        private void TrackSmartTarget(bool fake)
+        {
+            var aConst = Info.AmmoDef.Const;
+            HadTarget = true;
+            if (ZombieLifeTime > 0) {
+                ZombieLifeTime = 0;
+                OffSetTarget();
+            }
+
+            var targetPos = Vector3D.Zero;
+
+            Ai.FakeTarget.FakeWorldTargetInfo fakeTargetInfo = null;
+
+            if (fake && Info.DummyTargets != null) {
+                var fakeTarget = Info.DummyTargets.PaintedTarget.EntityId != 0 ? Info.DummyTargets.PaintedTarget : Info.DummyTargets.ManualTarget;
+                fakeTargetInfo = fakeTarget.LastInfoTick != Info.System.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
+                targetPos = fakeTargetInfo.WorldPosition;
+            }
+            else if (Info.Target.IsProjectile)
+            {
+                targetPos = Info.Target.Projectile.Position;
+            }
+            else if (Info.Target.TargetEntity != null)
+            {
+                targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
+            }
+
+            if (aConst.TargetOffSet && WasTracking) {
+
+                if (Info.Age - LastOffsetTime > 300) {
+
+                    double dist;
+                    Vector3D.DistanceSquared(ref Position, ref targetPos, out dist);
+                    if (dist < aConst.SmartOffsetSqr + VelocityLengthSqr && Vector3.Dot(Info.Direction, Position - targetPos) > 0)
+                        OffSetTarget();
+                }
+                targetPos += TargetOffSet;
+            }
+
+            PredictedTargetPos = targetPos;
+
+            var physics = Info.Target.TargetEntity?.Physics ?? Info.Target.TargetEntity?.Parent?.Physics;
+            if (!(Info.Target.IsProjectile || fake) && (physics == null || Vector3D.IsZero(targetPos)))
+            {
+                PrevTargetPos = PredictedTargetPos;
+            }
+            else
+            {
+                PrevTargetPos = targetPos;
+
+            }
+
+            var tVel = Vector3.Zero;
+            if (fake && fakeTargetInfo != null)
+            {
+                tVel = fakeTargetInfo.LinearVelocity;
+            }
+            else if (Info.Target.IsProjectile)
+            {
+                tVel = Info.Target.Projectile.Velocity;
+            }
+            else if (physics != null)
+            {
+                tVel = physics.LinearVelocity;
+            }
+
+            if (aConst.TargetLossDegree > 0 && Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr)
+                SmartTargetLoss(targetPos);
+
+            PrevTargetVel = tVel;
+        }
+
+        private void SmartTargetLoss(Vector3D targetPos)
+        {
+
+            if (WasTracking && (Info.System.Session.Tick20 || Vector3.Dot(Info.Direction, Position - targetPos) > 0) || !WasTracking)
+            {
+                var targetDir = -Info.Direction;
+                var refDir = Vector3D.Normalize(Position - targetPos);
+                if (!MathFuncs.IsDotProductWithinTolerance(ref targetDir, ref refDir, Info.AmmoDef.Const.TargetLossDegree))
+                {
+                    if (WasTracking)
+                        PickTarget = true;
+                }
+                else if (!WasTracking)
+                    WasTracking = true;
+            }
         }
 
         internal void RunSmart()
