@@ -147,6 +147,7 @@ namespace CoreSystems.Projectiles
             var probability = ammoDef.AmmoGraphics.VisualProbability;
             EnableAv = !aConst.VirtualBeams && !session.DedicatedServer && DistanceFromCameraSqr <= session.SyncDistSqr && (probability >= 1 || probability >= MyUtils.GetRandomDouble(0.0f, 1f));
             ModelState = EntityState.None;
+            DroneStat = DroneStatus.Transit;
             LastEntityPos = Position;
             LastHitEntVel = null;
             Info.AvShot = null;
@@ -629,6 +630,191 @@ namespace CoreSystems.Projectiles
 
         }
 
+
+        internal void ActivateMine()
+        {
+            var ent = Info.Target.TargetEntity;
+            MineActivated = true;
+            AtMaxRange = false;
+            var targetPos = ent.PositionComp.WorldAABB.Center;
+            var deltaPos = targetPos - Position;
+            var targetVel = ent.Physics?.LinearVelocity ?? Vector3.Zero;
+            var deltaVel = targetVel - Vector3.Zero;
+            var timeToIntercept = MathFuncs.Intercept(deltaPos, deltaVel, DesiredSpeed);
+            var predictedPos = targetPos + (float)timeToIntercept * deltaVel;
+            PredictedTargetPos = predictedPos;
+            PrevTargetPos = predictedPos;
+            PrevTargetVel = targetVel;
+            LockedTarget = true;
+
+            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectFixed) return;
+            Vector3D.DistanceSquared(ref Info.Origin, ref predictedPos, out DistanceToTravelSqr);
+            Info.DistanceTraveled = 0;
+            Info.PrevDistanceTraveled = 0;
+
+            Info.Direction = Vector3D.Normalize(predictedPos - Position);
+            AccelDir = Info.Direction;
+            VelocityLengthSqr = 0;
+
+            MaxVelocity = (Info.Direction * DesiredSpeed);
+            MaxSpeed = MaxVelocity.Length();
+            MaxSpeedSqr = MaxSpeed * MaxSpeed;
+            AccelVelocity = (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
+
+            if (Info.AmmoDef.Const.AmmoSkipAccel)
+            {
+                Velocity = MaxVelocity;
+                VelocityLengthSqr = MaxSpeed * MaxSpeed;
+            }
+            else Velocity = AccelVelocity;
+
+            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
+            {
+
+                IsSmart = true;
+
+                if (IsSmart && Info.AmmoDef.Const.TargetOffSet && LockedTarget)
+                {
+                    OffSetTarget();
+                }
+                else
+                {
+                    TargetOffSet = Vector3D.Zero;
+                }
+            }
+
+            TravelMagnitude = Velocity * StepConst;
+        }
+
+        internal void RunDrone(MyEntity targetEnt)
+        {
+            Vector3D newVel = new Vector3D();
+            var aConst = Info.AmmoDef.Const;
+            var targetDist = Vector3D.Distance(PredictedTargetPos, Position);//Check for orbit range
+            var fragProx = Info.AmmoDef.Const.FragProximity;
+            var tracking = aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr;
+            var topEnt = targetEnt.GetTopMostParent();
+            if (targetEnt.MarkedForClose)
+                Log.Line($"entity is marked for close");
+            else if (topEnt.MarkedForClose)
+                Log.Line($"top entity is marked for close");
+
+            var topPos = topEnt.PositionComp.WorldAABB.Center;
+            var debugLine = new LineD(Position, topPos);
+
+            var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
+            var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity*1.25d); //Test different multipliers
+            var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max()*1.5d); //Could this exceed fragprox?
+
+            if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
+            {
+                if (orbitSphereClose.Contains(Position) != ContainmentType.Disjoint)
+                {
+                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to Escape from {DroneStat}");
+                    DroneStat = DroneStatus.Escape;
+                }
+                else
+                {
+                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to Orbit from {DroneStat}");
+                    DroneStat = DroneStatus.Orbit;
+                }
+            }
+            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint)
+            {
+                if (DroneStat == DroneStatus.Transit|| DroneStat == DroneStatus.Orbit)
+                {
+                    Log.Line($"Changed to Approach from {DroneStat}");
+                    DroneStat = DroneStatus.Approach;
+                }
+
+
+            }
+            else if (DroneStat != DroneStatus.Transit || DroneStat !=DroneStatus.Approach)
+            {
+                if (DroneStat != DroneStatus.Transit)Log.Line($"Changed to Transit from {DroneStat}");
+                DroneStat = DroneStatus.Transit;
+            }
+
+
+
+            //debug line draw stuff
+            if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
+            if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
+            if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
+            if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Purple, 0.5f);
+            if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
+
+
+
+
+            //var tracking = true;
+            if (tracking)
+            {
+                var validEntity = !Info.Target.TargetEntity?.MarkedForClose ?? false;
+                var timeSlot = (Info.Age + SmartSlot) % 30 == 0;
+                var overMaxTargets = HadTarget && NewTargets > aConst.MaxTargets && aConst.MaxTargets != 0;
+                var fake = Info.Target.IsFakeTarget;
+                var validTarget = fake || Info.Target.IsProjectile || validEntity && !overMaxTargets;
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsShrapnel);
+                var gaveUpChase = !fake && Info.Age - ChaseAge > aConst.MaxChaseTime && HadTarget;
+                var isZombie = aConst.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
+                var seekNewTarget = timeSlot && HadTarget && !validEntity && !overMaxTargets;
+                var needsTarget = (PickTarget && timeSlot || seekNewTarget || gaveUpChase && validTarget || isZombie || seekFirstTarget);
+
+                if (needsTarget && NewTarget() || validTarget)
+                    TrackSmartTarget(fake);
+                else if (!SmartRoam())
+                    return;
+
+                ComputeSmartVelocity(out newVel);
+
+            }
+            UpdateSmartVelocity(newVel, tracking);
+            //Log.Line($"Tracking: {tracking} DeltaVel: {aConst.DeltaVelocityPerTick} Dist: {Vector3D.DistanceSquared(Info.Origin, Position)} Smart Delay Dist: {aConst.SmartsDelayDistSqr}" +
+            //    $" NewVel: {newVel}");
+            //Log.Line($"Tracking2: Velocity: {Velocity} Direction: {Info.Direction} Origin: {Info.Origin}");
+
+            /*
+                        if (targetEnt != null)
+            {
+                var topEnt = targetEnt.GetTopMostParent();
+                if (targetEnt.MarkedForClose)
+                    Log.Line($"entity is marked for close");
+                else if (topEnt.MarkedForClose)
+                    Log.Line($"top entity is marked for close");
+
+                var topPos = topEnt.PositionComp.WorldAABB.Center;
+                var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);
+                if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
+                {
+                    orbit = true;
+                }
+            }
+            else Log.Line($"drone target is null");
+            */
+
+        }
+
+        private void OffsetSmartVelocity(ref Vector3D commandedAccel)
+        {
+            var smarts = Info.AmmoDef.Trajectory.Smarts;
+            var offsetTime = smarts.OffsetTime;
+
+            if ((Info.Age % offsetTime == 0))
+            {
+                double angle = Info.Random.NextDouble() * MathHelper.TwoPi;
+                var up = Vector3D.CalculatePerpendicularVector(Info.Direction);
+                var right = Vector3D.Cross(Info.Direction, up);
+                OffsetDir = Math.Sin(angle) * up + Math.Cos(angle) * right;
+                OffsetDir *= smarts.OffsetRatio;
+            }
+
+            commandedAccel += AccelInMetersPerSec * OffsetDir;
+            commandedAccel = Vector3D.Normalize(commandedAccel) * AccelInMetersPerSec;
+
+        }
+
+
         private void ComputeSmartVelocity(out Vector3D newVel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
@@ -650,11 +836,6 @@ namespace CoreSystems.Projectiles
 
                 var lineToCtr = new LineD(Position, topPos);
                 var targetVec = Vector3D.SwapYZCoordinates(Vector3D.Cross(Info.Direction, lineToCtr.Direction));
-                var tempRay = new RayD(Position, targetVec);
-                var tempDirRay = new RayD(Position, Info.Direction);
-                DsDebugDraw.DrawRay(tempRay, Color.Red, 1f, 25f);
-                DsDebugDraw.DrawRay(tempDirRay, Color.Green, 1f, 25f);
-                DsDebugDraw.DrawLine(lineToCtr, Color.Blue, 1f);
                 droneNavTarget = Vector3D.Normalize(targetVec);
             }
 
@@ -667,8 +848,7 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
-                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);
-                droneNavTarget.X = 0.75d;
+                droneNavTarget = Vector3D.Normalize(PrevTargetPos+100 - Position);
             }
 
             if (DroneStat == DroneStatus.Escape)
