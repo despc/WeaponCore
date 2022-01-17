@@ -7,6 +7,8 @@ namespace CoreSystems.Support
     {
         internal MyEntity Entity;
         internal MyEntity Parent;
+        internal bool IsBlock;
+        internal bool ParentIsBlock;
         internal Matrix ToTransformation;
         internal Matrix FromTransformation;
         internal Matrix FullRotationStep;
