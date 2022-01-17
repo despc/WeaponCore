@@ -339,10 +339,10 @@ namespace CoreSystems.Platform
             NewTarget = new Target(this);
             RayCallBack = new ParallelRayCallBack(this);
             Acquire = new PartAcquire(this);
-            AzimuthPart = new PartInfo {Entity = azimuthPart};
-            ElevationPart = new PartInfo {Entity = elevationPart};
-            SpinPart = new PartInfo {Entity = spinPart};
-            MuzzlePart = new PartInfo { Entity = entity };
+            AzimuthPart = new PartInfo {Entity = azimuthPart, IsBlock = azimuthPart == Comp.CoreEntity, ParentIsBlock = azimuthPart?.Parent == Comp.CoreEntity};
+            ElevationPart = new PartInfo {Entity = elevationPart, IsBlock = elevationPart == Comp.CoreEntity, ParentIsBlock = elevationPart?.Parent == Comp.CoreEntity };
+            SpinPart = new PartInfo {Entity = spinPart, IsBlock = spinPart == Comp.CoreEntity, ParentIsBlock = spinPart?.Parent == Comp.CoreEntity };
+            MuzzlePart = new PartInfo { Entity = entity,  IsBlock = entity == Comp.CoreEntity, ParentIsBlock = entity?.Parent == Comp.CoreEntity };
             MiddleMuzzleIndex = Muzzles.Length > 1 ? Muzzles.Length / 2 - 1 : 0;
 
             AnimationsSet = comp.Session.CreateWeaponAnimationSet(system, parts);
