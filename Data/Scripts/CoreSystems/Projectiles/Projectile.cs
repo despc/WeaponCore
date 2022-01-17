@@ -129,6 +129,7 @@ namespace CoreSystems.Projectiles
             var probability = ammoDef.AmmoGraphics.VisualProbability;
             EnableAv = !aConst.VirtualBeams && !session.DedicatedServer && DistanceFromCameraSqr <= session.SyncDistSqr && (probability >= 1 || probability >= MyUtils.GetRandomDouble(0.0f, 1f));
             ModelState = EntityState.None;
+            DroneStat = DroneStatus.Transit;
             LastEntityPos = Position;
             LastHitEntVel = null;
             Info.AvShot = null;
@@ -581,7 +582,6 @@ namespace CoreSystems.Projectiles
             var targetDist = Vector3D.Distance(PredictedTargetPos, Position);//Check for orbit range
             var fragProx = Info.AmmoDef.Const.FragProximity;
             var tracking = aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr;
-            
             var topEnt = targetEnt.GetTopMostParent();
             if (targetEnt.MarkedForClose)
                 Log.Line($"entity is marked for close");
@@ -589,6 +589,8 @@ namespace CoreSystems.Projectiles
                 Log.Line($"top entity is marked for close");
 
             var topPos = topEnt.PositionComp.WorldAABB.Center;
+            var debugLine = new LineD(Position, topPos);
+
             var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
             var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity*1.25d); //Test different multipliers
             var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max()*1.5d); //Could this exceed fragprox?
@@ -597,21 +599,41 @@ namespace CoreSystems.Projectiles
             {
                 if (orbitSphereClose.Contains(Position) != ContainmentType.Disjoint)
                 {
-                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to escape");
+                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to Escape from {DroneStat}");
                     DroneStat = DroneStatus.Escape;
                 }
                 else
                 {
-                if (DroneStat != DroneStatus.Orbit)Log.Line($"Changed to orbit");
-                DroneStat = DroneStatus.Orbit;
+                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to Orbit from {DroneStat}");
+                    DroneStat = DroneStatus.Orbit;
                 }
             }
-            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && DroneStat==DroneStatus.Transit)
+            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint)
             {
-                DroneStat = DroneStatus.Approach;
-                Log.Line($"Changed to approach");
+                if (DroneStat == DroneStatus.Transit|| DroneStat == DroneStatus.Orbit)
+                {
+                    Log.Line($"Changed to Approach from {DroneStat}");
+                    DroneStat = DroneStatus.Approach;
+                }
+
+
             }
-            
+            else if (DroneStat != DroneStatus.Transit || DroneStat !=DroneStatus.Approach)
+            {
+                if (DroneStat != DroneStatus.Transit)Log.Line($"Changed to Transit from {DroneStat}");
+                DroneStat = DroneStatus.Transit;
+            }
+
+
+
+            //debug line draw stuff
+            if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
+            if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
+            if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
+            if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Purple, 0.5f);
+            if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
+
+
 
 
             //var tracking = true;
@@ -702,11 +724,6 @@ namespace CoreSystems.Projectiles
 
                 var lineToCtr = new LineD(Position, topPos);
                 var targetVec = Vector3D.SwapYZCoordinates(Vector3D.Cross(Info.Direction, lineToCtr.Direction));
-                var tempRay = new RayD(Position, targetVec);
-                var tempDirRay = new RayD(Position, Info.Direction);
-                DsDebugDraw.DrawRay(tempRay, Color.Red, 1f, 25f);
-                DsDebugDraw.DrawRay(tempDirRay, Color.Green, 1f, 25f);
-                DsDebugDraw.DrawLine(lineToCtr, Color.Blue, 1f);
                 droneNavTarget = Vector3D.Normalize(targetVec);
             }
 
@@ -719,8 +736,7 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
-                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);
-                droneNavTarget.X = 0.75d;
+                droneNavTarget = Vector3D.Normalize(PrevTargetPos+100 - Position);
             }
 
             if (DroneStat == DroneStatus.Escape)
