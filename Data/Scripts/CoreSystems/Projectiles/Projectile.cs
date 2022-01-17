@@ -171,7 +171,7 @@ namespace CoreSystems.Projectiles
             Info.PrevDistanceTraveled = 0;
             Info.DistanceTraveled = 0;
             PrevEndPointToCenterSqr = double.MaxValue;
-
+            DroneStat = DroneStatus.Transit;
             var trajectory = ammoDef.Trajectory;
             var guidance = trajectory.Guidance;
             CachedId = Info.MuzzleId == -1 ? Info.WeaponCache.VirutalId : Info.MuzzleId;
@@ -439,89 +439,7 @@ namespace CoreSystems.Projectiles
         }
         #endregion
 
-        #region Fragments / Smart / Drones
-        internal void SpawnShrapnel(bool timedSpawn = true) // inception begins
-        {
-
-            var ammoDef = Info.AmmoDef;
-            var aConst = ammoDef.Const;
-            var patternIndex = aConst.FragPatternCount;
-            var pattern = ammoDef.Pattern;
-
-            if (aConst.FragmentPattern) 
-            {
-                if (pattern.Random) 
-                {
-                    if (pattern.TriggerChance >= 1 || pattern.TriggerChance >= Info.Random.NextDouble())
-                        patternIndex = Info.Random.Range(pattern.RandomMin, pattern.RandomMax);
-
-                    for (int w = 0; w < aConst.FragPatternCount; w++) {
-
-                        var y = Info.Random.Range(0, w + 1);
-                        Info.PatternShuffle[w] = Info.PatternShuffle[y];
-                        Info.PatternShuffle[y] = w;
-                    }
-                }
-                else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.FragPatternCount) {
-                    patternIndex = pattern.PatternSteps;
-                    for (int p = 0; p < aConst.FragPatternCount; ++p)
-                        Info.PatternShuffle[p] = (Info.PatternShuffle[p] + patternIndex) % aConst.FragPatternCount;
-                }
-            }
-
-            var fireOnTarget = timedSpawn && aConst.HasFragProximity && aConst.FragPointAtTarget;
-
-            Vector3D newOrigin;
-            if (!aConst.HasFragmentOffset)
-                newOrigin = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
-            else {
-                var pos = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
-                var offSet = (Info.Direction * aConst.FragmentOffset);
-                newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
-            }
-
-            var spawn = false;
-
-            for (int i = 0; i < patternIndex; i++)
-            {
-                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i]] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
-                Vector3D pointDir;
-                if (!fireOnTarget)
-                    pointDir = Info.Direction;
-                else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
-                    continue;
-                spawn = true;
-
-                if (fragAmmoDef.Const.HasAdvFragOffset)
-                {
-                    MatrixD matrix;
-                    MatrixD.CreateWorld(ref Position, ref Info.Direction, ref Info.OriginUp, out matrix);
-
-                    Vector3D advOffSet;
-                    var offSet = fragAmmoDef.Const.FragOffset;
-                    Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
-                    newOrigin += offSet;
-                }
-
-
-                var projectiles = Info.System.Session.Projectiles;
-                var shrapnel = projectiles.ShrapnelPool.Get();
-                shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
-                projectiles.ShrapnelToSpawn.Add(shrapnel);
-            }
-
-            if (!spawn)
-                return;
-
-            ++Info.SpawnDepth;
-
-            if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
-                DistanceToTravelSqr = Info.DistanceTraveled * Info.DistanceTraveled;
-
-            Info.LastFragTime = Info.Age;
-        }
-
-
+        #region Smart / Drones
         internal void RunDrone(MyEntity targetEnt)
         {
             Vector3D newVel = new Vector3D();
@@ -529,7 +447,6 @@ namespace CoreSystems.Projectiles
             var targetDist = Vector3D.Distance(PredictedTargetPos, Position);//Check for orbit range
             var fragProx = Info.AmmoDef.Const.FragProximity;
             var tracking = aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr;
-
             var topEnt = targetEnt.GetTopMostParent();
             if (targetEnt.MarkedForClose)
                 Log.Line($"entity is marked for close");
@@ -537,6 +454,8 @@ namespace CoreSystems.Projectiles
                 Log.Line($"top entity is marked for close");
 
             var topPos = topEnt.PositionComp.WorldAABB.Center;
+            var debugLine = new LineD(Position, topPos);
+
             var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
             var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity * 1.25d); //Test different multipliers
             var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max() * 1.5d); //Could this exceed fragprox?
@@ -545,20 +464,40 @@ namespace CoreSystems.Projectiles
             {
                 if (orbitSphereClose.Contains(Position) != ContainmentType.Disjoint)
                 {
-                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to escape");
+                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to Escape from {DroneStat}");
                     DroneStat = DroneStatus.Escape;
                 }
                 else
                 {
-                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to orbit");
+                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to Orbit from {DroneStat}");
                     DroneStat = DroneStatus.Orbit;
                 }
             }
-            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && DroneStat == DroneStatus.Transit)
+            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint)
             {
-                DroneStat = DroneStatus.Approach;
-                Log.Line($"Changed to approach");
+                if (DroneStat == DroneStatus.Transit || DroneStat == DroneStatus.Orbit)
+                {
+                    Log.Line($"Changed to Approach from {DroneStat}");
+                    DroneStat = DroneStatus.Approach;
+                }
+
+
             }
+            else if (DroneStat != DroneStatus.Transit || DroneStat != DroneStatus.Approach)
+            {
+                if (DroneStat != DroneStatus.Transit) Log.Line($"Changed to Transit from {DroneStat}");
+                DroneStat = DroneStatus.Transit;
+            }
+
+
+
+            //debug line draw stuff
+            if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
+            if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
+            if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
+            if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Purple, 0.5f);
+            if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
+
 
 
 
@@ -609,6 +548,7 @@ namespace CoreSystems.Projectiles
             */
 
         }
+
 
         private void OffsetSmartVelocity(ref Vector3D commandedAccel)
         {
@@ -1423,6 +1363,91 @@ namespace CoreSystems.Projectiles
         #endregion
 
         #region Misc
+        internal void SpawnShrapnel(bool timedSpawn = true) // inception begins
+        {
+
+            var ammoDef = Info.AmmoDef;
+            var aConst = ammoDef.Const;
+            var patternIndex = aConst.FragPatternCount;
+            var pattern = ammoDef.Pattern;
+
+            if (aConst.FragmentPattern)
+            {
+                if (pattern.Random)
+                {
+                    if (pattern.TriggerChance >= 1 || pattern.TriggerChance >= Info.Random.NextDouble())
+                        patternIndex = Info.Random.Range(pattern.RandomMin, pattern.RandomMax);
+
+                    for (int w = 0; w < aConst.FragPatternCount; w++)
+                    {
+
+                        var y = Info.Random.Range(0, w + 1);
+                        Info.PatternShuffle[w] = Info.PatternShuffle[y];
+                        Info.PatternShuffle[y] = w;
+                    }
+                }
+                else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.FragPatternCount)
+                {
+                    patternIndex = pattern.PatternSteps;
+                    for (int p = 0; p < aConst.FragPatternCount; ++p)
+                        Info.PatternShuffle[p] = (Info.PatternShuffle[p] + patternIndex) % aConst.FragPatternCount;
+                }
+            }
+
+            var fireOnTarget = timedSpawn && aConst.HasFragProximity && aConst.FragPointAtTarget;
+
+            Vector3D newOrigin;
+            if (!aConst.HasFragmentOffset)
+                newOrigin = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
+            else
+            {
+                var pos = !Vector3D.IsZero(Info.Hit.LastHit) ? Info.Hit.LastHit : Position;
+                var offSet = (Info.Direction * aConst.FragmentOffset);
+                newOrigin = aConst.HasNegFragmentOffset ? pos - offSet : pos + offSet;
+            }
+
+            var spawn = false;
+
+            for (int i = 0; i < patternIndex; i++)
+            {
+                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i]] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+                Vector3D pointDir;
+                if (!fireOnTarget)
+                    pointDir = Info.Direction;
+                else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
+                    continue;
+                spawn = true;
+
+                if (fragAmmoDef.Const.HasAdvFragOffset)
+                {
+                    MatrixD matrix;
+                    MatrixD.CreateWorld(ref Position, ref Info.Direction, ref Info.OriginUp, out matrix);
+
+                    Vector3D advOffSet;
+                    var offSet = fragAmmoDef.Const.FragOffset;
+                    Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
+                    newOrigin += offSet;
+                }
+
+
+                var projectiles = Info.System.Session.Projectiles;
+                var shrapnel = projectiles.ShrapnelPool.Get();
+                shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
+                projectiles.ShrapnelToSpawn.Add(shrapnel);
+            }
+
+            if (!spawn)
+                return;
+
+            ++Info.SpawnDepth;
+
+            if (timedSpawn && ++Info.Frags == aConst.MaxFrags && aConst.FragParentDies)
+                DistanceToTravelSqr = Info.DistanceTraveled * Info.DistanceTraveled;
+
+            Info.LastFragTime = Info.Age;
+        }
+
+
         internal void CheckForNearVoxel(uint steps)
         {
             var possiblePos = BoundingBoxD.CreateFromSphere(new BoundingSphereD(Position, ((MaxSpeed) * (steps + 1) * StepConst) + Info.AmmoDef.Const.CollisionSize));
