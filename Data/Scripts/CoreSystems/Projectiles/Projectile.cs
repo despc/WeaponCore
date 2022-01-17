@@ -20,6 +20,8 @@ namespace CoreSystems.Projectiles
         internal ProjectileState State;
         internal EntityState ModelState;
         internal MyEntityQueryType PruneQuery;
+        internal CheckTypes CheckType;
+        internal DroneStatus DroneStat;
         internal Vector3D AccelDir;
         internal Vector3D Position;
         internal Vector3D OffsetDir;
@@ -84,6 +86,7 @@ namespace CoreSystems.Projectiles
         internal bool LineCheck;
         internal bool Asleep;
         internal bool IsDrone;
+
         internal enum DroneStatus
         {
             Transit, //Movement from/to target area
@@ -92,6 +95,7 @@ namespace CoreSystems.Projectiles
             Strafe, //Nose at target movement, for PointType = direct and PointAtTarget = false
             Escape, //Move away from target
         }
+
         internal enum CheckTypes
         {
             Ray,
@@ -100,8 +104,22 @@ namespace CoreSystems.Projectiles
             CachedRay,
         }
 
-        internal CheckTypes CheckType;
-        internal DroneStatus DroneStat;
+        internal enum ProjectileState
+        {
+            Alive,
+            Detonate,
+            OneAndDone,
+            Dead,
+            Depleted,
+            Destroy,
+        }
+
+        internal enum EntityState
+        {
+            Exists,
+            None
+        }
+
         internal readonly ProInfo Info = new ProInfo();
         internal readonly List<MyLineSegmentOverlapResult<MyEntity>> MySegmentList = new List<MyLineSegmentOverlapResult<MyEntity>>();
         internal readonly List<MyEntity> MyEntityList = new List<MyEntity>();
@@ -333,16 +351,95 @@ namespace CoreSystems.Projectiles
 
         #endregion
 
-        #region Run
-        internal void CheckForNearVoxel(uint steps)
+        #region End
+
+        internal void DestroyProjectile()
         {
-            var possiblePos = BoundingBoxD.CreateFromSphere(new BoundingSphereD(Position, ((MaxSpeed) * (steps + 1) * StepConst) + Info.AmmoDef.Const.CollisionSize));
-            if (MyGamePruningStructure.AnyVoxelMapInBox(ref possiblePos))
+            if (State == ProjectileState.Destroy)
             {
-                PruneQuery = MyEntityQueryType.Both;
+                Info.Hit = new Hit { Block = null, Entity = null, SurfaceHit = Position, LastHit = Position, HitVelocity = Info.InPlanetGravity ? Velocity * 0.33f : Velocity, HitTick = Info.System.Session.Tick };
+                if (EnableAv || Info.AmmoDef.Const.VirtualBeams)
+                {
+                    Info.AvShot.ForceHitParticle = true;
+                    Info.AvShot.Hit = Info.Hit;
+                }
+
+                Intersecting = true;
+            }
+
+            State = ProjectileState.Depleted;
+        }
+
+        internal void UnAssignProjectile(bool clear)
+        {
+            Info.Target.Projectile.Seekers.Remove(this);
+            if (clear) Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
+            else
+            {
+                Info.Target.IsProjectile = false;
+                Info.Target.IsFakeTarget = false;
+                Info.Target.Projectile = null;
             }
         }
 
+        internal void ProjectileClose()
+        {
+            var aConst = Info.AmmoDef.Const;
+            if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
+                SpawnShrapnel(false);
+
+            for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
+            Watchers.Clear();
+
+            foreach (var seeker in Seekers) seeker.Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
+            Seekers.Clear();
+
+            if (EnableAv && Info.AvShot.ForceHitParticle)
+                Info.AvShot.HitEffects(true);
+
+            State = ProjectileState.Dead;
+
+            var detExp = aConst.EndOfLifeAv && (!aConst.ArmOnlyOnHit || Info.ObjectsHit > 0);
+
+            if (EnableAv)
+            {
+                if (ModelState == EntityState.Exists)
+                    ModelState = EntityState.None;
+                if (!Info.AvShot.Active)
+                    Info.System.Session.Av.AvShotPool.Return(Info.AvShot);
+                else Info.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
+            }
+            else if (Info.AmmoDef.Const.VirtualBeams)
+            {
+                for (int i = 0; i < VrPros.Count; i++)
+                {
+                    var vp = VrPros[i];
+                    if (!vp.AvShot.Active)
+                        Info.System.Session.Av.AvShotPool.Return(vp.AvShot);
+                    else vp.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
+
+                    Info.System.Session.Projectiles.VirtInfoPool.Return(vp);
+                }
+                VrPros.Clear();
+            }
+
+            if (DynamicGuidance && Info.System.Session.AntiSmartActive)
+                DynTrees.UnregisterProjectile(this);
+
+            var target = Info.Target;
+            CoreComponent comp;
+            if (Info.DamageDone > 0 && Info.Ai?.Construct.RootAi != null && target.CoreEntity != null && !Info.Ai.MarkedForClose && !target.CoreEntity.MarkedForClose && Info.Ai.CompBase.TryGetValue(target.CoreEntity, out comp))
+            {
+                Info.Ai.Construct.RootAi.Construct.TotalEffect += Info.DamageDone;
+                comp.TotalEffect += Info.DamageDone;
+            }
+
+            PruningProxyId = -1;
+            Info.Clean();
+        }
+        #endregion
+
+        #region Fragments / Smart / Drones
         internal void SpawnShrapnel(bool timedSpawn = true) // inception begins
         {
 
@@ -424,155 +521,6 @@ namespace CoreSystems.Projectiles
             Info.LastFragTime = Info.Age;
         }
 
-        internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, ref Vector3D shooterPos, out Vector3D targetDirection)
-        {
-            var aConst = Info.AmmoDef.Const;
-            if (Info.Target.TargetEntity.GetTopMostParent()?.Physics?.LinearVelocity == null)
-            {
-                targetDirection = Vector3D.Zero;
-                return false;
-            }
-
-            var targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
-
-            if (aConst.FragPointType == PointTypes.Direct)
-            {
-                targetDirection = Vector3D.Normalize(targetPos - Position);
-                return true;
-            }
-
-
-            var targetVel = Info.Target.TargetEntity.GetTopMostParent().Physics.LinearVelocity;
-            var shooterVel = !Info.AmmoDef.Const.FragDropVelocity ? Velocity : Vector3D.Zero;
-
-            var projectileMaxSpeed = ammoDef.Const.DesiredProjectileSpeed;
-            Vector3D deltaPos = targetPos - shooterPos;
-            Vector3D deltaVel = targetVel - shooterVel;
-            Vector3D deltaPosNorm;
-            if (Vector3D.IsZero(deltaPos)) deltaPosNorm = Vector3D.Zero;
-            else if (Vector3D.IsUnit(ref deltaPos)) deltaPosNorm = deltaPos;
-            else Vector3D.Normalize(ref deltaPos, out deltaPosNorm);
-
-            double closingSpeed;
-            Vector3D.Dot(ref deltaVel, ref deltaPosNorm, out closingSpeed);
-
-            Vector3D closingVel = closingSpeed * deltaPosNorm;
-            Vector3D lateralVel = deltaVel - closingVel;
-            double projectileMaxSpeedSqr = projectileMaxSpeed * projectileMaxSpeed;
-            double ttiDiff = projectileMaxSpeedSqr - lateralVel.LengthSquared();
-
-            if (ttiDiff < 0)
-            {
-                targetDirection = Info.Direction;
-                return aConst.FragPointType == PointTypes.Direct;
-            }
-
-            double projectileClosingSpeed = Math.Sqrt(ttiDiff) - closingSpeed;
-
-            double closingDistance;
-            Vector3D.Dot(ref deltaPos, ref deltaPosNorm, out closingDistance);
-
-            double timeToIntercept = ttiDiff < 0 ? 0 : closingDistance / projectileClosingSpeed;
-
-            if (timeToIntercept < 0)
-            {
-                
-                if (aConst.FragPointType == PointTypes.Lead)
-                {
-                    targetDirection = Vector3D.Normalize((targetPos + timeToIntercept * (targetVel - shooterVel)) - shooterPos);
-                    return true;
-                }
-                
-                targetDirection = Info.Direction;
-                return false;
-            }
-
-            targetDirection = Vector3D.Normalize(targetPos + timeToIntercept * (targetVel - shooterVel * 1) - shooterPos);
-            return true;
-        }
-
-
-        internal bool NewTarget()
-        {
-            var giveUp = HadTarget && ++NewTargets > Info.AmmoDef.Const.MaxTargets && Info.AmmoDef.Const.MaxTargets != 0;
-            ChaseAge = Info.Age;
-            PickTarget = false;
-            if (giveUp || !Ai.ReacquireTarget(this))
-            {
-                var badEntity = !Info.LockOnFireState && Info.Target.TargetEntity != null && Info.Target.TargetEntity.MarkedForClose || Info.LockOnFireState && (Info.Target.TargetEntity?.GetTopMostParent()?.MarkedForClose ?? true);
-                if (!giveUp && !Info.LockOnFireState || Info.LockOnFireState && giveUp || !Info.AmmoDef.Trajectory.Smarts.NoTargetExpire || badEntity)
-                {
-                    Info.Target.TargetEntity = null;
-                }
-
-                if (Info.Target.IsProjectile) UnAssignProjectile(true);
-                return false;
-            }
-
-            if (Info.Target.IsProjectile) UnAssignProjectile(false);
-            return true;
-        }
-
-        internal void ForceNewTarget()
-        {
-            ChaseAge = Info.Age;
-            PickTarget = false;
-        }
-
-        internal void ActivateMine()
-        {
-            var ent = Info.Target.TargetEntity;
-            MineActivated = true;
-            AtMaxRange = false;
-            var targetPos = ent.PositionComp.WorldAABB.Center;
-            var deltaPos = targetPos - Position;
-            var targetVel = ent.Physics?.LinearVelocity ?? Vector3.Zero;
-            var deltaVel = targetVel - Vector3.Zero;
-            var timeToIntercept = MathFuncs.Intercept(deltaPos, deltaVel, DesiredSpeed);
-            var predictedPos = targetPos + (float)timeToIntercept * deltaVel;
-            PredictedTargetPos = predictedPos;
-            PrevTargetPos = predictedPos;
-            PrevTargetVel = targetVel;
-            LockedTarget = true;
-
-            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectFixed) return;
-            Vector3D.DistanceSquared(ref Info.Origin, ref predictedPos, out DistanceToTravelSqr);
-            Info.DistanceTraveled = 0;
-            Info.PrevDistanceTraveled = 0;
-
-            Info.Direction = Vector3D.Normalize(predictedPos - Position);
-            AccelDir = Info.Direction;
-            VelocityLengthSqr = 0;
-
-            MaxVelocity = (Info.Direction * DesiredSpeed);
-            MaxSpeed = MaxVelocity.Length();
-            MaxSpeedSqr = MaxSpeed * MaxSpeed;
-            AccelVelocity = (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
-
-            if (Info.AmmoDef.Const.AmmoSkipAccel)
-            {
-                Velocity = MaxVelocity;
-                VelocityLengthSqr = MaxSpeed * MaxSpeed;
-            }
-            else Velocity = AccelVelocity;
-
-            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
-            {
-
-                IsSmart = true;
-
-                if (IsSmart && Info.AmmoDef.Const.TargetOffSet && LockedTarget)
-                {
-                    OffSetTarget();
-                }
-                else
-                {
-                    TargetOffSet = Vector3D.Zero;
-                }
-            }
-
-            TravelMagnitude = Velocity * StepConst;
-        }
 
         internal void RunDrone(MyEntity targetEnt)
         {
@@ -581,7 +529,7 @@ namespace CoreSystems.Projectiles
             var targetDist = Vector3D.Distance(PredictedTargetPos, Position);//Check for orbit range
             var fragProx = Info.AmmoDef.Const.FragProximity;
             var tracking = aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr;
-            
+
             var topEnt = targetEnt.GetTopMostParent();
             if (targetEnt.MarkedForClose)
                 Log.Line($"entity is marked for close");
@@ -590,8 +538,8 @@ namespace CoreSystems.Projectiles
 
             var topPos = topEnt.PositionComp.WorldAABB.Center;
             var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
-            var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity*1.25d); //Test different multipliers
-            var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max()*1.5d); //Could this exceed fragprox?
+            var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity * 1.25d); //Test different multipliers
+            var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max() * 1.5d); //Could this exceed fragprox?
 
             if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
             {
@@ -602,16 +550,16 @@ namespace CoreSystems.Projectiles
                 }
                 else
                 {
-                if (DroneStat != DroneStatus.Orbit)Log.Line($"Changed to orbit");
-                DroneStat = DroneStatus.Orbit;
+                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to orbit");
+                    DroneStat = DroneStatus.Orbit;
                 }
             }
-            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && DroneStat==DroneStatus.Transit)
+            else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && DroneStat == DroneStatus.Transit)
             {
                 DroneStat = DroneStatus.Approach;
                 Log.Line($"Changed to approach");
             }
-            
+
 
 
             //var tracking = true;
@@ -687,8 +635,8 @@ namespace CoreSystems.Projectiles
             var droneNavTarget = new Vector3D(); //Gives a default "whizz by & juke" behavior until out of orbit sphere to double back, only works w/ offsets
             var strafing = Info.AmmoDef.Fragment.TimedSpawns.PointType == PointTypes.Direct && Info.AmmoDef.Fragment.TimedSpawns.PointAtTarget == false;
             var fragProx = Info.AmmoDef.Const.FragProximity;
-            
-            if (DroneStat==DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
+
+            if (DroneStat == DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
             {
                 var topEnt = Info.Target.TargetEntity.GetTopMostParent();
                 var topPos = topEnt.PositionComp.WorldAABB.Center;
@@ -696,7 +644,7 @@ namespace CoreSystems.Projectiles
 
                 var noseOffset = new Vector3D(Position + (Info.Direction * Info.AmmoDef.Shape.Diameter)); // gets an offset forward from the 'nose'
                 var smallestDist = MyUtils.GetSmallestDistanceToSphere(ref noseOffset, ref orbitSphere);
-                
+
                 //^ crap above was to try and forecast a position on sphere
 
 
@@ -710,11 +658,11 @@ namespace CoreSystems.Projectiles
                 droneNavTarget = Vector3D.Normalize(targetVec);
             }
 
-            if ((DroneStat==DroneStatus.Orbit||DroneStat==DroneStatus.Strafe) && strafing) //strafing behavior WIP.  can this be synced to GroupDelay?
+            if ((DroneStat == DroneStatus.Orbit || DroneStat == DroneStatus.Strafe) && strafing) //strafing behavior WIP.  can this be synced to GroupDelay?
             {
                 Log.Line($"Strafing");
                 DroneStat = DroneStatus.Strafe;
-                droneNavTarget= Vector3D.Normalize(PrevTargetPos - Position);//Keep going nose-in
+                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);//Keep going nose-in
             }
 
             if (DroneStat == DroneStatus.Approach) // on final approach
@@ -725,11 +673,11 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Escape)
             {
-                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position)*-0.75d;
+                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position) * -0.75d;
             }
 
 
-            var missileToTarget = DroneStat!=DroneStatus.Transit ? droneNavTarget : Vector3D.Normalize(PrevTargetPos - Position);
+            var missileToTarget = DroneStat != DroneStatus.Transit ? droneNavTarget : Vector3D.Normalize(PrevTargetPos - Position);
 
 
 
@@ -814,7 +762,8 @@ namespace CoreSystems.Projectiles
         {
             var aConst = Info.AmmoDef.Const;
             HadTarget = true;
-            if (ZombieLifeTime > 0) {
+            if (ZombieLifeTime > 0)
+            {
                 ZombieLifeTime = 0;
                 OffSetTarget();
             }
@@ -823,7 +772,8 @@ namespace CoreSystems.Projectiles
 
             Ai.FakeTarget.FakeWorldTargetInfo fakeTargetInfo = null;
 
-            if (fake && Info.DummyTargets != null) {
+            if (fake && Info.DummyTargets != null)
+            {
                 var fakeTarget = Info.DummyTargets.PaintedTarget.EntityId != 0 ? Info.DummyTargets.PaintedTarget : Info.DummyTargets.ManualTarget;
                 fakeTargetInfo = fakeTarget.LastInfoTick != Info.System.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
                 targetPos = fakeTargetInfo.WorldPosition;
@@ -837,9 +787,11 @@ namespace CoreSystems.Projectiles
                 targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
             }
 
-            if (aConst.TargetOffSet && WasTracking) {
+            if (aConst.TargetOffSet && WasTracking)
+            {
 
-                if (Info.Age - LastOffsetTime > 300) {
+                if (Info.Age - LastOffsetTime > 300)
+                {
 
                     double dist;
                     Vector3D.DistanceSquared(ref Position, ref targetPos, out dist);
@@ -880,6 +832,18 @@ namespace CoreSystems.Projectiles
                 SmartTargetLoss(targetPos);
 
             PrevTargetVel = tVel;
+        }
+
+        internal void OffSetTarget(bool roam = false)
+        {
+            var randAzimuth = (Info.Random.NextDouble() * 1) * 2 * Math.PI;
+            var randElevation = ((Info.Random.NextDouble() * 1) * 2 - 1) * 0.5 * Math.PI;
+            var offsetAmount = roam ? 100 : Info.AmmoDef.Trajectory.Smarts.Inaccuracy;
+            Vector3D randomDirection;
+            Vector3D.CreateFromAzimuthAndElevation(randAzimuth, randElevation, out randomDirection); // this is already normalized
+            PrevTargetOffset = TargetOffSet;
+            TargetOffSet = (randomDirection * offsetAmount);
+            if (Info.Age != 0) LastOffsetTime = Info.Age;
         }
 
         private void SmartTargetLoss(Vector3D targetPos)
@@ -1061,6 +1025,283 @@ namespace CoreSystems.Projectiles
             Velocity = newVel;
         }
 
+        internal bool NewTarget()
+        {
+            var giveUp = HadTarget && ++NewTargets > Info.AmmoDef.Const.MaxTargets && Info.AmmoDef.Const.MaxTargets != 0;
+            ChaseAge = Info.Age;
+            PickTarget = false;
+            if (giveUp || !Ai.ReacquireTarget(this))
+            {
+                var badEntity = !Info.LockOnFireState && Info.Target.TargetEntity != null && Info.Target.TargetEntity.MarkedForClose || Info.LockOnFireState && (Info.Target.TargetEntity?.GetTopMostParent()?.MarkedForClose ?? true);
+                if (!giveUp && !Info.LockOnFireState || Info.LockOnFireState && giveUp || !Info.AmmoDef.Trajectory.Smarts.NoTargetExpire || badEntity)
+                {
+                    Info.Target.TargetEntity = null;
+                }
+
+                if (Info.Target.IsProjectile) UnAssignProjectile(true);
+                return false;
+            }
+
+            if (Info.Target.IsProjectile) UnAssignProjectile(false);
+            return true;
+        }
+
+        internal void ForceNewTarget()
+        {
+            ChaseAge = Info.Age;
+            PickTarget = false;
+        }
+
+        internal bool TrajectoryEstimation(WeaponDefinition.AmmoDef ammoDef, ref Vector3D shooterPos, out Vector3D targetDirection)
+        {
+            var aConst = Info.AmmoDef.Const;
+            if (Info.Target.TargetEntity.GetTopMostParent()?.Physics?.LinearVelocity == null)
+            {
+                targetDirection = Vector3D.Zero;
+                return false;
+            }
+
+            var targetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
+
+            if (aConst.FragPointType == PointTypes.Direct)
+            {
+                targetDirection = Vector3D.Normalize(targetPos - Position);
+                return true;
+            }
+
+
+            var targetVel = Info.Target.TargetEntity.GetTopMostParent().Physics.LinearVelocity;
+            var shooterVel = !Info.AmmoDef.Const.FragDropVelocity ? Velocity : Vector3D.Zero;
+
+            var projectileMaxSpeed = ammoDef.Const.DesiredProjectileSpeed;
+            Vector3D deltaPos = targetPos - shooterPos;
+            Vector3D deltaVel = targetVel - shooterVel;
+            Vector3D deltaPosNorm;
+            if (Vector3D.IsZero(deltaPos)) deltaPosNorm = Vector3D.Zero;
+            else if (Vector3D.IsUnit(ref deltaPos)) deltaPosNorm = deltaPos;
+            else Vector3D.Normalize(ref deltaPos, out deltaPosNorm);
+
+            double closingSpeed;
+            Vector3D.Dot(ref deltaVel, ref deltaPosNorm, out closingSpeed);
+
+            Vector3D closingVel = closingSpeed * deltaPosNorm;
+            Vector3D lateralVel = deltaVel - closingVel;
+            double projectileMaxSpeedSqr = projectileMaxSpeed * projectileMaxSpeed;
+            double ttiDiff = projectileMaxSpeedSqr - lateralVel.LengthSquared();
+
+            if (ttiDiff < 0)
+            {
+                targetDirection = Info.Direction;
+                return aConst.FragPointType == PointTypes.Direct;
+            }
+
+            double projectileClosingSpeed = Math.Sqrt(ttiDiff) - closingSpeed;
+
+            double closingDistance;
+            Vector3D.Dot(ref deltaPos, ref deltaPosNorm, out closingDistance);
+
+            double timeToIntercept = ttiDiff < 0 ? 0 : closingDistance / projectileClosingSpeed;
+
+            if (timeToIntercept < 0)
+            {
+                
+                if (aConst.FragPointType == PointTypes.Lead)
+                {
+                    targetDirection = Vector3D.Normalize((targetPos + timeToIntercept * (targetVel - shooterVel)) - shooterPos);
+                    return true;
+                }
+                
+                targetDirection = Info.Direction;
+                return false;
+            }
+
+            targetDirection = Vector3D.Normalize(targetPos + timeToIntercept * (targetVel - shooterVel * 1) - shooterPos);
+            return true;
+        }
+        #endregion
+
+        #region Mines
+        internal void ActivateMine()
+        {
+            var ent = Info.Target.TargetEntity;
+            MineActivated = true;
+            AtMaxRange = false;
+            var targetPos = ent.PositionComp.WorldAABB.Center;
+            var deltaPos = targetPos - Position;
+            var targetVel = ent.Physics?.LinearVelocity ?? Vector3.Zero;
+            var deltaVel = targetVel - Vector3.Zero;
+            var timeToIntercept = MathFuncs.Intercept(deltaPos, deltaVel, DesiredSpeed);
+            var predictedPos = targetPos + (float)timeToIntercept * deltaVel;
+            PredictedTargetPos = predictedPos;
+            PrevTargetPos = predictedPos;
+            PrevTargetVel = targetVel;
+            LockedTarget = true;
+
+            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectFixed) return;
+            Vector3D.DistanceSquared(ref Info.Origin, ref predictedPos, out DistanceToTravelSqr);
+            Info.DistanceTraveled = 0;
+            Info.PrevDistanceTraveled = 0;
+
+            Info.Direction = Vector3D.Normalize(predictedPos - Position);
+            AccelDir = Info.Direction;
+            VelocityLengthSqr = 0;
+
+            MaxVelocity = (Info.Direction * DesiredSpeed);
+            MaxSpeed = MaxVelocity.Length();
+            MaxSpeedSqr = MaxSpeed * MaxSpeed;
+            AccelVelocity = (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
+
+            if (Info.AmmoDef.Const.AmmoSkipAccel)
+            {
+                Velocity = MaxVelocity;
+                VelocityLengthSqr = MaxSpeed * MaxSpeed;
+            }
+            else Velocity = AccelVelocity;
+
+            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
+            {
+
+                IsSmart = true;
+
+                if (IsSmart && Info.AmmoDef.Const.TargetOffSet && LockedTarget)
+                {
+                    OffSetTarget();
+                }
+                else
+                {
+                    TargetOffSet = Vector3D.Zero;
+                }
+            }
+
+            TravelMagnitude = Velocity * StepConst;
+        }
+
+
+        internal void SeekEnemy()
+        {
+            var mineInfo = Info.AmmoDef.Trajectory.Mines;
+            var detectRadius = mineInfo.DetectRadius;
+            var deCloakRadius = mineInfo.DeCloakRadius;
+
+            var wakeRadius = detectRadius > deCloakRadius ? detectRadius : deCloakRadius;
+            PruneSphere = new BoundingSphereD(Position, wakeRadius);
+            var inRange = false;
+            var activate = false;
+            var minDist = double.MaxValue;
+            if (!MineActivated)
+            {
+                MyEntity closestEnt = null;
+                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref PruneSphere, MyEntityList, MyEntityQueryType.Dynamic);
+                for (int i = 0; i < MyEntityList.Count; i++)
+                {
+                    var ent = MyEntityList[i];
+                    var grid = ent as MyCubeGrid;
+                    var character = ent as IMyCharacter;
+                    if (grid == null && character == null || ent.MarkedForClose || !ent.InScene) continue;
+                    MyDetectedEntityInfo entInfo;
+
+                    if (!Info.Ai.CreateEntInfo(ent, Info.Ai.AiOwner, out entInfo)) continue;
+                    switch (entInfo.Relationship)
+                    {
+                        case MyRelationsBetweenPlayerAndBlock.Owner:
+                            continue;
+                        case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                            continue;
+                    }
+                    var entSphere = ent.PositionComp.WorldVolume;
+                    entSphere.Radius += Info.AmmoDef.Const.CollisionSize;
+                    var dist = MyUtils.GetSmallestDistanceToSphereAlwaysPositive(ref Position, ref entSphere);
+                    if (dist >= minDist) continue;
+                    minDist = dist;
+                    closestEnt = ent;
+                }
+                MyEntityList.Clear();
+
+                if (closestEnt != null)
+                {
+                    ForceNewTarget();
+                    Info.Target.TargetEntity = closestEnt;
+                }
+            }
+            else if (Info.Target.TargetEntity != null && !Info.Target.TargetEntity.MarkedForClose)
+            {
+                var entSphere = Info.Target.TargetEntity.PositionComp.WorldVolume;
+                entSphere.Radius += Info.AmmoDef.Const.CollisionSize;
+                minDist = MyUtils.GetSmallestDistanceToSphereAlwaysPositive(ref Position, ref entSphere);
+            }
+            else
+                TriggerMine(true);
+
+            if (EnableAv)
+            {
+                if (Info.AvShot.Cloaked && minDist <= deCloakRadius) Info.AvShot.Cloaked = false;
+                else if (Info.AvShot.AmmoDef.Trajectory.Mines.Cloak && !Info.AvShot.Cloaked && minDist > deCloakRadius) Info.AvShot.Cloaked = true;
+            }
+
+            if (minDist <= Info.AmmoDef.Const.CollisionSize) activate = true;
+            if (minDist <= detectRadius) inRange = true;
+            if (MineActivated)
+            {
+                if (!inRange)
+                    TriggerMine(true);
+            }
+            else if (inRange) ActivateMine();
+
+            if (activate)
+            {
+                TriggerMine(false);
+                MyEntityList.Add(Info.Target.TargetEntity);
+            }
+        }
+        internal void TriggerMine(bool startTimer)
+        {
+            DistanceToTravelSqr = double.MinValue;
+            if (Info.AmmoDef.Const.Ewar)
+            {
+                Info.AvShot.Triggered = true;
+            }
+
+            if (startTimer) FieldTime = Info.AmmoDef.Trajectory.Mines.FieldTime;
+            MineTriggered = true;
+        }
+
+        internal void ResetMine()
+        {
+            if (MineTriggered)
+            {
+                IsSmart = false;
+                Info.DistanceTraveled = double.MaxValue;
+                FieldTime = 0;
+                return;
+            }
+
+            FieldTime = Info.AmmoDef.Const.Ewar || Info.AmmoDef.Const.IsMine ? Info.AmmoDef.Trajectory.FieldTime : 0;
+            DistanceToTravelSqr = MaxTrajectorySqr;
+
+            Info.AvShot.Triggered = false;
+            MineTriggered = false;
+            MineActivated = false;
+            LockedTarget = false;
+            MineSeeking = true;
+
+            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
+            {
+                IsSmart = false;
+                IsSmart = false;
+                SmartSlot = 0;
+                TargetOffSet = Vector3D.Zero;
+            }
+
+            Info.Direction = Vector3D.Zero;
+            AccelDir = Vector3D.Zero;
+            Velocity = Vector3D.Zero;
+            TravelMagnitude = Vector3D.Zero;
+            VelocityLengthSqr = 0;
+        }
+
+        #endregion
+
+        #region Ewar
         internal void RunEwar()
         {
             if (Info.AmmoDef.Const.Pulse && !Info.EwarAreaPulse && (VelocityLengthSqr <= 0 || AtMaxRange) && !Info.AmmoDef.Const.IsMine)
@@ -1179,242 +1420,18 @@ namespace CoreSystems.Projectiles
                     break;
             }
         }
+        #endregion
 
-
-        internal void SeekEnemy()
+        #region Misc
+        internal void CheckForNearVoxel(uint steps)
         {
-            var mineInfo = Info.AmmoDef.Trajectory.Mines;
-            var detectRadius = mineInfo.DetectRadius;
-            var deCloakRadius = mineInfo.DeCloakRadius;
-
-            var wakeRadius = detectRadius > deCloakRadius ? detectRadius : deCloakRadius;
-            PruneSphere = new BoundingSphereD(Position, wakeRadius);
-            var inRange = false;
-            var activate = false;
-            var minDist = double.MaxValue;
-            if (!MineActivated)
+            var possiblePos = BoundingBoxD.CreateFromSphere(new BoundingSphereD(Position, ((MaxSpeed) * (steps + 1) * StepConst) + Info.AmmoDef.Const.CollisionSize));
+            if (MyGamePruningStructure.AnyVoxelMapInBox(ref possiblePos))
             {
-                MyEntity closestEnt = null;
-                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref PruneSphere, MyEntityList, MyEntityQueryType.Dynamic);
-                for (int i = 0; i < MyEntityList.Count; i++)
-                {
-                    var ent = MyEntityList[i];
-                    var grid = ent as MyCubeGrid;
-                    var character = ent as IMyCharacter;
-                    if (grid == null && character == null || ent.MarkedForClose || !ent.InScene) continue;
-                    MyDetectedEntityInfo entInfo;
-
-                    if (!Info.Ai.CreateEntInfo(ent, Info.Ai.AiOwner, out entInfo)) continue;
-                    switch (entInfo.Relationship)
-                    {
-                        case MyRelationsBetweenPlayerAndBlock.Owner:
-                            continue;
-                        case MyRelationsBetweenPlayerAndBlock.FactionShare:
-                            continue;
-                    }
-                    var entSphere = ent.PositionComp.WorldVolume;
-                    entSphere.Radius += Info.AmmoDef.Const.CollisionSize;
-                    var dist = MyUtils.GetSmallestDistanceToSphereAlwaysPositive(ref Position, ref entSphere);
-                    if (dist >= minDist) continue;
-                    minDist = dist;
-                    closestEnt = ent;
-                }
-                MyEntityList.Clear();
-
-                if (closestEnt != null)
-                {
-                    ForceNewTarget();
-                    Info.Target.TargetEntity = closestEnt;
-                }
+                PruneQuery = MyEntityQueryType.Both;
             }
-            else if (Info.Target.TargetEntity != null && !Info.Target.TargetEntity.MarkedForClose)
-            {
-                var entSphere = Info.Target.TargetEntity.PositionComp.WorldVolume;
-                entSphere.Radius += Info.AmmoDef.Const.CollisionSize;
-                minDist = MyUtils.GetSmallestDistanceToSphereAlwaysPositive(ref Position, ref entSphere);
-            }
-            else
-                TriggerMine(true);
-
-            if (EnableAv)
-            {
-                if (Info.AvShot.Cloaked && minDist <= deCloakRadius) Info.AvShot.Cloaked = false;
-                else if (Info.AvShot.AmmoDef.Trajectory.Mines.Cloak && !Info.AvShot.Cloaked && minDist > deCloakRadius) Info.AvShot.Cloaked = true;
-            }
-
-            if (minDist <= Info.AmmoDef.Const.CollisionSize) activate = true;
-            if (minDist <= detectRadius) inRange = true;
-            if (MineActivated)
-            {
-                if (!inRange)
-                    TriggerMine(true);
-            }
-            else if (inRange) ActivateMine();
-
-            if (activate)
-            {
-                TriggerMine(false);
-                MyEntityList.Add(Info.Target.TargetEntity);
-            }
-        }
-
-        internal void TriggerMine(bool startTimer)
-        {
-            DistanceToTravelSqr = double.MinValue;
-            if (Info.AmmoDef.Const.Ewar)
-            {
-                Info.AvShot.Triggered = true;
-            }
-
-            if (startTimer) FieldTime = Info.AmmoDef.Trajectory.Mines.FieldTime;
-            MineTriggered = true;
-        }
-
-        internal void ResetMine()
-        {
-            if (MineTriggered)
-            {
-                IsSmart = false;
-                Info.DistanceTraveled = double.MaxValue;
-                FieldTime = 0;
-                return;
-            }
-
-            FieldTime = Info.AmmoDef.Const.Ewar || Info.AmmoDef.Const.IsMine ? Info.AmmoDef.Trajectory.FieldTime : 0;
-            DistanceToTravelSqr = MaxTrajectorySqr;
-
-            Info.AvShot.Triggered = false;
-            MineTriggered = false;
-            MineActivated = false;
-            LockedTarget = false;
-            MineSeeking = true;
-
-            if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
-            {
-                IsSmart = false;
-                IsSmart = false;
-                SmartSlot = 0;
-                TargetOffSet = Vector3D.Zero;
-            }
-
-            Info.Direction = Vector3D.Zero;
-            AccelDir = Vector3D.Zero;
-            Velocity = Vector3D.Zero;
-            TravelMagnitude = Vector3D.Zero;
-            VelocityLengthSqr = 0;
-        }
-
-        internal void OffSetTarget(bool roam = false)
-        {
-            var randAzimuth = (Info.Random.NextDouble() * 1) * 2 * Math.PI;
-            var randElevation = ((Info.Random.NextDouble() * 1) * 2 - 1) * 0.5 * Math.PI;
-            var offsetAmount = roam ? 100 : Info.AmmoDef.Trajectory.Smarts.Inaccuracy;
-            Vector3D randomDirection;
-            Vector3D.CreateFromAzimuthAndElevation(randAzimuth, randElevation, out randomDirection); // this is already normalized
-            PrevTargetOffset = TargetOffSet;
-            TargetOffSet = (randomDirection * offsetAmount);
-            if (Info.Age != 0) LastOffsetTime = Info.Age;
-        }
-
-        internal void DestroyProjectile()
-        {
-            if (State == ProjectileState.Destroy)
-            {
-                Info.Hit = new Hit { Block = null, Entity = null, SurfaceHit = Position, LastHit = Position, HitVelocity = Info.InPlanetGravity ? Velocity * 0.33f : Velocity, HitTick = Info.System.Session.Tick };
-                if (EnableAv || Info.AmmoDef.Const.VirtualBeams)
-                {
-                    Info.AvShot.ForceHitParticle = true;
-                    Info.AvShot.Hit = Info.Hit;
-                }
-
-                Intersecting = true;
-            }
-
-            State = ProjectileState.Depleted;
-        }
-
-        internal void UnAssignProjectile(bool clear)
-        {
-            Info.Target.Projectile.Seekers.Remove(this);
-            if (clear) Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
-            else
-            {
-                Info.Target.IsProjectile = false;
-                Info.Target.IsFakeTarget = false;
-                Info.Target.Projectile = null;
-            }
-        }
-
-        internal void ProjectileClose()
-        {
-            var aConst = Info.AmmoDef.Const;
-            if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
-                SpawnShrapnel(false);
-
-            for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
-            Watchers.Clear();
-
-            foreach (var seeker in Seekers) seeker.Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
-            Seekers.Clear();
-
-            if (EnableAv && Info.AvShot.ForceHitParticle)
-                Info.AvShot.HitEffects(true);
-
-            State = ProjectileState.Dead;
-
-            var detExp = aConst.EndOfLifeAv && (!aConst.ArmOnlyOnHit || Info.ObjectsHit > 0);
-
-            if (EnableAv)
-            {
-                if (ModelState == EntityState.Exists)
-                    ModelState = EntityState.None;
-                if (!Info.AvShot.Active)
-                    Info.System.Session.Av.AvShotPool.Return(Info.AvShot);
-                else Info.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
-            }
-            else if (Info.AmmoDef.Const.VirtualBeams)
-            {
-                for (int i = 0; i < VrPros.Count; i++)
-                {
-                    var vp = VrPros[i];
-                    if (!vp.AvShot.Active)
-                        Info.System.Session.Av.AvShotPool.Return(vp.AvShot);
-                    else vp.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
-
-                    Info.System.Session.Projectiles.VirtInfoPool.Return(vp);
-                }
-                VrPros.Clear();
-            }
-            
-            if (DynamicGuidance && Info.System.Session.AntiSmartActive)
-                DynTrees.UnregisterProjectile(this);
-
-            var target = Info.Target;
-            CoreComponent comp;
-            if (Info.DamageDone > 0 && Info.Ai?.Construct.RootAi != null && target.CoreEntity != null && !Info.Ai.MarkedForClose && !target.CoreEntity.MarkedForClose && Info.Ai.CompBase.TryGetValue(target.CoreEntity, out comp)) {
-                Info.Ai.Construct.RootAi.Construct.TotalEffect += Info.DamageDone;
-                comp.TotalEffect += Info.DamageDone;
-            }
-
-            PruningProxyId = -1;
-            Info.Clean();
-        }
-
-        internal enum ProjectileState
-        {
-            Alive,
-            Detonate,
-            OneAndDone,
-            Dead,
-            Depleted,
-            Destroy,
-        }
-
-        internal enum EntityState
-        {
-            Exists,
-            None
         }
         #endregion
+
     }
 }
