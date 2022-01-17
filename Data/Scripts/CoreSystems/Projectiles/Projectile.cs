@@ -453,12 +453,17 @@ namespace CoreSystems.Projectiles
             else if (topEnt.MarkedForClose)
                 Log.Line($"top entity is marked for close");
 
-            var topPos = topEnt.PositionComp.WorldAABB.Center;
+            var targetSphere = topEnt.PositionComp.WorldVolume;
+            var topPos = targetSphere.Center;
             var debugLine = new LineD(Position, topPos);
 
-            var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
-            var orbitSphereFar = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity * 1.25d); //Test different multipliers
-            var orbitSphereClose = new BoundingSphereD(topPos, topEnt.PositionComp.WorldAABB.HalfExtents.Max() * 1.5d); //Could this exceed fragprox?
+            //var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);//Should this account for grid size?
+            var orbitSphere = targetSphere;
+            orbitSphere.Radius *= 1.5f;
+            var orbitSphereFar = targetSphere; //Test different multipliers
+            orbitSphereFar.Radius *= 1.75;
+            var orbitSphereClose = orbitSphere; //Could this exceed fragprox?
+            orbitSphereClose.Radius *= 1.15;
 
             if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
             {
@@ -520,7 +525,7 @@ namespace CoreSystems.Projectiles
                 else if (!SmartRoam())
                     return;
 
-                ComputeSmartVelocity(out newVel);
+                ComputeSmartVelocity(ref topPos, ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, out newVel);
 
             }
             UpdateSmartVelocity(newVel, tracking);
@@ -549,7 +554,6 @@ namespace CoreSystems.Projectiles
 
         }
 
-
         private void OffsetSmartVelocity(ref Vector3D commandedAccel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
@@ -569,32 +573,22 @@ namespace CoreSystems.Projectiles
 
         }
 
-        private void ComputeSmartVelocity(out Vector3D newVel)
+        private void ComputeSmartVelocity(ref Vector3D topPos, ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, out Vector3D newVel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
             var droneNavTarget = new Vector3D(); //Gives a default "whizz by & juke" behavior until out of orbit sphere to double back, only works w/ offsets
             var strafing = Info.AmmoDef.Fragment.TimedSpawns.PointType == PointTypes.Direct && Info.AmmoDef.Fragment.TimedSpawns.PointAtTarget == false;
-            var fragProx = Info.AmmoDef.Const.FragProximity;
 
             if (DroneStat == DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
             {
-                var topEnt = Info.Target.TargetEntity.GetTopMostParent();
-                var topPos = topEnt.PositionComp.WorldAABB.Center;
-                var orbitSphere = new BoundingSphereD(topPos, Info.AmmoDef.Const.FragProximity);
-
                 var noseOffset = new Vector3D(Position + (Info.Direction * Info.AmmoDef.Shape.Diameter)); // gets an offset forward from the 'nose'
                 var smallestDist = MyUtils.GetSmallestDistanceToSphere(ref noseOffset, ref orbitSphere);
 
                 //^ crap above was to try and forecast a position on sphere
-
+                Log.Line($"test1");
 
                 var lineToCtr = new LineD(Position, topPos);
                 var targetVec = Vector3D.SwapYZCoordinates(Vector3D.Cross(Info.Direction, lineToCtr.Direction));
-                var tempRay = new RayD(Position, targetVec);
-                var tempDirRay = new RayD(Position, Info.Direction);
-                DsDebugDraw.DrawRay(tempRay, Color.Red, 1f, 25f);
-                DsDebugDraw.DrawRay(tempDirRay, Color.Green, 1f, 25f);
-                DsDebugDraw.DrawLine(lineToCtr, Color.Blue, 1f);
                 droneNavTarget = Vector3D.Normalize(targetVec);
             }
 
@@ -607,19 +601,27 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
-                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);
-                droneNavTarget.X = 0.75d;
+                var hitDist = orbitSphere.Intersects(new RayD(Position, Info.Direction));
+                if (hitDist.HasValue)
+                {
+                    var newHeading = (Velocity * Velocity) / orbitSphere.Radius; //v^2/r
+                    droneNavTarget = Vector3D.Normalize(newHeading - Position);
+                }
+                else
+                    droneNavTarget = Info.Direction;
+                //droneNavTarget = Vector3D.Normalize(PrevTargetPos + 100 - Position);
             }
 
             if (DroneStat == DroneStatus.Escape)
             {
-                droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position) * -0.75d;
+                var newHeading = (Velocity * Velocity) / orbitSphereFar.Radius;
+                droneNavTarget = Vector3D.Normalize(newHeading - Position);
+                //droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position) * -0.75d;
+
             }
 
 
             var missileToTarget = DroneStat != DroneStatus.Transit ? droneNavTarget : Vector3D.Normalize(PrevTargetPos - Position);
-
-
 
 
             var relativeVelocity = PrevTargetVel - Velocity;
@@ -772,18 +774,6 @@ namespace CoreSystems.Projectiles
                 SmartTargetLoss(targetPos);
 
             PrevTargetVel = tVel;
-        }
-
-        internal void OffSetTarget(bool roam = false)
-        {
-            var randAzimuth = (Info.Random.NextDouble() * 1) * 2 * Math.PI;
-            var randElevation = ((Info.Random.NextDouble() * 1) * 2 - 1) * 0.5 * Math.PI;
-            var offsetAmount = roam ? 100 : Info.AmmoDef.Trajectory.Smarts.Inaccuracy;
-            Vector3D randomDirection;
-            Vector3D.CreateFromAzimuthAndElevation(randAzimuth, randElevation, out randomDirection); // this is already normalized
-            PrevTargetOffset = TargetOffSet;
-            TargetOffSet = (randomDirection * offsetAmount);
-            if (Info.Age != 0) LastOffsetTime = Info.Age;
         }
 
         private void SmartTargetLoss(Vector3D targetPos)
@@ -963,6 +953,18 @@ namespace CoreSystems.Projectiles
 
             if (VelocityLengthSqr > MaxSpeedSqr) newVel = Info.Direction * MaxSpeed;
             Velocity = newVel;
+        }
+
+        internal void OffSetTarget(bool roam = false)
+        {
+            var randAzimuth = (Info.Random.NextDouble() * 1) * 2 * Math.PI;
+            var randElevation = ((Info.Random.NextDouble() * 1) * 2 - 1) * 0.5 * Math.PI;
+            var offsetAmount = roam ? 100 : Info.AmmoDef.Trajectory.Smarts.Inaccuracy;
+            Vector3D randomDirection;
+            Vector3D.CreateFromAzimuthAndElevation(randAzimuth, randElevation, out randomDirection); // this is already normalized
+            PrevTargetOffset = TargetOffSet;
+            TargetOffSet = (randomDirection * offsetAmount);
+            if (Info.Age != 0) LastOffsetTime = Info.Age;
         }
 
         internal bool NewTarget()
