@@ -597,6 +597,7 @@ namespace CoreSystems.Projectiles
                 Log.Line($"Strafing");
                 DroneStat = DroneStatus.Strafe;
                 droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);//Keep going nose-in
+
             }
 
             if (DroneStat == DroneStatus.Approach) // on final approach
@@ -606,18 +607,19 @@ namespace CoreSystems.Projectiles
                 {
                     var newHeading = (Velocity * Velocity) / orbitSphere.Radius; //v^2/r
                     droneNavTarget = Vector3D.Normalize(newHeading - Position);
+                    var testLine = new LineD(Position, Position + (droneNavTarget * 50));
+                    DsDebugDraw.DrawLine(testLine, Color.Orange, 1f);
                 }
                 else
+                {
                     droneNavTarget = Info.Direction;
-                //droneNavTarget = Vector3D.Normalize(PrevTargetPos + 100 - Position);
+                }
             }
 
             if (DroneStat == DroneStatus.Escape)
             {
                 var newHeading = (Velocity * Velocity) / orbitSphereFar.Radius;
                 droneNavTarget = Vector3D.Normalize(newHeading - Position);
-                //droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position) * -0.75d;
-
             }
 
 
