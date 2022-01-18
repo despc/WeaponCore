@@ -502,16 +502,16 @@ namespace CoreSystems.Projectiles
                 if (DroneStat != DroneStatus.Transit) Log.Line($"Changed to Transit from {DroneStat}");
                 DroneStat = DroneStatus.Transit;
             }
-            if (Info.AmmoDef.Trajectory.MaxLifeTime-Info.Age <= finalFlightTime) DroneStat = DroneStatus.Kamikaze;
+            if (Info.AmmoDef.Const.MaxLifeTime > 0 & Info.AmmoDef.Const.MaxLifeTime - Info.Age <= finalFlightTime) DroneStat = DroneStatus.Kamikaze;
 
 
             //debug line draw stuff
-            if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
-            if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
-            if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
-            if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Pink, 0.5f);
-            if (DroneStat == DroneStatus.Kamikaze) DsDebugDraw.DrawLine(debugLine, Color.White, 0.5f);
-            if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
+            //if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
+            ///if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
+            //if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
+            //if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Pink, 0.5f);
+            //if (DroneStat == DroneStatus.Kamikaze) DsDebugDraw.DrawLine(debugLine, Color.White, 0.5f);
+            //if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
 
 
 
@@ -546,18 +546,20 @@ namespace CoreSystems.Projectiles
             var smarts = Info.AmmoDef.Trajectory.Smarts;
             var offsetTime = smarts.OffsetTime;
 
-            if ((Info.Age % offsetTime == 0))
+            var testSphere = new BoundingSphereD(Position + (OffsetDir * 25), 10f);
+            var ray = new RayD(Position, Info.Direction);
+            if (Info.Age % offsetTime == 0 || ray.Intersects(testSphere) != null)
             {
                 double angle = Info.Random.NextDouble() * MathHelper.TwoPi;
                 var up = Vector3D.CalculatePerpendicularVector(Info.Direction);
                 var right = Vector3D.Cross(Info.Direction, up);
                 OffsetDir = Math.Sin(angle) * up + Math.Cos(angle) * right;
                 OffsetDir *= smarts.OffsetRatio;
+
             }
 
             commandedAccel += AccelInMetersPerSec * OffsetDir;
             commandedAccel = Vector3D.Normalize(commandedAccel) * AccelInMetersPerSec;
-
         }
 
         private void ComputeSmartVelocity(ref MyEntity topEnt, ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, ref BoundingSphereD targetSphere, out Vector3D newVel)
@@ -567,15 +569,15 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
             {
-                var noseOffset = new Vector3D(Position + (Info.Direction * AccelInMetersPerSec));
+                var noseOffset = new Vector3D(Position + (Info.Direction * (AccelInMetersPerSec * StepConst)));
                 double length;
                 Vector3D.Distance(ref orbitSphere.Center, ref noseOffset, out length);
                 var dir = (noseOffset - orbitSphere.Center) / length;
                 var deltaDist = length - orbitSphere.Radius * 0.95; //0.95 modifier for hysterisis, keeps target inside dronesphere
                 var navPoint = noseOffset + (-dir * deltaDist);
 
-                DsDebugDraw.DrawLine(new LineD(Position, noseOffset), Color.Yellow, 0.5f);
-                DsDebugDraw.DrawLine(new LineD(orbitSphere.Center, navPoint), Color.Purple, 0.5f);
+                //DsDebugDraw.DrawLine(new LineD(Position, noseOffset), Color.Yellow, 0.5f);
+                //DsDebugDraw.DrawLine(new LineD(orbitSphere.Center, navPoint), Color.Purple, 0.5f);
                 
                 droneNavTarget = new LineD(Position,navPoint).Direction;
             }
@@ -589,15 +591,15 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
-                var radius = targetSphere.Radius;
-                var center = targetSphere.Center;
                 var pointArray = Info.System.Session.LosPointSphere;
+
                 Info.EdgeIndex = Info.EdgeIndex < 0 ? Info.Random.Range(0, pointArray.Length) : Info.EdgeIndex;
                 var edgeTarget = pointArray[Info.EdgeIndex];
-                edgeTarget = center + (radius * edgeTarget);
-
+                edgeTarget = targetSphere.Center + (targetSphere.Radius * edgeTarget);
                 droneNavTarget = Vector3D.Normalize(edgeTarget - Position);
-                DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 50)), Color.Red, 0.5f);
+
+                DsDebugDraw.DrawLine(targetSphere.Center, edgeTarget, Color.Purple, 0.5f);
+                DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 100)), Color.Green, 0.5f);
             }
 
             if (DroneStat == DroneStatus.Escape)
@@ -609,10 +611,13 @@ namespace CoreSystems.Projectiles
                     var dirToFuturePos = Vector3D.Normalize(futurePos - orbitSphereClose.Center);
                     var futureSurfacePos = orbitSphereClose.Center + (dirToFuturePos * orbitSphereClose.Radius);
                     droneNavTarget = Vector3D.Normalize(futureSurfacePos - Position);
-                    DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 50)), Color.Orange, 0.5f);
+                    DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 100)), Color.Orange, 0.5f);
                 }
                 else
+                {
                     droneNavTarget = Info.Direction;
+                    DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 100)), Color.Red, 0.5f);
+                }
             }
             if (DroneStat == DroneStatus.Kamikaze)
             {
@@ -625,9 +630,8 @@ namespace CoreSystems.Projectiles
 
             var relativeVelocity = PrevTargetVel - Velocity;
             var normalMissileAcceleration = (relativeVelocity - (relativeVelocity.Dot(missileToTarget) * missileToTarget)) * smarts.Aggressiveness;
-
             Vector3D commandedAccel;
-            if (Vector3D.IsZero(normalMissileAcceleration)) commandedAccel = (missileToTarget * AccelInMetersPerSec);
+            if (Vector3D.IsZero(normalMissileAcceleration)) {commandedAccel = (missileToTarget * AccelInMetersPerSec);}
             else
             {
                 var maxLateralThrust = AccelInMetersPerSec * Math.Min(1, Math.Max(0, Info.AmmoDef.Const.MaxLateralThrust));
