@@ -55,6 +55,15 @@ namespace CoreSystems.Projectiles
                 var selfDamage = aConst.SelfDamage;
                 var ignoreVoxels = aDef.IgnoreVoxels;
                 var isGrid = ai.AiType == Ai.AiTypes.Grid;
+
+                //New Obb, have fun!
+                var lastpos = p.LastPosition;
+                var curpos = p.Position;
+                var thickness = p.Info.AmmoDef.Const.CollisionSize;
+                p.ProjObb.Center = curpos + (curpos - lastpos) * 0.5f;
+                p.ProjObb.Orientation = Quaternion.CreateFromTwoVectors(lastpos, curpos);
+                p.ProjObb.HalfExtent = new Vector3D(p.ProjObb.Orientation.Length() / 2 + thickness, thickness, thickness);
+
                 WaterData water = null;
                 if (Session.WaterApiLoaded && info.MyPlanet != null)
                     Session.WaterMap.TryGetValue(info.MyPlanet.EntityId, out water);
