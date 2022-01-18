@@ -50,6 +50,7 @@ namespace CoreSystems.Support
         internal int SpawnDepth;
         internal int Frags;
         internal int LastFragTime;
+        internal int EdgeIndex = -1;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
         internal double DistanceTraveled;
@@ -170,6 +171,7 @@ namespace CoreSystems.Support
             Frags = 0;
             MuzzleId = 0;
             Age = 0;
+            EdgeIndex = -1;
             DamageDone = 0;
             ProjectileDisplacement = 0;
             MaxTrajectory = 0;

@@ -535,7 +535,7 @@ namespace CoreSystems.Projectiles
                 else if (!SmartRoam())
                     return;
 
-                ComputeSmartVelocity(ref topPos, ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, out newVel);
+                ComputeSmartVelocity(ref topEnt, ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, ref targetSphere, out newVel);
 
             }
             UpdateSmartVelocity(newVel, tracking);
@@ -560,18 +560,19 @@ namespace CoreSystems.Projectiles
 
         }
 
-        private void ComputeSmartVelocity(ref Vector3D topPos, ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, out Vector3D newVel)
+        private void ComputeSmartVelocity(ref MyEntity topEnt, ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, ref BoundingSphereD targetSphere, out Vector3D newVel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
             var droneNavTarget = new Vector3D();
 
             if (DroneStat == DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
             {
-                var distPerTick = Info.AmmoDef.Trajectory.DesiredSpeed / 60;
-                var noseOffset = new Vector3D(Position + (Info.Direction * distPerTick * Info.AmmoDef.Trajectory.Smarts.TrackingDelay));
-                var lineFromCenter = new LineD(orbitSphere.Center, noseOffset);
-                var deltaDist = lineFromCenter.Length - orbitSphere.Radius * 0.95; //0.95 modifier for hysterisis, keeps target inside dronesphere
-                var navPoint = noseOffset + (-lineFromCenter.Direction * deltaDist);
+                var noseOffset = new Vector3D(Position + (Info.Direction * AccelInMetersPerSec));
+                double length;
+                Vector3D.Distance(ref orbitSphere.Center, ref noseOffset, out length);
+                var dir = (noseOffset - orbitSphere.Center) / length;
+                var deltaDist = length - orbitSphere.Radius * 0.95; //0.95 modifier for hysterisis, keeps target inside dronesphere
+                var navPoint = noseOffset + (-dir * deltaDist);
 
                 DsDebugDraw.DrawLine(new LineD(Position, noseOffset), Color.Yellow, 0.5f);
                 DsDebugDraw.DrawLine(new LineD(orbitSphere.Center, navPoint), Color.Purple, 0.5f);
@@ -588,22 +589,30 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
-                var metersInSideOrbit = MyUtils.GetSmallestDistanceToSphere(ref Position, ref orbitSphere);
-                var futurePos = (Position + (TravelMagnitude * metersInSideOrbit));
-                var dirToFuturePos = Vector3D.Normalize(futurePos - orbitSphere.Center);
-                var futureSurfacePos = orbitSphere.Center + (dirToFuturePos * orbitSphere.Radius*0.95f);
-                DsDebugDraw.DrawLine(new LineD(Position, futureSurfacePos), Color.Red, 0.5f);
-                droneNavTarget = Vector3D.Normalize(futureSurfacePos - Position);
+                var radius = targetSphere.Radius;
+                var center = targetSphere.Center;
+                var pointArray = Info.System.Session.LosPointSphere;
+                Info.EdgeIndex = Info.EdgeIndex < 0 ? Info.Random.Range(0, pointArray.Length) : Info.EdgeIndex;
+                var edgeTarget = pointArray[Info.EdgeIndex];
+                edgeTarget = center + (radius * edgeTarget);
+
+                droneNavTarget = Vector3D.Normalize(edgeTarget - Position);
+                DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 50)), Color.Red, 0.5f);
             }
 
             if (DroneStat == DroneStatus.Escape)
             {
                 var metersInSideOrbit = MyUtils.GetSmallestDistanceToSphere(ref Position, ref orbitSphereClose);
-                var futurePos = (Position + (TravelMagnitude * metersInSideOrbit));
-                var dirToFuturePos = Vector3D.Normalize(futurePos - orbitSphere.Center);
-                var futureSurfacePos = orbitSphere.Center + (dirToFuturePos * orbitSphere.Radius);
-                DsDebugDraw.DrawLine(new LineD(Position, futureSurfacePos), Color.Orange, 0.5f);
-                droneNavTarget = Vector3D.Normalize(futureSurfacePos - Position);
+                if (metersInSideOrbit < 0)
+                {
+                    var futurePos = (Position + (TravelMagnitude * Math.Abs(metersInSideOrbit)));
+                    var dirToFuturePos = Vector3D.Normalize(futurePos - orbitSphereClose.Center);
+                    var futureSurfacePos = orbitSphereClose.Center + (dirToFuturePos * orbitSphereClose.Radius);
+                    droneNavTarget = Vector3D.Normalize(futureSurfacePos - Position);
+                    DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 50)), Color.Orange, 0.5f);
+                }
+                else
+                    droneNavTarget = Info.Direction;
             }
             if (DroneStat == DroneStatus.Kamikaze)
             {

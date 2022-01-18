@@ -957,7 +957,8 @@ namespace CoreSystems.Projectiles
                                 if (!(cube is MyGyro)) continue;
                                 break;
                             case Offense:
-                                if (!(cube is IMyGunBaseUser)) continue;
+                                var valid = cube is IMyGunBaseUser || cube is MyConveyorSorter && system.Session.PartPlatforms.ContainsKey(cube.BlockDefinition.Id);
+                                if (!valid) continue;
                                 break;
                             case Emp:
                             case Dot:

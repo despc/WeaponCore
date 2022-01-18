@@ -94,7 +94,6 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<MyConcurrentList<BetterInventoryItem>> BetterItemsListPool = new MyConcurrentPool<MyConcurrentList<BetterInventoryItem>>(256, list => list.Clear());
         internal readonly MyConcurrentPool<HashSet<long>> PlayerGridPool = new MyConcurrentPool<HashSet<long>>(16);
 
-
         internal readonly Stack<Ai> AiPool = new Stack<Ai>(128);
         internal readonly Stack<MyEntity3DSoundEmitter> Emitters = new Stack<MyEntity3DSoundEmitter>(256);
         internal readonly Stack<VoxelCache> VoxelCachePool = new Stack<VoxelCache>(256);
@@ -217,6 +216,7 @@ namespace CoreSystems
         internal readonly List<MyTuple<IMyPlayer, Vector4, FakeTarget>> ActiveMarks = new List<MyTuple<IMyPlayer, Vector4, FakeTarget>>();
         internal readonly Queue<PartAnimation> ThreadedAnimations = new Queue<PartAnimation>();
         internal readonly int[] AuthorSettings = new int[6];
+        internal readonly Vector3D[] LosPointSphere = new Vector3D[2000];
         internal readonly List<Weapon>[] LeadGroups = new List<Weapon>[4];
         internal readonly Queue<double> ClientPerfHistory = new Queue<double>(20);
 
@@ -533,6 +533,8 @@ namespace CoreSystems
 
             for (int i = 0; i < DamageBlockCache.Length; i++)
                DamageBlockCache[i] = new List<IMySlimBlock>();
+                   
+            SUtils.UnitSphereRandomOnly(ref LosPointSphere);
         }
     }
 }
