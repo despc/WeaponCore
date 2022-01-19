@@ -480,12 +480,12 @@ namespace CoreSystems.Projectiles
             {
                 if (orbitSphereClose.Contains(Position) != ContainmentType.Disjoint)
                 {
-                    if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to Escape from {DroneStat}");
+                    //if (DroneStat != DroneStatus.Escape) Log.Line($"Changed to Escape from {DroneStat}");
                     DroneStat = DroneStatus.Escape;
                 }
                 else
                 {
-                    if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to Orbit from {DroneStat}");
+                    //if (DroneStat != DroneStatus.Orbit) Log.Line($"Changed to Orbit from {DroneStat}");
                     DroneStat = DroneStatus.Orbit;
                 }
             }
@@ -493,13 +493,13 @@ namespace CoreSystems.Projectiles
             {
                 if (DroneStat == DroneStatus.Transit || DroneStat == DroneStatus.Orbit)
                 {
-                    Log.Line($"Changed to Approach from {DroneStat}");
+                   //Log.Line($"Changed to Approach from {DroneStat}");
                     DroneStat = DroneStatus.Approach;
                 }
             }
             else if (DroneStat != DroneStatus.Transit || DroneStat != DroneStatus.Approach)
             {
-                if (DroneStat != DroneStatus.Transit) Log.Line($"Changed to Transit from {DroneStat}");
+                //if (DroneStat != DroneStatus.Transit) Log.Line($"Changed to Transit from {DroneStat}");
                 DroneStat = DroneStatus.Transit;
             }
             if (Info.AmmoDef.Const.MaxLifeTime > 0 & Info.AmmoDef.Const.MaxLifeTime - Info.Age <= finalFlightTime) DroneStat = DroneStatus.Kamikaze;
@@ -540,15 +540,22 @@ namespace CoreSystems.Projectiles
             }
             UpdateSmartVelocity(newVel, tracking);
         }
-
         private void OffsetSmartVelocity(ref Vector3D commandedAccel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
             var offsetTime = smarts.OffsetTime;
 
-            var testSphere = new BoundingSphereD(Position + (OffsetDir * 25), 10f);
-            var ray = new RayD(Position, Info.Direction);
-            if (Info.Age % offsetTime == 0 || ray.Intersects(testSphere) != null)
+            var targetDir = OffsetDir;
+            var refDir = Info.Direction;
+
+            var degrees = 1;
+            var toleranceInRadians = MathHelper.ToRadians(degrees);
+            var tolerance = Math.Cos(toleranceInRadians);
+            var dot = Vector3D.Dot(targetDir, refDir);
+            var num = targetDir.LengthSquared() * refDir.LengthSquared() * tolerance * Math.Abs(tolerance);
+            var inTolerance = Math.Abs(dot) * dot > num;
+
+            if (Info.Age % offsetTime == 0 || inTolerance)
             {
                 double angle = Info.Random.NextDouble() * MathHelper.TwoPi;
                 var up = Vector3D.CalculatePerpendicularVector(Info.Direction);
@@ -569,7 +576,7 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Orbit && Info.AmmoDef.Fragment.TimedSpawns.PointType != PointTypes.Direct) //Orbit & shoot behavior
             {
-                var noseOffset = new Vector3D(Position + (Info.Direction * (AccelInMetersPerSec * StepConst)));
+                var noseOffset = new Vector3D(Position + (Info.Direction * (AccelInMetersPerSec)));
                 double length;
                 Vector3D.Distance(ref orbitSphere.Center, ref noseOffset, out length);
                 var dir = (noseOffset - orbitSphere.Center) / length;
@@ -591,6 +598,26 @@ namespace CoreSystems.Projectiles
 
             if (DroneStat == DroneStatus.Approach) // on final approach
             {
+                var lineToCenter = new LineD(Position, orbitSphere.Center);
+                var distToCenter = lineToCenter.Length; //tangential tomfoolery
+                var radius = orbitSphere.Radius*0.99;//Multiplier to ensure drone doesn't get "stuck" on periphery
+                var centerOffset = distToCenter - Math.Sqrt(distToCenter * distToCenter - radius * radius);
+                var offsetDist = Math.Sqrt(radius * radius - centerOffset * centerOffset);
+                var offsetPoint = new Vector3D(orbitSphere.Center + centerOffset * -lineToCenter.Direction);//
+                var angleQuat = Vector3D.CalculatePerpendicularVector(lineToCenter.Direction); //placeholder for a possible rand-rotated quat.  Should be 90*, rand*, 0* 
+                var tangentPoint = new Vector3D(offsetPoint + offsetDist * angleQuat);
+                droneNavTarget = Vector3D.Normalize(tangentPoint- Position);
+
+
+
+                DsDebugDraw.DrawLine(orbitSphere.Center, offsetPoint, Color.Purple, 0.5f);
+                DsDebugDraw.DrawLine(tangentPoint, offsetPoint, Color.Purple, 0.5f);
+                DsDebugDraw.DrawLine(Position, tangentPoint, Color.Purple, 0.5f);
+                //DsDebugDraw.DrawSphere(orbitSphere, Color.Blue);
+
+
+
+                /*
                 var pointArray = Info.System.Session.LosPointSphere;
 
                 Info.EdgeIndex = Info.EdgeIndex < 0 ? Info.Random.Range(0, pointArray.Length) : Info.EdgeIndex;
@@ -600,6 +627,7 @@ namespace CoreSystems.Projectiles
 
                 DsDebugDraw.DrawLine(targetSphere.Center, edgeTarget, Color.Purple, 0.5f);
                 DsDebugDraw.DrawLine(new LineD(Position, Position + (droneNavTarget * 100)), Color.Green, 0.5f);
+                */
             }
 
             if (DroneStat == DroneStatus.Escape)
