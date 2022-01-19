@@ -453,12 +453,7 @@ namespace CoreSystems.Projectiles
                 var topEnt = targetEnt.GetTopMostParent();
                 if (targetEnt.MarkedForClose || topEnt == null || topEnt.MarkedForClose)
                     return;
-                /*
-                if (targetEnt.MarkedForClose)
-                    Log.Line($"entity is marked for close");
-                else if (topEnt.MarkedForClose)
-                    Log.Line($"top entity is marked for close");
-                */
+  
                 var targetSphere = topEnt.PositionComp.WorldVolume;
                 //var maneuverFactor = (MaxSpeed + AccelInMetersPerSec) * Info.AmmoDef.Trajectory.Smarts.MaxLateralThrust;
                 //var trackDist = Info.AmmoDef.Trajectory.Smarts.TrackingDelay * Info.AmmoDef.Shape.Diameter;
@@ -598,12 +593,14 @@ namespace CoreSystems.Projectiles
                 var lineToCenter = new LineD(Position, orbitSphere.Center);
                 var distToCenter = lineToCenter.Length; //tangential tomfoolery
                 var radius = orbitSphere.Radius*0.99;//Multiplier to ensure drone doesn't get "stuck" on periphery
-                var centerOffset = distToCenter - Math.Sqrt(distToCenter * distToCenter - radius * radius);
-                var offsetDist = Math.Sqrt(radius * radius - centerOffset * centerOffset);
-                var offsetPoint = new Vector3D(orbitSphere.Center + centerOffset * -lineToCenter.Direction);//
+                var centerOffset = distToCenter - Math.Sqrt((distToCenter * distToCenter) - (radius * radius));
+                var offsetDist = Math.Sqrt((radius * radius) - (centerOffset * centerOffset));
+                var offsetPoint = new Vector3D(orbitSphere.Center + (centerOffset * -lineToCenter.Direction));//
+
                 var angleQuat = Vector3D.CalculatePerpendicularVector(lineToCenter.Direction); //placeholder for a possible rand-rotated quat.  Should be 90*, rand*, 0* 
+
                 var tangentPoint = new Vector3D(offsetPoint + offsetDist * angleQuat);
-                droneNavTarget = Vector3D.Normalize(tangentPoint- Position);
+                droneNavTarget = Vector3D.Normalize(tangentPoint - Position);
 
 
 

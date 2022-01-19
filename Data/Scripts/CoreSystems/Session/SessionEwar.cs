@@ -152,7 +152,6 @@ namespace CoreSystems
                 ForceFields(hitEnt, info);
                 return;
             }
-
             var grid = hitEnt.Entity as MyCubeGrid;
             if (grid == null || grid.MarkedForClose) return;
 

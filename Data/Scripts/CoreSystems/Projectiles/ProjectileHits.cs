@@ -43,7 +43,6 @@ namespace CoreSystems.Projectiles
                 var isBeam = aConst.IsBeamWeapon;
                 var lineCheck = aConst.CollisionIsLine && !info.EwarAreaPulse;
                 var offensiveEwar = (info.EwarActive && aConst.NonAntiSmartEwar);
-
                 bool projetileInShield = false;
                 var tick = Session.Tick;
                 var useEntityCollection = p.CheckType != Projectile.CheckTypes.Ray;
@@ -755,8 +754,9 @@ namespace CoreSystems.Projectiles
             var yDist = double.MaxValue;
             var beam = x.Intersection;
             var count = y != null ? 2 : 1;
-            var eWarPulse = info.AmmoDef.Const.Ewar && info.AmmoDef.Const.Pulse;
-            var triggerEvent = eWarPulse && !info.EwarAreaPulse && info.AmmoDef.Const.EwarTriggerRange > 0;
+            var aConst = info.AmmoDef.Const;
+            var eWarPulse = aConst.Ewar && aConst.Pulse;
+            var triggerEvent = eWarPulse && !info.EwarAreaPulse && aConst.EwarTriggerRange > 0;
             for (int i = 0; i < count; i++)
             {
                 var isX = i == 0;
@@ -804,6 +804,7 @@ namespace CoreSystems.Projectiles
                     }
                     else
                     {
+
                         if (hitEnt.SphereCheck || info.EwarActive && eWarPulse)
                         {
                             var ewarActive = hitEnt.EventType == Field || hitEnt.EventType == Effect;
@@ -828,12 +829,12 @@ namespace CoreSystems.Projectiles
 
                             var closestBlockFound = false;
                             IMySlimBlock lastBlockHit = null;
+                            var ewarWeaponDamage = info.EwarActive && aConst.SelfDamage && hitEnt.EventType == Effect;
                             for (int j = 0; j < hitEnt.Vector3ICache.Count; j++)
                             {
                                 var posI = hitEnt.Vector3ICache[j];
                                 var firstBlock = grid.GetCubeBlock(posI) as IMySlimBlock;
-                                MatrixD transform = grid.WorldMatrix;
-                                if (firstBlock != null && firstBlock != lastBlockHit && !firstBlock.IsDestroyed && (hitEnt.Info.Target.CoreCube == null || firstBlock != hitEnt.Info.Target.CoreCube.SlimBlock))
+                                if (firstBlock != null && firstBlock != lastBlockHit && !firstBlock.IsDestroyed && (hitEnt.Info.Target.CoreCube == null || firstBlock != hitEnt.Info.Target.CoreCube.SlimBlock || ewarWeaponDamage && firstBlock == hitEnt.Info.Target.CoreCube.SlimBlock))
                                 {
                                     lastBlockHit = firstBlock;
                                     hitEnt.Blocks.Add(new HitEntity.RootBlocks {Block = firstBlock, QueryPos = posI});
@@ -847,8 +848,9 @@ namespace CoreSystems.Projectiles
                                         Vector3 halfExt;
                                         firstBlock.ComputeScaledHalfExtents(out halfExt);
                                         var blockBox = new BoundingBoxD(-halfExt, halfExt);
-                                        transform.Translation = grid.GridIntegerToWorld(firstBlock.Position);
-                                        obb = new MyOrientedBoundingBoxD(blockBox, transform);
+                                        var gridMatrix = grid.PositionComp.WorldMatrixRef;
+                                        gridMatrix.Translation = grid.GridIntegerToWorld(firstBlock.Position);
+                                        obb = new MyOrientedBoundingBoxD(blockBox, gridMatrix);
                                     }
 
                                     var hitDist = obb.Intersects(ref beam) ?? Vector3D.Distance(beam.From, obb.Center);
