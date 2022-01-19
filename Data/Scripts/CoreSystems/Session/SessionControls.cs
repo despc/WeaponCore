@@ -329,6 +329,7 @@ namespace CoreSystems
                 "Renamer_SuffixButton",
                 "Renamer_ResetButton",
             };
+
             for (int i = validType ? 12 : 0; i < controls.Count; i++) {
 
                 var c = controls[i];

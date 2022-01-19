@@ -234,6 +234,7 @@ namespace CoreSystems
 
         internal readonly double VisDirToleranceCosine;
         internal readonly double AimDirToleranceCosine;
+        internal readonly double ProjectileOffsetTolerance;
 
         private readonly MyConcurrentPool<List<Vector3I>> _blockSpherePool = new MyConcurrentPool<List<Vector3I>>(25);
         private readonly HashSet<IMySlimBlock> _slimsSet = new HashSet<IMySlimBlock>();
@@ -535,6 +536,8 @@ namespace CoreSystems
                DamageBlockCache[i] = new List<IMySlimBlock>();
                    
             SUtils.UnitSphereRandomOnly(ref LosPointSphere);
+
+            ProjectileOffsetTolerance = Math.Cos(MathHelper.ToRadians(5));
         }
     }
 }

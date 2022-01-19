@@ -594,11 +594,15 @@ namespace CoreSystems.Support
             if (!enabled || !pattern.SkipParent)
                 ammoPattern[indexPos++] = ammo.AmmoDef;
 
+            var validPatterns = 0; 
             if (enabled)
             {
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
                 {
                     var aPattern = ammo.AmmoDef.Pattern.Patterns[j];
+                    
+                    if (!string.IsNullOrEmpty(aPattern))
+                        ++validPatterns;
 
                     for (int i = 0; i < wDef.Ammos.Length; i++)
                     {
@@ -618,6 +622,12 @@ namespace CoreSystems.Support
                     }
                 }
             }
+
+            if (validPatterns == 0) {
+                weaponPattern = false;
+                fragmentPattern = false;
+            }
+
             guidedDetected = guidedAmmo;
             hasAntiSmart = antiSmart;
             hasTargetOverride = targetOverride;
@@ -627,10 +637,10 @@ namespace CoreSystems.Support
 
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)
         {
-            pulseInterval = ammoDef.Ewar.Field.Interval;
+            pulseInterval = ammoDef.Ewar.Mode != EwarMode.Effect ? ammoDef.Ewar.Field.Interval : 0;
             growTime = ammoDef.Ewar.Field.GrowTime == 0 && pulseInterval > 0 ? 60 : ammoDef.Ewar.Field.GrowTime;
-            pulseChance = ammoDef.Ewar.Field.PulseChance;
-            pulse = pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
+            pulseChance = ammoDef.Ewar.Mode != EwarMode.Effect ? ammoDef.Ewar.Field.PulseChance : 0;
+            pulse = ammoDef.Ewar.Mode != EwarMode.Effect && pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }
 
         private void AreaEffects(AmmoDef ammoDef, out float byBlockHitDepth, out float endOfLifeDepth, out EwarType ewarType, out float byBlockHitDamage, out double byBlockHitRadius, out float endOfLifeDamage, out float endOfLifeRadius, out double ewarEffectStrength, out double largestHitSize, out double ewarEffectSize, out bool eWar, out bool nonAntiSmart, out double eWarTriggerRange, out int minArmingTime, out float aoeMaxAbsorb, out float detMaxAbsorb, out bool endOfLifeAoe)

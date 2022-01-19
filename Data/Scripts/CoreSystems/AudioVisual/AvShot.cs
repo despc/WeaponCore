@@ -1068,11 +1068,10 @@ namespace CoreSystems.Support
 
                 if (loop)
                 {
+                    Log.Line($"test1");
                     FireEmitter.StopSound(true);
                     FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                 }
-                else
-                    FireEmitter.StopSound(false);
 
                 System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
 
@@ -1089,8 +1088,6 @@ namespace CoreSystems.Support
                         TravelEmitter.StopSound(true);
                         TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                     }
-                    else
-                        TravelEmitter.StopSound(false);
                 }
 
                 System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
@@ -1150,8 +1147,6 @@ namespace CoreSystems.Support
                     FireEmitter.StopSound(true);
                     FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                 }
-                else
-                    FireEmitter.StopSound(false);
 
                 System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
             }
@@ -1165,8 +1160,6 @@ namespace CoreSystems.Support
                         TravelEmitter.StopSound(true);
                         TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                     }
-                    else
-                        TravelEmitter.StopSound(false);
                 }
                 
                 System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });

@@ -185,18 +185,8 @@ namespace CoreSystems.Platform
                 azimuthMatrix = Comp.CoreEntity.PositionComp.WorldMatrixRef;
                 azParentMatrix = azimuthMatrix;
                 elevationMatrix = azimuthMatrix;
-                //muzzleMatrix = azimuthMatrix;
-
-                //var localCenter = MuzzlePart.Entity.PositionComp.LocalAABB.Center;
-                //Vector3D.Transform(ref localCenter, ref muzzleMatrix, out weaponCenter);
                 weaponCenter = Comp.CoreEntity.PositionComp.WorldAABB.Center;
             }
-
-            //var weaponCenter =  muzzleMatrix.Translation;
-            //var azimuthMatrix = AzimuthPart.Entity.PositionComp.WorldMatrixRef;
-            //var elevationMatrix = ElevationPart.Entity.PositionComp.WorldMatrixRef;
-            //Log.Line($"{localCenter} - {Vector3D.Transform(localCenter, muzzleMatrix)}[{MuzzlePart.Entity.PositionComp.WorldAABB.Center}]");
-
 
             BarrelOrigin = weaponCenter;
             var centerTestPos = azimuthMatrix.Translation;
@@ -212,9 +202,7 @@ namespace CoreSystems.Platform
             }
             else
             {
-                //var parentPart = ParentIsSubpart ? AzimuthPart.Parent : Comp.CoreEntity;
-                //var worldMatrix = parentPart.PositionComp.WorldMatrixRef;
-                var forward = !AlternateForward ? azParentMatrix.Forward : Vector3D.TransformNormal(AzimuthInitFwdDir, azParentMatrix);
+                var forward = !AlternateForward ? azParentMatrix.Forward : Vector3D.TransformNormal(AzimuthInitFwdDir, ref azParentMatrix);
 
                 Vector3D left;
                 Vector3D.Cross(ref MyPivotUp, ref forward, out left);
