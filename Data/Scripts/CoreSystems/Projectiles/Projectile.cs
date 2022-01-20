@@ -491,7 +491,7 @@ namespace CoreSystems.Projectiles
                         }
                     }
                     else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && (DroneStat == DroneStatus.Transit || DroneStat == DroneStatus.Orbit))
-                        {
+                    {
                         DroneStat = DroneStatus.Approach;
                     }
                     /*
