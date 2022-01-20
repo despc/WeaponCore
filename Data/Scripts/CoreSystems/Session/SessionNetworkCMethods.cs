@@ -446,5 +446,26 @@ namespace CoreSystems
             return true;
 
         }
+
+        private bool ClientProjectileSyncs(PacketObj data)
+        {
+            var packet = data.Packet;
+            var proSync = (ProjectileSyncPacket)packet;
+            if (proSync.Data == null) return Error(data, Msg("ProSyncData"));
+
+            for (int i = 0; i < proSync.Data.Count; i++)
+            {
+                var sync = proSync.Data[i];
+                var dict = WeaponProSyncs[sync.UniquePartId];
+                var protoWeaponProSync = dict[sync.ProId];
+                protoWeaponProSync.Position = sync.Position;
+                protoWeaponProSync.Type = sync.Type;
+                protoWeaponProSync.ProId = sync.ProId;
+                protoWeaponProSync.TargetId = sync.TargetId;
+                protoWeaponProSync.UniquePartId = sync.UniquePartId;
+            }
+            proSync.CleanUp();
+            return true;
+        }
     }
 }

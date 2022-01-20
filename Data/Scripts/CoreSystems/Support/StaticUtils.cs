@@ -30,6 +30,14 @@ namespace CoreSystems.Support
             return MyColorPickerConstants.HSVToHSVOffset(color.ColorToHSV());
         }
 
+        public static long MakeLong(int left, int right)
+        {
+            long res = left;
+            res <<= 32;
+            res |= (uint)right; //uint first to prevent loss of signed bit
+            return res;
+        }
+
         static void ShellSort(List<Projectile> list, Vector3D weaponPos)
         {
             int length = list.Count;

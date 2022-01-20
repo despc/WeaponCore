@@ -97,6 +97,7 @@ namespace CoreSystems
         internal readonly Stack<Ai> AiPool = new Stack<Ai>(128);
         internal readonly Stack<MyEntity3DSoundEmitter> Emitters = new Stack<MyEntity3DSoundEmitter>(256);
         internal readonly Stack<VoxelCache> VoxelCachePool = new Stack<VoxelCache>(256);
+        internal readonly Stack<ProtoWeaponProSync> ProtoWeaponProSyncPool = new Stack<ProtoWeaponProSync>(256);
 
         internal readonly HashSet<MyCubeGrid> DirtyGridInfos = new HashSet<MyCubeGrid>();
 
@@ -162,6 +163,8 @@ namespace CoreSystems
         internal readonly Dictionary<WeaponDefinition.AmmoDef, Dictionary<string, string>> AmmoValuesMap = new Dictionary<WeaponDefinition.AmmoDef, Dictionary<string, string>>();
         internal readonly Dictionary<WeaponDefinition, Dictionary<string, string>> WeaponValuesMap = new Dictionary<WeaponDefinition, Dictionary<string, string>>();
         internal readonly Dictionary<ulong, Projectile> MonitoredProjectiles = new Dictionary<ulong, Projectile>();
+        internal readonly Dictionary<int, Dictionary<long, ProtoWeaponProSync>> WeaponProSyncs = new Dictionary<int, Dictionary<long, ProtoWeaponProSync>>();
+
         internal readonly HashSet<MyDefinitionId> DefIdsComparer = new HashSet<MyDefinitionId>(MyDefinitionId.Comparer);
         internal readonly HashSet<string> VanillaSubpartNames = new HashSet<string>();
         internal readonly HashSet<MyDefinitionBase> AllArmorBaseDefinitions = new HashSet<MyDefinitionBase>();

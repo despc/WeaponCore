@@ -101,6 +101,33 @@ namespace CoreSystems
     }
 
     [ProtoContract]
+    public class ProtoWeaponProSync 
+    {
+        public enum ProSyncState
+        {
+            Alive,
+            Dead,
+            Return,
+            Stored,
+        }
+
+        public enum TargetTypes
+        {
+            None,
+            Entity,
+            Projectile,
+            Fake,
+        }
+
+        [ProtoMember(1)] public ProSyncState State;
+        [ProtoMember(2)] public TargetTypes Type;
+        [ProtoMember(3)] public Vector3D Position;
+        [ProtoMember(4)] public int UniquePartId;
+        [ProtoMember(5)] public long ProId;
+        [ProtoMember(6)] public long TargetId;
+    }
+
+    [ProtoContract]
     public class ProtoWeaponComp
     {
         [ProtoMember(1)] public uint Revision;

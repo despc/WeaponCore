@@ -305,7 +305,7 @@ namespace CoreSystems
             }
         }
 
-        internal static void AlterControls<T>(Session session) where T : IMyTerminalBlock
+        internal static void AlterControls<T>(Session session) where T : IMyTerminalBlock //  https://github.com/THDigi/ElectronicsPanel/blob/master/Data/Scripts/ElectronicsPanel/ElectronicsPanelMod.cs#L244
         {
             var validType = typeof(T) == typeof(IMyUserControllableGun);
             List<IMyTerminalControl> controls;

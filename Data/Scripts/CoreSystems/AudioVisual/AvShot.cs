@@ -1068,7 +1068,6 @@ namespace CoreSystems.Support
 
                 if (loop)
                 {
-                    Log.Line($"test1");
                     FireEmitter.StopSound(true);
                     FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                 }

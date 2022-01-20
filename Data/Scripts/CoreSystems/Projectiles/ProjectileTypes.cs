@@ -43,6 +43,7 @@ namespace CoreSystems.Support
         internal List<Action<long, int, ulong, long, Vector3D, bool>> Monitors;
         internal int TriggerGrowthSteps;
         internal int PartId;
+        internal int UniquePartId;
         internal int MuzzleId;
         internal int ObjectsHit;
         internal int Age;
@@ -50,9 +51,9 @@ namespace CoreSystems.Support
         internal int SpawnDepth;
         internal int Frags;
         internal int LastFragTime;
-        internal int EdgeIndex = -1;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
+        internal long SyncId;
         internal double DistanceTraveled;
         internal double PrevDistanceTraveled;
         internal double ProjectileDisplacement;
@@ -168,10 +169,11 @@ namespace CoreSystems.Support
             TriggerGrowthSteps = 0;
             SpawnDepth = 0;
             PartId = 0;
+            UniquePartId = 0;
             Frags = 0;
             MuzzleId = 0;
             Age = 0;
-            EdgeIndex = -1;
+            SyncId = -1;
             DamageDone = 0;
             ProjectileDisplacement = 0;
             MaxTrajectory = 0;

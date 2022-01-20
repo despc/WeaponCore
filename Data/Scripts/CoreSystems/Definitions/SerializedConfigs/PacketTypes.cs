@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using CoreSystems.Settings;
 using ProtoBuf;
@@ -56,6 +57,7 @@ namespace CoreSystems
         PlayerState,
         EwaredBlocks,
         ClientReady,
+        ProjectileSyncs,
     }
 
     #region packets
@@ -92,6 +94,7 @@ namespace CoreSystems
     [ProtoInclude(34, typeof(EwaredBlocksPacket))]
     [ProtoInclude(35, typeof(ClientReadyPacket))]
     [ProtoInclude(36, typeof(PaintedTargetPacket))]
+    [ProtoInclude(37, typeof(ProjectileSyncPacket))]
 
     public class Packet
     {
@@ -127,6 +130,18 @@ namespace CoreSystems
     }
 
     [ProtoContract]
+    public class ProjectileSyncPacket : Packet
+    {
+        [ProtoMember(1)] internal List<ProtoWeaponProSync> Data;
+
+        public override void CleanUp()
+        {
+            base.CleanUp();
+            Data.Clear();
+        }
+    }
+
+    [ProtoContract]
     public class OverRidesPacket : Packet
     {
         [ProtoMember(1)] internal ProtoWeaponOverrides Data;
@@ -155,6 +170,7 @@ namespace CoreSystems
             Target = null;
         }
     }
+
 
     [ProtoContract]
     public class ConstructPacket : Packet
@@ -489,12 +505,12 @@ namespace CoreSystems
     [ProtoContract]
     public class MouseInputSyncPacket : Packet
     {
-        [ProtoMember(1)] internal PlayerMouseData[] Data = new PlayerMouseData[0];
+        [ProtoMember(1)] internal PlayerMouseData[] Data = Array.Empty<PlayerMouseData>();
 
         public override void CleanUp()
         {
             base.CleanUp();
-            Data = new PlayerMouseData[0];
+            Data = Array.Empty<PlayerMouseData>();
         }
     }
 

@@ -96,6 +96,32 @@ namespace CoreSystems
         #endregion
 
         #region ServerOnly
+
+        private void SendProjectileSyncs()
+        {
+            var packet = new ProjectileSyncPacket();
+
+            foreach (var pSync in WeaponProSyncs)
+            {
+                var wId = pSync.Key;
+                var syncDict = pSync.Value;
+                foreach (var sync in syncDict.Values)
+                {
+                    packet.Data.Add(sync);
+                    ProtoWeaponProSyncPool.Push(sync);
+                }
+                syncDict.Clear();
+            }
+            WeaponProSyncs.Clear();
+
+            WeaponProSyncs.Clear();
+            PacketsToClient.Add(new PacketInfo
+            {
+                Entity = null,
+                Packet = packet,
+            });
+        }
+
         internal void SendConstruct(Ai ai)
         {
             if (IsServer)

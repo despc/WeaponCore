@@ -207,6 +207,10 @@ namespace CoreSystems
                 if (MpActive)  {
                     
                     DsUtil.Start("network1");
+
+                    if (WeaponProSyncs.Count > 0)
+                        SendProjectileSyncs();
+
                     if (PacketsToClient.Count > 0 || PrunedPacketsToClient.Count > 0) 
                         ProccessServerPacketsForClients();
                     if (PacketsToServer.Count > 0) 
