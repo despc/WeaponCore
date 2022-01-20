@@ -80,6 +80,11 @@ namespace CoreSystems
                 var invalidType = false;
                 switch (packetObj.Packet.PType) {
 
+                    case PacketType.ProjectileSyncs:
+                    {
+                            ClientProjectileSyncs(packetObj);
+                            break;
+                    }
                     case PacketType.AimTargetUpdate: 
                     {
                             ClientFakeTargetUpdate(packetObj);
@@ -480,7 +485,6 @@ namespace CoreSystems
             }
             PrunedPacketsToClient.Clear();
         }
-
         #endregion
     }
 }

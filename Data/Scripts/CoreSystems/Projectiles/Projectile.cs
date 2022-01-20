@@ -389,13 +389,14 @@ namespace CoreSystems.Projectiles
         internal void ProjectileClose()
         {
             var aConst = Info.AmmoDef.Const;
+            var session = Info.System.Session;
             if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
                 SpawnShrapnel(false);
 
             for (int i = 0; i < Watchers.Count; i++) Watchers[i].DeadProjectiles.Add(this);
             Watchers.Clear();
 
-            foreach (var seeker in Seekers) seeker.Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
+            foreach (var seeker in Seekers) seeker.Info.Target.Reset(session.Tick, Target.States.ProjectileClosed);
             Seekers.Clear();
 
             if (EnableAv && Info.AvShot.ForceHitParticle)
@@ -410,7 +411,7 @@ namespace CoreSystems.Projectiles
                 if (ModelState == EntityState.Exists)
                     ModelState = EntityState.None;
                 if (!Info.AvShot.Active)
-                    Info.System.Session.Av.AvShotPool.Return(Info.AvShot);
+                    session.Av.AvShotPool.Return(Info.AvShot);
                 else Info.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
             }
             else if (Info.AmmoDef.Const.VirtualBeams)
@@ -419,15 +420,15 @@ namespace CoreSystems.Projectiles
                 {
                     var vp = VrPros[i];
                     if (!vp.AvShot.Active)
-                        Info.System.Session.Av.AvShotPool.Return(vp.AvShot);
+                        session.Av.AvShotPool.Return(vp.AvShot);
                     else vp.AvShot.EndState = new AvClose { EndPos = Position, Dirty = true, DetonateEffect = detExp };
 
-                    Info.System.Session.Projectiles.VirtInfoPool.Return(vp);
+                    session.Projectiles.VirtInfoPool.Return(vp);
                 }
                 VrPros.Clear();
             }
 
-            if (DynamicGuidance && Info.System.Session.AntiSmartActive)
+            if (DynamicGuidance && session.AntiSmartActive)
                 DynTrees.UnregisterProjectile(this);
 
             var target = Info.Target;
@@ -437,6 +438,9 @@ namespace CoreSystems.Projectiles
                 Info.Ai.Construct.RootAi.Construct.TotalEffect += Info.DamageDone;
                 comp.TotalEffect += Info.DamageDone;
             }
+
+            if (aConst.ProjectileSync && session.MpActive && session.IsServer)
+                SyncProjectile(ProtoWeaponProSync.ProSyncState.Alive);
 
             PruningProxyId = -1;
             Info.Clean();
@@ -593,9 +597,11 @@ namespace CoreSystems.Projectiles
 
             switch (DroneStat)
             {
+
                 case DroneStatus.Transit:
                     droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);
                     break;
+
 
                 case DroneStatus.Approach:
                     var lineToCenter = new LineD(Position, orbitSphere.Center);
@@ -1498,7 +1504,23 @@ namespace CoreSystems.Projectiles
                 PruneQuery = MyEntityQueryType.Both;
             }
         }
-        #endregion
 
+        internal void SyncProjectile(ProtoWeaponProSync.ProSyncState state)
+        {
+            var target = Info.Target;
+            var session = Info.System.Session;
+            var proSync = session.ProtoWeaponProSyncPool.Count > 0 ? session.ProtoWeaponProSyncPool.Pop() : new ProtoWeaponProSync();
+            proSync.UniquePartId = Info.UniquePartId;
+            proSync.State = state;
+            proSync.Position = Position;
+            proSync.ProId = Info.SyncId;
+            proSync.TargetId = target.TargetId;
+            proSync.Type = target.TargetEntity != null ? ProtoWeaponProSync.TargetTypes.Entity : target.IsProjectile ? ProtoWeaponProSync.TargetTypes.Projectile : target.IsFakeTarget ? ProtoWeaponProSync.TargetTypes.Fake : ProtoWeaponProSync.TargetTypes.None;
+            var weaponSync = session.WeaponProSyncs[Info.UniquePartId];
+
+            weaponSync[Info.SyncId] = proSync;
+        }
+
+        #endregion
     }
 }

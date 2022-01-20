@@ -169,6 +169,7 @@ namespace CoreSystems.Support
         public readonly bool NoSubParts;
         public readonly bool HasSpinPart;
         public readonly bool DebugMode;
+        public readonly bool HasProjectileSync;
         public readonly double MaxTargetSpeed;
         public readonly double AzStep;
         public readonly double ElStep;
@@ -272,6 +273,9 @@ namespace CoreSystems.Support
                 ammo.AmmoDef.Const = new AmmoConstants(ammo, Values, Session, this, i);
                 if (ammo.AmmoDef.Const.GuidedAmmoDetected)
                     HasGuidedAmmo = true;
+
+                if (ammo.AmmoDef.Const.ProjectileSync)
+                    HasProjectileSync = true;
 
                 if (ammo.AmmoDef.Const.AntiSmartDetected)
                     HasAntiSmart = true;

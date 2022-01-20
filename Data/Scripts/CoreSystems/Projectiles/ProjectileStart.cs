@@ -31,6 +31,7 @@ namespace CoreSystems.Projectiles
                 var p = Session.Projectiles.ProjectilePool.Count > 0 ? Session.Projectiles.ProjectilePool.Pop() : new Projectile();
                 var info = p.Info;
                 var target = info.Target;
+
                 info.Id = Session.Projectiles.CurrentProjectileId++;
                 info.System = w.System;
                 info.Ai = comp.Ai;
@@ -52,6 +53,7 @@ namespace CoreSystems.Projectiles
                 info.PartId = w.PartId;
                 info.BaseDamagePool = a == weaponAmmoDef ? w.BaseDamage : aConst.BaseDamage;
                 info.WeaponCache = w.WeaponCache;
+
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
                 info.LockOnFireState = (w.LockOnFireState || !aConst.TargetOverrideDetected && wTarget.TargetEntity != null);
                 info.ModOverride = comp.ModOverride;
@@ -61,6 +63,7 @@ namespace CoreSystems.Projectiles
                 info.MaxTrajectory = t != Kind.Client ? aConst.MaxTrajectoryGrows && w.FireCounter < a.Trajectory.MaxTrajectoryTime ? aConst.TrajectoryStep * w.FireCounter : aConst.MaxTrajectory : gen.MaxTrajectory;
                 info.MuzzleId = t != Kind.Virtual ? muzzle.MuzzleId : -1;
                 info.UniqueMuzzleId = muzzle.UniqueId;
+                info.UniquePartId = w.UniqueId;
                 info.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : info.WeaponCache.VirutalId;
                 info.Origin = t != Kind.Client ? t != Kind.Virtual ? muzzle.Position : w.MyPivotPos : gen.Origin;
                 info.Direction = t != Kind.Client ? t != Kind.Virtual ? gen.Direction : w.MyPivotFwd : gen.Direction;
@@ -131,6 +134,12 @@ namespace CoreSystems.Projectiles
                     for (int j = 0; j < info.Monitors.Count; j++)
                         p.Info.Monitors[j].Invoke(comp.Cube.EntityId, w.PartId, info.Id, target.TargetId, p.Position, true);
                 }
+
+                if (Session.MpActive && aConst.ProjectileSync) {
+                    info.SyncId = (long)w.Reload.EndId << 32 | w.ProjectileCounter & 0xFFFFFFFFL;
+                    p.SyncProjectile(ProtoWeaponProSync.ProSyncState.Alive);
+                }
+
             }
             NewProjectiles.Clear();
         }

@@ -438,7 +438,7 @@ namespace CoreSystems
                 }
 
                 var blockStages = maxAoeDistance + 1;
-
+                var appliedImpulse = false;
                 for (int j = 0; j < blockStages; j++)//Loop through blocks "hit" by damage, in groups by range.  J essentially = dist to root
                 {
                     var dbc = DamageBlockCache[j];
@@ -602,11 +602,6 @@ namespace CoreSystems
                             t.BaseDamagePool = basePool;
                             detRequested = hasDet;
                             objectsHit++;
-                            if (hitMass > 0 && i == 0)//apply force
-                            {
-                                var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
-                                if (Session.IsServer) ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
-                            }
                             //Log.Line($"basePool exhausted: detRequested:{detRequested} - i:{i} - j:{j} - k:{k}");
                         }
                         else if (primaryDamage)
@@ -684,6 +679,13 @@ namespace CoreSystems
                             {
                                 block.DoDamage(scaledDamage, damageType, sync, null, attackerId);
                                 t.DamageDone += scaledDamage;
+
+                                if (!appliedImpulse && primaryDamage && hitMass > 0 && Session.IsServer)
+                                {
+                                    appliedImpulse = true;
+                                    var speed = !t.AmmoDef.Const.IsBeamWeapon && t.AmmoDef.Const.DesiredProjectileSpeed > 0 ? t.AmmoDef.Const.DesiredProjectileSpeed : 1;
+                                    ApplyProjectileForce(grid, grid.GridIntegerToWorld(rootBlock.Position), hitEnt.Intersection.Direction, (hitMass * speed));
+                                }
                             }
                             catch
                             {
