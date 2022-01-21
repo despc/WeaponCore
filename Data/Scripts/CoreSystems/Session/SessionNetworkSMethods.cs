@@ -51,7 +51,7 @@ namespace CoreSystems
                 ai.Construct.UpdateConstructsPlayers(entity, playerId, dPacket.Data);
                 data.Report.PacketValid = true;
             }
-            else Log.Line($"ServerActiveControlUpdate: ai:{ai != null} - targetingAi:{EntityAIs.ContainsKey(topEntity)} - masterAi:{EntityToMasterAi.ContainsKey(topEntity)} - IdToComp:{IdToCompMap.ContainsKey(entity.EntityId)} - playerId:{playerId}({packet.SenderId}) - marked:{entity.MarkedForClose}({topEntity.MarkedForClose}) - active:{dPacket.Data} - inGridMap:{GridToInfoMap.ContainsKey(topEntity)} - controlName:{entity.DebugName}");
+            else Log.Line($"ServerActiveControlUpdate: ai:{ai != null} - targetingAi:{EntityAIs.ContainsKey(topEntity)} - masterAi:{EntityToMasterAi.ContainsKey(topEntity)} - playerId:{playerId}({packet.SenderId}) - marked:{entity.MarkedForClose}({topEntity.MarkedForClose}) - active:{dPacket.Data} - inGridMap:{GridToInfoMap.ContainsKey(topEntity)} - controlName:{entity.DebugName}");
 
             return true;
         }

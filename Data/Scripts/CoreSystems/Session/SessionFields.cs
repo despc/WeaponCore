@@ -421,6 +421,7 @@ namespace CoreSystems
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.
             //76561198058376283 Tino (WPG server)
+            //76561198323181476 reupload
         };
 
         internal readonly HashSet<ulong> JokePlayerList = new HashSet<ulong>()

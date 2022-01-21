@@ -238,7 +238,7 @@ namespace CoreSystems.Platform
             System = system;
             Init(comp, system, partId);
 
-            if (System.Session.MpActive && System.HasProjectileSync )
+            if (System.Session.MpActive && System.HasProjectileSync)
                 System.Session.WeaponProSyncs[UniqueId] = new Dictionary<long, ProtoWeaponProSync>();
 
             MyStringHash subtype;

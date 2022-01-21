@@ -459,6 +459,7 @@ namespace CoreSystems
                 var dict = WeaponProSyncs[sync.UniquePartId];
                 var protoWeaponProSync = dict[sync.ProId];
                 protoWeaponProSync.Position = sync.Position;
+                protoWeaponProSync.Velocity = sync.Velocity;
                 protoWeaponProSync.Type = sync.Type;
                 protoWeaponProSync.ProId = sync.ProId;
                 protoWeaponProSync.TargetId = sync.TargetId;

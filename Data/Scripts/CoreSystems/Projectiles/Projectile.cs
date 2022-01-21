@@ -1513,6 +1513,7 @@ namespace CoreSystems.Projectiles
             proSync.UniquePartId = Info.UniquePartId;
             proSync.State = state;
             proSync.Position = Position;
+            proSync.Velocity = Velocity;
             proSync.ProId = Info.SyncId;
             proSync.TargetId = target.TargetId;
             proSync.Type = target.TargetEntity != null ? ProtoWeaponProSync.TargetTypes.Entity : target.IsProjectile ? ProtoWeaponProSync.TargetTypes.Projectile : target.IsFakeTarget ? ProtoWeaponProSync.TargetTypes.Fake : ProtoWeaponProSync.TargetTypes.None;
