@@ -702,6 +702,10 @@ namespace CoreSystems.Support
                         
                         if (rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr)
                         {
+                            var overrides = w.Comp.Data.Repo.Values.Set.Overrides;
+                            if (overrides.FocusSubSystem && overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any && block != null && !w.ValidSubSystemTarget(block, overrides.SubSystem))
+                                return false;
+
                             if (w.System.LockOnFocus)
                             {
                                 var targetSphere = targetEnt.PositionComp.WorldVolume;

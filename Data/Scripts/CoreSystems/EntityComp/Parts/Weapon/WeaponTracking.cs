@@ -3,6 +3,8 @@ using CoreSystems.Support;
 using Jakaria;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
+using SpaceEngineers.Game.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -459,8 +461,10 @@ namespace CoreSystems.Platform
 
             double rangeToTarget;
             Vector3D.DistanceSquared(ref targetPos, ref MyPivotPos, out rangeToTarget);
-
-            return rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr;
+            var inRange = rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr;
+            var block = target as MyCubeBlock;
+            var overrides = Comp.Data.Repo.Values.Set.Overrides;
+            return inRange && (block == null || !overrides.FocusSubSystem || overrides.SubSystem == WeaponDefinition.TargetingDef.BlockTypes.Any || ValidSubSystemTarget(block, overrides.SubSystem));
         }
 
         public bool SmartLos()
@@ -778,7 +782,8 @@ namespace CoreSystems.Platform
 
             var scopeInfo = GetScope.Info;
             var trackingCheckPosition = ScopeDistToCheckPos > 0 ? scopeInfo.Position - (scopeInfo.Direction * ScopeDistToCheckPos) : scopeInfo.Position;
-            
+            var overrides = Comp.Data.Repo.Values.Set.Overrides;
+
             if (System.Session.DebugLos && Target.TargetEntity != null)
             {
                 var trackPos = BarrelOrigin + (MyPivotFwd * MuzzleDistToBarrelCenter);
@@ -815,7 +820,7 @@ namespace CoreSystems.Platform
                 if (tick - Comp.LastRayCastTick <= 29) return true;
             }
 
-            if (Target.TargetEntity is IMyCharacter && !Comp.Data.Repo.Values.Set.Overrides.Biologicals || Target.TargetEntity is MyCubeBlock && !Comp.Data.Repo.Values.Set.Overrides.Grids)
+            if (Target.TargetEntity is IMyCharacter && !overrides.Biologicals || Target.TargetEntity is MyCubeBlock && !overrides.Grids)
             {
                 masterWeapon.Target.Reset(Comp.Session.Tick, Target.States.RayCheckProjectile);
                 if (masterWeapon != this) Target.Reset(Comp.Session.Tick, Target.States.RayCheckProjectile);
@@ -854,12 +859,18 @@ namespace CoreSystems.Platform
                 }
 
                 var cube = Target.TargetEntity as MyCubeBlock;
-                if (cube != null && !cube.IsWorking && !Comp.Ai.Construct.Focus.EntityIsFocused(Comp.Ai, cube.CubeGrid))
+                if (cube != null)
                 {
-                    masterWeapon.Target.Reset(Comp.Session.Tick, Target.States.RayCheckDeadBlock);
-                    if (masterWeapon != this) Target.Reset(Comp.Session.Tick, Target.States.RayCheckDeadBlock);
-                    FastTargetResetTick = System.Session.Tick;
-                    return false;
+                    var focusFailed = (!cube.IsWorking || overrides.FocusTargets) && !Comp.Ai.Construct.Focus.EntityIsFocused(Comp.Ai, cube.CubeGrid);
+                    var checkSubsystem = overrides.FocusSubSystem && overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any;
+                    if (focusFailed || checkSubsystem && ValidSubSystemTarget(cube, overrides.SubSystem))
+                    {
+                        masterWeapon.Target.Reset(Comp.Session.Tick, Target.States.RayCheckDeadBlock);
+                        if (masterWeapon != this) Target.Reset(Comp.Session.Tick, Target.States.RayCheckDeadBlock);
+                        FastTargetResetTick = System.Session.Tick;
+                        return false;
+                    }
+
                 }
                 var topMostEnt = Target.TargetEntity.GetTopMostParent();
                 if (Target.TopEntityId != topMostEnt.EntityId || !Comp.Ai.Targets.ContainsKey(topMostEnt))
@@ -893,6 +904,30 @@ namespace CoreSystems.Platform
 
             Comp.Session.Physics.CastRayParallel(ref trackingCheckPosition, ref targetPos, CollisionLayers.DefaultCollisionLayer, RayCallBack.NormalShootRayCallBack);
             return true;
+        }
+
+        internal bool ValidSubSystemTarget(MyCubeBlock cube, WeaponDefinition.TargetingDef.BlockTypes subsystem)
+        {
+            switch (subsystem)
+            {
+                case WeaponDefinition.TargetingDef.BlockTypes.Jumping:
+                    return cube is MyJumpDrive || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Offense:
+                    return cube is IMyGunBaseUser || cube is MyConveyorSorter && System.Session.PartPlatforms.ContainsKey(cube.BlockDefinition.Id) || cube is IMyWarhead || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Power:
+                    return cube is IMyPowerProducer || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Production:
+                    return cube is IMyProductionBlock || cube is IMyUpgradeModule && System.Session.VanillaUpgradeModuleHashes.Contains(cube.BlockDefinition.Id.SubtypeName) || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Steering:
+                    var cockpit = cube as MyCockpit;
+                    return cube is MyGyro || cockpit != null && cockpit.EnableShipControl || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Thrust:
+                    return cube is MyThrust || cube is IMyDecoy;
+                case WeaponDefinition.TargetingDef.BlockTypes.Utility:
+                    return !(cube is IMyProductionBlock) && cube is IMyUpgradeModule || cube is IMyRadioAntenna || cube is IMyLaserAntenna || cube is MyRemoteControl || cube is IMyShipToolBase || cube is IMyMedicalRoom || cube is IMyCameraBlock || cube is IMyDecoy; 
+                default:
+                    return false;
+            }
         }
 
         internal void InitTracking()
