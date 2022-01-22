@@ -16,7 +16,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             //runs once on first draw then only again if a menu is closed
             var fovScale = (float)(0.1 * _session.ScaleFov);
 
-            var fovModifier = (float)((_session.Settings.ClientConfig.HudScale * 1.5) * _session.ScaleFov);
+            var fovModifier = (float)((_session.Settings.ClientConfig.HudScale * 1.4) * _session.ScaleFov);
             var normScaler = (float)(_session.Settings.ClientConfig.HudScale * _session.ScaleFov);
             var aspectScale = (2.37037f / _session.AspectRatio);
 
@@ -26,7 +26,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             _viewPortSize.Y = fovScale;
             _viewPortSize.Z = -0.1f;
 
-            _currWeaponDisplayPos.X = _viewPortSize.X;
+            _currWeaponDisplayPos.X = _viewPortSize.X * BgWidthPosOffset;
             _currWeaponDisplayPos.Y = _viewPortSize.Y * .6f;
 
             _padding = PaddingConst * ((float)_session.ScaleFov * _session.AspectRatio);
@@ -40,7 +40,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             _stextWidth = (_textWidth * .75f);
             _stackPadding = _stextWidth * 6; // gives max limit of 6 characters (x999)
 
-            _heatWidth = HeatWidthConst * fovModifier;
+            _heatWidth = (HeatWidthConst * fovModifier) ;
             _heatHeight = HeatHeightConst * fovModifier;
             _heatOffsetX = (HeatWidthOffset * fovModifier) * aspectScale;
             _heatOffsetY = (_heatHeight * 3f);
@@ -49,7 +49,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             //_paddingHeat = _session.CurrentFovWithZoom < 1 ? MathHelper.Clamp(_session.CurrentFovWithZoom * 0.0001f, 0.0001f, 0.0003f) : 0;
             _paddingReload = _session.CurrentFovWithZoom < 1 ? MathHelper.Clamp(_session.CurrentFovWithZoom * 0.002f, 0.0002f, 0.001f) : 0.001f;
 
-            _symbolWidth = (_heatWidth + _padding) * aspectScale;
+            _symbolWidth = ((_heatWidth + _padding) * aspectScale);
             _bgColor = new Vector4(1f, 1f, 1f, 0f);
         }
 

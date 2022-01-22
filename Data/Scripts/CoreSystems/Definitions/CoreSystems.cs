@@ -120,6 +120,7 @@ namespace CoreSystems.Support
 
         public readonly string AltScopeName;
         public readonly string AltEjectorName;
+        public readonly string ShortName;
         public readonly string[] Muzzles;
 
         public readonly int DelayToFire;
@@ -297,6 +298,13 @@ namespace CoreSystems.Support
             HardPointSoundDistMaxSqr(AmmoTypes, out FiringSoundDistSqr, out ReloadSoundDistSqr, out BarrelSoundDistSqr, out HardPointSoundDistSqr, out NoAmmoSoundDistSqr, out HardPointAvMaxDistSqr);
 
             HasBarrelShootAv = BarrelEffect1 || BarrelEffect2 || HardPointRotationSound || FiringSound != FiringSoundState.None;
+
+            var nameLen = partName.Length;
+            if (nameLen > 21)
+                ShortName = partName.Remove(21, nameLen - 21);
+            else
+                ShortName = PartName;
+            Log.Line($"{PartName} - {ShortName}");
         }
 
 

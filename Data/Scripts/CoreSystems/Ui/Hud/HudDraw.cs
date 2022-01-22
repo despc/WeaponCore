@@ -55,7 +55,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
                 var largestName = (_currentLargestName * (_textWidth)) + _stackPadding;
 
-                _bgWidth = largestName > _symbolWidth ? largestName : _symbolWidth;
+                _bgWidth = (largestName > _symbolWidth ? largestName : _symbolWidth) * SymbolWidthScaler;
                 _bgBorderHeight = _bgWidth * BgBorderRatio;
                 _bgCenterHeight = _weapontoDraw.Count * _infoPaneloffset;
             }
@@ -248,7 +248,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 var overrides = comp.Data.Repo.Values.Set.Overrides;
                 var notAnyBlock = overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any;
                 var needsTarget =  !weapon.Target.HasTarget && overrides.Grids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && weapon.ActiveAmmoDef.AmmoDef.Const.CanReportTargetStatus && ai.DetectionInfo.TargetInRange(weapon);
-                var name = weapon.System.PartName + (needsTarget ? overrides.FocusSubSystem && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus ? needsLock : EmptyStr);
+                var name = weapon.System.ShortName + (needsTarget ? overrides.FocusSubSystem && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;
                 var hasHeat = weapon.HeatPerc > 0;

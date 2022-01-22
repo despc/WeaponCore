@@ -457,7 +457,7 @@ namespace CoreSystems.Support
             MaxOffset = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
             MinOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
             MaxOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength;
-            CanReportTargetStatus = RequiresTarget && system.TrackGrids && PeakDps > 0;
+            CanReportTargetStatus = RequiresTarget && system.TrackGrids && !system.DesignatorWeapon && PeakDps > 0;
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
