@@ -239,16 +239,16 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 var stackedInfo = _weapontoDraw[i];
                 var weapon = stackedInfo.HighestValueWeapon;
                 var comp = weapon.Comp;
-                if (comp.Ai == null || comp.Data.Repo?.Values == null)
+                if (comp.Ai == null || comp.Ai.MarkedForClose || comp.CoreEntity.MarkedForClose || comp.Data.Repo?.Values == null || weapon.ActiveAmmoDef?.AmmoDef?.Const == null)
                     continue;
 
                 var ai = weapon.Comp.Ai;
                 var currLock = _session.TrackingAi.Construct.Data.Repo.FocusData.Locked == FocusData.LockModes.Locked ? NeedsLockStr : CurrentLockStr;
                 var needsLock = weapon.System.LockOnFocus && currLock == CurrentLockStr ? GapStr + _session.UiInput.ActionKey : NeedsLockStr;
                 var overrides = comp.Data.Repo.Values.Set.Overrides;
-                var anyBlock = overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any;
-                var needsTarget = weapon.RequiresTarget && !weapon.Target.HasTarget && overrides.Grids && weapon.System.TrackGrids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(weapon);
-                var name = weapon.System.PartName + (needsTarget ? overrides.FocusSubSystem && anyBlock ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus ? needsLock : EmptyStr);
+                var notAnyBlock = overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any;
+                var needsTarget =  !weapon.Target.HasTarget && overrides.Grids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && weapon.ActiveAmmoDef.AmmoDef.Const.CanReportTargetStatus && ai.DetectionInfo.TargetInRange(weapon);
+                var name = weapon.System.PartName + (needsTarget ? overrides.FocusSubSystem && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;
                 var hasHeat = weapon.HeatPerc > 0;

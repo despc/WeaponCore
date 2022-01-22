@@ -29,7 +29,6 @@ namespace CoreSystems.Platform
                 AmmoName = ActiveAmmoDef.AmmoName;
             PrepAmmoShuffle();
 
-            RequiresTarget = ActiveAmmoDef.AmmoDef.Const.RequiresTarget || System.TrackTargets;
             if (!ActiveAmmoDef.AmmoDef.Const.EnergyAmmo)
                 Reload.CurrentMags = Comp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom ? Comp.CoreInventory.GetItemAmount(ActiveAmmoDef.AmmoDefinitionId).ToIntSafe() : int.MaxValue;
 
@@ -51,8 +50,6 @@ namespace CoreSystems.Platform
 
             ActiveAmmoDef = System.AmmoTypes[Reload.AmmoTypeId];
             PrepAmmoShuffle();
-
-            RequiresTarget = ActiveAmmoDef.AmmoDef.Const.RequiresTarget || System.TrackTargets;
 
             UpdateRof();
             SetWeaponDps();

@@ -261,7 +261,7 @@ namespace CoreSystems.Support
 
                     var endReturn = i + 1 != collection.Count ? "\n" : string.Empty;
 
-                    stringBuilder.Append($"\n{Localization.GetText("WeaponInfoName")}: " + w.System.PartName + shots + burst + $"\n{Localization.GetText("WeaponInfoHasTarget")}: " + (w.RequiresTarget ? w.Target.HasTarget.ToString() : "n/a") + $"\n{Localization.GetText("WeaponInfoReloading")}: " + w.Loading +  $"\n{Localization.GetText("WeaponInfoLoS")}: " + !w.PauseShoot + endReturn);
+                    stringBuilder.Append($"\n{Localization.GetText("WeaponInfoName")}: " + w.System.PartName + shots + burst + $"\n{Localization.GetText("WeaponInfoHasTarget")}: " + (w.ActiveAmmoDef.AmmoDef.Const.RequiresTarget ? w.Target.HasTarget.ToString() : "n/a") + $"\n{Localization.GetText("WeaponInfoReloading")}: " + w.Loading +  $"\n{Localization.GetText("WeaponInfoLoS")}: " + !w.PauseShoot + endReturn);
 
                     string otherAmmo = null;
                     for (int j = 0; j < w.System.AmmoTypes.Length; j++)

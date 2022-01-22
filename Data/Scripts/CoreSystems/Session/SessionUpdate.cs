@@ -314,7 +314,7 @@ namespace CoreSystems
                         /// Update Weapon Hud Info
                         /// 
 
-                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (w.RequiresTarget && !w.Target.HasTarget && wValues.Set.Overrides.Grids && w.System.TrackGrids && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(w)));
+                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (aConst.CanReportTargetStatus && !w.Target.HasTarget && wValues.Set.Overrides.Grids && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(w)));
 
                         if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;
@@ -341,7 +341,7 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !wComp.FakeMode || wComp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
                                 w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
-                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidFocusTarget(w) || Tick60 && !focusTargets && !w.TurretController && w.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
+                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidFocusTarget(w) || Tick60 && !focusTargets && !w.TurretController && aConst.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -382,9 +382,9 @@ namespace CoreSystems
                         /// 
                         
 
-                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || w.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
+                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || aConst.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
                         
-                        if (!IsClient && (seek || w.RequiresTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
+                        if (!IsClient && (seek || aConst.RequiresTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;
                             AcquireTargets.Add(w);
@@ -415,7 +415,7 @@ namespace CoreSystems
                         var shootRequest = (validShootStates || manualShot || w.FinishShots || delayedFire);
                         w.LockOnFireState = shootRequest && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shootRequest && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
-                        var shoot = shotReady && ai.CanShoot && (!w.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
+                        var shoot = shotReady && ai.CanShoot && (!aConst.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
 
                         if (shoot) {
 

@@ -332,6 +332,8 @@ namespace CoreSystems.Support
             if (session.WaterApiLoaded && !w.ActiveAmmoDef.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
                 waterSphere = new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius);
 
+            w.FoundTopMostTarget = false;
+
             TargetInfo alphaInfo = null;
             int offset = 0;
 
@@ -418,6 +420,7 @@ namespace CoreSystems.Support
 
                         var targetNormDir = Vector3D.Normalize(targetCenter - barrelPos);
                         var predictedMuzzlePos = barrelPos + (targetNormDir * w.MuzzleDistToBarrelCenter);
+                        w.FoundTopMostTarget = true;
 
                         if (!AcquireBlock(s, w.Comp.Ai, target, info, predictedMuzzlePos, w.TargetData.WeaponRandom, Acquire, ref waterSphere, ref w.XorRnd, w, !focusTarget)) continue;
                         targetType = TargetType.Other;
@@ -459,6 +462,8 @@ namespace CoreSystems.Support
                             target.Set(info.Target, w.LastHitInfo.Position, shortDist, origDist, topEntId);
                             targetType = TargetType.Other;
                             target.TransferTo(w.Target, w.Comp.Session.Tick);
+                            
+                            w.FoundTopMostTarget = true;
 
                             if (targetType == TargetType.Other && w.Target.TargetEntity != null)
                                 ai.Session.NewThreat(w);

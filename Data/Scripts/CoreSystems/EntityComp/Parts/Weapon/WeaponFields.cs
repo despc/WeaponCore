@@ -69,6 +69,7 @@ namespace CoreSystems.Platform
         internal bool LockOnFireState;
         internal bool ScheduleAmmoChange;
         internal bool CriticalReaction;
+        internal bool FoundTopMostTarget;
         internal uint LastMagSeenTick;
         internal uint GravityTick;
         internal uint ShootTick;
@@ -201,9 +202,7 @@ namespace CoreSystems.Platform
         internal bool ParentIsSubpart;
         internal bool CheckInventorySystem = true;
         internal bool PlayingHardPointSound;
-        internal bool RequiresTarget;
         internal bool VanillaTracking;
-
         internal bool ShotReady
         {
             get

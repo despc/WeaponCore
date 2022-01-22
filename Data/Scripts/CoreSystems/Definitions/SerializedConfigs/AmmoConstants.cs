@@ -231,6 +231,7 @@ namespace CoreSystems.Support
         public readonly bool RequiresTarget;
         public readonly bool HasAdvFragOffset;
         public readonly bool DetonationSound;
+        public readonly bool CanReportTargetStatus;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -410,7 +411,7 @@ namespace CoreSystems.Support
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
-            ComputeAmmoPattern(ammo, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
+            ComputeAmmoPattern(ammo, system, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
 
             DamageScales(ammo.AmmoDef, out DamageScaling, out FallOffScaling, out ArmorScaling, out CustomDamageScales, out CustomBlockDefinitionBasesToScales, out SelfDamage, out VoxelDamage, out HealthHitModifier, out VoxelHitModifier);
             CollisionShape(ammo.AmmoDef, out CollisionIsLine, out CollisionSize, out TracerLength);
@@ -456,6 +457,7 @@ namespace CoreSystems.Support
             MaxOffset = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxOffset;
             MinOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
             MaxOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength;
+            CanReportTargetStatus = RequiresTarget && system.TrackGrids && PeakDps > 0;
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
@@ -567,7 +569,7 @@ namespace CoreSystems.Support
             pointType = ammo.AmmoDef.Fragment.TimedSpawns.PointType;
         }
 
-        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out bool weaponPattern, out bool fragmentPattern)
+        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponSystem system, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out bool weaponPattern, out bool fragmentPattern)
         {
             var pattern = ammo.AmmoDef.Pattern;
             var indexPos = 0;
@@ -632,7 +634,7 @@ namespace CoreSystems.Support
             hasAntiSmart = antiSmart;
             hasTargetOverride = targetOverride;
 
-            requiresTarget = guidedAmmo && !targetOverride;
+            requiresTarget = guidedAmmo && !targetOverride || system.TrackTargets;
         }
 
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)
