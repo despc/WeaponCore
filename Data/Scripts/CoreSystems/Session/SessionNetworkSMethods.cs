@@ -307,9 +307,6 @@ namespace CoreSystems
                         if (targetGrid != null)
                             ai.Construct.Focus.ServerAddFocus(targetGrid, ai);
                         break;
-                    case PacketType.NextActiveUpdate:
-                        ai.Construct.Focus.ServerNextActive(focusPacket.AddSecondary, ai);
-                        break;
                     case PacketType.ReleaseActiveUpdate:
                         ai.Construct.Focus.RequestReleaseActive(ai);
                         break;

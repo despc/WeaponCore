@@ -338,7 +338,6 @@ namespace CoreSystems
                 }
                 case PacketType.FocusUpdate:
                 case PacketType.FocusLockUpdate:
-                case PacketType.NextActiveUpdate:
                 case PacketType.ReleaseActiveUpdate: {
                     ServerFocusUpdate(packetObj);
                     break;

@@ -237,10 +237,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 var stackedInfo = _weapontoDraw[i];
                 var weapon = stackedInfo.HighestValueWeapon;
                 
-                
-                var currLock = _session.TrackingAi.Construct.Data.Repo.FocusData.Locked[0] == FocusData.LockModes.Locked ? NeedsLockStr : CurrentLockStr;
+                var currLock = _session.TrackingAi.Construct.Data.Repo.FocusData.Locked == FocusData.LockModes.Locked ? NeedsLockStr : CurrentLockStr;
                 var needsLock = weapon.System.LockOnFocus && currLock == CurrentLockStr ? GapStr + _session.UiInput.ActionKey : NeedsLockStr;
-                var needsTarget = weapon.RequiresTarget && !weapon.Target.HasTarget;
+                var needsTarget = weapon.RequiresTarget && !weapon.Target.HasTarget &&  weapon.Comp.Ai.DetectionInfo.PriorityInRange && weapon.Comp.Data.Repo.Values.Set.Overrides.Grids;
                 var name = weapon.System.PartName + (needsTarget ? NoTargetStr :weapon.System.LockOnFocus ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;

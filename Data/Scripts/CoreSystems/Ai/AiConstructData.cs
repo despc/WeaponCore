@@ -20,7 +20,7 @@ namespace CoreSystems
 
             if (Ai.Session.IsServer)
             {
-                Repo.FocusData = new FocusData { Target = new long[2], Locked = new FocusData.LockModes[2]};
+                Repo.FocusData = new FocusData();
             }
         }
 
@@ -74,7 +74,7 @@ namespace CoreSystems
             else Repo = new ConstructDataValues();
 
             if (Repo.FocusData == null)
-                Repo.FocusData = new FocusData {Target = new long[2], Locked = new FocusData.LockModes[2] };
+                Repo.FocusData = new FocusData();
         }
     }
 }

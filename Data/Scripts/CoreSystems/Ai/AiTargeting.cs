@@ -218,18 +218,15 @@ namespace CoreSystems.Support
             if (s.Session.WaterApiLoaded && !info.AmmoDef.IgnoreWater && ai.InPlanetGravity && ai.MyPlanet != null && s.Session.WaterMap.TryGetValue(ai.MyPlanet.EntityId, out water))
                 waterSphere = new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius);
             TargetInfo alphaInfo = null;
-            TargetInfo betaInfo = null;
             int offset = 0;
             MyEntity fTarget;
-            if (ai.Construct.Data.Repo.FocusData.Target[0] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[0], out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
+            if (ai.Construct.Data.Repo.FocusData.Target > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target, out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
                 offset++;
 
-            if (ai.Construct.Data.Repo.FocusData.Target[1] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[1], out fTarget) && ai.Targets.TryGetValue(fTarget, out betaInfo))
-                offset++;
 
             MyEntity topTarget = null;
             if (lockedToTarget && target.TargetEntity != null) {
-                topTarget = target.TargetEntity.GetTopMostParent() ?? alphaInfo?.Target ?? betaInfo?.Target;
+                topTarget = target.TargetEntity.GetTopMostParent() ?? alphaInfo?.Target;
                 if (topTarget != null && topTarget.MarkedForClose)
                     topTarget = null;
             }
@@ -246,10 +243,9 @@ namespace CoreSystems.Support
 
                 TargetInfo tInfo;
                 if (i == 0 && alphaInfo != null) tInfo = alphaInfo;
-                else if (i <= lastOffset && betaInfo != null) tInfo = betaInfo;
                 else tInfo = ai.SortedTargets[deck[i - offset]];
 
-                if (!focusTarget && tInfo.OffenseRating <= 0 || focusTarget && !attackFriends && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Friends || tInfo.Target == null || tInfo.Target.MarkedForClose || hasOffset && i > lastOffset && (tInfo.Target == alphaInfo?.Target || tInfo.Target == betaInfo?.Target)) { continue; }
+                if (!focusTarget && tInfo.OffenseRating <= 0 || focusTarget && !attackFriends && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Friends || tInfo.Target == null || tInfo.Target.MarkedForClose || hasOffset && i > lastOffset && (tInfo.Target == alphaInfo?.Target)) { continue; }
 
                 if (!attackNeutrals && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && tInfo.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership) continue;
 
@@ -337,14 +333,10 @@ namespace CoreSystems.Support
                 waterSphere = new BoundingSphereD(ai.MyPlanet.PositionComp.WorldAABB.Center, water.MinRadius);
 
             TargetInfo alphaInfo = null;
-            TargetInfo betaInfo = null;
             int offset = 0;
 
             MyEntity fTarget;
-            if (ai.Construct.Data.Repo.FocusData.Target[0] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[0], out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
-                offset++;
-
-            if (ai.Construct.Data.Repo.FocusData.Target[1] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[1], out fTarget) && ai.Targets.TryGetValue(fTarget, out betaInfo))
+            if (ai.Construct.Data.Repo.FocusData.Target > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target, out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
                 offset++;
 
             TargetInfo gridInfo = null;
@@ -373,13 +365,11 @@ namespace CoreSystems.Support
                         if (focusTarget)
                         {
                             if (x == 0 && alphaInfo != null) info = alphaInfo;
-                            else if (x == 0 && betaInfo != null) info = betaInfo;
-                            else if (x == 1) info = betaInfo;
                             if (!attackFriends && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Friends) continue;
                         }
                         else info = ai.SortedTargets[deck[x - offset]];
                     }
-                    if (info?.Target == null || info.Target.MarkedForClose || hasOffset && x > lastOffset && (info.Target == alphaInfo?.Target || info.Target == betaInfo?.Target) || !attackNeutrals && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership)
+                    if (info?.Target == null || info.Target.MarkedForClose || hasOffset && x > lastOffset && (info.Target == alphaInfo?.Target) || !attackNeutrals && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.Neutral || !attackNoOwner && info.EntInfo.Relationship == MyRelationsBetweenPlayerAndBlock.NoOwnership)
                         continue;
                     if (movingMode && info.VelLenSqr < 1 || !fireOnStation && info.IsStatic || stationOnly && !info.IsStatic)
                         continue;
@@ -543,12 +533,7 @@ namespace CoreSystems.Support
             {
                 TargetInfo priorityInfo;
                 MyEntity fTarget;
-                if (ai.Construct.Data.Repo.FocusData.Target[0] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[0], out fTarget) && ai.Targets.TryGetValue(fTarget, out priorityInfo) && priorityInfo.Target?.GetTopMostParent() == topEnt)
-                {
-                    isPriroity = true;
-                    lastBlocks = totalBlocks < 250 ? totalBlocks : 250;
-                }
-                else if (ai.Construct.Data.Repo.FocusData.Target[1] > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target[1], out fTarget) && ai.Targets.TryGetValue(fTarget, out priorityInfo) && priorityInfo.Target?.GetTopMostParent() == topEnt)
+                if (ai.Construct.Data.Repo.FocusData.Target > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target, out fTarget) && ai.Targets.TryGetValue(fTarget, out priorityInfo) && priorityInfo.Target?.GetTopMostParent() == topEnt)
                 {
                     isPriroity = true;
                     lastBlocks = totalBlocks < 250 ? totalBlocks : 250;

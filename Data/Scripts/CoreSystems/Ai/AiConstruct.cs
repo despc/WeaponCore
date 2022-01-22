@@ -407,11 +407,10 @@ namespace CoreSystems.Support
 
     public class Focus
     {
-        public readonly long[] OldTarget = new long[2];
-        public readonly LockModes[] OldLocked = new LockModes[2];
+        public long OldTarget;
+        public LockModes OldLocked;
 
         public uint LastUpdateTick;
-        public int OldActiveId;
         public bool OldHasFocus;
         public float OldDistToNearestFocusSqr;
         
@@ -419,13 +418,10 @@ namespace CoreSystems.Support
         {
             var fd = ai.Construct.Data.Repo.FocusData;
             var forceUpdate = LastUpdateTick == 0 || ai.Session.Tick - LastUpdateTick > 600;
-            if (forceUpdate || fd.Target[0] != OldTarget[0] || fd.Target[1] != OldTarget[1] || fd.Locked[0] != OldLocked[0] || fd.Locked[1] != OldLocked[1] || fd.ActiveId != OldActiveId || fd.HasFocus != OldHasFocus || Math.Abs(fd.DistToNearestFocusSqr - OldDistToNearestFocusSqr) > 0) {
+            if (forceUpdate || fd.Target != OldTarget || fd.Locked != OldLocked || fd.HasFocus != OldHasFocus || Math.Abs(fd.DistToNearestFocusSqr - OldDistToNearestFocusSqr) > 0) {
 
-                OldTarget[0] = fd.Target[0];
-                OldTarget[1] = fd.Target[1];
-                OldLocked[0] = fd.Locked[0];
-                OldLocked[1] = fd.Locked[1];
-                OldActiveId = fd.ActiveId;
+                OldTarget = fd.Target;
+                OldLocked = fd.Locked;
                 OldHasFocus = fd.HasFocus;
                 OldDistToNearestFocusSqr = fd.DistToNearestFocusSqr;
                 LastUpdateTick = ai.Session.Tick;
@@ -439,10 +435,9 @@ namespace CoreSystems.Support
         {
             var session = ai.Session;
             var fd = ai.Construct.Data.Repo.FocusData;
-            var oldTargetId = fd.Target[fd.ActiveId];
-            if (oldTargetId != target.EntityId)
+            if (fd.Target != target.EntityId)
             {
-                fd.Target[fd.ActiveId] = target.EntityId;
+                fd.Target = target.EntityId;
                 ai.TargetResetTick = session.Tick + 1;
             }
             ServerIsFocused(ai);
@@ -462,11 +457,10 @@ namespace CoreSystems.Support
         {
             var session = ai.Session;
             var fd = ai.Construct.Data.Repo.FocusData;
-            var currentMode = fd.Locked[fd.ActiveId];
             var modeCount = Enum.GetNames(typeof(LockModes)).Length;
 
-            var nextMode = (int)currentMode + 1 < modeCount ? currentMode + 1 : 0;
-            fd.Locked[fd.ActiveId] = nextMode;
+            var nextMode = (int)fd.Locked + 1 < modeCount ? fd.Locked + 1 : 0;
+            fd.Locked = nextMode;
             ai.TargetResetTick = session.Tick + 1;
             ServerIsFocused(ai);
 
@@ -481,44 +475,12 @@ namespace CoreSystems.Support
                 ai.Session.SendFocusLockUpdate(ai);
         }
 
-        internal void ServerNextActive(bool addSecondary, Ai ai)
-        {
-            var fd = ai.Construct.Data.Repo.FocusData;
-
-            var prevId = fd.ActiveId;
-            var newActiveId = prevId;
-            if (newActiveId + 1 > fd.Target.Length - 1) newActiveId -= 1;
-            else newActiveId += 1;
-
-            if (addSecondary && fd.Target[newActiveId] <= 0)
-            {
-                fd.Target[newActiveId] = fd.Target[prevId];
-                fd.ActiveId = newActiveId;
-            }
-            else if (!addSecondary && fd.Target[newActiveId] > 0)
-                fd.ActiveId = newActiveId;
-
-            ServerIsFocused(ai);
-
-            ai.Construct.UpdateConstruct(Ai.Constructs.UpdateType.Focus, ChangeDetected(ai));
-
-        }
-
-        internal void RequestNextActive(bool addSecondary, Ai ai)
-        {
-            if (ai.Session.IsServer)
-
-                ServerNextActive(addSecondary, ai);
-            else
-                ai.Session.SendNextActiveUpdate(ai, addSecondary);
-        }
-
         internal void ServerReleaseActive(Ai ai)
         {
             var fd = ai.Construct.Data.Repo.FocusData;
 
-            fd.Target[fd.ActiveId] = -1;
-            fd.Locked[fd.ActiveId] = LockModes.None;
+            fd.Target = -1;
+            fd.Locked = LockModes.None;
 
             ServerIsFocused(ai);
 
@@ -538,34 +500,16 @@ namespace CoreSystems.Support
         {
             var fd = ai.Construct.Data.Repo.FocusData;
 
-            fd.HasFocus = false;
-            for (int i = 0; i < fd.Target.Length; i++)
-            {
-
-                if (fd.Target[i] > 0)
-                {
-
-                    if (MyEntities.GetEntityById(fd.Target[fd.ActiveId]) != null)
-                        fd.HasFocus = true;
-                    else
-                    {
-                        fd.Target[i] = -1;
-                        fd.Locked[i] = LockModes.None;
-                    }
-                }
-
-                if (fd.Target[0] <= 0 && fd.HasFocus)
-                {
-
-                    fd.Target[0] = fd.Target[i];
-                    fd.Locked[0] = fd.Locked[i];
-                    fd.Target[i] = -1;
-                    fd.Locked[i] = LockModes.None;
-                    fd.ActiveId = 0;
-                }
+            if (fd.Target > 0 && MyEntities.GetEntityById(fd.Target) != null) {
+                fd.HasFocus = true;
+                return true;
             }
 
-            return fd.HasFocus;
+            fd.Target = -1;
+            fd.Locked = LockModes.None;
+            fd.HasFocus = false;
+
+            return false;
         }
 
         internal bool ClientIsFocused(Ai ai)
@@ -575,47 +519,29 @@ namespace CoreSystems.Support
             if (ai.Session.IsServer)
                 return ServerIsFocused(ai);
 
-            bool focus = false;
-            for (int i = 0; i < fd.Target.Length; i++)
-            {
-
-                if (fd.Target[i] > 0)
-                    if (MyEntities.GetEntityById(fd.Target[fd.ActiveId]) != null)
-                        focus = true;
-            }
-
-            return focus;
+            return fd.Target > 0 && MyEntities.GetEntityById(fd.Target) != null;
         }
 
-        internal bool GetPriorityTarget(Ai ai, out MyEntity target, out int focusId)
+        internal bool GetPriorityTarget(Ai ai, out MyEntity target)
         {
-
             var fd = ai.Construct.Data.Repo.FocusData;
 
-            if (fd.Target[fd.ActiveId] > 0 && MyEntities.TryGetEntityById(fd.Target[fd.ActiveId], out target, true))
-            {
-                focusId = fd.ActiveId;
+            if (fd.Target > 0 && MyEntities.TryGetEntityById(fd.Target, out target, true))
                 return true;
-            }
 
-            for (int i = 0; i < fd.Target.Length; i++)
-                if (MyEntities.TryGetEntityById(fd.Target[i], out target, true))
-                {
-                    focusId = i;
-                    return true;
-                }
+            if (MyEntities.TryGetEntityById(fd.Target, out target, true))
+                return true;
 
-            focusId = -1;
             target = null;
             return false;
         }
 
-        internal void ReassignTarget(MyEntity target, int focusId, Ai ai)
+        internal void ReassignTarget(MyEntity target, Ai ai)
         {
             var fd = ai.Construct.Data.Repo.FocusData;
 
-            if (focusId >= fd.Target.Length || target == null || target.MarkedForClose) return;
-            fd.Target[focusId] = target.EntityId;
+            if (target == null || target.MarkedForClose) return;
+            fd.Target = target.EntityId;
             ServerIsFocused(ai);
 
             ai.Construct.UpdateConstruct(Ai.Constructs.UpdateType.Focus, ChangeDetected(ai));
@@ -630,22 +556,19 @@ namespace CoreSystems.Support
             var fd = w.Comp.Ai.Construct.Data.Repo.FocusData;
             
             fd.DistToNearestFocusSqr = float.MaxValue;
-            for (int i = 0; i < fd.Target.Length; i++)
+                if (fd.Target <= 0)
+                    return false;
+
+            MyEntity target;
+            if (MyEntities.TryGetEntityById(fd.Target, out target))
             {
-                if (fd.Target[i] <= 0)
-                    continue;
-
-                MyEntity target;
-                if (MyEntities.TryGetEntityById(fd.Target[i], out target))
-                {
-                    var sphere = target.PositionComp.WorldVolume;
-                    var distSqr = (float)MyUtils.GetSmallestDistanceToSphere(ref w.MyPivotPos, ref sphere);
-                    distSqr *= distSqr;
-                    if (distSqr < fd.DistToNearestFocusSqr)
-                        fd.DistToNearestFocusSqr = distSqr;
-                }
-
+                var sphere = target.PositionComp.WorldVolume;
+                var distSqr = (float)MyUtils.GetSmallestDistanceToSphere(ref w.MyPivotPos, ref sphere);
+                distSqr *= distSqr;
+                if (distSqr < fd.DistToNearestFocusSqr)
+                    fd.DistToNearestFocusSqr = distSqr;
             }
+
             return fd.DistToNearestFocusSqr <= w.MaxTargetDistanceSqr;
         }
 
@@ -655,16 +578,13 @@ namespace CoreSystems.Support
 
             if (targets != null)
             {
-                for (int i = 0; i < targets.Length; i++)
-                {
-                    var tId = targets[i];
-                    if (tId == 0)
-                        continue;
+                var tId = targets ?? 0;
+                if (tId == 0)
+                    return false;
 
-                    MyEntity target;
-                    if (MyEntities.TryGetEntityById(tId, out target) && target == entToCheck)
-                        return true;
-                }
+                MyEntity target;
+                if (MyEntities.TryGetEntityById(tId, out target) && target == entToCheck)
+                    return true;
             }
             return false;
         }
@@ -679,43 +599,40 @@ namespace CoreSystems.Support
 
             if (targets != null && targetEnt != null)
             {
-                for (int i = 0; i < targets.Length; i++)
+                var tId = targets ?? 0;
+                if (tId == 0) return false;
+
+                var block = targetEnt as MyCubeBlock;
+
+                MyEntity target;
+                if (MyEntities.TryGetEntityById(tId, out target) && (target == targetEnt || block != null && target == block.CubeGrid))
                 {
-                    var tId = targets[i];
-                    if (tId == 0) continue;
+                    var worldVolume = target.PositionComp.WorldVolume;
+                    var targetPos = worldVolume.Center;
+                    var tRadius = worldVolume.Radius;
+                    var maxRangeSqr = tRadius + w.MaxTargetDistance;
+                    var minRangeSqr = tRadius + w.MinTargetDistance;
 
-                    var block = targetEnt as MyCubeBlock;
-
-                    MyEntity target;
-                    if (MyEntities.TryGetEntityById(tId, out target) && (target == targetEnt || block != null && target == block.CubeGrid))
+                    maxRangeSqr *= maxRangeSqr;
+                    minRangeSqr *= minRangeSqr;
+                    double rangeToTarget;
+                    Vector3D.DistanceSquared(ref targetPos, ref w.MyPivotPos, out rangeToTarget);
+                    
+                    if (rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr)
                     {
-                        var worldVolume = target.PositionComp.WorldVolume;
-                        var targetPos = worldVolume.Center;
-                        var tRadius = worldVolume.Radius;
-                        var maxRangeSqr = tRadius + w.MaxTargetDistance;
-                        var minRangeSqr = tRadius + w.MinTargetDistance;
+                        var overrides = w.Comp.Data.Repo.Values.Set.Overrides;
+                        if (overrides.FocusSubSystem && overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any && block != null && !w.ValidSubSystemTarget(block, overrides.SubSystem))
+                            return false;
 
-                        maxRangeSqr *= maxRangeSqr;
-                        minRangeSqr *= minRangeSqr;
-                        double rangeToTarget;
-                        Vector3D.DistanceSquared(ref targetPos, ref w.MyPivotPos, out rangeToTarget);
-                        
-                        if (rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr)
+                        if (w.System.LockOnFocus)
                         {
-                            var overrides = w.Comp.Data.Repo.Values.Set.Overrides;
-                            if (overrides.FocusSubSystem && overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any && block != null && !w.ValidSubSystemTarget(block, overrides.SubSystem))
-                                return false;
-
-                            if (w.System.LockOnFocus)
-                            {
-                                var targetSphere = targetEnt.PositionComp.WorldVolume;
-                                targetSphere.Center = targetEnt.PositionComp.WorldAABB.Center;
-                                w.AimCone.ConeDir = w.MyPivotFwd;
-                                w.AimCone.ConeTip = w.BarrelOrigin;
-                                return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);
-                            }
-                            return true;
+                            var targetSphere = targetEnt.PositionComp.WorldVolume;
+                            targetSphere.Center = targetEnt.PositionComp.WorldAABB.Center;
+                            w.AimCone.ConeDir = w.MyPivotFwd;
+                            w.AimCone.ConeTip = w.BarrelOrigin;
+                            return MathFuncs.TargetSphereInCone(ref targetSphere, ref w.AimCone);
                         }
+                        return true;
                     }
                 }
             }

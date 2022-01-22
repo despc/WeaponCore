@@ -314,7 +314,7 @@ namespace CoreSystems
                         /// Update Weapon Hud Info
                         /// 
 
-                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked[0] != FocusData.LockModes.Locked) || (w.RequiresTarget && !w.Target.HasTarget));
+                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (w.RequiresTarget && !w.Target.HasTarget && ai.DetectionInfo.PriorityInRange && wValues.Set.Overrides.Grids));
 
                         if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;

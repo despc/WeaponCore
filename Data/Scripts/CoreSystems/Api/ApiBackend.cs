@@ -623,7 +623,7 @@ namespace CoreSystems.Api
             {
                 Ai ai;
                 if (_session.EntityToMasterAi.TryGetValue(shootingGrid, out ai))
-                    return MyEntities.GetEntityById(ai.Construct.Data.Repo.FocusData.Target[priority]);
+                    return MyEntities.GetEntityById(ai.Construct.Data.Repo.FocusData.Target);
             }
             return null;
         }
@@ -640,7 +640,7 @@ namespace CoreSystems.Api
                     if (!ai.Session.IsServer)
                         return false;
 
-                    ai.Construct.Focus.ReassignTarget((MyEntity)target, priority, ai);
+                    ai.Construct.Focus.ReassignTarget((MyEntity)target, ai);
                     return true;
                 }
             }
@@ -1129,7 +1129,7 @@ namespace CoreSystems.Api
                 if (!ai.Session.IsServer)
                     return false;
 
-                ai.Construct.Focus.ReassignTarget(target, focusId, ai);
+                ai.Construct.Focus.ReassignTarget(target, ai);
                 return true;
             }
 

@@ -420,8 +420,6 @@ namespace CoreSystems
             {
                 if (UiInput.CurrentWheel != UiInput.PreviousWheel)
                     TargetUi.SelectNext();
-                else if (UiInput.LongShift || UiInput.ShiftReleased && !UiInput.LongShift)
-                    TrackingAi.Construct.Focus.RequestNextActive(UiInput.LongShift, TrackingAi);
             }
         }
 

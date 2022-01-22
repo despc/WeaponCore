@@ -759,35 +759,6 @@ namespace CoreSystems
             }
         }
 
-        internal void SendNextActiveUpdate(Ai ai, bool addSecondary)
-        {
-            if (IsClient)
-            {
-                PacketsToServer.Add(new FocusPacket
-                {
-                    EntityId = ai.TopEntity.EntityId,
-                    SenderId = MultiplayerId,
-                    PType = PacketType.NextActiveUpdate,
-                    AddSecondary = addSecondary
-                });
-
-            }
-            else if (HandlesInput)
-            {
-                PacketsToClient.Add(new PacketInfo
-                {
-                    Entity = ai.TopEntity,
-                    Packet = new FocusPacket
-                    {
-                        EntityId = ai.TopEntity.EntityId,
-                        SenderId = MultiplayerId,
-                        PType = PacketType.NextActiveUpdate,
-                        AddSecondary = addSecondary
-                    }
-                });
-            }
-        }
-
         internal void SendReleaseActiveUpdate(Ai ai)
         {
             if (IsClient)

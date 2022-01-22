@@ -123,7 +123,7 @@ namespace CoreSystems.Platform
         
         internal void UpdatePivotPos()
         {
-            if (PosChangedTick == Comp.Session.Tick || Comp.IsBlock && AzimuthPart?.Parent == null || ElevationPart?.Entity == null || MuzzlePart?.Entity == null || Comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (Comp.Session == null || PosChangedTick == Comp.Session.Tick || Comp.CoreEntity == null || Comp.IsBlock && (AzimuthPart?.Entity?.Parent == null || ElevationPart?.Entity?.Parent == null)  || ElevationPart?.Entity == null || MuzzlePart?.Entity == null || Comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
             PosChangedTick = Comp.Session.Tick;
 

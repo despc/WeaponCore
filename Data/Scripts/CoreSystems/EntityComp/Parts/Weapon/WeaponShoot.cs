@@ -44,11 +44,10 @@ namespace CoreSystems.Platform
                 if (System.HasBarrelRotation && !SpinBarrel() || ShootTick > tick)
                     return;
 
-                if (LockOnFireState && (Target.TargetEntity?.EntityId != Comp.Ai.Construct.Data.Repo.FocusData.Target[0] || Target.TargetEntity?.EntityId != Comp.Ai.Construct.Data.Repo.FocusData.Target[1])) {
+                if (LockOnFireState && (Target.TargetEntity?.EntityId != Comp.Ai.Construct.Data.Repo.FocusData.Target)) {
                     
                     MyEntity focusTarget;
-                    int focusId;
-                    if (!Comp.Ai.Construct.Focus.GetPriorityTarget(Comp.Ai, out focusTarget, out focusId) || Comp.Ai.Construct.Data.Repo.FocusData.Locked[focusId] == FocusData.LockModes.None)
+                    if (!Comp.Ai.Construct.Focus.GetPriorityTarget(Comp.Ai, out focusTarget) || Comp.Ai.Construct.Data.Repo.FocusData.Locked == FocusData.LockModes.None)
                         return;
                 }
 

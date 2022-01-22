@@ -230,7 +230,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             BuildMasterCollections(ai);
 
             for (int i = 0; i < _sortedMasterList.Count; i++)
-                if (focus.Target[focus.ActiveId] == _sortedMasterList[i].EntityId) _currentIdx = i;
+                if (focus.Target == _sortedMasterList[i].EntityId) _currentIdx = i;
             _endIdx = _sortedMasterList.Count - 1;
             return _endIdx >= 0;
         }

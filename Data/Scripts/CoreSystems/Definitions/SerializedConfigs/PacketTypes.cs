@@ -44,7 +44,6 @@ namespace CoreSystems
         RequestMouseStates,
         FullMouseUpdate,
         RequestShootUpdate,
-        NextActiveUpdate,
         ReleaseActiveUpdate,
         AmmoCycleRequest,
         PlayerControlRequest,
@@ -478,14 +477,12 @@ namespace CoreSystems
     {
         [ProtoMember(1)] internal long TargetId;
         [ProtoMember(2), DefaultValue(-1)] internal int FocusId;
-        [ProtoMember(3)] internal bool AddSecondary;
 
         public override void CleanUp()
         {
             base.CleanUp();
             TargetId = 0;
             FocusId = -1;
-            AddSecondary = false;
         }
     }
 

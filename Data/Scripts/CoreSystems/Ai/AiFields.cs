@@ -80,7 +80,7 @@ namespace CoreSystems.Support
         internal readonly Dictionary<MyEntity, TargetInfo> Targets = new Dictionary<MyEntity, TargetInfo>(32);
         internal readonly MyDefinitionId GId = MyResourceDistributorComponent.ElectricityId;
         internal readonly AiData Data = new AiData();
-        internal TargetStatus[] TargetState = new TargetStatus[2];
+        internal TargetStatus TargetState = new TargetStatus();
         internal readonly AiComponent AiComp;
         internal readonly AiCharger Charger;
         internal readonly Session Session;
@@ -195,9 +195,6 @@ namespace CoreSystems.Support
         public Ai(Session session)
         {
             Session = session;
-            for (int i = 0; i < TargetState.Length; i++)
-                TargetState[i] = new TargetStatus();
-
             AiComp = new AiComponent(this);
             Charger = new AiCharger(this);
         }

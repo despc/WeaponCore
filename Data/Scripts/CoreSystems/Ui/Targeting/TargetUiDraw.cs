@@ -209,7 +209,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             var focus = s.TrackingAi.Construct.Data.Repo.FocusData;
 
             MyEntity target;
-            if (!MyEntities.TryGetEntityById(focus.Target[focus.ActiveId], out target) && target.Physics == null)
+            if (!MyEntities.TryGetEntityById(focus.Target, out target) && target.Physics == null)
                 return;
 
             var targetSphere = target.PositionComp.WorldVolume;
@@ -330,101 +330,89 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             var focus = s.TrackingAi.Construct.Data.Repo.FocusData;
             var detailedHud = !_session.Settings.ClientConfig.MinimalHud;
             var element = 0;
-            for (int i = 0; i < s.TrackingAi.TargetState.Length; i++)
+
+            if (focus.Target <= 0) return;
+            var lockMode = focus.Locked;
+
+            var targetState = s.TrackingAi.TargetState;
+            var shielded = detailedHud && targetState.ShieldHealth >= 0;
+
+            var collection = detailedHud ? _primaryTargetHuds : _primaryMinimalHuds;
+
+            foreach (var hud in collection.Keys)
+            {
+                if ((hud == InactiveShield || hud == InactiveNoShield))
+                    continue;
+
+                if (shielded && (hud == ActiveNoShield || hud == InactiveNoShield))
+                    continue;
+                if (!shielded && (hud == ActiveShield || hud == InactiveShield))
+                    continue;
+
+                Vector3D offset;
+                Vector2 localOffset;
+
+                float scale;
+                float screenScale;
+                float fontScale;
+                MyStringId textureName;
+                var hudInfo = collection[hud];
+                hudInfo.GetTextureInfo(s, out textureName, out scale, out screenScale, out fontScale, out offset, out localOffset);
+
+                var color = Color.White;
+                var lockColor = Color.White;
+
+                var hudOpacity = MathHelper.Clamp(_session.UIHudOpacity, 0.25f, 1f);
+                
+                switch (lockMode)
+                {
+                    case FocusData.LockModes.None:
+                        lockColor = Color.White;
+                        break;
+                    case FocusData.LockModes.Locked:
+                        lockColor = s.Count < 60 ? Color.White : new Color(0, 50, 0, hudOpacity);
+                        break;
+                }
+                MyTransparentGeometry.AddBillboardOriented(textureName, color, offset, s.CameraMatrix.Left, s.CameraMatrix.Up, screenScale, BlendTypeEnum.PostPP);
+                for (int j = 0; j < 11; j++)
+                {
+                    string text;
+                    Vector2 textOffset;
+                    if (TargetTextStatus(j, targetState, scale, localOffset, shielded, detailedHud, out text, out textOffset))
+                    {
+                        var textColor = j != 10 ? Color.White : lockColor;
+                        var fontSize = (float)Math.Round(21 * fontScale, 2);
+                        var fontHeight = 0.75f;
+                        var fontAge = -1;
+                        var fontJustify = Hud.Hud.Justify.None;
+                        var fontType = Hud.Hud.FontType.Shadow;
+                        var elementId = 3000 + element++;
+                        s.HudUi.AddText(text: text, x: textOffset.X, y: textOffset.Y, elementId: elementId, ttl: fontAge, color: textColor, justify: fontJustify, fontType: fontType, fontSize: fontSize, heightScale: fontHeight);
+                    }
+                }
+            }
+
+            MyEntity target;
+            if (MyEntities.TryGetEntityById(focus.Target, out target))
             {
 
-                if (focus.Target[i] <= 0) continue;
-                var lockMode = focus.Locked[i];
+                var targetSphere = target.PositionComp.WorldVolume;
+                var targetCenter = targetSphere.Center;
+                var screenPos = s.Camera.WorldToScreen(ref targetCenter);
 
-                var targetState = s.TrackingAi.TargetState[i];
-                var isActive = i == focus.ActiveId;
-                var primary = i == 0;
-                var shielded = detailedHud && targetState.ShieldHealth >= 0;
-
-                Dictionary<string, HudInfo> collection;
-                if (detailedHud)
-                    collection = primary ? _primaryTargetHuds : _secondaryTargetHuds;
-                else
-                    collection = primary ? _primaryMinimalHuds : _secondaryMinimalHuds;
-
-                foreach (var hud in collection.Keys)
+                if (Vector3D.Transform(targetCenter, s.Camera.ViewMatrix).Z > 0)
                 {
-                    if (isActive && (hud == InactiveShield || hud == InactiveNoShield))
-                        continue;
-
-                    if (!isActive && (hud == ActiveShield || hud == ActiveNoShield))
-                        continue;
-
-                    if (shielded && (hud == ActiveNoShield || hud == InactiveNoShield))
-                        continue;
-                    if (!shielded && (hud == ActiveShield || hud == InactiveShield))
-                        continue;
-
-                    Vector3D offset;
-                    Vector2 localOffset;
-
-                    float scale;
-                    float screenScale;
-                    float fontScale;
-                    MyStringId textureName;
-                    var hudInfo = collection[hud];
-                    hudInfo.GetTextureInfo(s, out textureName, out scale, out screenScale, out fontScale, out offset, out localOffset);
-
-                    var color = Color.White;
-                    var lockColor = Color.White;
-
-                    var hudOpacity = MathHelper.Clamp(_session.UIHudOpacity, 0.25f, 1f);
-                    
-                    switch (lockMode)
-                    {
-                        case FocusData.LockModes.None:
-                            lockColor = Color.White;
-                            break;
-                        case FocusData.LockModes.Locked:
-                            lockColor = s.Count < 60 ? Color.White : new Color(0, 50, 0, hudOpacity);
-                            break;
-                    }
-                    MyTransparentGeometry.AddBillboardOriented(textureName, color, offset, s.CameraMatrix.Left, s.CameraMatrix.Up, screenScale, BlendTypeEnum.PostPP);
-                    for (int j = 0; j < 11; j++)
-                    {
-                        string text;
-                        Vector2 textOffset;
-                        if (TargetTextStatus(j, targetState, scale, localOffset, shielded, detailedHud, out text, out textOffset))
-                        {
-                            var textColor = j != 10 ? Color.White : lockColor;
-                            var fontSize = (float)Math.Round(21 * fontScale, 2);
-                            var fontHeight = 0.75f;
-                            var fontAge = -1;
-                            var fontJustify = Hud.Hud.Justify.None;
-                            var fontType = Hud.Hud.FontType.Shadow;
-                            var elementId = 3000 + element++;
-                            s.HudUi.AddText(text: text, x: textOffset.X, y: textOffset.Y, elementId: elementId, ttl: fontAge, color: textColor, justify: fontJustify, fontType: fontType, fontSize: fontSize, heightScale: fontHeight);
-                        }
-                    }
+                    screenPos.X *= -1;
+                    screenPos.Y = -1;
                 }
 
-                MyEntity target;
-                if (isActive && MyEntities.TryGetEntityById(focus.Target[focus.ActiveId], out target))
-                {
+                var dotpos = new Vector2D(MathHelper.Clamp(screenPos.X, -0.98, 0.98), MathHelper.Clamp(screenPos.Y, -0.98, 0.98));
+                var screenScale = 0.1 * s.ScaleFov;
+                dotpos.X *= (float)(screenScale * _session.AspectRatio);
+                dotpos.Y *= (float)screenScale;
+                screenPos = Vector3D.Transform(new Vector3D(dotpos.X, dotpos.Y, -0.1), s.CameraMatrix);
+                MyTransparentGeometry.AddBillboardOriented(_targetCircle, Color.White, screenPos, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)screenScale * 0.075f, BlendTypeEnum.PostPP);
 
-                    var targetSphere = target.PositionComp.WorldVolume;
-                    var targetCenter = targetSphere.Center;
-                    var screenPos = s.Camera.WorldToScreen(ref targetCenter);
-
-                    if (Vector3D.Transform(targetCenter, s.Camera.ViewMatrix).Z > 0)
-                    {
-                        screenPos.X *= -1;
-                        screenPos.Y = -1;
-                    }
-
-                    var dotpos = new Vector2D(MathHelper.Clamp(screenPos.X, -0.98, 0.98), MathHelper.Clamp(screenPos.Y, -0.98, 0.98));
-                    var screenScale = 0.1 * s.ScaleFov;
-                    dotpos.X *= (float)(screenScale * _session.AspectRatio);
-                    dotpos.Y *= (float)screenScale;
-                    screenPos = Vector3D.Transform(new Vector3D(dotpos.X, dotpos.Y, -0.1), s.CameraMatrix);
-                    MyTransparentGeometry.AddBillboardOriented(_targetCircle, Color.White, screenPos, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)screenScale * 0.075f, BlendTypeEnum.PostPP);
-
-                }
             }
         }
 
@@ -699,125 +687,121 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal bool GetTargetState(Session s)
         {
             var ai = s.TrackingAi;
-            var validFocus = false;
             var maxNameLength = 18;
 
             if (s.Tick - MasterUpdateTick > 300 || MasterUpdateTick < 300 && _masterTargets.Count == 0)
                 BuildMasterCollections(ai);
 
-            for (int i = 0; i < ai.Construct.Data.Repo.FocusData.Target.Length; i++)
+            var targetId = ai.Construct.Data.Repo.FocusData.Target;
+            MyTuple<float, TargetControl> targetInfo;
+            MyEntity target;
+            if (!s.Tick20 || (targetId <= 0 || !MyEntities.TryGetEntityById(targetId, out target) || !_masterTargets.TryGetValue(target, out targetInfo) || ai.NoTargetLos.ContainsKey(target))) 
+                return false;
+
+            var grid = target as MyCubeGrid;
+            var partCount = 1;
+            var largeGrid = false;
+            Ai targetAi = null;
+            if (grid != null)
             {
-                var targetId = ai.Construct.Data.Repo.FocusData.Target[i];
-                MyTuple<float, TargetControl> targetInfo;
-                MyEntity target;
-                if (targetId <= 0 || !MyEntities.TryGetEntityById(targetId, out target) || !_masterTargets.TryGetValue(target, out targetInfo) || ai.NoTargetLos.ContainsKey(target)) continue;
-                validFocus = true;
-                if (!s.Tick20) continue;
-                var grid = target as MyCubeGrid;
-                var partCount = 1;
-                var largeGrid = false;
-                Ai targetAi = null;
-                if (grid != null)
-                {
-                    largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
-                    GridMap gridMap;
-                    if (s.EntityToMasterAi.TryGetValue(grid, out targetAi))
-                        partCount = targetAi.Construct.BlockCount;
-                    else if (s.GridToInfoMap.TryGetValue(grid, out gridMap))
-                        partCount = gridMap.MostBlocks;
-                }
-
-                var state = ai.TargetState[i];
-
-                state.Aware = targetAi != null ? AggressionState(ai, targetAi) : TargetStatus.Awareness.WONDERING;
-                var displayName = target.DisplayName;
-
-                var combinedName = TargetControllerNames[(int)targetInfo.Item2] + displayName;
-                var name = string.IsNullOrEmpty(combinedName) ? string.Empty : combinedName.Length <= maxNameLength ? combinedName : combinedName.Substring(0, maxNameLength);
-                var targetVel = target.Physics?.LinearVelocity ?? Vector3.Zero;
-                if (MyUtils.IsZero(targetVel, 1E-01F)) targetVel = Vector3.Zero;
-                var targetDir = Vector3D.Normalize(targetVel);
-                var targetRevDir = -targetDir;
-                var targetPos = target.PositionComp.WorldAABB.Center;
-                var myPos = ai.TopEntity.PositionComp.WorldAABB.Center;
-                var myHeading = Vector3D.Normalize(myPos - targetPos);
-
-                var intercept = MathFuncs.IsDotProductWithinTolerance(ref targetDir, ref myHeading, s.ApproachDegrees);
-                var retreat = MathFuncs.IsDotProductWithinTolerance(ref targetRevDir, ref myHeading, s.ApproachDegrees);
-
-                var distanceFromCenters = Vector3D.Distance(ai.TopEntity.PositionComp.WorldAABB.Center, target.PositionComp.WorldAABB.Center);
-                distanceFromCenters -= ai.TopEntity.PositionComp.LocalVolume.Radius;
-                distanceFromCenters -= target.PositionComp.LocalVolume.Radius;
-                distanceFromCenters = distanceFromCenters <= 0 ? 0 : distanceFromCenters;
-
-                var speed = (float)Math.Round(target.Physics?.Speed ?? 0, 1);
-
-                state.Name = name;
-
-                state.RealDistance = distanceFromCenters;
-
-                state.SizeExtended = (float)Math.Round(partCount / (largeGrid ? 100f : 500f), 1);
-
-                state.Speed = speed;
-
-                if (intercept) state.Engagement = 0;
-                else if (retreat) state.Engagement = 1;
-                else state.Engagement = 2;
-
-                MyTuple<bool, bool, float, float, float, int> shieldInfo = new MyTuple<bool, bool, float, float, float, int>();
-                if (s.ShieldApiLoaded) shieldInfo = s.SApi.GetShieldInfo(target);
-                if (shieldInfo.Item1)
-                {
-                    var modInfo = s.SApi.GetModulationInfo(target);
-                    var modValue = MyUtils.IsEqual(modInfo.Item3, modInfo.Item4) ? 0 : modInfo.Item3 > modInfo.Item4 ? modInfo.Item3 : -modInfo.Item4;
-                    var faceInfo = s.SApi.GetFacesFast(target);
-                    state.ShieldFaces = faceInfo.Item1 ? faceInfo.Item2 : Vector3I.Zero;
-                    state.ShieldHeat = shieldInfo.Item6 / 10;
-                    state.ShieldMod = modValue;
-                    state.ShieldHealth = (float)Math.Round(shieldInfo.Item5);
-                }
-                else
-                {
-                    state.ShieldHeat = 0;
-                    state.ShieldMod = 0;
-                    state.ShieldHealth = -1;
-                    state.ShieldFaces = Vector3I.Zero;
-                }
-
-                var friend = false;
-                if (grid != null && grid.BigOwners.Count != 0)
-                {
-                    var relation = MyIDModule.GetRelationPlayerBlock(ai.AiOwner, grid.BigOwners[0], MyOwnershipShareModeEnum.Faction);
-                    if (relation == MyRelationsBetweenPlayerAndBlock.FactionShare || relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.Friends) friend = true;
-                }
-
-                if (friend) state.ThreatLvl = -1;
-                else
-                {
-                    int shieldBonus = 0;
-                    if (s.ShieldApiLoaded)
-                    {
-                        var myShieldInfo = s.SApi.GetShieldInfo(ai.GridEntity);
-                        if (shieldInfo.Item1 && myShieldInfo.Item1)
-                            shieldBonus = shieldInfo.Item5 > myShieldInfo.Item5 ? 1 : -1;
-                        else if (shieldInfo.Item1) shieldBonus = 1;
-                        else if (myShieldInfo.Item1) shieldBonus = -1;
-                    }
-
-                    if (targetInfo.Item1 > 5) state.ThreatLvl = shieldBonus < 0 ? 8 : 9;
-                    else if (targetInfo.Item1 > 4) state.ThreatLvl = 8 + shieldBonus;
-                    else if (targetInfo.Item1 > 3) state.ThreatLvl = 7 + shieldBonus;
-                    else if (targetInfo.Item1 > 2) state.ThreatLvl = 6 + shieldBonus;
-                    else if (targetInfo.Item1 > 1) state.ThreatLvl = 5 + shieldBonus;
-                    else if (targetInfo.Item1 > 0.5) state.ThreatLvl = 4 + shieldBonus;
-                    else if (targetInfo.Item1 > 0.25) state.ThreatLvl = 3 + shieldBonus;
-                    else if (targetInfo.Item1 > 0.125) state.ThreatLvl = 2 + shieldBonus;
-                    else if (targetInfo.Item1 > 0.0625) state.ThreatLvl = 1 + shieldBonus;
-                    else if (targetInfo.Item1 > 0) state.ThreatLvl = shieldBonus > 0 ? 1 : 0;
-                    else state.ThreatLvl = -1;
-                }
+                largeGrid = grid.GridSizeEnum == MyCubeSize.Large;
+                GridMap gridMap;
+                if (s.EntityToMasterAi.TryGetValue(grid, out targetAi))
+                    partCount = targetAi.Construct.BlockCount;
+                else if (s.GridToInfoMap.TryGetValue(grid, out gridMap))
+                    partCount = gridMap.MostBlocks;
             }
-            return validFocus;
+
+            var state = ai.TargetState;
+
+            state.Aware = targetAi != null ? AggressionState(ai, targetAi) : TargetStatus.Awareness.WONDERING;
+            var displayName = target.DisplayName;
+
+            var combinedName = TargetControllerNames[(int)targetInfo.Item2] + displayName;
+            var name = string.IsNullOrEmpty(combinedName) ? string.Empty : combinedName.Length <= maxNameLength ? combinedName : combinedName.Substring(0, maxNameLength);
+            var targetVel = target.Physics?.LinearVelocity ?? Vector3.Zero;
+            if (MyUtils.IsZero(targetVel, 1E-01F)) targetVel = Vector3.Zero;
+            var targetDir = Vector3D.Normalize(targetVel);
+            var targetRevDir = -targetDir;
+            var targetPos = target.PositionComp.WorldAABB.Center;
+            var myPos = ai.TopEntity.PositionComp.WorldAABB.Center;
+            var myHeading = Vector3D.Normalize(myPos - targetPos);
+
+            var intercept = MathFuncs.IsDotProductWithinTolerance(ref targetDir, ref myHeading, s.ApproachDegrees);
+            var retreat = MathFuncs.IsDotProductWithinTolerance(ref targetRevDir, ref myHeading, s.ApproachDegrees);
+
+            var distanceFromCenters = Vector3D.Distance(ai.TopEntity.PositionComp.WorldAABB.Center, target.PositionComp.WorldAABB.Center);
+            distanceFromCenters -= ai.TopEntity.PositionComp.LocalVolume.Radius;
+            distanceFromCenters -= target.PositionComp.LocalVolume.Radius;
+            distanceFromCenters = distanceFromCenters <= 0 ? 0 : distanceFromCenters;
+
+            var speed = (float)Math.Round(target.Physics?.Speed ?? 0, 1);
+
+            state.Name = name;
+
+            state.RealDistance = distanceFromCenters;
+
+            state.SizeExtended = (float)Math.Round(partCount / (largeGrid ? 100f : 500f), 1);
+
+            state.Speed = speed;
+
+            if (intercept) state.Engagement = 0;
+            else if (retreat) state.Engagement = 1;
+            else state.Engagement = 2;
+
+            MyTuple<bool, bool, float, float, float, int> shieldInfo = new MyTuple<bool, bool, float, float, float, int>();
+            if (s.ShieldApiLoaded) shieldInfo = s.SApi.GetShieldInfo(target);
+            if (shieldInfo.Item1)
+            {
+                var modInfo = s.SApi.GetModulationInfo(target);
+                var modValue = MyUtils.IsEqual(modInfo.Item3, modInfo.Item4) ? 0 : modInfo.Item3 > modInfo.Item4 ? modInfo.Item3 : -modInfo.Item4;
+                var faceInfo = s.SApi.GetFacesFast(target);
+                state.ShieldFaces = faceInfo.Item1 ? faceInfo.Item2 : Vector3I.Zero;
+                state.ShieldHeat = shieldInfo.Item6 / 10;
+                state.ShieldMod = modValue;
+                state.ShieldHealth = (float)Math.Round(shieldInfo.Item5);
+            }
+            else
+            {
+                state.ShieldHeat = 0;
+                state.ShieldMod = 0;
+                state.ShieldHealth = -1;
+                state.ShieldFaces = Vector3I.Zero;
+            }
+
+            var friend = false;
+            if (grid != null && grid.BigOwners.Count != 0)
+            {
+                var relation = MyIDModule.GetRelationPlayerBlock(ai.AiOwner, grid.BigOwners[0], MyOwnershipShareModeEnum.Faction);
+                if (relation == MyRelationsBetweenPlayerAndBlock.FactionShare || relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.Friends) friend = true;
+            }
+
+            if (friend) state.ThreatLvl = -1;
+            else
+            {
+                int shieldBonus = 0;
+                if (s.ShieldApiLoaded)
+                {
+                    var myShieldInfo = s.SApi.GetShieldInfo(ai.GridEntity);
+                    if (shieldInfo.Item1 && myShieldInfo.Item1)
+                        shieldBonus = shieldInfo.Item5 > myShieldInfo.Item5 ? 1 : -1;
+                    else if (shieldInfo.Item1) shieldBonus = 1;
+                    else if (myShieldInfo.Item1) shieldBonus = -1;
+                }
+
+                if (targetInfo.Item1 > 5) state.ThreatLvl = shieldBonus < 0 ? 8 : 9;
+                else if (targetInfo.Item1 > 4) state.ThreatLvl = 8 + shieldBonus;
+                else if (targetInfo.Item1 > 3) state.ThreatLvl = 7 + shieldBonus;
+                else if (targetInfo.Item1 > 2) state.ThreatLvl = 6 + shieldBonus;
+                else if (targetInfo.Item1 > 1) state.ThreatLvl = 5 + shieldBonus;
+                else if (targetInfo.Item1 > 0.5) state.ThreatLvl = 4 + shieldBonus;
+                else if (targetInfo.Item1 > 0.25) state.ThreatLvl = 3 + shieldBonus;
+                else if (targetInfo.Item1 > 0.125) state.ThreatLvl = 2 + shieldBonus;
+                else if (targetInfo.Item1 > 0.0625) state.ThreatLvl = 1 + shieldBonus;
+                else if (targetInfo.Item1 > 0) state.ThreatLvl = shieldBonus > 0 ? 1 : 0;
+                else state.ThreatLvl = -1;
+            }
+            return true;
         }
 
         private TargetStatus.Awareness AggressionState(Ai ai, Ai targetAi)
@@ -826,13 +810,10 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (targetAi.Construct.Data.Repo.FocusData.HasFocus)
             {
                 var fd = targetAi.Construct.Data.Repo.FocusData;
-                foreach (var tId in fd.Target)
+                foreach (var sub in ai.SubGrids)
                 {
-                    foreach (var sub in ai.SubGrids)
-                    {
-                        if (sub.EntityId == tId)
-                            return TargetStatus.Awareness.FOCUSFIRE;
-                    }
+                    if (sub.EntityId == fd.Target)
+                        return TargetStatus.Awareness.FOCUSFIRE;
                 }
             }
             var tracking = targetAi.Targets.ContainsKey(ai.TopEntity);
