@@ -691,13 +691,13 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
             if (s.Tick - MasterUpdateTick > 300 || MasterUpdateTick < 300 && _masterTargets.Count == 0)
                 BuildMasterCollections(ai);
-
             var targetId = ai.Construct.Data.Repo.FocusData.Target;
             MyTuple<float, TargetControl> targetInfo;
             MyEntity target;
-            if (!s.Tick20 || (targetId <= 0 || !MyEntities.TryGetEntityById(targetId, out target) || !_masterTargets.TryGetValue(target, out targetInfo) || ai.NoTargetLos.ContainsKey(target))) 
+            if ((targetId <= 0 || !MyEntities.TryGetEntityById(targetId, out target) || !_masterTargets.TryGetValue(target, out targetInfo) || ai.NoTargetLos.ContainsKey(target))) 
                 return false;
 
+            if (!s.Tick20) return true;
             var grid = target as MyCubeGrid;
             var partCount = 1;
             var largeGrid = false;
