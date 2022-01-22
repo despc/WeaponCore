@@ -361,7 +361,7 @@ namespace CoreSystems
 
             for (int i = 0; i < blockCount; i++)
             {
-                if (earlyExit || (basePool <= 0 || objectsHit >= maxObjects) && !detRequested)
+                if (earlyExit || (basePool <= 0.5d || objectsHit >= maxObjects) && !detRequested)
                 {
                     //Log.Line($"Early exit:{earlyExit} - basePool:{basePool} - objhit:{objectsHit} - maxObj:{maxObjects} - detRequested:{detRequested}");
                     basePool = 0;
