@@ -435,12 +435,15 @@ namespace CoreSystems.Platform
                 {
                     case "MaxSize":
                         o.MaxSize = v;
+                        clearTargets = true;
                         break;
                     case "MinSize":
                         o.MinSize = v;
+                        clearTargets = true;
                         break;
                     case "SubSystems":
                         o.SubSystem = (WeaponDefinition.TargetingDef.BlockTypes)v;
+                        clearTargets = true;
                         break;
                     case "MovementModes":
                         o.MoveMode = (ProtoWeaponOverrides.MoveModes)v;
@@ -460,6 +463,7 @@ namespace CoreSystems.Platform
                         break;
                     case "Unowned":
                         o.Unowned = enabled;
+                        clearTargets = true;
                         break;
                     case "Friendly":
                         o.Friendly = enabled;
@@ -470,12 +474,14 @@ namespace CoreSystems.Platform
                         break;
                     case "Grids":
                         o.Grids = enabled;
+                        clearTargets = true;
                         break;
                     case "ArmorShowArea":
                         o.ArmorShowArea = enabled;
                         break;
                     case "Biologicals":
                         o.Biologicals = enabled;
+                        clearTargets = true;
                         break;
                     case "Projectiles":
                         o.Projectiles = enabled;
