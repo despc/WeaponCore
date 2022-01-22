@@ -143,7 +143,7 @@ namespace CoreSystems
                     if (pComp.Status != Started)
                         pComp.HealthCheck();
 
-                    if (pComp.Platform.State != CorePlatform.PlatformState.Ready || pComp.IsDisabled || pComp.IsAsleep  || pComp.CoreEntity.MarkedForClose || pComp.LazyUpdate && !ai.DbUpdated && Tick > pComp.NextLazyUpdateStart)
+                    if (pComp.Platform.State != CorePlatform.PlatformState.Ready || pComp.IsDisabled || pComp.IsAsleep || pComp.CoreEntity.MarkedForClose || pComp.LazyUpdate && !ai.DbUpdated && Tick > pComp.NextLazyUpdateStart)
                         continue;
 
                     if (ai.DbUpdated || !pComp.UpdatedState) {
@@ -313,7 +313,9 @@ namespace CoreSystems
                         ///
                         /// Update Weapon Hud Info
                         /// 
-                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.Loading || w.Reload.WaitForClient) && w.ShowReload || w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked[0] != FocusData.LockModes.Locked);
+
+                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked[0] != FocusData.LockModes.Locked) || (w.RequiresTarget && !w.Target.HasTarget));
+
                         if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;
                             HudUi.WeaponsToDisplay.Add(w);
@@ -339,7 +341,7 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.TargetEntity == null && w.Target.Projectile == null && !wComp.FakeMode || wComp.ManualMode && (fakeTargets == null || Tick - fakeTargets.ManualTarget.LastUpdateTick > 120))
                                 w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
-                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidTargetFocused(w) || Tick60 && !focusTargets && !w.TurretController && w.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
+                            else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidFocusTarget(w) || Tick60 && !focusTargets && !w.TurretController && w.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
                                 w.Target.Reset(Tick, States.Expired);
                             else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
@@ -414,13 +416,7 @@ namespace CoreSystems
                         w.LockOnFireState = shootRequest && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shootRequest && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
                         var shoot = shotReady && ai.CanShoot && (!w.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
-                        /*
-                        var playerControlled = wValues.State.PlayerId == PlayerId;
-                        if (playerControlled && !w.Target.HasTarget)
-                            Log.Line($"no target");
-                        else if (playerControlled && !focus.EntityIsFocused(ai, w.Target.TargetEntity.GetTopMostParent()))
-                            Log.Line($"invalid target");
-                        */
+
                         if (shoot) {
 
                             if (MpActive && HandlesInput && !ManualShot)

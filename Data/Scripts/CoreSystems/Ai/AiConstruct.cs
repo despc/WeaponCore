@@ -669,7 +669,7 @@ namespace CoreSystems.Support
             return false;
         }
 
-        internal bool ValidTargetFocused(Weapon w)
+        internal bool ValidFocusTarget(Weapon w)
         {
             var targets = w.Comp.Ai.Construct.Data.Repo.FocusData?.Target;
 

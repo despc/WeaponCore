@@ -1,4 +1,5 @@
-﻿using CoreSystems.Platform;
+﻿using CoreSystems;
+using CoreSystems.Platform;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
@@ -221,6 +222,12 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             _textureAddList.Add(backgroundTexture);
         }
 
+        private const string NeedsLockStr = ": Locked";
+        private const string CurrentLockStr = "None";
+        private const string EmptyStr = "";
+        private const string GapStr = ": ";
+        private const string NoTargetStr = ": No Target";
+
         private void WeaponsToAdd(bool reset, Vector2D currWeaponDisplayPos, double bgStartPosX)
         {
             for (int i = 0; i < _weapontoDraw.Count; i++)
@@ -231,9 +238,10 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 var weapon = stackedInfo.HighestValueWeapon;
                 
                 
-                var currLock = _session.TrackingAi.Construct.Data.Repo.FocusData.Locked[0].ToString();
-                var needsLock = weapon.System.LockOnFocus && currLock == "None" ? ": " + _session.UiInput.ActionKey.ToString() : ": Locked";
-                var name = weapon.System.PartName + (weapon.System.LockOnFocus ? needsLock : "");
+                var currLock = _session.TrackingAi.Construct.Data.Repo.FocusData.Locked[0] == FocusData.LockModes.Locked ? NeedsLockStr : CurrentLockStr;
+                var needsLock = weapon.System.LockOnFocus && currLock == CurrentLockStr ? GapStr + _session.UiInput.ActionKey : NeedsLockStr;
+                var needsTarget = weapon.RequiresTarget && !weapon.Target.HasTarget;
+                var name = weapon.System.PartName + (needsTarget ? NoTargetStr :weapon.System.LockOnFocus ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;
                 var hasHeat = weapon.HeatPerc > 0;
