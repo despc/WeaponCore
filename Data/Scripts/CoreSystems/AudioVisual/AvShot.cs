@@ -882,10 +882,10 @@ namespace CoreSystems.Support
                     FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                     FireEmitter.CanPlayLoopSounds = true;
-                    FireEmitter.Entity = PrimeEntity;
+                    FireEmitter.Entity = null;
 
-                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.FiringSound, false);
-
+                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.AmmoAudio.FragmentSound, false);
+                    
                     FireEmitter.SetPosition(Origin);
                 }
             }
@@ -1065,7 +1065,6 @@ namespace CoreSystems.Support
             if (FireEmitter != null)
             {
                 var loop = FireEmitter.Loop;
-
                 if (loop)
                 {
                     FireEmitter.StopSound(true);
