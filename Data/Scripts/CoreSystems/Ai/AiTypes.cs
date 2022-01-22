@@ -308,6 +308,11 @@ namespace CoreSystems.Support
                 return signalInRange || w.Comp.Ai.Construct.Data.Repo.FocusData.HasFocus || w.Comp.Ai.LiveProjectile.Count > 0 && w.System.TrackProjectile && w.Comp.Data.Repo.Values.Set.Overrides.Projectiles; 
             }
 
+            internal bool TargetInRange(Weapon w)
+            {
+                return !w.Comp.DetectOtherSignals ? PriorityRangeSqr <= w.MaxTargetDistanceSqr : (OtherRangeSqr <= w.MaxTargetDistanceSqr || PriorityRangeSqr <= w.MaxTargetDistanceSqr);
+            }
+
             internal void DroneAdd(Ai ai, TargetInfo info)
             {
                 var rootConstruct = ai.Construct.RootAi.Construct;
