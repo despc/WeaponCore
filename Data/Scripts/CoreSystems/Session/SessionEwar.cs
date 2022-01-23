@@ -30,7 +30,7 @@ namespace CoreSystems
         internal readonly Dictionary<long, BlockState> EffectedCubes = new Dictionary<long, BlockState>();
         internal readonly Dictionary<long, EwarValues> CurrentClientEwaredCubes = new Dictionary<long, EwarValues>();
         internal readonly Dictionary<long, EwarValues> DirtyEwarData = new Dictionary<long, EwarValues>();
-        private readonly CachingDictionary<long, BlockState> _activeEwarCubes = new CachingDictionary<long, BlockState>();
+        internal readonly ConcurrentDictionary<long, BlockState> ActiveEwarCubes = new ConcurrentDictionary<long, BlockState>();
         private readonly Queue<long> _effectPurge = new Queue<long>();
         internal bool ClientEwarStale;
 
@@ -399,7 +399,6 @@ namespace CoreSystems
 
                         if (IsHost)
                         {
-                            functBlock.AppendingCustomInfo += blockInfo.AppendCustomInfo;
                             functBlock.RefreshCustomInfo();
 
                             if (blockInfo.AmmoDef.Ewar.Field.ShowParticle)
@@ -419,7 +418,6 @@ namespace CoreSystems
                     if (IsHost)
                     {
 
-                        functBlock.AppendingCustomInfo -= blockInfo.AppendCustomInfo;
                         functBlock.RefreshCustomInfo();
 
                         if (blockInfo.AmmoDef.Ewar.Field.ShowParticle)
@@ -465,36 +463,34 @@ namespace CoreSystems
                     var func = (IMyFunctionalBlock)cube;
                     func.RefreshCustomInfo();
 
-                    if (!_activeEwarCubes.ContainsKey(entId))
+                    if (!ActiveEwarCubes.ContainsKey(entId))
                     {
 
                         state = new BlockState { FunctBlock = func, FirstState = func.Enabled, Endtick = Tick + ewarPair.Value.EndTick, Session = this };
-                        _activeEwarCubes[entId] = state;
+                        ActiveEwarCubes[entId] = state;
                         ActivateClientEwarState(ref state);
                     }
                 }
-                else if (_activeEwarCubes.TryGetValue(entId, out state))
+                else if (ActiveEwarCubes.TryGetValue(entId, out state))
                 {
 
                     DeactivateClientEwarState(ref state);
-                    _activeEwarCubes.Remove(entId);
+                    ActiveEwarCubes.Remove(entId);
                 }
 
                 ClientEwarStale = false;
             }
 
-            _activeEwarCubes.ApplyChanges();
-            foreach (var activeEwar in _activeEwarCubes)
+            foreach (var activeEwar in ActiveEwarCubes)
             {
 
                 if (!CurrentClientEwaredCubes.ContainsKey(activeEwar.Key))
                 {
                     var state = activeEwar.Value;
                     DeactivateClientEwarState(ref state);
-                    _activeEwarCubes.Remove(activeEwar.Key);
+                    ActiveEwarCubes.Remove(activeEwar.Key);
                 }
             }
-            _activeEwarCubes.ApplyRemovals();
         }
 
         private static void ActivateClientEwarState(ref BlockState state)
@@ -502,7 +498,6 @@ namespace CoreSystems
             var functBlock = state.FunctBlock;
             functBlock.Enabled = false;
             functBlock.EnabledChanged += ForceDisable;
-            functBlock.AppendingCustomInfo += state.AppendCustomInfo;
             functBlock.RefreshCustomInfo();
             functBlock.SetDamageEffect(true);
         }
@@ -518,7 +513,6 @@ namespace CoreSystems
                 state.FunctBlock.Enabled = state.FirstState;
                 state.FunctBlock.RefreshCustomInfo();
             }
-            state.FunctBlock.AppendingCustomInfo -= state.AppendCustomInfo;
 
             if (valid)
             {
@@ -613,14 +607,6 @@ namespace CoreSystems
         public float Health;
         public long FiringBlockId;
         public int SystemId;
-
-        internal void AppendCustomInfo(IMyTerminalBlock block, StringBuilder stringBuilder)
-        {
-            var seconds = (Endtick - Session.Tick) / 60;
-            if (Endtick > Session.Tick && seconds > 0)
-                stringBuilder.Append($"\n*****************************************\nDisabled due to Electronic Warfare!\nRebooting in {seconds} seconds");
-            else stringBuilder.Clear();
-        }
     }
 
     internal class GridEffect
