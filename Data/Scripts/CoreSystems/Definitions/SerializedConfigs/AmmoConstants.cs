@@ -108,6 +108,7 @@ namespace CoreSystems.Support
         public readonly string HitParticleStr;
         public readonly string DetParticleStr;
         public readonly string DetSoundStr;
+        public readonly string ShotSoundStr;
         public readonly int MaxObjectsHit;
         public readonly int TargetLossTime;
         public readonly int MaxLifeTime;
@@ -183,7 +184,7 @@ namespace CoreSystems.Support
         public readonly bool HitSound;
         public readonly bool AltHitSounds;
         public readonly bool AmmoTravelSound;
-        public readonly bool FragmentSound;
+        public readonly bool ShotSound;
         public readonly bool IsHybrid;
         public readonly bool IsTurretSelectable;
         public readonly bool CanZombie;
@@ -256,7 +257,7 @@ namespace CoreSystems.Support
         public readonly float DesiredProjectileSpeed;
         public readonly float HitSoundDistSqr;
         public readonly float AmmoTravelSoundDistSqr;
-        public readonly float FragSoundDistSqr;
+        public readonly float ShotSoundDistSqr;
         public readonly float AmmoSoundMaxDistSqr;
         public readonly float BaseDps;
         public readonly float AreaDps;
@@ -423,7 +424,7 @@ namespace CoreSystems.Support
             PrimeEntityPool = Models(ammo.AmmoDef, wDef, out PrimeModel, out TriggerModel, out ModelPath);
 
             Energy(ammo, system, wDef, out EnergyAmmo, out MustCharge, out Reloadable, out EnergyCost, out EnergyMagSize, out ChargSize, out BurstMode, out HasShotReloadDelay);
-            Sound(ammo.AmmoDef, session, out HitSound, out AltHitSounds, out AmmoTravelSound, out FragmentSound, out DetonationSound, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr, out FragSoundDistSqr, out DetonationSoundDistSqr);
+            Sound(ammo.AmmoDef, system, session, out HitSound, out AltHitSounds, out AmmoTravelSound, out ShotSound, out DetonationSound, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr, out ShotSoundDistSqr, out DetonationSoundDistSqr, out ShotSoundStr);
 
             MagazineSize = EnergyAmmo ? EnergyMagSize : MagazineDef.Capacity;
             MagsToLoad = wDef.HardPoint.Loading.MagsToLoad > 0 ? wDef.HardPoint.Loading.MagsToLoad : 1;
@@ -791,21 +792,23 @@ namespace CoreSystems.Support
             energyMagSize = 0;
         }
 
-        private void Sound(AmmoDef ammoDef, Session session, out bool hitSound, out bool altHitSounds, out bool ammoTravelSound, out bool fragSound, out bool detSound, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float fragSoundDistSqr, out float detSoundDistSqr)
+        private void Sound(AmmoDef ammoDef, WeaponSystem system, Session session, out bool hitSound, out bool altHitSounds, out bool ammoTravelSound, out bool shotSound, out bool detSound, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float shotSoundDistSqr, out float detSoundDistSqr, out string rawShotSoundStr)
         {
+            rawShotSoundStr = system.Values.HardPoint.Audio.FiringSoundPerShot && !string.IsNullOrEmpty(system.Values.HardPoint.Audio.FiringSound) ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
+
             hitSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.HitSound);
             ammoTravelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.TravelSound);
-            fragSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.FragmentSound);
+            shotSound = !string.IsNullOrEmpty(rawShotSoundStr);
             detSound = !string.IsNullOrEmpty(DetSoundStr) && !ammoDef.AreaOfDamage.EndOfLife.NoSound;
             var hitSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.HitSound);
             var travelSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.TravelSound);
-            var fragSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.FragmentSound);
+            var shotSoundStr = string.Concat(Arc, rawShotSoundStr);
             var detSoundStr = string.Concat(Arc, DetSoundStr);
 
             hitSoundDistSqr = 0;
             ammoTravelSoundDistSqr = 0;
             ammoSoundMaxDistSqr = 0;
-            fragSoundDistSqr = 0;
+            shotSoundDistSqr = 0;
             detSoundDistSqr = 0;
 
             altHitSounds = true;
@@ -825,11 +828,11 @@ namespace CoreSystems.Support
                     if (ob != null) ammoTravelSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
                     if (ammoTravelSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = ammoTravelSoundDistSqr;
                 }
-                else if (fragSound && (id == fragSoundStr || id == ammoDef.AmmoAudio.FragmentSound))
+                else if (shotSound && (id == shotSoundStr || id == rawShotSoundStr))
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
-                    if (ob != null) fragSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
-                    if (fragSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = fragSoundDistSqr;
+                    if (ob != null) shotSoundDistSqr = ob.MaxDistance * ob.MaxDistance;
+                    if (shotSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = shotSoundDistSqr;
                 }
                 else if (detSound && (id == detSoundStr || id == DetSoundStr))
                 {

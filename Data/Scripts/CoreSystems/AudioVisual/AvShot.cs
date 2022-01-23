@@ -876,7 +876,7 @@ namespace CoreSystems.Support
             }
             if (IsShrapnel)
             {
-                if (AmmoDef.Const.FragmentSound && distanceFromCameraSqr <= AmmoDef.Const.FragSoundDistSqr)
+                if (AmmoDef.Const.ShotSound && distanceFromCameraSqr <= AmmoDef.Const.ShotSoundDistSqr)
                 {
                     StartSoundActived = true;
                     FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
@@ -884,7 +884,7 @@ namespace CoreSystems.Support
                     FireEmitter.CanPlayLoopSounds = true;
                     FireEmitter.Entity = null;
 
-                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.AmmoAudio.FragmentSound, false);
+                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
                     
                     FireEmitter.SetPosition(Origin);
                 }
@@ -896,8 +896,7 @@ namespace CoreSystems.Support
 
                 FireEmitter.CanPlayLoopSounds = true;
                 FireEmitter.Entity = CoreEntity;
-
-                FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.FiringSound, false);
+                FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
 
                 FireEmitter.SetPosition(Origin);
             }
