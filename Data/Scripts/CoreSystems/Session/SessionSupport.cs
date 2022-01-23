@@ -183,7 +183,7 @@ namespace CoreSystems
 
             var desyncLevel = serverSim - clientSim;
             if (IsClient && desyncLevel >= 0.1)
-                Log.LineShortDate($"Client Lagged, desync: {desyncLevel * 10}%", "perf");
+                Log.LineShortDate($"[Client Lagged] desync: {desyncLevel * 100}%", "perf");
             
             _avCpuTime =  drawTime.Median;
 

@@ -84,7 +84,7 @@ namespace CoreSystems.Platform
 
         internal void UpdateShotEnergy()
         {
-            ShotEnergyCost = (float) (ActiveAmmoDef.AmmoDef.Ewar.Enable ? ActiveAmmoDef.AmmoDef.Const.EnergyCost * ActiveAmmoDef.AmmoDef.Const.EwarStrength : ActiveAmmoDef.AmmoDef.Const.EnergyCost * BaseDamage);
+            ShotEnergyCost = (float) (ActiveAmmoDef.AmmoDef.Ewar.Enable ? ActiveAmmoDef.AmmoDef.Const.EnergyCost * ActiveAmmoDef.AmmoDef.Const.EwarStrength : ActiveAmmoDef.AmmoDef.Const.EnergyCost * ActiveAmmoDef.AmmoDef.Const.BaseDamage);
         }
 
         internal void UpdateBarrelRotation()
@@ -118,7 +118,6 @@ namespace CoreSystems.Platform
             if (!IsShooting && !System.DesignatorWeapon)
             {
                 EventTriggerStateChanged(EventTriggers.StopFiring, false);
-                Comp.CurrentDps += Dps;
                 if (!ActiveAmmoDef.AmmoDef.Const.Reloadable && !Comp.ModOverride && !ExitCharger)
                     ChargeReload();
             }
@@ -131,7 +130,6 @@ namespace CoreSystems.Platform
             {
                 EventTriggerStateChanged(EventTriggers.Firing, false);
                 EventTriggerStateChanged(EventTriggers.StopFiring, true, _muzzlesFiring);
-                Comp.CurrentDps = Comp.CurrentDps - Dps > 0 ? Comp.CurrentDps - Dps : 0;
             }
 
             if (System.Session.HandlesInput)

@@ -403,10 +403,6 @@ namespace CoreSystems
                             var message = string.Empty;
                             return !TryGetValidPlatform(out TmpPlatform) ? string.Empty : TmpPlatform.Weapons.Aggregate(message, (current, w) => current + $"{w.RateOfFire}"); }
                     },
-                    {"Dps", () => {
-                            var message = string.Empty;
-                            return !TryGetValidPlatform(out TmpPlatform) ? string.Empty : TmpPlatform.Weapons.Aggregate(message, (current, w) => current + $"{w.Dps}"); }
-                    },
                     {"ShotReady", () => {
                             var message = string.Empty;
                             return !TryGetValidPlatform(out TmpPlatform) ? string.Empty : TmpPlatform.Weapons.Aggregate(message, (current, w) => current + $"{w.ShotReady}"); }

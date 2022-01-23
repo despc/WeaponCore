@@ -682,9 +682,11 @@ namespace CoreSystems.Support
         internal readonly int ReloadTime;
         internal readonly int RateOfFire;
         internal readonly int HeatPerShot;
+        public readonly int DelayAfterBurst;
 
         internal readonly uint FireSoundEndDelay;
 
+        public readonly bool GiveUpAfter;
         internal bool SpinFree;
         internal bool DebugMode;
         internal bool HasServerOverrides;
@@ -694,6 +696,8 @@ namespace CoreSystems.Support
         {
             FireSoundNoBurst = values.HardPoint.Audio.FireSoundNoBurst;
             FireSoundEndDelay = values.HardPoint.Audio.FireSoundEndDelay;
+            DelayAfterBurst = values.HardPoint.Loading.DelayAfterBurst;
+            GiveUpAfter = values.HardPoint.Loading.GiveUpAfter;
 
             SpinFree = values.HardPoint.Loading.SpinFree;
             LoadModifiers(session, values, out HasServerOverrides);

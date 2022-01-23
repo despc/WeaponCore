@@ -292,6 +292,8 @@ namespace CoreSystems.Support
         public readonly double MaxOffsetLength;
         public readonly double FragProximity;
         public readonly double SmartOffsetSqr;
+        public readonly double HeatModifier;
+
         internal AmmoConstants(WeaponSystem.AmmoType ammo, WeaponDefinition wDef, Session session, WeaponSystem system, int ammoIndex)
         {
 
@@ -409,6 +411,8 @@ namespace CoreSystems.Support
 
             var givenSpeed = AmmoModsFound && _modifierMap[SpeedStr].HasData() ? _modifierMap[SpeedStr].GetAsFloat : ammo.AmmoDef.Trajectory.DesiredSpeed;
             DesiredProjectileSpeed = !IsBeamWeapon ? givenSpeed : MaxTrajectory * MyEngineConstants.UPDATE_STEPS_PER_SECOND;
+            HeatModifier = ammo.AmmoDef.HeatModifier > 0 ? ammo.AmmoDef.HeatModifier : 1;
+
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
             ComputeAmmoPattern(ammo, system, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
@@ -1022,11 +1026,11 @@ namespace CoreSystems.Support
             shotsPerSec = realShotsPerSec;
             var shotsPerSecPreHeat = shotsPerSec;
 
-            if (s.WConst.HeatPerShot > 0)
+            if (s.WConst.HeatPerShot * HeatModifier > 0)
             {
 
 
-                var heatGenPerSec = (s.WConst.HeatPerShot * realShotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
+                var heatGenPerSec = (s.WConst.HeatPerShot * HeatModifier * realShotsPerSec) - system.WConst.HeatSinkRate; //heat - cooldown
 
 
 
@@ -1039,12 +1043,12 @@ namespace CoreSystems.Support
                     var timeHeatCycle = (safeToOverheat + cooldownTime);
 
 
-                    realShotsPerSec = ((safeToOverheat / timeHeatCycle) * realShotsPerSec);
+                    realShotsPerSec = (float) ((safeToOverheat / timeHeatCycle) * realShotsPerSec);
 
                     if ((mexLogLevel >= 1))
                     {
                         Log.Line($"Name = {s.PartName}");
-                        Log.Line($"HeatPerShot = {s.WConst.HeatPerShot}");
+                        Log.Line($"HeatPerShot = {s.WConst.HeatPerShot * HeatModifier}");
                         Log.Line($"HeatGenPerSec = {heatGenPerSec}");
 
                         Log.Line($"WepCoolDown = {l.Cooldown}");

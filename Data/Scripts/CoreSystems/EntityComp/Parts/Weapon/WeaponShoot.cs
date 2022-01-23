@@ -310,10 +310,10 @@ namespace CoreSystems.Platform
             if (burstReset) {
 
                 EventTriggerStateChanged(EventTriggers.BurstReload, true);
-                var burstDelay = (uint)System.Values.HardPoint.Loading.DelayAfterBurst;
-                ShootTick = System.Values.HardPoint.Loading.DelayAfterBurst > TicksPerShot ? System.Session.Tick + burstDelay : System.Session.Tick + TicksPerShot;
+                var burstDelay = (uint)System.WConst.DelayAfterBurst;
+                ShootTick = burstDelay > TicksPerShot ? System.Session.Tick + burstDelay : System.Session.Tick + TicksPerShot;
 
-                if (System.Values.HardPoint.Loading.GiveUpAfter)
+                if (System.WConst.GiveUpAfter)
                      GiveUpTarget();
             }
             else if (System.AlwaysFireFull)

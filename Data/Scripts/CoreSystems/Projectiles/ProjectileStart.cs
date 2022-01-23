@@ -51,7 +51,7 @@ namespace CoreSystems.Projectiles
                     Session.PlayerDummyTargets.TryGetValue(repo.Values.State.PlayerId, out info.DummyTargets);
 
                 info.PartId = w.PartId;
-                info.BaseDamagePool = a == weaponAmmoDef ? w.BaseDamage : aConst.BaseDamage;
+                info.BaseDamagePool = aConst.BaseDamage;
                 info.WeaponCache = w.WeaponCache;
 
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));

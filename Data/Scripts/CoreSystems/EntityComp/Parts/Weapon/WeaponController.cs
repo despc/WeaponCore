@@ -356,38 +356,22 @@ namespace CoreSystems.Platform
         {
             if (System.DesignatorWeapon) return;
 
-            BaseDamage = !ActiveAmmoDef.AmmoDef.Const.EnergyAmmo ? ActiveAmmoDef.AmmoDef.Const.BaseDamage : (ActiveAmmoDef.AmmoDef.Const.BaseDamage * Comp.Data.Repo.Values.Set.DpsModifier) * Comp.Data.Repo.Values.Set.Overload;
             
             var oldHeatPSec = Comp.HeatPerSecond;
             UpdateShotEnergy();
             UpdateDesiredPower();
 
-            var multiplier = (ActiveAmmoDef.AmmoDef.Const.EnergyAmmo && ActiveAmmoDef.AmmoDef.Const.BaseDamage > 0) ? BaseDamage / ActiveAmmoDef.AmmoDef.Const.BaseDamage : 1;
 
-            var dpsMulti = multiplier;
+            HeatPShot = (float) (System.WConst.HeatPerShot * ActiveAmmoDef.AmmoDef.Const.HeatModifier);
 
-            if (BaseDamage > ActiveAmmoDef.AmmoDef.Const.BaseDamage)
-                multiplier *= multiplier;
-
-            HeatPShot = System.WConst.HeatPerShot * multiplier;
-
-            DesiredPower *= multiplier;
-            
-            MaxCharge = ActiveAmmoDef.AmmoDef.Const.ChargSize * multiplier;
+            MaxCharge = ActiveAmmoDef.AmmoDef.Const.ChargSize;
 
             TicksPerShot = (uint)(3600f / RateOfFire);
-
-            var oldDps = Dps;
-            Dps = ActiveAmmoDef.AmmoDef.Const.PeakDps * dpsMulti;
 
             var newHeatPSec = (60f / TicksPerShot) * HeatPShot * System.BarrelsPerShot;
 
             var heatDif = oldHeatPSec - newHeatPSec;
-            var dpsDif = oldDps - Dps;
             
-            if (IsShooting)
-                Comp.CurrentDps -= dpsDif;
-
             Comp.HeatPerSecond -= heatDif;
 
             if (InCharger)

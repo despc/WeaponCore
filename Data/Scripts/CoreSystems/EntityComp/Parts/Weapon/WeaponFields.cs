@@ -123,8 +123,6 @@ namespace CoreSystems.Platform
         internal IHitInfo LastHitInfo;
         internal EventTriggers LastEvent;
 
-        internal float BaseDamage;
-        internal float Dps;
         internal float ShotEnergyCost;
         internal float LastHeat;
         internal uint ReloadEndTick = uint.MaxValue;

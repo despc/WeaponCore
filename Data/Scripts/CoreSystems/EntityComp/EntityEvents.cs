@@ -222,9 +222,7 @@ namespace CoreSystems.Support
                     .Append($"\n{Localization.GetText("WeaponInfoPeakDps")}: " + comp.PeakDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoBaseDps")}: " + comp.BaseDps.ToString("0.0"))
                     .Append($"\n{Localization.GetText("WeaponInfoAreaDps")}: " + comp.AreaDps.ToString("0.0"))
-                    .Append($"\n{Localization.GetText("WeaponInfoExplode")}: " + comp.DetDps.ToString("0.0"))
-                    .Append($"\n{Localization.GetText("WeaponInfoCurrent")}: " + comp.CurrentDps.ToString("0") + " (" + (comp.CurrentDps / comp.PeakDps).ToString("P") + ")");
-
+                    .Append($"\n{Localization.GetText("WeaponInfoExplode")}: " + comp.DetDps.ToString("0.0"));
 
 
                 if (HeatPerSecond > 0)

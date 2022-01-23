@@ -561,6 +561,7 @@ namespace CoreSystems.Support
             [ProtoMember(25)] internal EwarDef Ewar;
             [ProtoMember(26)] internal bool IgnoreVoxels;
             [ProtoMember(27)] internal bool Synchronize;
+            [ProtoMember(28)] internal double HeatModifier;
 
             internal AmmoConstants Const;
 

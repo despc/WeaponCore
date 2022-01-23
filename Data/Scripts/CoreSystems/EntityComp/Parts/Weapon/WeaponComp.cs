@@ -33,7 +33,6 @@ namespace CoreSystems.Platform
             internal float BaseDps;
             internal float AreaDps;
             internal float DetDps;
-            internal float CurrentDps;
             internal bool HasEnergyWeapon;
             internal bool HasGuidance;
             internal bool HasRofSlider;
