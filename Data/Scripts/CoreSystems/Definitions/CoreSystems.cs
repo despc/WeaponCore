@@ -304,7 +304,6 @@ namespace CoreSystems.Support
                 ShortName = partName.Remove(21, nameLen - 21);
             else
                 ShortName = PartName;
-            Log.Line($"{PartName} - {ShortName}");
         }
 
 

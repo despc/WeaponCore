@@ -341,6 +341,7 @@ namespace CoreSystems
         internal int AsleepCount = -1;
         internal int Rays;
         internal int ClientAvLevel;
+        internal int SimStepsLastSecond;
         internal ulong MultiplayerId;
         internal ulong MuzzleIdCounter;
         internal ulong PhantomIdCounter;
@@ -360,6 +361,8 @@ namespace CoreSystems
         internal float UIHudOpacity;
         internal float CurrentFovWithZoom;
         internal float LastOptimalDps;
+        internal float ServerSimulation;
+        internal float ClientSimulation;
         internal bool PurgedAll;
         internal bool InMenu;
         internal bool GunnerBlackList;

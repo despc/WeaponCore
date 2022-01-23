@@ -41,7 +41,12 @@ namespace CoreSystems
             Tick600 = Tick % 600 == 0;
             Tick1800 = Tick % 1800 == 0;
             Tick3600 = Tick % 3600 == 0;
-            
+
+            ServerSimulation += MyAPIGateway.Physics.ServerSimulationRatio;
+            ClientSimulation += MyAPIGateway.Physics.SimulationRatio;
+            SimStepsLastSecond += MyAPIGateway.Physics.StepsLastSecond;
+
+
             if (Tick60)
             {
                 if (Av.ExplosionCounter - 5 >= 0) Av.ExplosionCounter -= 5;
@@ -168,11 +173,23 @@ namespace CoreSystems
             var ai = DsUtil.GetValue("ai");
             var charge = DsUtil.GetValue("charge");
             var acquire = DsUtil.GetValue("acquire");
-            Log.LineShortDate($"(CPU-T) --- <AI>{ai.Median:0.0000}/{ai.Min:0.0000}/{ai.Max:0.0000} <Acq>{acquire.Median:0.0000}/{acquire.Min:0.0000}/{acquire.Max:0.0000} <SH>{updateTime.Median:0.0000}/{updateTime.Min:0.0000}/{updateTime.Max:0.0000} <CH>{charge.Median:0.0000}/{charge.Min:0.0000}/{charge.Max:0.0000} <PS>{psTime.Median:0.0000}/{psTime.Min:0.0000}/{psTime.Max:0.0000} <PI>{piTIme.Median:0.0000}/{piTIme.Min:0.0000}/{piTIme.Max:0.0000} <PD>{pdTime.Median:0.0000}/{pdTime.Min:0.0000}/{pdTime.Max:0.0000} <PA>{paTime.Median:0.0000}/{paTime.Min:0.0000}/{paTime.Max:0.0000} <DR>{drawTime.Median:0.0000}/{drawTime.Min:0.0000}/{drawTime.Max:0.0000} <AV>{av.Median:0.0000}/{av.Min:0.0000}/{av.Max:0.0000} <NET1>{netTime1.Median:0.0000}/{netTime1.Min:0.0000}/{netTime1.Max:0.0000}> <DB>{db.Median:0.0000}/{db.Min:0.0000}/{db.Max:0.0000}>", "perf");
+
+            var clientSim = ClientSimulation / 180;
+            var serverSim = ServerSimulation / 180;
+            var simSteps = SimStepsLastSecond / 180;
+
+            Log.LineShortDate($"(CPU-T) --- <Steps>{simSteps} <S-Sim>{Math.Round(serverSim, 2)} <C-Sim>{Math.Round(clientSim, 2)} <AI>{ai.Median:0.0000}/{ai.Min:0.0000}/{ai.Max:0.0000} <Acq>{acquire.Median:0.0000}/{acquire.Min:0.0000}/{acquire.Max:0.0000} <SH>{updateTime.Median:0.0000}/{updateTime.Min:0.0000}/{updateTime.Max:0.0000} <CH>{charge.Median:0.0000}/{charge.Min:0.0000}/{charge.Max:0.0000} <PS>{psTime.Median:0.0000}/{psTime.Min:0.0000}/{psTime.Max:0.0000} <PI>{piTIme.Median:0.0000}/{piTIme.Min:0.0000}/{piTIme.Max:0.0000} <PD>{pdTime.Median:0.0000}/{pdTime.Min:0.0000}/{pdTime.Max:0.0000} <PA>{paTime.Median:0.0000}/{paTime.Min:0.0000}/{paTime.Max:0.0000} <DR>{drawTime.Median:0.0000}/{drawTime.Min:0.0000}/{drawTime.Max:0.0000} <AV>{av.Median:0.0000}/{av.Min:0.0000}/{av.Max:0.0000} <NET1>{netTime1.Median:0.0000}/{netTime1.Min:0.0000}/{netTime1.Max:0.0000}> <DB>{db.Median:0.0000}/{db.Min:0.0000}/{db.Max:0.0000}>", "perf");
             Log.LineShortDate($"(STATS) -------- AIs:[{EntityAIs.Count}] - WcBlocks:[{IdToCompMap.Count}] - AiReq:[{TargetRequests}] Targ:[{TargetChecks}] Bloc:[{BlockChecks}] Aim:[{CanShoot}] CCast:[{ClosestRayCasts}] RndCast[{RandomRayCasts}] TopCast[{TopRayCasts}]", "stats");
 
+            var desyncLevel = serverSim - clientSim;
+            if (IsClient && desyncLevel >= 0.1)
+                Log.LineShortDate($"Client Lagged, desync: {desyncLevel * 10}%", "perf");
+            
             _avCpuTime =  drawTime.Median;
 
+            SimStepsLastSecond = 0;
+            ServerSimulation = 0;
+            ClientSimulation = 0;
             TargetRequests = 0;
             TargetChecks = 0;
             BlockChecks = 0;
