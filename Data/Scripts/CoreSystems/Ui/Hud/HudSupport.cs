@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CoreSystems.Platform;
 using CoreSystems.Support;
 using VRage.Utils;
@@ -86,31 +87,15 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             return position;
         }
 
+        private readonly WeaponCompare _weaponCompare = new WeaponCompare();
         internal List<StackedWeaponInfo> SortDisplayedWeapons(List<Weapon> list)
         {
-            int length = list.Count;
             int finalCount = 0;
             List<StackedWeaponInfo> finalList;
             if (!_weaponInfoListPool.TryDequeue(out finalList))
                 finalList = new List<StackedWeaponInfo>();
 
-            for (int h = length / 2; h > 0; h /= 2) // switch a proper comparer, performance not an issue.  Sort by heat duration and then estimated time to reload complete, longest to shortest
-            {
-                for (int i = h; i < length; i += 1)
-                {
-                    var tempValue = list[i];
-                    var temp = list[i].PartState.Heat;
-
-                    int j;
-                    for (j = i; j >= h && list[j - h].PartState.Heat < temp; j -= h)
-                    {
-                        list[j] = list[j - h];
-                    }
-
-                    list[j] = tempValue;
-                }
-            }
-
+            list.Sort(_weaponCompare);
             if (list.Count > WeaponLimit) //limit to top 50 based on heat
                 list.RemoveRange(WeaponLimit, list.Count - WeaponLimit);
             else if (list.Count <= StackThreshold)
@@ -295,6 +280,29 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
                 removeList1.Clear();
             }
+        }
+    }
+
+    internal class WeaponCompare : IComparer<Weapon>
+    {
+        public int Compare(Weapon x, Weapon y)
+        {
+            var chargeCompare = x.Charging.CompareTo(y.Charging);
+            if (chargeCompare != 0) return -chargeCompare;
+
+            var xHeatLevel = x.System.MaxHeat - x.PartState.Heat;
+            var yHeatLevel = y.System.MaxHeat - y.PartState.Heat;
+            var hasHeat = x.PartState.Heat > 0 || y.PartState.Heat > 0;
+            var heatCompare = xHeatLevel.CompareTo(yHeatLevel);
+            if (hasHeat && heatCompare != 0) return -heatCompare;
+
+            var xReload = (x.Loading || x.Reload.WaitForClient || x.System.Session.Tick - x.LastLoadedTick < 60);
+            var yReload = (y.Loading || y.Reload.WaitForClient || y.System.Session.Tick - y.LastLoadedTick < 60);
+            var reloadCompare = xReload.CompareTo(yReload);
+            if (reloadCompare != 0) return -reloadCompare;
+            
+            var dpsCompare = x.Comp.PeakDps.CompareTo(y.Comp.PeakDps);
+            return -dpsCompare;
         }
     }
 }

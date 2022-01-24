@@ -22,13 +22,13 @@ namespace CoreSystems.Platform
                 var s = Comp.Session;
                 var tick = s.Tick;
                 #region Prefire
-
+                var aConst = ActiveAmmoDef.AmmoDef.Const;
                 if (_ticksUntilShoot++ < System.DelayToFire) {
 
                     if (AvCapable && System.PreFireSound && !PreFiringEmitter.IsPlaying)
                         StartPreFiringSound();
 
-                    if (ActiveAmmoDef.AmmoDef.Const.MustCharge && ActiveAmmoDef.AmmoDef.Const.Reloadable || System.AlwaysFireFull)
+                    if (aConst.MustCharge && aConst.Reloadable || System.AlwaysFireFull)
                         FinishShots = true;
 
                     if (!PreFired)
@@ -78,7 +78,7 @@ namespace CoreSystems.Platform
 
                     #region Update ProtoWeaponAmmo state
                     var skipMuzzle = s.IsClient && ProtoWeaponAmmo.CurrentAmmo == 0 && ClientMakeUpShots == 0 && PartState.Action == TriggerActions.TriggerOnce;
-                    if (ActiveAmmoDef.AmmoDef.Const.Reloadable) {
+                    if (aConst.Reloadable) {
 
                         if (ProtoWeaponAmmo.CurrentAmmo == 0) {
 
@@ -103,7 +103,7 @@ namespace CoreSystems.Platform
                             --ClientMakeUpShots;
                         }
 
-                        if (System.HasEjector && ActiveAmmoDef.AmmoDef.Const.HasEjectEffect)  {
+                        if (System.HasEjector && aConst.HasEjectEffect)  {
                             if (ActiveAmmoDef.AmmoDef.Ejection.SpawnChance >= 1 || rnd.AcquireRandom.Range(0f, 1f) >= ActiveAmmoDef.AmmoDef.Ejection.SpawnChance)
                                 SpawnEjection();
                         }
@@ -124,7 +124,7 @@ namespace CoreSystems.Platform
                     }
                     #endregion
 
-                    if (ActiveAmmoDef.AmmoDef.Const.HasBackKickForce && !Comp.Ai.IsStatic && !Comp.Ai.ShieldFortified && s.IsServer)
+                    if (aConst.HasBackKickForce && !Comp.Ai.IsStatic && !Comp.Ai.ShieldFortified && s.IsServer)
                         Comp.Ai.TopEntity.Physics?.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, -muzzle.Direction * ActiveAmmoDef.AmmoDef.BackKickForce, muzzle.Position, Vector3D.Zero);
 
                     if (PlayTurretAv) {
@@ -163,9 +163,9 @@ namespace CoreSystems.Platform
                         #endregion
 
                         #region Pick ProtoWeaponAmmo Pattern
-                        var patternIndex = ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount;
+                        var patternIndex = aConst.WeaponPatternCount;
 
-                        if (ActiveAmmoDef.AmmoDef.Const.WeaponPattern) {
+                        if (aConst.WeaponPattern) {
 
                             if (pattern.Random) {
 
@@ -173,17 +173,17 @@ namespace CoreSystems.Platform
                                     patternIndex = rnd.TurretRandom.Range(pattern.RandomMin, pattern.RandomMax);
                                 }
 
-                                for (int w = 0; w < ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount; w++) {
+                                for (int w = 0; w < aConst.WeaponPatternCount; w++) {
                                     var y = rnd.TurretRandom.Range(0, w + 1);
                                     AmmoShufflePattern[w] = AmmoShufflePattern[y];
                                     AmmoShufflePattern[y] = w;
                                 }
                             }
-                            else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount) {
+                            else if (pattern.PatternSteps > 0 && pattern.PatternSteps <= aConst.WeaponPatternCount) {
 
                                 patternIndex = pattern.PatternSteps;
-                                for (int p = 0; p < ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount; ++p)
-                                    AmmoShufflePattern[p] = (AmmoShufflePattern[p] + patternIndex) % ActiveAmmoDef.AmmoDef.Const.WeaponPatternCount;
+                                for (int p = 0; p < aConst.WeaponPatternCount; ++p)
+                                    AmmoShufflePattern[p] = (AmmoShufflePattern[p] + patternIndex) % aConst.WeaponPatternCount;
                             }
                         }
                         #endregion
@@ -191,7 +191,7 @@ namespace CoreSystems.Platform
                         #region Generate Projectiles
                         for (int k = 0; k < patternIndex; k++) {
 
-                            var ammoPattern = ActiveAmmoDef.AmmoDef.Const.WeaponPattern ? ActiveAmmoDef.AmmoDef.Const.AmmoPattern[AmmoShufflePattern[k]] : ActiveAmmoDef.AmmoDef;
+                            var ammoPattern = aConst.WeaponPattern ? aConst.AmmoPattern[AmmoShufflePattern[k]] : ActiveAmmoDef.AmmoDef;
 
                             selfDamage += ammoPattern.DecayPerShot;
 

@@ -252,7 +252,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 var needsTarget =  !weapon.Target.HasTarget && overrides.Grids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && weapon.ActiveAmmoDef.AmmoDef.Const.CanReportTargetStatus && delayNoTarget && ai.DetectionInfo.TargetInRange(weapon);
                 var showReloadIcon = (weapon.Loading || weapon.Reload.WaitForClient || _session.Tick - weapon.LastLoadedTick < 60);
 
-                var name = weapon.System.ShortName + (needsTarget ? overrides.FocusSubSystem && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus ? needsLock : EmptyStr);
+                var name = weapon.System.ShortName + (needsTarget ? overrides.FocusSubSystem && !showReloadIcon  && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus && !showReloadIcon ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;
                 var hasHeat = weapon.HeatPerc > 0;
@@ -334,10 +334,15 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             var texture = mustCharge ? ChargingTexture : ReloadingTexture;
             if (texture.Length > 0)
             {
-
                 if (mustCharge)
                     stackedInfo.ReloadIndex = MathHelper.Clamp((int)(MathHelper.Lerp(0, texture.Length - 1, weapon.ProtoWeaponAmmo.CurrentCharge / weapon.MaxCharge)), 0, texture.Length - 1);
 
+                if (stackedInfo.ReloadIndex >= texture.Length)
+                {
+                    Log.Line($"ShowReloadIcon index error: {stackedInfo.ReloadIndex} >= {texture.Length} - {MathHelper.Lerp(0, texture.Length - 1, weapon.ProtoWeaponAmmo.CurrentCharge / weapon.MaxCharge)} - {weapon.ProtoWeaponAmmo.CurrentCharge / weapon.MaxCharge}");
+                    stackedInfo.ReloadIndex = 0;
+                    return;
+                }
                 stackedInfo.CachedReloadTexture.Material = texture[stackedInfo.ReloadIndex].Material;
                 stackedInfo.CachedReloadTexture.Color = _bgColor;
                 stackedInfo.CachedReloadTexture.Position.X = (textOffset - _paddingReload) - _reloadOffset;

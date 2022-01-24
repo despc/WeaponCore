@@ -613,7 +613,6 @@ namespace CoreSystems.Support
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
                 {
                     var aPattern = ammo.AmmoDef.Pattern.Patterns[j];
-                    Log.Line($"aPattern: j{j} {ammo.AmmoDef.Pattern.Patterns[j]}");
                     if (!string.IsNullOrEmpty(aPattern))
                         ++validPatterns;
 
