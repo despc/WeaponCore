@@ -814,7 +814,8 @@ namespace CoreSystems.Support
             hitSoundPair = hitSound ? new MySoundPair(ammoDef.AmmoAudio.HitSound, false) : null;
 
             ammoTravelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.TravelSound);
-            travelSoundPair = ammoShotSound ? new MySoundPair(ammoDef.AmmoAudio.TravelSound, false) : null;
+            travelSoundPair = ammoTravelSound ? new MySoundPair(ammoDef.AmmoAudio.TravelSound, false) : null;
+
 
             shotSound = !string.IsNullOrEmpty(rawShotSoundStr);
             shotSoundPair = shotSound ? new MySoundPair(rawShotSoundStr, false) : null;
