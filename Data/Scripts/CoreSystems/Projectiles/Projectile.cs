@@ -55,8 +55,8 @@ namespace CoreSystems.Projectiles
         internal double MaxSpeed;
         internal double MaxTrajectorySqr;
         internal double PrevEndPointToCenterSqr;
-        internal double FieldTime;
         internal float DesiredSpeed;
+        internal int FieldTime;
         internal int ChaseAge;
         internal int EndStep;
         internal int ZombieLifeTime;
@@ -321,7 +321,7 @@ namespace CoreSystems.Projectiles
             InitalStep = !Info.IsShrapnel && aConst.AmmoSkipAccel ? desiredSpeed * StepConst : Velocity * StepConst;
 
             TravelMagnitude = Velocity * StepConst;
-            FieldTime = aConst.Ewar || aConst.IsMine ? trajectory.FieldTime : IsDrone? 1: 0;
+            FieldTime = aConst.Ewar || aConst.IsMine ? trajectory.FieldTime : IsDrone? 100: 0;
             State = !aConst.IsBeamWeapon ? ProjectileState.Alive : ProjectileState.OneAndDone;
 
             if (EnableAv)
@@ -716,7 +716,7 @@ namespace CoreSystems.Projectiles
                     var returnTargetTest = new Vector3D(parentCubePos + parentCubeOrientation.Forward * orbitSphere.Radius);
                     var droneNavTargetAim = Vector3D.Normalize(returnTargetTest - Position);
                     var testPathRayCheck = new RayD(returnTargetTest, -droneNavTargetAim);//Ray looking out from dock approach point
-                        DsDebugDraw.DrawRay(testPathRayCheck, Color.Red, 0.5f, 300f);
+                        //DsDebugDraw.DrawRay(testPathRayCheck, Color.Red, 0.5f, 300f);
                         if (testPathRayCheck.Intersects(orbitSphereClose)==null)
                         {                            
                             DroneStat = DroneStatus.Return;
@@ -771,37 +771,37 @@ namespace CoreSystems.Projectiles
                 case DroneStatus.Return:
                     var returnTarget = new Vector3D(parentCubePos + parentCubeOrientation.Forward * orbitSphere.Radius);
                     droneNavTarget = Vector3D.Normalize(returnTarget - Position);
-                    FieldTime = 0.3;
+                    FieldTime = 30;
                     if (Vector3D.Distance(Position, returnTarget) <= droneSize) DroneStat = DroneStatus.Dock;
                     break;
 
                 case DroneStatus.Dock: //This is ugly and I hate it...
                     var maxLife = Info.AmmoDef.Const.MaxLifeTime;
                     var sphereTarget = new Vector3D(parentCubePos + parentCubeOrientation.Forward * (orbitSphereClose.Radius+MaxSpeed/2));
-                    DsDebugDraw.DrawLine(new LineD(parentCubePos, sphereTarget), Color.CadetBlue, 0.5f);
+                    //DsDebugDraw.DrawLine(new LineD(parentCubePos, sphereTarget), Color.CadetBlue, 0.5f);
 
                     if (Vector3D.Distance(sphereTarget, Position) >= droneSize)
                     {
-                        if (FieldTime >= 0.25)//Final Approach
+                        if (FieldTime >= 25)//Final Approach
                         {
                             droneNavTarget = Vector3D.Normalize(sphereTarget - Position);
-                            DsDebugDraw.DrawLine(new LineD(Position, sphereTarget), Color.Green, 0.5f);
-                            FieldTime = 0.25;
+                            //DsDebugDraw.DrawLine(new LineD(Position, sphereTarget), Color.Green, 0.5f);
+                            FieldTime = 25;
                             //Info.Age -= 1; //Keep alive mechanic
                         }
 
                     }
-                    else if (FieldTime >=0.25)
+                    else if (FieldTime >=25)
                     {
-                        FieldTime = 0.15;
+                        FieldTime = 15;
                     }
 
-                    if (FieldTime <=0.15)
+                    if (FieldTime <=15)
                     {
                         if (Vector3D.Distance(parentCubePos, Position) >= droneSize)
                         {
                             droneNavTarget = Vector3D.Normalize(parentCubePos - Position);
-                            DsDebugDraw.DrawLine(new LineD(Position, parentCubePos), Color.Orange, 0.5f);
+                            //DsDebugDraw.DrawLine(new LineD(Position, parentCubePos), Color.Orange, 0.5f);
                             //Info.Age -= 1; //Keep alive mechanic
                         }
                         else// docked
@@ -882,7 +882,7 @@ namespace CoreSystems.Projectiles
                 newVel = Velocity += (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
             VelocityLengthSqr = newVel.LengthSquared();
 
-            if (VelocityLengthSqr > MaxSpeedSqr||FieldTime <1) newVel = Info.Direction * MaxSpeed*FieldTime;
+            if (VelocityLengthSqr > MaxSpeedSqr || (FieldTime <100&&IsDrone)) newVel = Info.Direction * MaxSpeed*FieldTime/100;
             Velocity = newVel;
         }
 
