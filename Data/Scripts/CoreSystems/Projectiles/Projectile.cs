@@ -1566,9 +1566,7 @@ namespace CoreSystems.Projectiles
                     patternIndex = pattern.PatternSteps;
                     for (int p = 0; p < aConst.FragPatternCount; ++p)
                     {   
-                        //The bit below needs to be tweaked to start at 0, instead of 1
                         Info.PatternShuffle[p] = (Info.PatternShuffle[p] + patternIndex) % aConst.FragPatternCount;
-                        //Log.Line($"aConst.FragmentPattern - patternIndex: {patternIndex} p: {p} Info.PatternShuffle[p]: {Info.PatternShuffle[p]} aConst.FragPatternCount: {aConst.FragPatternCount}");
                     }
                 }
             }
@@ -1589,7 +1587,8 @@ namespace CoreSystems.Projectiles
 
             for (int i = 0; i < patternIndex; i++)
             {
-                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i]] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+                var indexOffset = Info.PatternShuffle[i] > 0 ? Info.PatternShuffle[i] - 1 : aConst.FragPatternCount-1;
+                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[indexOffset] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
                
                 Vector3D pointDir;
                 if (!fireOnTarget)
