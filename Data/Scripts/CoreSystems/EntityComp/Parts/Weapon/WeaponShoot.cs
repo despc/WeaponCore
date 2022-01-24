@@ -192,7 +192,7 @@ namespace CoreSystems.Platform
                         #region Generate Projectiles
                         for (int k = 0; k < patternIndex; k++) {
 
-                            var ammoPattern = ActiveAmmoDef.AmmoDef.Const.AmmoPattern[AmmoShufflePattern[k]];
+                            var ammoPattern = ActiveAmmoDef.AmmoDef.Const.WeaponPattern ? ActiveAmmoDef.AmmoDef.Const.AmmoPattern[AmmoShufflePattern[k]] : ActiveAmmoDef.AmmoDef;
 
                             selfDamage += ammoPattern.DecayPerShot;
 

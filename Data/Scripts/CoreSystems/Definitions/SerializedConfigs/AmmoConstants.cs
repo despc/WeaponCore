@@ -591,7 +591,7 @@ namespace CoreSystems.Support
 
             ammoPattern = new AmmoDef[indexCount];
 
-            if (!enabled || !pattern.SkipParent)
+            if (!pattern.SkipParent && pattern.Mode != AmmoDef.PatternDef.PatternModes.Fragment)
                 ammoPattern[indexPos++] = ammo.AmmoDef;
 
             var validPatterns = 0; 
@@ -600,7 +600,7 @@ namespace CoreSystems.Support
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
                 {
                     var aPattern = ammo.AmmoDef.Pattern.Patterns[j];
-                    
+                    Log.Line($"aPattern: j{j} {ammo.AmmoDef.Pattern.Patterns[j]}");
                     if (!string.IsNullOrEmpty(aPattern))
                         ++validPatterns;
 
@@ -609,6 +609,7 @@ namespace CoreSystems.Support
                         var ammoDef = wDef.Ammos[i];
                         if (aPattern.Equals(ammoDef.AmmoRound))
                         {
+                            
                             ammoPattern[indexPos++] = ammoDef;
                             var hasGuidance = ammoDef.Trajectory.Guidance != None;
                             if (!guidedAmmo && hasGuidance)
