@@ -484,8 +484,6 @@ namespace CoreSystems.Projectiles
                     if (topEnt == null || topEnt.MarkedForClose) return;
                 }
 
-
-
                 //General use vars
                 var targetSphere = topEnt.PositionComp.WorldVolume;
                 var orbitSphere = targetSphere; //desired orbit dist
@@ -578,30 +576,30 @@ namespace CoreSystems.Projectiles
                             }
                         }
 
-                            try
-                            {
-                                parentPos = Info.Target.CoreEntity.PositionComp.GetPosition();
-                            }
-                            catch
-                            {
-                                Log.Line($"Parent Pos not found");
-                                //DroneStat = DroneStatus.Orbit; //Keep orbiting target if parent is dead?
-                                break;
-                            }
+                        try
+                        {
+                            parentPos = Info.Target.CoreEntity.PositionComp.GetPosition();
+                        }
+                        catch
+                        {
+                            Log.Line($"Parent Pos not found");
+                            //DroneStat = DroneStatus.Orbit; //Keep orbiting target if parent is dead?
+                            break;
+                        }
 
-                            if (parentPos != Vector3D.Zero && DroneStat != DroneStatus.Return)
+                        if (parentPos != Vector3D.Zero && DroneStat != DroneStatus.Return)
+                        {
+                            var rtbFlightTime = Vector3D.Distance(Position, parentPos) / MaxSpeed * 60 * 1.05d;//add a multiplier to ensure final docking time?
+                            if ((maxLife > 0 && maxLife - Info.Age <= rtbFlightTime) || (Info.Frags >= Info.AmmoDef.Fragment.TimedSpawns.MaxSpawns))
                             {
-                                var rtbFlightTime = Vector3D.Distance(Position, parentPos) / MaxSpeed * 60 * 1.05d;//add a multiplier to ensure final docking time?
-                                if ((maxLife > 0 && maxLife - Info.Age <= rtbFlightTime) || (Info.Frags >= Info.AmmoDef.Fragment.TimedSpawns.MaxSpawns))
+                                var rayTestPath = new RayD(Position, Vector3D.Normalize(parentPos - Position));//Check for clear LOS home
+                                if (rayTestPath.Intersects(orbitSphereClose) == null)
                                 {
-                                    var rayTestPath = new RayD(Position, Vector3D.Normalize(parentPos - Position));//Check for clear LOS home
-                                    if (rayTestPath.Intersects(orbitSphereClose) == null)
-                                    {
-                                        DroneMsn = DroneMission.RTB;
-                                        DroneStat = DroneStatus.Transit;
-                                    }
+                                    DroneMsn = DroneMission.RTB;
+                                    DroneStat = DroneStatus.Transit;
                                 }
                             }
+                        }
                         
                         break;
                     case DroneMission.RTB:
@@ -1596,12 +1594,9 @@ namespace CoreSystems.Projectiles
             }
 
             var spawn = false;
-
             for (int i = 0; i < patternIndex; i++)
             {
-                var indexOffset = Info.PatternShuffle[i] > 0 ? Info.PatternShuffle[i] - 1 : aConst.FragPatternCount-1;
-                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[indexOffset] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
-               
+                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i] > 0 ? Info.PatternShuffle[i] - 1 : aConst.FragPatternCount-1] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
                 Vector3D pointDir;
                 if (!fireOnTarget)
                     pointDir = Info.Direction;
