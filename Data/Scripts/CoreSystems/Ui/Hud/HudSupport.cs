@@ -88,6 +88,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
         }
 
         private readonly WeaponCompare _weaponCompare = new WeaponCompare();
+        private readonly WeaponListCompare _weaponListCompare = new WeaponListCompare();
+
         internal List<StackedWeaponInfo> SortDisplayedWeapons(List<Weapon> list)
         {
             int finalCount = 0;
@@ -98,12 +100,14 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             list.Sort(_weaponCompare);
             if (list.Count > WeaponLimit) //limit to top 50 based on heat
                 list.RemoveRange(WeaponLimit, list.Count - WeaponLimit);
-            else if (list.Count <= StackThreshold)
+            
+            if (list.Count <= StackThreshold)
             {
                 for (int i = 0; i < list.Count; i++)
                 {
                     var w = list[i];
-                    if (w.System.PartName.Length > _currentLargestName) _currentLargestName = w.System.PartName.Length;
+                    if (w.System.PartName.Length > _currentLargestName) 
+                        _currentLargestName = w.System.PartName.Length;
 
                     StackedWeaponInfo swi;
                     if (!_weaponStackedInfoPool.TryDequeue(out swi))
@@ -126,21 +130,23 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             }
 
 
-            Dictionary<int, List<Weapon>> weaponTypes = new Dictionary<int, List<Weapon>>();
+            Dictionary<long, List<Weapon>> weaponTypes = new Dictionary<long, List<Weapon>>();
             for (int i = 0; i < list.Count; i++) //sort list into groups of same weapon type
             {
                 var w = list[i];
 
-                if (!weaponTypes.ContainsKey(w.System.WeaponIdHash))
+                var targetId = w.Target.HasTarget ? 1 : 2;
+                var hashId = (long)w.System.WeaponIdHash << 32 | (uint)targetId;
+                if (!weaponTypes.ContainsKey(hashId))
                 {
                     List<Weapon> tmp;
                     if (!_weaponSortingListPool.TryDequeue(out tmp))
                         tmp = new List<Weapon>();
 
-                    weaponTypes[w.System.WeaponIdHash] = tmp;
+                    weaponTypes[hashId] = tmp;
                 }
 
-                weaponTypes[w.System.WeaponIdHash].Add(w);
+                weaponTypes[hashId].Add(w);
             }
 
             foreach (var weaponType in weaponTypes)
@@ -169,7 +175,10 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                             subList.Add(w);
                         else
                         {
-                            if (last.HeatPerc - w.HeatPerc > .05f || last.Loading != w.Loading || last.Reload.WaitForClient != w.Reload.WaitForClient || last.PartState.Overheated != w.PartState.Overheated)
+                            var lastLoading = last.Loading || last.Reload.WaitForClient;
+                            var thisLoading = w.Loading || w.Reload.WaitForClient;
+
+                            if (last.HeatPerc - w.HeatPerc > .05f || lastLoading != thisLoading || last.PartState.Overheated != w.PartState.Overheated || last.Target.HasTarget != w.Target.HasTarget)
                             {
                                 subLists.Add(subList);
                                 if (!_weaponSortingListPool.TryDequeue(out subList))
@@ -183,9 +192,10 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                                 subLists.Add(subList);
                         }
                     }
-
                     weapons.Clear();
                     _weaponSortingListPool.Enqueue(weapons);
+
+                    subLists.Sort(_weaponListCompare);
 
                     for (int i = 0; i < subLists.Count; i++)
                     {
@@ -208,7 +218,6 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                             swi.ReloadIndex = 0;
                             swi.HighestValueWeapon = subL[0];
                             swi.WeaponStack = subL.Count;
-
                             finalList.Add(swi);
                             finalCount++;
                         }
@@ -301,7 +310,36 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             var reloadCompare = xReload.CompareTo(yReload);
             if (reloadCompare != 0) return -reloadCompare;
             
+            var targetCompare = x.Target.HasTarget.CompareTo(y.Target.HasTarget);
+            if (targetCompare != 0) return -targetCompare;
+
             var dpsCompare = x.Comp.PeakDps.CompareTo(y.Comp.PeakDps);
+            return -dpsCompare;
+        }
+    }
+
+    internal class WeaponListCompare : IComparer<List<Weapon>>
+    {
+        public int Compare(List<Weapon> x, List<Weapon> y)
+        {
+            var chargeCompare = x[0].Charging.CompareTo(y[0].Charging);
+            if (chargeCompare != 0) return -chargeCompare;
+
+            var xHeatLevel = x[0].System.MaxHeat - x[0].PartState.Heat;
+            var yHeatLevel = y[0].System.MaxHeat - y[0].PartState.Heat;
+            var hasHeat = x[0].PartState.Heat > 0 || y[0].PartState.Heat > 0;
+            var heatCompare = xHeatLevel.CompareTo(yHeatLevel);
+            if (hasHeat && heatCompare != 0) return -heatCompare;
+
+            var xReload = (x[0].Loading || x[0].Reload.WaitForClient || x[0].System.Session.Tick - x[0].LastLoadedTick < 60);
+            var yReload = (y[0].Loading || y[0].Reload.WaitForClient || y[0].System.Session.Tick - y[0].LastLoadedTick < 60);
+            var reloadCompare = xReload.CompareTo(yReload);
+            if (reloadCompare != 0) return -reloadCompare;
+
+            var targetCompare = x[0].Target.HasTarget.CompareTo(y[0].Target.HasTarget);
+            if (targetCompare != 0) return -targetCompare;
+
+            var dpsCompare = x[0].Comp.PeakDps.CompareTo(y[0].Comp.PeakDps);
             return -dpsCompare;
         }
     }

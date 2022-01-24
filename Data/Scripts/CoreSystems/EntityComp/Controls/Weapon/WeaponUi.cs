@@ -71,21 +71,7 @@ namespace CoreSystems
             }
 
         }
-        /*
-        internal static void RequestSetGuidance(IMyTerminalBlock block, bool newValue)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            if (comp.Session.IsServer) {
-                comp.Data.Repo.Values.Set.Guidance = newValue;
-                if (comp.Session.MpActive)
-                    comp.Session.SendComp(comp);
-            }
-            else
-                comp.Session.SendSetCompBoolRequest(comp, newValue, PacketType.RequestSetGuidance);
-        }
-        */
         internal static void RequestSetOverload(IMyTerminalBlock block, bool newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -102,14 +88,27 @@ namespace CoreSystems
                 comp.Session.SendSetCompBoolRequest(comp, newValue, PacketType.RequestSetOverload);
         }
 
-        /*
-        internal static bool GetGuidance(IMyTerminalBlock block, int wepId)
+        internal static void RequestSetReportTarget(IMyTerminalBlock block, bool newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            if (comp.Session.IsServer)
+            {
+                comp.Data.Repo.Values.Set.ReportTarget = newValue;
+                if (comp.Session.MpActive)
+                    comp.Session.SendComp(comp);
+            }
+            else
+                comp.Session.SendSetCompBoolRequest(comp, newValue, PacketType.RequestSetReportTarget);
+        }
+
+        internal static bool GetReportTarget(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
-            return comp.Data.Repo.Values.Set.Guidance;
+            return comp.Data.Repo.Values.Set.ReportTarget;
         }
-        */
 
         internal static float GetDps(IMyTerminalBlock block)
         {

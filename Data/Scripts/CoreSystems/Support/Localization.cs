@@ -12,9 +12,9 @@ namespace CoreSystems.Support
                 {
                     MyLanguagesEnum.English, new Dictionary<string, string>
                     {
-                        { "Guidance Toggle On/Off", "Guidance Toggle On/Off" },
-                        { "Guidance On", "Guidance On" },
-                        { "Guidance Off", "Guidance Off" },
+                        { "ReportTarget Toggle On/Off", "ReportTarget Toggle On/Off" },
+                        { "ReportTarget On", "ReportTarget On" },
+                        { "ReportTarget Off", "ReportTarget Off" },
                         { "Increase Weapon Damage", "Increase Weapon Damage" },
                         { "Decrease Weapon Damage", "Decrease Weapon Damage" },
                         { "Increase Weapon ROF", "Increase Weapon ROF" },
@@ -24,8 +24,8 @@ namespace CoreSystems.Support
                         { "Overload Off", "Overload Off" },
                         { "TerminalSwitchOn", "On" },
                         { "TerminalSwitchOff", "Off" },
-                        { "TerminalGuidanceTitle", "Enable Guidance" },
-                        { "TerminalGuidanceTooltip", "Enable Guidance" },
+                        { "TerminalReportTargetTitle", "Enable Report Target" },
+                        { "TerminalReportTargetTooltip", "Report if weapon has target on HUD" },
                         { "TerminalWeaponDamageTitle", "Change Damage Per Shot" },
                         { "TerminalWeaponDamageTooltip", "Change the damage per shot" },
                         { "TerminalWeaponROFTitle", "Change Rate of Fire" },
@@ -149,9 +149,9 @@ namespace CoreSystems.Support
                {
                     MyLanguagesEnum.Russian, new Dictionary<string, string>
                     {
-                        { "Guidance Toggle On/Off", "Переключить Наведение Вкл/Выкл" },
-                        { "Guidance On", "Переключить Наведение Вкл" },
-                        { "Guidance Off", "Переключить Наведение Выкл" },
+                        { "ReportTarget Toggle On/Off", "Переключить Наведение Вкл/Выкл" },
+                        { "ReportTarget On", "Переключить Наведение Вкл" },
+                        { "ReportTarget Off", "Переключить Наведение Выкл" },
                         { "Increase Weapon Damage", "Увеличить Наносимый урон" },
                         { "Decrease Weapon Damage", "Уменьшить Наносимый урон" },
                         { "Increase Weapon ROF", "Увеличить Скорострельность" },
@@ -161,8 +161,8 @@ namespace CoreSystems.Support
                         { "Overload Off", "Переключить Перегрузка Выкл" },
                         { "TerminalSwitchOn", "Вкл" },
                         { "TerminalSwitchOff", "Выкл" },
-                        { "TerminalGuidanceTitle", "Включить Наведение" },
-                        { "TerminalGuidanceTooltip", "Активировать наводку турелей" },
+                        { "TerminalReportTargetTitle", "Включить Наведение" },
+                        { "TerminalReportTargetTooltip", "Активировать наводку турелей" },
                         { "TerminalWeaponDamageTitle", "Изменить наносимый урон за выстрел" },
                         { "TerminalWeaponDamageTooltip", "Изменить наносимый уронурон за выстрел" },
                         { "TerminalWeaponROFTitle", "Изменить скорострельность" },
@@ -283,9 +283,9 @@ namespace CoreSystems.Support
                 {
                     MyLanguagesEnum.ChineseChina, new Dictionary<string, string>
                     {
-                        { "Guidance Toggle On/Off", "切换制导 开启/关闭" },
-                        { "Guidance On", "制导 开启" },
-                        { "Guidance Off", "制导 关闭" },
+                        { "ReportTarget Toggle On/Off", "切换制导 开启/关闭" },
+                        { "ReportTarget On", "制导 开启" },
+                        { "ReportTarget Off", "制导 关闭" },
                         { "Increase Weapon Damage", "增加 武器伤害" },
                         { "Decrease Weapon Damage", "减少 武器伤害" },
                         { "Increase Weapon ROF", "增加 武器射速" },
@@ -295,8 +295,8 @@ namespace CoreSystems.Support
                         { "Overload Off", "过载 关闭" },
                         { "TerminalSwitchOn", "开启" },
                         { "TerminalSwitchOff", "关闭" },
-                        { "TerminalGuidanceTitle", "启用制导" },
-                        { "TerminalGuidanceTooltip", "启用制导" },
+                        { "TerminalReportTargetTitle", "启用制导" },
+                        { "TerminalReportTargetTooltip", "启用制导" },
                         { "TerminalWeaponDamageTitle", "改变每发的伤害" },
                         { "TerminalWeaponDamageTooltip", "改变每发的伤害" },
                         { "TerminalWeaponROFTitle", "改变射速" },

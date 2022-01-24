@@ -35,8 +35,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
         private readonly MyConcurrentPool<AgingTextRequest> _agingTextRequestPool = new MyConcurrentPool<AgingTextRequest>(64, data => data.Clean());
         private readonly MyConcurrentPool<TextData> _textDataPool = new MyConcurrentPool<TextData>(128);
-        private readonly ConcurrentQueue<TextureDrawData> _textureDrawPool = new ConcurrentQueue<TextureDrawData>();
-        private readonly ConcurrentQueue<TextDrawRequest> _textDrawPool = new ConcurrentQueue<TextDrawRequest>();
+        private readonly Queue<TextureDrawData> _textureDrawPool = new Queue<TextureDrawData>();
+        private readonly Queue<TextDrawRequest> _textDrawPool = new Queue<TextDrawRequest>();
         private readonly Queue<List<Weapon>> _weaponSortingListPool = new Queue<List<Weapon>>(InitialPoolCapacity);
         private readonly Queue<StackedWeaponInfo> _weaponStackedInfoPool = new Queue<StackedWeaponInfo>(InitialPoolCapacity);
         private readonly Queue<List<StackedWeaponInfo>> _weaponInfoListPool = new Queue<List<StackedWeaponInfo>>(InitialPoolCapacity);
@@ -149,7 +149,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             }
         }
 
-        internal struct TextureMap
+        internal class TextureMap
         {
             internal MyStringId Material;
             internal Vector2 P0;
@@ -207,7 +207,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
             internal int ReloadIndex;
         }
 
-        internal struct TextDrawRequest
+        internal class TextDrawRequest
         {
             internal string Text;
             internal Vector4 Color;

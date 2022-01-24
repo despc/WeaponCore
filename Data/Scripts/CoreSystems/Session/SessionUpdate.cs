@@ -314,7 +314,7 @@ namespace CoreSystems
                         /// Update Weapon Hud Info
                         /// 
 
-                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (aConst.CanReportTargetStatus && !w.Target.HasTarget && wValues.Set.Overrides.Grids && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(w)));
+                        var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (aConst.CanReportTargetStatus && wValues .Set.ReportTarget && !w.Target.HasTarget && wValues.Set.Overrides.Grids && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(w)));
 
                         if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;

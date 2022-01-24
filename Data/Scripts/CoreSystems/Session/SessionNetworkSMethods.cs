@@ -80,13 +80,11 @@ namespace CoreSystems
                         BlockUi.RequestSetDps(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
                         break;
                     }
-                /*
-                case PacketType.RequestSetGuidance:
+                case PacketType.RequestSetReportTarget:
                     {
-                        BlockUi.RequestSetGuidance(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
+                        BlockUi.RequestSetReportTarget(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
                         break;
                     }
-                */
                 case PacketType.RequestSetOverload:
                     {
                         BlockUi.RequestSetOverload(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);

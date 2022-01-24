@@ -24,7 +24,7 @@ namespace CoreSystems
         ConstructFoci,
         TargetChange,
         RequestSetDps,
-        RequestSetGuidance,
+        RequestSetReportTarget,
         RequestSetRof,
         RequestSetOverload,
         RequestSetRange,

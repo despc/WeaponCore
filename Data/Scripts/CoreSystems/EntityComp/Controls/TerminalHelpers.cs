@@ -15,7 +15,7 @@ namespace CoreSystems.Control
     {
         internal static void AddUiControls<T>(Session session) where T : IMyTerminalBlock
         {
-            //AddWeaponOnOff<T>(session, "Guidance", Localization.GetText("TerminalGuidanceTitle"), Localization.GetText("TerminalGuidanceTooltip"), Localization.GetText("TerminalSwitchOn"), Localization.GetText("TerminalSwitchOff"), BlockUi.GetGuidance, BlockUi.RequestSetGuidance, UiGuidance);
+            AddOnOffSwitchNoAction<T>(session, "ReportTarget", Localization.GetText("TerminalReportTargetTitle"), Localization.GetText("TerminalReportTargetTooltip"), BlockUi.GetReportTarget, BlockUi.RequestSetReportTarget,true, UiReportTarget);
 
             AddSliderDamage<T>(session, "Weapon Damage", Localization.GetText("TerminalWeaponDamageTitle"), Localization.GetText("TerminalWeaponDamageTooltip"), BlockUi.GetDps, BlockUi.RequestSetDps, UiStrengthSlider);
 
@@ -146,11 +146,11 @@ namespace CoreSystems.Control
             return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.CanOverload;
         }
 
-        internal static bool UiGuidance(IMyTerminalBlock block)
+        internal static bool UiReportTarget(IMyTerminalBlock block)
         {
 
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.HasGuidance;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.HasRequireTarget;
         }
 
         internal static bool TrackMeteors(IMyTerminalBlock block)

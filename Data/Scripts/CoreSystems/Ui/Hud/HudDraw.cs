@@ -25,7 +25,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 {
 
                     if (TexturesToAdd > 0)
+                    {
                         _weapontoDraw = SortDisplayedWeapons(WeaponsToDisplay);
+                    }
 
                     _lastHudUpdateTick = _session.Tick;
                 }
@@ -129,10 +131,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
                     var cm = CharacterMap[textAdd.Font][c];
 
-                    TextureDrawData tdd;
-
-                    if (!_textureDrawPool.TryDequeue(out tdd))
-                        tdd = new TextureDrawData();
+                    var tdd = _textureDrawPool.Count > 0 ? _textureDrawPool.Dequeue() : new TextureDrawData();
 
                     tdd.Material = cm.Material;
                     tdd.Color = textAdd.Color;
@@ -170,9 +169,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
         private void BackgroundAdd(Vector2D currWeaponDisplayPos, double bgStartPosX)
         {
             var bgStartPosY = currWeaponDisplayPos.Y - _bgCenterHeight;
-            TextureDrawData backgroundTexture;
-            if (!_textureDrawPool.TryDequeue(out backgroundTexture))
-                backgroundTexture = new TextureDrawData();
+            var backgroundTexture = _textureDrawPool.Count > 0 ? _textureDrawPool.Dequeue() : new TextureDrawData();
 
             backgroundTexture.Material = InfoBackground[1].Material;
             backgroundTexture.Color = _bgColor;
@@ -188,8 +185,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
             _textureAddList.Add(backgroundTexture);
 
-            if (!_textureDrawPool.TryDequeue(out backgroundTexture))
-                backgroundTexture = new TextureDrawData();
+            backgroundTexture = _textureDrawPool.Count > 0 ? _textureDrawPool.Dequeue() : new TextureDrawData();
 
             backgroundTexture.Material = InfoBackground[0].Material;
             backgroundTexture.Color = _bgColor;
@@ -205,8 +201,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
             _textureAddList.Add(backgroundTexture);
 
-            if (!_textureDrawPool.TryDequeue(out backgroundTexture))
-                backgroundTexture = new TextureDrawData();
+            backgroundTexture = _textureDrawPool.Count > 0 ? _textureDrawPool.Dequeue() : new TextureDrawData();
 
             backgroundTexture.Material = InfoBackground[2].Material;
             backgroundTexture.Color = _bgColor;
@@ -234,8 +229,6 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
         {
             for (int i = 0; i < _weapontoDraw.Count; i++)
             {
-
-                TextDrawRequest textInfo;
                 var stackedInfo = _weapontoDraw[i];
                 var weapon = stackedInfo.HighestValueWeapon;
                 var comp = weapon.Comp;
@@ -249,16 +242,15 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
 
                 var delayNoTarget = !weapon.System.WConst.GiveUpAfter || _session.Tick - weapon.LastShootTick > weapon.System.WConst.DelayAfterBurst;
                 var notAnyBlock = overrides.SubSystem != WeaponDefinition.TargetingDef.BlockTypes.Any;
-                var needsTarget =  !weapon.Target.HasTarget && overrides.Grids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && weapon.ActiveAmmoDef.AmmoDef.Const.CanReportTargetStatus && delayNoTarget && ai.DetectionInfo.TargetInRange(weapon);
+                var needsTarget =  !weapon.Target.HasTarget && overrides.Grids && (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && weapon.ActiveAmmoDef.AmmoDef.Const.CanReportTargetStatus && comp.Data.Repo.Values.Set.ReportTarget && delayNoTarget && ai.DetectionInfo.TargetInRange(weapon);
                 var showReloadIcon = (weapon.Loading || weapon.Reload.WaitForClient || _session.Tick - weapon.LastLoadedTick < 60);
 
                 var name = weapon.System.ShortName + (needsTarget ? overrides.FocusSubSystem && !showReloadIcon  && notAnyBlock && weapon.FoundTopMostTarget ? NoSubsystem : NoTargetStr : weapon.System.LockOnFocus && !showReloadIcon ? needsLock : EmptyStr);
 
                 var textOffset = bgStartPosX - _bgWidth + _reloadWidth + _padding;
                 var hasHeat = weapon.HeatPerc > 0;
-
-                if (!_textDrawPool.TryDequeue(out textInfo))
-                    textInfo = new TextDrawRequest();
+                
+                var textInfo = _textDrawPool.Count > 0 ? _textDrawPool.Dequeue() :  new TextDrawRequest();
 
                 textInfo.Text = name;
                 var color = new Vector4(1, 1, 1, 1);
@@ -273,8 +265,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 if (stackedInfo.WeaponStack > 1)
                 {
 
-                    if (!_textDrawPool.TryDequeue(out textInfo))
-                        textInfo = new TextDrawRequest();
+                    textInfo = _textDrawPool.Count > 0 ? _textDrawPool.Dequeue() : new TextDrawRequest();
 
                     textInfo.Text = $"(x{stackedInfo.WeaponStack})";
                     textInfo.Color = new Vector4(0.5f, 0.5f, 1, 1);
@@ -341,7 +332,6 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 {
                     Log.Line($"ShowReloadIcon index error: {stackedInfo.ReloadIndex} >= {texture.Length} - {MathHelper.Lerp(0, texture.Length - 1, weapon.ProtoWeaponAmmo.CurrentCharge / weapon.MaxCharge)} - {weapon.ProtoWeaponAmmo.CurrentCharge / weapon.MaxCharge}");
                     stackedInfo.ReloadIndex = 0;
-                    return;
                 }
                 stackedInfo.CachedReloadTexture.Material = texture[stackedInfo.ReloadIndex].Material;
                 stackedInfo.CachedReloadTexture.Color = _bgColor;

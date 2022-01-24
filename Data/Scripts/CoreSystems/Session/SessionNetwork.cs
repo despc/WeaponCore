@@ -328,7 +328,7 @@ namespace CoreSystems
                     break;
                 }
                 case PacketType.RequestSetRof:
-                //case PacketType.RequestSetGuidance:
+                case PacketType.RequestSetReportTarget:
                 case PacketType.RequestSetOverload:
                 case PacketType.RequestSetRange:
                 case PacketType.RequestSetDps:
