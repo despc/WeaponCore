@@ -601,7 +601,7 @@ namespace CoreSystems.Support
             weaponPatternCount = weaponPattern ? indexCount : 1;
 
             fragmentPatternCount = fragmentPattern ? indexCount : 1;
-            if (!pattern.SkipParent) fragmentPatternCount--;
+            if (!pattern.SkipParent && fragmentPattern) fragmentPatternCount--;
             ammoPattern = new AmmoDef[indexCount];
 
             if (!pattern.SkipParent && pattern.Mode != AmmoDef.PatternDef.PatternModes.Fragment)
