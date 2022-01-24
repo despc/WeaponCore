@@ -158,21 +158,9 @@ namespace CoreSystems
                     var system = pair.Value as WeaponSystem;
                     if (system != null)
                     {
-                        system.PreFirePairs.Clear();
-                        system.FireWhenDonePairs.Clear();
-                        system.FirePerShotPairs.Clear();
-                        system.RotatePairs.Clear();
-                        system.ReloadPairs.Clear();
                         foreach (var ammo in system.AmmoTypes)
                         {
                             ammo.AmmoDef.Const.PrimeEntityPool?.Clean();
-                            ammo.AmmoDef.Const.HitDefaultSoundPairs.Clear();
-                            ammo.AmmoDef.Const.HitVoxelSoundPairs.Clear();
-                            ammo.AmmoDef.Const.HitShieldSoundPairs.Clear();
-                            ammo.AmmoDef.Const.HitFloatingSoundPairs.Clear();
-                            ammo.AmmoDef.Const.HitPlayerSoundPairs.Clear();
-                            ammo.AmmoDef.Const.TravelSoundPairs.Clear();
-                            ammo.AmmoDef.Const.CustomSoundPairs.Clear();
                         }
                     }
 

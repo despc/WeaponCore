@@ -883,9 +883,7 @@ namespace CoreSystems
         internal struct CleanSound
         {
             internal Stack<MyEntity3DSoundEmitter> EmitterPool;
-            internal Stack<MySoundPair> SoundPairPool;
             internal MyEntity3DSoundEmitter Emitter;
-            internal MySoundPair SoundPair;
             internal uint SpawnTick;
             internal bool Force;
             internal bool DelayedReturn;

@@ -82,14 +82,15 @@ namespace CoreSystems.Support
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
         public readonly Dictionary<MyDefinitionBase, float> CustomBlockDefinitionBasesToScales;
-        public readonly Stack<MySoundPair> HitDefaultSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> HitShieldSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> HitVoxelSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> HitPlayerSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> HitFloatingSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> TravelSoundPairs = new Stack<MySoundPair>();
-        public readonly Stack<MySoundPair> CustomSoundPairs = new Stack<MySoundPair>();
+        public readonly MySoundPair TravelSoundPair;
         public readonly Stack<int[]> PatternShuffleArray = new Stack<int[]>();
+        public readonly MySoundPair ShotSoundPair;
+        public readonly MySoundPair HitSoundPair;
+        public readonly MySoundPair DetSoundPair;
+        public readonly MySoundPair ShieldSoundPair;
+        public readonly MySoundPair VoxelSoundPair;
+        public readonly MySoundPair PlayerSoundPair;
+        public readonly MySoundPair FloatingSoundPair;
 
         public readonly MyAmmoMagazineDefinition MagazineDef;
         public readonly AmmoDef[] AmmoPattern;
@@ -233,6 +234,10 @@ namespace CoreSystems.Support
         public readonly bool HasAdvFragOffset;
         public readonly bool DetonationSound;
         public readonly bool CanReportTargetStatus;
+        public readonly bool VoxelSound;
+        public readonly bool PlayerSound;
+        public readonly bool FloatingSound;
+        public readonly bool ShieldSound;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -424,7 +429,8 @@ namespace CoreSystems.Support
             PrimeEntityPool = Models(ammo.AmmoDef, wDef, out PrimeModel, out TriggerModel, out ModelPath);
 
             Energy(ammo, system, wDef, out EnergyAmmo, out MustCharge, out Reloadable, out EnergyCost, out EnergyMagSize, out ChargSize, out BurstMode, out HasShotReloadDelay);
-            Sound(ammo.AmmoDef, system, session, out HitSound, out AltHitSounds, out AmmoTravelSound, out ShotSound, out DetonationSound, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr, out ShotSoundDistSqr, out DetonationSoundDistSqr, out ShotSoundStr);
+            Sound(ammo.AmmoDef, system, session, out HitSound, out HitSoundPair, out AltHitSounds, out AmmoTravelSound, out TravelSoundPair, out ShotSound, out ShotSoundPair, out DetonationSound, out DetSoundPair, out HitSoundDistSqr, out AmmoTravelSoundDistSqr, out AmmoSoundMaxDistSqr, 
+                out ShotSoundDistSqr, out DetonationSoundDistSqr, out ShotSoundStr, out VoxelSound, out VoxelSoundPair, out FloatingSound, out FloatingSoundPair, out PlayerSound, out PlayerSoundPair, out ShieldSound, out ShieldSoundPair);
 
             MagazineSize = EnergyAmmo ? EnergyMagSize : MagazineDef.Capacity;
             MagsToLoad = wDef.HardPoint.Loading.MagsToLoad > 0 ? wDef.HardPoint.Loading.MagsToLoad : 1;
@@ -792,14 +798,30 @@ namespace CoreSystems.Support
             energyMagSize = 0;
         }
 
-        private void Sound(AmmoDef ammoDef, WeaponSystem system, Session session, out bool hitSound, out bool altHitSounds, out bool ammoTravelSound, out bool shotSound, out bool detSound, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float shotSoundDistSqr, out float detSoundDistSqr, out string rawShotSoundStr)
+        private void Sound(AmmoDef ammoDef, WeaponSystem system, Session session, out bool hitSound, out MySoundPair hitSoundPair, out bool altHitSounds, out bool ammoTravelSound, out MySoundPair travelSoundPair, out bool shotSound, out MySoundPair shotSoundPair, 
+            out bool detSound, out MySoundPair detSoundPair, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float shotSoundDistSqr, out float detSoundDistSqr, out string rawShotSoundStr, 
+            out bool voxelSound, out MySoundPair voxelSoundPair, out bool floatingSound, out MySoundPair floatingSoundPair, out bool playerSound, out MySoundPair playerSoundPair, out bool shieldSound, out MySoundPair shieldSoundPair)
         {
-            rawShotSoundStr = system.Values.HardPoint.Audio.FiringSoundPerShot && !string.IsNullOrEmpty(system.Values.HardPoint.Audio.FiringSound) ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
+            var perShot = system.Values.HardPoint.Audio.FiringSoundPerShot;
+            var weaponShotSound = !string.IsNullOrEmpty(system.Values.HardPoint.Audio.FiringSound);
+            var ammoShotSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.ShotSound);
+            var sharedPerShot = perShot && weaponShotSound;
+            var noWeaponUniqueShot = !perShot && !ammoShotSound && weaponShotSound;
+
+            rawShotSoundStr = sharedPerShot || noWeaponUniqueShot ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
 
             hitSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.HitSound);
+            hitSoundPair = hitSound ? new MySoundPair(ammoDef.AmmoAudio.HitSound, false) : null;
+
             ammoTravelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.TravelSound);
+            travelSoundPair = ammoShotSound ? new MySoundPair(ammoDef.AmmoAudio.TravelSound, false) : null;
+
             shotSound = !string.IsNullOrEmpty(rawShotSoundStr);
+            shotSoundPair = shotSound ? new MySoundPair(rawShotSoundStr, false) : null;
+
             detSound = !string.IsNullOrEmpty(DetSoundStr) && !ammoDef.AreaOfDamage.EndOfLife.NoSound;
+            detSoundPair = detSound ? new MySoundPair(DetSoundStr, false) : null;
+
             var hitSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.HitSound);
             var travelSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.TravelSound);
             var shotSoundStr = string.Concat(Arc, rawShotSoundStr);
@@ -841,6 +863,18 @@ namespace CoreSystems.Support
                     if (detSoundDistSqr > ammoSoundMaxDistSqr) ammoSoundMaxDistSqr = detSoundDistSqr;
                 }
             }
+
+            voxelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.VoxelHitSound);
+            voxelSoundPair = voxelSound ? new MySoundPair(ammoDef.AmmoAudio.VoxelHitSound, false) : null;
+
+            playerSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.PlayerHitSound);
+            playerSoundPair = playerSound ? new MySoundPair(ammoDef.AmmoAudio.PlayerHitSound, false) : null;
+
+            floatingSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.FloatingHitSound);
+            floatingSoundPair = floatingSound ? new MySoundPair(ammoDef.AmmoAudio.FloatingHitSound, false) : null;
+
+            shieldSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.ShieldHitSound);
+            shieldSoundPair = shieldSound ? new MySoundPair(ammoDef.AmmoAudio.ShieldHitSound, false) : null;
         }
 
         private MyEntity PrimeEntityActivator()

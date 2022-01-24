@@ -18,8 +18,6 @@ namespace CoreSystems.Support
         internal WeaponDefinition.AmmoDef AmmoDef;
         internal MyEntity PrimeEntity;
         internal MyEntity TriggerEntity;
-        internal MySoundPair FireSound;
-        internal MySoundPair TravelSound;
         internal MyEntity3DSoundEmitter FireEmitter;
         internal MyEntity3DSoundEmitter TravelEmitter;
         internal MyQueue<AfterGlow> GlowSteps = new MyQueue<AfterGlow>(64);
@@ -803,11 +801,9 @@ namespace CoreSystems.Support
                 var hitSound = AmmoDef.Const.HitSound && HitSoundActive && distToCameraSqr < AmmoDef.Const.HitSoundDistSqr && (!LastHitShield || AmmoDef.AmmoAudio.HitPlayShield);
                 if (hitSound) {
 
-                    MySoundPair pair;
-                    Stack<MySoundPair> pool;
+                    MySoundPair pair = null;
                     if (!AmmoDef.Const.AltHitSounds)                    {
-                        pool = AmmoDef.Const.HitDefaultSoundPairs;
-                        pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(AmmoDef.AmmoAudio.HitSound, false);
+                        pair = AmmoDef.Const.HitSoundPair;
                     }
                     else {
 
@@ -816,38 +812,33 @@ namespace CoreSystems.Support
                         var player = Hit.Entity as IMyCharacter;
                         var floating = Hit.Entity as MyFloatingObject;
 
-                        if (voxel != null && !string.IsNullOrEmpty(AmmoDef.AmmoAudio.VoxelHitSound)) {
-                            pool = AmmoDef.Const.HitVoxelSoundPairs;
-                            pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(AmmoDef.AmmoAudio.VoxelHitSound, false);
+                        if (voxel != null && AmmoDef.Const.VoxelSound) {
+                            pair = AmmoDef.Const.VoxelSoundPair;
                         }
-                        else if (player != null && !string.IsNullOrEmpty(AmmoDef.AmmoAudio.PlayerHitSound)) {
-                            pool = AmmoDef.Const.HitPlayerSoundPairs;
-                            pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(AmmoDef.AmmoAudio.PlayerHitSound, false);
+                        else if (player != null && AmmoDef.Const.PlayerSound) {
+                            pair = AmmoDef.Const.PlayerSoundPair;
                         }
-                        else if (floating != null && !string.IsNullOrEmpty(AmmoDef.AmmoAudio.FloatingHitSound)) {
-                            pool = AmmoDef.Const.HitFloatingSoundPairs;
-                            pair = AmmoDef.Const.HitFloatingSoundPairs.Count > 0 ? AmmoDef.Const.HitFloatingSoundPairs.Pop() : new MySoundPair(AmmoDef.AmmoAudio.FloatingHitSound, false);
+                        else if (floating != null && AmmoDef.Const.FloatingSound) {
+                            pair = AmmoDef.Const.FloatingSoundPair;
                         }
                         else {
 
-                            if (shield != null && !string.IsNullOrEmpty(AmmoDef.AmmoAudio.ShieldHitSound)) {
-                                pool = AmmoDef.Const.HitShieldSoundPairs;
-                                pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(AmmoDef.AmmoAudio.ShieldHitSound, false);
+                            if (shield != null && AmmoDef.Const.ShieldSound) {
+                                pair = AmmoDef.Const.ShieldSoundPair;
                             }
-                            else {
-                                pool = AmmoDef.Const.HitDefaultSoundPairs;
-                                pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(AmmoDef.AmmoAudio.HitSound, false);
+                            else if (AmmoDef.Const.HitSound) {
+                                pair = AmmoDef.Const.HitSoundPair;
                             }
                         }
                     }
 
-                    if (pool != null && pair != null) {
+                    if (pair != null) {
 
                         var hitEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                         hitEmitter.Entity = Hit.Entity;
                         var pos = System.Session.Tick - Hit.HitTick <= 1 && !MyUtils.IsZero(Hit.SurfaceHit) ? Hit.SurfaceHit : TracerFront;
-                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = hitEmitter, SoundPair = pair, Position = pos });
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true,  Emitter = hitEmitter, SoundPair = pair, Position = pos });
 
                         HitSoundInitted = true;
                     }
@@ -866,7 +857,6 @@ namespace CoreSystems.Support
                 TravelEmitter = System.Session.Av.TravelEmitters.Count > 0 ? System.Session.Av.TravelEmitters.Pop() : new MyEntity3DSoundEmitter(null);
 
                 TravelEmitter.CanPlayLoopSounds = true;
-                TravelSound = AmmoDef.Const.TravelSoundPairs.Count > 0 ? AmmoDef.Const.TravelSoundPairs.Pop() : new MySoundPair(AmmoDef.AmmoAudio.TravelSound, false);
             }
             else HasTravelSound = false;
 
@@ -884,7 +874,7 @@ namespace CoreSystems.Support
                     FireEmitter.CanPlayLoopSounds = true;
                     FireEmitter.Entity = null;
 
-                    FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
+                    //FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
                     
                     FireEmitter.SetPosition(Origin);
                 }
@@ -896,14 +886,12 @@ namespace CoreSystems.Support
 
                 FireEmitter.CanPlayLoopSounds = true;
                 FireEmitter.Entity = CoreEntity;
-                FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
-
                 FireEmitter.SetPosition(Origin);
             }
                         
             if (StartSoundActived) {
                 StartSoundActived = false;
-                FireEmitter.PlaySound(FireSound, true);
+                FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, true);
             }
         }
 
@@ -911,7 +899,7 @@ namespace CoreSystems.Support
         {
             TravelEmitter.SetPosition(TracerFront);
             TravelEmitter.Entity = PrimeEntity;
-            TravelEmitter.PlaySound(TravelSound, true);
+            TravelEmitter.PlaySound(AmmoDef.Const.TravelSoundPair, true);
             AmmoSound = true;
         }
 
@@ -1031,13 +1019,11 @@ namespace CoreSystems.Support
                     var pos = hit ? Hit.SurfaceHit : TracerFront;
                     if (a.Const.DetonationSound && Vector3D.DistanceSquared(System.Session.CameraPos, pos) < a.Const.DetonationSoundDistSqr)
                     {
-                        var pool = c.CustomSoundPairs;
-                        var pair = pool.Count > 0 ? pool.Pop() : new MySoundPair(a.Const.DetSoundStr, false);
 
                         var detEmitter = System.Session.Av.PersistentEmitters.Count > 0 ? System.Session.Av.PersistentEmitters.Pop() : new MyEntity3DSoundEmitter(null);
                         detEmitter.Entity = Hit.Entity;
 
-                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Pool = pool, Emitter = detEmitter, SoundPair = pair, Position = pos });
+                        System.Session.Av.RunningSounds.Add(new RunAv.HitSounds { Hit = true, Emitter = detEmitter, SoundPair = a.Const.DetSoundPair, Position = pos });
                     }
 
                     if (a.Const.CustomDetParticle || System.Session.Av.ExplosionReady)
@@ -1067,10 +1053,10 @@ namespace CoreSystems.Support
                 if (loop)
                 {
                     FireEmitter.StopSound(true);
-                    FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                    FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                 }
 
-                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SpawnTick = System.Session.Tick });
 
                 FireEmitter = null;
             }
@@ -1083,11 +1069,11 @@ namespace CoreSystems.Support
                     if (loop)
                     {
                         TravelEmitter.StopSound(true);
-                        TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                        TravelEmitter.PlaySound(AmmoDef.Const.TravelSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                     }
                 }
 
-                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SpawnTick = System.Session.Tick });
 
                 AmmoSound = false;
                 TravelEmitter = null;
@@ -1142,10 +1128,10 @@ namespace CoreSystems.Support
                 if (loop)
                 {
                     FireEmitter.StopSound(true);
-                    FireEmitter.PlaySound(FireSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                    FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                 }
 
-                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SoundPair = FireSound, SoundPairPool = System.FirePerShotPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = FireEmitter, EmitterPool = System.Session.Av.FireEmitters, SpawnTick = System.Session.Tick });
             }
 
             if (TravelEmitter != null) {
@@ -1155,11 +1141,11 @@ namespace CoreSystems.Support
                     if (loop)
                     {
                         TravelEmitter.StopSound(true);
-                        TravelEmitter.PlaySound(TravelSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                        TravelEmitter.PlaySound(AmmoDef.Const.TravelSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
                     }
                 }
                 
-                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SoundPair = TravelSound, SoundPairPool = AmmoDef.Const.TravelSoundPairs, SpawnTick = System.Session.Tick });
+                System.Session.SoundsToClean.Add(new Session.CleanSound { JustClean = !AmmoSound, DelayedReturn = AmmoSound, Emitter = TravelEmitter, EmitterPool = System.Session.Av.TravelEmitters, SpawnTick = System.Session.Tick });
                 
                 AmmoSound = false;
             }
@@ -1247,9 +1233,7 @@ namespace CoreSystems.Support
             AmmoDef = null;
             System = null;
             FireEmitter = null;
-            FireSound = null;
             TravelEmitter = null;
-            TravelSound = null;
         }
     }
 

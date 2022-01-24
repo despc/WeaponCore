@@ -443,7 +443,6 @@ namespace CoreSystems
                     }
                     sound.Emitter.Entity = null;
                     sound.EmitterPool.Push(sound.Emitter);
-                    sound.SoundPairPool.Push(sound.SoundPair);
                     SoundsToClean.RemoveAtFast(i);
                 }
             }

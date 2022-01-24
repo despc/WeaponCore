@@ -330,7 +330,7 @@ namespace CoreSystems.Platform
         {
             if (PreFiringEmitter == null)
                 return;
-            PreFiringEmitter.PlaySound(PreFiringSound);
+            PreFiringEmitter.PlaySound(System.PreFireSoundPairs);
         }
 
         public void StopPreFiringSound()
@@ -341,7 +341,7 @@ namespace CoreSystems.Platform
             if (PreFiringEmitter.Loop)
             {
                 PreFiringEmitter.StopSound(true);
-                PreFiringEmitter.PlaySound(PreFiringSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                PreFiringEmitter.PlaySound(System.PreFireSoundPairs, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 PreFiringEmitter.StopSound(false);
@@ -349,10 +349,10 @@ namespace CoreSystems.Platform
 
         public void StartFiringSound()
         {
-            if (FiringEmitter == null)
+            if (FiringEmitter == null || ActiveAmmoDef?.AmmoDef.Const.ShotSoundPair == null)
                 return;
 
-            FiringEmitter.PlaySound(FiringSound);
+            FiringEmitter.PlaySound(ActiveAmmoDef.AmmoDef.Const.ShotSoundPair);
         }
 
         public void StartHardPointSound()
@@ -360,7 +360,7 @@ namespace CoreSystems.Platform
             if (HardPointEmitter == null)
                 return;
             PlayingHardPointSound = true;
-            HardPointEmitter.PlaySound(HardPointSound);
+            HardPointEmitter.PlaySound(System.RotateSoundPairs);
         }
 
 
@@ -374,7 +374,7 @@ namespace CoreSystems.Platform
             if (HardPointEmitter.Loop)
             {
                 HardPointEmitter.StopSound(true);
-                HardPointEmitter.PlaySound(HardPointSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                HardPointEmitter.PlaySound(System.RotateSoundPairs, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 HardPointEmitter.StopSound(false);
@@ -382,13 +382,13 @@ namespace CoreSystems.Platform
 
         public void StopFiringSound(object o = null)
         {
-            if (FiringEmitter == null)
+            if (FiringEmitter == null || ActiveAmmoDef?.AmmoDef.Const.ShotSoundPair == null)
                 return;
 
             if (FiringEmitter.Loop)
 			{
                 FiringEmitter.StopSound(true);
-                FiringEmitter.PlaySound(FiringSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                FiringEmitter.PlaySound(ActiveAmmoDef.AmmoDef.Const.ShotSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 FiringEmitter.StopSound(false);
@@ -402,7 +402,7 @@ namespace CoreSystems.Platform
             if (ReloadEmitter.Loop)
             {
                 ReloadEmitter.StopSound(true);
-                ReloadEmitter.PlaySound(ReloadSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                ReloadEmitter.PlaySound(System.ReloadSoundPairs, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 ReloadEmitter.StopSound(false);
@@ -416,7 +416,7 @@ namespace CoreSystems.Platform
             if (RotateEmitter.Loop)
 			{
 				RotateEmitter.StopSound(true);
-                RotateEmitter.PlaySound(RotateSound, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                RotateEmitter.PlaySound(System.ReloadSoundPairs, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 RotateEmitter.StopSound(false);

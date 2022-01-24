@@ -298,8 +298,8 @@ namespace CoreSystems.Platform
                 System.Session.SendWeaponReload(this);
             }
 
-            if (ReloadEmitter == null || ReloadSound == null || ReloadEmitter.IsPlaying) return;
-            ReloadEmitter.PlaySound(ReloadSound, true, false, false, false, false, false);
+            if (ReloadEmitter == null || ReloadEmitter.IsPlaying) return;
+            ReloadEmitter.PlaySound(System.ReloadSoundPairs, true, false, false, false, false, false);
         }
 
         internal void Reloaded(object o = null)

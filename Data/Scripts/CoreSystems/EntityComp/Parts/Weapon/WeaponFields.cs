@@ -38,11 +38,6 @@ namespace CoreSystems.Platform
         internal readonly MyParticleEffect[] Effects1;
         internal readonly MyParticleEffect[] Effects2;
         internal readonly MyParticleEffect[] HitEffects;
-        internal readonly MySoundPair HardPointSound;
-        internal readonly MySoundPair ReloadSound;
-        internal readonly MySoundPair PreFiringSound;
-        internal readonly MySoundPair FiringSound;
-        internal readonly MySoundPair RotateSound;
         internal readonly WeaponComponent Comp;
         internal readonly MyEntity3DSoundEmitter ReloadEmitter;
         internal readonly MyEntity3DSoundEmitter PreFiringEmitter;
@@ -268,7 +263,6 @@ namespace CoreSystems.Platform
                 FiringEmitter = System.Session.Emitters.Count > 0 ? System.Session.Emitters.Pop() : new MyEntity3DSoundEmitter(null);
                 FiringEmitter.CanPlayLoopSounds = true;
                 FiringEmitter.Entity = Comp.CoreEntity;
-                FiringSound = System.FireWhenDonePairs.Count > 0 ? System.FireWhenDonePairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.FiringSound, false);
             }
 
             if (AvCapable && system.PreFireSound)
@@ -277,7 +271,6 @@ namespace CoreSystems.Platform
                 PreFiringEmitter.CanPlayLoopSounds = true;
 
                 PreFiringEmitter.Entity = Comp.CoreEntity;
-                PreFiringSound = System.PreFirePairs.Count > 0 ? System.PreFirePairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.PreFiringSound, false);
             }
 
             if (AvCapable && system.WeaponReloadSound)
@@ -286,7 +279,6 @@ namespace CoreSystems.Platform
                 ReloadEmitter.CanPlayLoopSounds = true;
 
                 ReloadEmitter.Entity = Comp.CoreEntity;
-                ReloadSound = System.ReloadPairs.Count > 0 ? System.ReloadPairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.ReloadSound, false);
             }
 
             if (AvCapable && system.BarrelRotationSound)
@@ -295,7 +287,6 @@ namespace CoreSystems.Platform
                 RotateEmitter.CanPlayLoopSounds = true;
 
                 RotateEmitter.Entity = Comp.CoreEntity;
-                RotateSound = System.RotatePairs.Count > 0 ? System.RotatePairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.BarrelRotationSound, false);
             }
 
             if (AvCapable)
@@ -404,6 +395,7 @@ namespace CoreSystems.Platform
             if (!comp.Debug && System.Values.HardPoint.Other.Debug)
                 comp.Debug = true;
 
+            var hasHardPointSound = false;
             if (TurretController)
             {
                 if (System.Values.HardPoint.Ai.PrimaryTracking && comp.TrackingWeapon == null)
@@ -411,15 +403,15 @@ namespace CoreSystems.Platform
 
                 if (AvCapable && System.HardPointRotationSound && (comp.TrackingWeapon == this || !System.Values.HardPoint.Ai.PrimaryTracking))
                 {
+                    hasHardPointSound = true;
                     HardPointEmitter = System.Session.Emitters.Count > 0 ? System.Session.Emitters.Pop() : new MyEntity3DSoundEmitter(null);
                     HardPointEmitter.CanPlayLoopSounds = true;
 
                     HardPointEmitter.Entity = Comp.CoreEntity;
-                    HardPointSound = System.RotatePairs.Count > 0 ? System.RotatePairs.Pop() : new MySoundPair(System.Values.HardPoint.Audio.HardPointRotationSound, false);
                 }
             }
 
-            HasHardPointSound = HardPointSound != null;
+            HasHardPointSound = hasHardPointSound;
 
             if (System.HasAntiSmart)
                 System.Session.AntiSmartActive = true;
