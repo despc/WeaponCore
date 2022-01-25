@@ -224,6 +224,11 @@ namespace CoreSystems.Projectiles
                             p.Velocity = newVel;
                         }
                     }
+                    else
+                    {
+                        if (p.IsSmart) p.RunSmart();
+                        else if (p.IsDrone) p.RunDrone(targetEnt);
+                    }
 
                     if (p.State == ProjectileState.OneAndDone) {
 

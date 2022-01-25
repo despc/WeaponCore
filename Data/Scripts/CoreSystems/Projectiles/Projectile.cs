@@ -227,7 +227,7 @@ namespace CoreSystems.Projectiles
                 OriginTargetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
                 HadTarget = true;
             }
-            else OriginTargetPos = Vector3D.Zero;
+            else OriginTargetPos = Info.IsShrapnel ? PredictedTargetPos : Vector3D.Zero;
             LockedTarget = !Vector3D.IsZero(OriginTargetPos);
 
             if (IsSmart && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
@@ -287,7 +287,7 @@ namespace CoreSystems.Projectiles
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
             PickTarget = (aConst.OverrideTarget || Info.ModOverride && !LockedTarget) && !Info.Target.IsFakeTarget;
-            if (PickTarget || LockedTarget) NewTargets++;
+            if (PickTarget || LockedTarget && !Info.IsShrapnel) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
             var pruneStaticCheck = Info.Ai.ClosestPlanetSqr * 0.5 < MaxTrajectorySqr || Info.Ai.StaticGridInRange;
@@ -973,6 +973,7 @@ namespace CoreSystems.Projectiles
             var aConst = Info.AmmoDef.Const;
             if (aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr)
             {
+
                 var smarts = Info.AmmoDef.Trajectory.Smarts;
                 var fake = Info.Target.IsFakeTarget;
                 var gaveUpChase = !fake && Info.Age - ChaseAge > aConst.MaxChaseTime && HadTarget;
