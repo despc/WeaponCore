@@ -1442,14 +1442,13 @@ namespace CoreSystems.Projectiles
             if (Info.EwarAreaPulse)
             {
                 var maxSteps = Info.AmmoDef.Const.PulseGrowTime;
-                if (++Info.TriggerGrowthSteps < maxSteps)
+                if (Info.TriggerGrowthSteps++ < maxSteps)
                 {
                     var areaSize = Info.AmmoDef.Const.EwarRadius;
-                    var expansionPerTick = areaSize / maxSteps+1;//sets a minimum of 1 tick to expand, to prevent a divide by zero below.  If left at zero, bubble renders significantly smaller
+                    var expansionPerTick = areaSize / maxSteps;
                     var nextSize = Info.TriggerGrowthSteps * expansionPerTick;
                     if (nextSize <= areaSize)
                     {
-                        Log.Line($"test2: {Info.Age}");
                         var nextRound = nextSize + 1;
                         if (nextRound > areaSize)
                         {

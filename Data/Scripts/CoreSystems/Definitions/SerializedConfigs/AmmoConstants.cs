@@ -355,7 +355,7 @@ namespace CoreSystems.Support
 
             FixedFireAmmo = system.TurretMovement == WeaponSystem.TurretType.Fixed && ammo.AmmoDef.Trajectory.Guidance == None;
             IsMine = ammo.AmmoDef.Trajectory.Guidance == DetectFixed || ammo.AmmoDef.Trajectory.Guidance == DetectSmart || ammo.AmmoDef.Trajectory.Guidance == DetectTravelTo;
-            IsField = ammo.AmmoDef.Trajectory.FieldTime > 0;
+            IsField = ammo.AmmoDef.Ewar.Mode == EwarMode.Field || ammo.AmmoDef.Trajectory.FieldTime > 0;
             IsHybrid = ammo.AmmoDef.HybridRound;
             IsTurretSelectable = !ammo.IsShrapnel && ammo.AmmoDef.HardPointUsable;
 
@@ -651,7 +651,7 @@ namespace CoreSystems.Support
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)
         {
             pulseInterval = ammoDef.Ewar.Mode != EwarMode.Effect ? ammoDef.Ewar.Field.Interval : 0;
-            growTime = ammoDef.Ewar.Field.GrowTime == 0 && pulseInterval > 0 ? 60 : ammoDef.Ewar.Field.GrowTime;
+            growTime = ammoDef.Ewar.Field.GrowTime == 0 ? 60 : ammoDef.Ewar.Field.GrowTime;
             pulseChance = ammoDef.Ewar.Mode != EwarMode.Effect ? ammoDef.Ewar.Field.PulseChance : 0;
             pulse = ammoDef.Ewar.Mode != EwarMode.Effect && pulseInterval > 0 && pulseChance > 0 && !ammoDef.Beams.Enable;
         }

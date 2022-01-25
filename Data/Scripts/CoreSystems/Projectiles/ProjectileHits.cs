@@ -323,6 +323,7 @@ namespace CoreSystems.Projectiles
 
                         if (grid != null)
                         {
+
                             hitEntity = HitEntityPool.Get();
                             if (entIsSelf && !selfDamage)
                             {
@@ -401,7 +402,7 @@ namespace CoreSystems.Projectiles
                                 hitEntity.EventType = Effect;
                             else
                                 hitEntity.EventType = Field;
-
+                            
                             p.EntitiesNear = true;
                         }
                     }
@@ -804,13 +805,11 @@ namespace CoreSystems.Projectiles
                     }
                     else
                     {
-
                         if (hitEnt.SphereCheck || info.EwarActive && eWarPulse)
                         {
                             var ewarActive = hitEnt.EventType == Field || hitEnt.EventType == Effect;
-
                             var hitPos = !ewarActive ? hitEnt.PruneSphere.Center + (hitEnt.Intersection.Direction * hitEnt.PruneSphere.Radius) : hitEnt.PruneSphere.Center;
-                            if (hitEnt.SelfHit && Vector3D.DistanceSquared(hitPos, hitEnt.Info.Origin) <= grid.GridSize * grid.GridSize)
+                            if (hitEnt.SelfHit && (Vector3D.DistanceSquared(hitPos, hitEnt.Info.Origin) <= grid.GridSize * grid.GridSize) && hitEnt.EventType != Field) 
                                 continue;
 
                             if (!ewarActive)

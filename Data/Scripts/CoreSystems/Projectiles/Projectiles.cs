@@ -264,11 +264,9 @@ namespace CoreSystems.Projectiles
 
                 if (p.State != ProjectileState.OneAndDone)
                 {
-                    if (info.Age > aConst.MaxLifeTime && !p.AtMaxRange) {
+                    if (info.Age > aConst.MaxLifeTime) {
                         p.DistanceToTravelSqr = (info.DistanceTraveled * info.DistanceTraveled);
                         p.EarlyEnd = true;
-                        p.AtMaxRange = true;
-                        Log.Line($"maxlifetime: {p.Info.Age} - {p.Info.AmmoDef.AmmoRound}");
                     }
 
                     if (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr) {
@@ -291,9 +289,6 @@ namespace CoreSystems.Projectiles
 
                 if (aConst.ProjectileSync && Session.MpActive && Session.IsServer && info.Age % 60 == 0)
                     p.SyncProjectile(ProtoWeaponProSync.ProSyncState.Alive);
-
-                if (p.Info.Age % 300 == 0)
-                    Log.Line($"{p.Info.AmmoDef.AmmoRound} - {p.Info.Age}");
             }
         }
 
@@ -345,7 +340,7 @@ namespace CoreSystems.Projectiles
                     if (aConst.PrimeModel)
                         info.AvShot.PrimeMatrix = matrix;
 
-                    if (aConst.TriggerModel && info.TriggerGrowthSteps >= aConst.EwarRadius)
+                    if (aConst.TriggerModel)
                         info.TriggerMatrix.Translation = p.Position;
                 }
 
@@ -356,9 +351,8 @@ namespace CoreSystems.Projectiles
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
                 p.Beam = useEwarSphere ? new LineD(p.Position + (-info.Direction * aConst.EwarTriggerRange), p.Position + (info.Direction * aConst.EwarTriggerRange)) : new LineD(p.LastPosition, p.Position);
 
-                if ((p.DeaccelTime <= 0 && p.State != ProjectileState.OneAndDone && info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr) || p.AtMaxRange) {
+                if (p.DeaccelTime <= 0 && p.State != ProjectileState.OneAndDone && (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr || info.Age > aConst.MaxLifeTime)) {
 
-                    Log.Line($"AtMaxRange: {p.Info.AmmoDef.AmmoRound}");
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.EndOfLifeRadius;
 
@@ -402,14 +396,10 @@ namespace CoreSystems.Projectiles
                         }
                         else
                             p.PruneSphere.Radius = aConst.EwarRadius;
-
-                        Log.Line($"EwarActive: {p.PruneSphere.Radius} - {p.Info.Age} - {p.DeaccelTime} - {p.AtMaxRange} - {p.EarlyEnd} - {p.Info.AmmoDef.AmmoRound}");
                     }
                     else
                         p.PruneSphere = new BoundingSphereD(p.Position, triggerRange);
-
-                    if (p.PruneSphere.Contains(p.DeadSphere) == ContainmentType.Disjoint)
-                        p.SphereCheck = true;
+                    p.SphereCheck = true;
                 }
                 else if (aConst.CollisionIsLine)
                 {

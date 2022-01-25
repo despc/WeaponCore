@@ -134,15 +134,15 @@ namespace CoreSystems
 
             var grid = hitEnt.Entity as MyCubeGrid;
             if (grid?.Physics == null || grid.MarkedForClose) return;
-
             var attackerId = info.Target.CoreEntity.EntityId;
             GetAndSortBlocksInSphere(info.AmmoDef, hitEnt.Info.System, grid, hitEnt.PruneSphere, !hitEnt.DamageOverTime, hitEnt.Blocks);
+
             var depletable = info.AmmoDef.Ewar.Depletable;
             var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : double.MaxValue;
             ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Const.EwarStrength, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
-
             if (depletable)
                 info.BaseHealthPool -= (float)healthPool;
+
         }
 
         private void UpdateEffect(HitEntity hitEnt, ProInfo info)
@@ -307,7 +307,6 @@ namespace CoreSystems
                     }
                     else
                     {
-                        damagePool -= scaledDamage;
                         blockState.FunctBlock = funcBlock;
                         var originState = blockState.FunctBlock.Enabled;
                         blockState.FirstTick = Tick + 1;
