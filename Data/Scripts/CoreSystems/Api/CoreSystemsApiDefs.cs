@@ -1130,7 +1130,7 @@ namespace CoreSystems.Api
                     [ProtoMember(4)] internal float TargetLossDegree;
                     [ProtoMember(5)] internal int TargetLossTime;
                     [ProtoMember(6)] internal int MaxLifeTime;
-                    [ProtoMember(7)] internal int FieldTime;
+                    [ProtoMember(7)] internal int DeaccelTime;
                     [ProtoMember(8)] internal Randomize SpeedVariance;
                     [ProtoMember(9)] internal Randomize RangeVariance;
                     [ProtoMember(10)] internal GuidanceType Guidance;

@@ -56,7 +56,7 @@ namespace CoreSystems.Projectiles
         internal double MaxTrajectorySqr;
         internal double PrevEndPointToCenterSqr;
         internal float DesiredSpeed;
-        internal int DeaccelTime;
+        internal int DeaccelRate;
         internal int ChaseAge;
         internal int EndStep;
         internal int ZombieLifeTime;
@@ -321,7 +321,7 @@ namespace CoreSystems.Projectiles
             InitalStep = !Info.IsShrapnel && aConst.AmmoSkipAccel ? desiredSpeed * StepConst : Velocity * StepConst;
 
             TravelMagnitude = Velocity * StepConst;
-            DeaccelTime = aConst.Ewar || aConst.IsMine ? trajectory.FieldTime : IsDrone? 100: 0;
+            DeaccelRate = aConst.Ewar || aConst.IsMine ? trajectory.DeaccelTime : IsDrone? 100: 0;
             State = !aConst.IsBeamWeapon ? ProjectileState.Alive : ProjectileState.OneAndDone;
 
             if (EnableAv)
@@ -769,7 +769,7 @@ namespace CoreSystems.Projectiles
                 case DroneStatus.Return:
                     var returnTarget = new Vector3D(parentCubePos + parentCubeOrientation.Forward * orbitSphere.Radius);
                     droneNavTarget = Vector3D.Normalize(returnTarget - Position);
-                    DeaccelTime = 30;
+                    DeaccelRate = 30;
                     if (Vector3D.Distance(Position, returnTarget) <= droneSize) DroneStat = DroneStatus.Dock;
                     break;
 
@@ -780,21 +780,21 @@ namespace CoreSystems.Projectiles
 
                     if (Vector3D.Distance(sphereTarget, Position) >= droneSize)
                     {
-                        if (DeaccelTime >= 25)//Final Approach
+                        if (DeaccelRate >= 25)//Final Approach
                         {
                             droneNavTarget = Vector3D.Normalize(sphereTarget - Position);
                             //DsDebugDraw.DrawLine(new LineD(Position, sphereTarget), Color.Green, 0.5f);
-                            DeaccelTime = 25;
+                            DeaccelRate = 25;
                             //Info.Age -= 1; //Keep alive mechanic
                         }
 
                     }
-                    else if (DeaccelTime >=25)
+                    else if (DeaccelRate >=25)
                     {
-                        DeaccelTime = 15;
+                        DeaccelRate = 15;
                     }
 
-                    if (DeaccelTime <=15)
+                    if (DeaccelRate <=15)
                     {
                         if (Vector3D.Distance(parentCubePos, Position) >= droneSize)
                         {
@@ -880,7 +880,7 @@ namespace CoreSystems.Projectiles
                 newVel = Velocity += (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
             VelocityLengthSqr = newVel.LengthSquared();
 
-            if (VelocityLengthSqr > MaxSpeedSqr || (DeaccelTime <100&&IsDrone)) newVel = Info.Direction * MaxSpeed*DeaccelTime/100;
+            if (VelocityLengthSqr > MaxSpeedSqr || (DeaccelRate <100&&IsDrone)) newVel = Info.Direction * MaxSpeed*DeaccelRate/100;
             Velocity = newVel;
         }
 
@@ -1388,7 +1388,7 @@ namespace CoreSystems.Projectiles
                 Info.AvShot.Triggered = true;
             }
 
-            if (startTimer) DeaccelTime = Info.AmmoDef.Trajectory.Mines.FieldTime;
+            if (startTimer) DeaccelRate = Info.AmmoDef.Trajectory.Mines.FieldTime;
             MineTriggered = true;
         }
 
@@ -1398,11 +1398,11 @@ namespace CoreSystems.Projectiles
             {
                 IsSmart = false;
                 Info.DistanceTraveled = double.MaxValue;
-                DeaccelTime = 0;
+                DeaccelRate = 0;
                 return;
             }
 
-            DeaccelTime = Info.AmmoDef.Const.Ewar || Info.AmmoDef.Const.IsMine ? Info.AmmoDef.Trajectory.FieldTime : 0;
+            DeaccelRate = Info.AmmoDef.Const.Ewar || Info.AmmoDef.Const.IsMine ? Info.AmmoDef.Trajectory.DeaccelTime : 0;
             DistanceToTravelSqr = MaxTrajectorySqr;
 
             Info.AvShot.Triggered = false;

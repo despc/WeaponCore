@@ -125,9 +125,9 @@ namespace CoreSystems.Projectiles
                 ai.ProjectileTicker = Session.Tick;
                 if (p.Asleep)
                 {
-                    if (p.DeaccelTime > 300 && info.Age % 100 != 0)
+                    if (p.DeaccelRate > 300 && info.Age % 100 != 0)
                     {
-                        p.DeaccelTime--;
+                        p.DeaccelRate--;
                         continue;
                     }
                     p.Asleep = false;
@@ -198,7 +198,7 @@ namespace CoreSystems.Projectiles
                         else {
                             var accel = true;
                             Vector3D newVel;
-                            if (p.DeaccelTime > 0) {
+                            if (p.DeaccelRate > 0) {
 
                                 var distToMax = info.MaxTrajectory - info.DistanceTraveled;
 
@@ -272,9 +272,9 @@ namespace CoreSystems.Projectiles
                     if (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr) {
 
                         p.AtMaxRange = !p.MineSeeking;
-                        if (p.DeaccelTime > 0) {
+                        if (p.DeaccelRate > 0) {
 
-                            p.DeaccelTime--;
+                            p.DeaccelRate--;
                             if (aConst.IsMine && !p.MineSeeking && !p.MineActivated) {
                                 if (p.EnableAv) info.AvShot.Cloaked = info.AmmoDef.Trajectory.Mines.Cloak;
                                 p.MineSeeking = true;
@@ -351,7 +351,7 @@ namespace CoreSystems.Projectiles
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
                 p.Beam = useEwarSphere ? new LineD(p.Position + (-info.Direction * aConst.EwarTriggerRange), p.Position + (info.Direction * aConst.EwarTriggerRange)) : new LineD(p.LastPosition, p.Position);
 
-                if (p.DeaccelTime <= 0 && p.State != ProjectileState.OneAndDone && (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr || info.Age > aConst.MaxLifeTime)) {
+                if (p.DeaccelRate <= 0 && p.State != ProjectileState.OneAndDone && (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr || info.Age > aConst.MaxLifeTime)) {
 
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.EndOfLifeRadius;
