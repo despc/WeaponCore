@@ -465,6 +465,11 @@ namespace CoreSystems.Projectiles
             var parentPos = Vector3D.Zero;
             var parentEnt = Info.Target.CoreEntity;
             MyEntity topEnt = null;
+            var hasTarget = (targetEnt != null || !targetEnt.MarkedForClose);
+            var hasParent = (parentEnt != null || !parentEnt.MarkedForClose);
+            var hasFriend = false;//placeholder
+            var hasObstacle = false;//placeholder
+
             try
             {
                 //Logic to handle loss of target and reassigment to friendly target
@@ -539,17 +544,7 @@ namespace CoreSystems.Projectiles
                     }
                     else if (!hasKamikaze && targetEnt != parentEnt)
                     {
-                        try
-                        {
-                            parentPos = Info.Target.CoreEntity.PositionComp.GetPosition();
-                        }
-                        catch
-                        {
-                            Log.Line($"Parent Pos not found");
-                            //DroneStat = DroneStatus.Orbit; //Keep orbiting target if parent is dead?
-                            break;
-                        }
-
+                        parentPos = Info.Target.CoreEntity.PositionComp.WorldAABB.Center;
                         if (parentPos != Vector3D.Zero && DroneStat != DroneStatus.Return)
                         {
                             var rtbFlightTime = Vector3D.Distance(Position, parentPos) / MaxSpeed * 60 * 1.05d;//add a multiplier to ensure final docking time?
@@ -588,18 +583,8 @@ namespace CoreSystems.Projectiles
                             DroneStat = DroneStatus.Approach;
                         }
                     }
-
-                    try
-                    {
-                        parentPos = Info.Target.CoreEntity.PositionComp.GetPosition();
-                    }
-                    catch
-                    {
-                        Log.Line($"Parent Pos not found");
-                        //DroneStat = DroneStatus.Orbit; //Keep orbiting target if parent is dead?
-                        break;
-                    }
-
+                    
+                    parentPos = Info.Target.CoreEntity.PositionComp.WorldAABB.Center;
                     if (parentPos != Vector3D.Zero && DroneStat != DroneStatus.Return)
                     {
                         var rtbFlightTime = Vector3D.Distance(Position, parentPos) / MaxSpeed * 60 * 1.05d;//add a multiplier to ensure final docking time?
@@ -759,7 +744,7 @@ namespace CoreSystems.Projectiles
                     break;
                
                 case DroneStatus.Strafe:
-                    droneNavTarget = Vector3D.Normalize(PrevTargetPos - Position);
+                    droneNavTarget = Vector3D.Normalize(PredictedTargetPos - Position);
                     break;
 
                 case DroneStatus.Escape:
@@ -1623,10 +1608,10 @@ namespace CoreSystems.Projectiles
                     if (IsDrone)
                     {
                         MathFuncs.Cone aimCone;
-                        var targetSphere = Info.Target.TargetEntity.PositionComp.WorldVolume;  
+                        var targetSphere = new BoundingSphereD(PredictedTargetPos, Info.Target.TargetEntity.PositionComp.LocalVolume.Radius);  
                         aimCone.ConeDir = Info.Direction;
                         aimCone.ConeTip = Position;
-                        aimCone.ConeAngle = MathHelper.ToRadians(3); //toleranceInRadians;
+                        aimCone.ConeAngle = MathHelper.ToRadians(3); //Add a coreparts variable
                         if (!MathFuncs.TargetSphereInCone(ref targetSphere, ref aimCone)) break;
                     }
 
