@@ -129,7 +129,6 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
                 return finalList;
             }
 
-
             Dictionary<long, List<Weapon>> weaponTypes = new Dictionary<long, List<Weapon>>();
             for (int i = 0; i < list.Count; i++) //sort list into groups of same weapon type
             {
@@ -296,25 +295,26 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
     {
         public int Compare(Weapon x, Weapon y)
         {
+            var xHeatLevel = x.PartState.Heat > 0;
+            var yHeatLevel = y.PartState.Heat > 0;
+            var diffStates = xHeatLevel != yHeatLevel;
+
+            var heatCompare = xHeatLevel.CompareTo(yHeatLevel);
+            if (diffStates && heatCompare != 0) return -heatCompare;
+
+            var xOverHeat = x.PartState.Overheated;
+            var yOverHeat = y.PartState.Overheated;
+            var overHeatCompare = xOverHeat.CompareTo(yOverHeat);
+            if (overHeatCompare != 0) return -overHeatCompare;
+
+
             var chargeCompare = x.Charging.CompareTo(y.Charging);
             if (chargeCompare != 0) return -chargeCompare;
 
-            var xHeatLevel = x.System.MaxHeat - x.PartState.Heat;
-            var yHeatLevel = y.System.MaxHeat - y.PartState.Heat;
-            var hasHeat = x.PartState.Heat > 0 || y.PartState.Heat > 0;
-            var heatCompare = xHeatLevel.CompareTo(yHeatLevel);
-            if (hasHeat && heatCompare != 0) return -heatCompare;
-
-            var xReload = (x.Loading || x.Reload.WaitForClient || x.System.Session.Tick - x.LastLoadedTick < 60);
-            var yReload = (y.Loading || y.Reload.WaitForClient || y.System.Session.Tick - y.LastLoadedTick < 60);
-            var reloadCompare = xReload.CompareTo(yReload);
-            if (reloadCompare != 0) return -reloadCompare;
-            
             var targetCompare = x.Target.HasTarget.CompareTo(y.Target.HasTarget);
             if (targetCompare != 0) return -targetCompare;
 
-            var dpsCompare = x.Comp.PeakDps.CompareTo(y.Comp.PeakDps);
-            return -dpsCompare;
+            return targetCompare;
         }
     }
 

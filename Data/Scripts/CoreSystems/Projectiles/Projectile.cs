@@ -464,7 +464,7 @@ namespace CoreSystems.Projectiles
             var newVel = new Vector3D();
             var parentPos = Vector3D.Zero;
             var parentEnt = Info.Target.CoreEntity;
-            var topEnt = new MyEntity();
+            MyEntity topEnt = null;
             try
             {
                 //Logic to handle loss of target and reassigment to friendly target

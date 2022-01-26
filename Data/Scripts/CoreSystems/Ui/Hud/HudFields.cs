@@ -29,7 +29,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Hud
         private const float SymbolWidthScaler = 1.28f;
         private const float BgWidthPosOffset = 1.0225f;
         private const int WeaponLimit = 50;
-        private const int StackThreshold = 10;
+        private const int StackThreshold = 12;
         private const int InitialPoolCapacity = 512;
         private const uint MinUpdateTicks = 60;
 

@@ -558,7 +558,7 @@ namespace CoreSystems.Support
 
             barrelRotationSound = Values.HardPoint.Audio.BarrelRotationSound != string.Empty;
             barrelSoundPair = barrelRotationSound ? new MySoundPair(Values.HardPoint.Audio.BarrelRotationSound, false) : null;
-
+            
             noAmmoSound = Values.HardPoint.Audio.NoAmmoSound != string.Empty;
             noAmmoSoundPair = noAmmoSound ? new MySoundPair(Values.HardPoint.Audio.NoAmmoSound, false) : null;
 

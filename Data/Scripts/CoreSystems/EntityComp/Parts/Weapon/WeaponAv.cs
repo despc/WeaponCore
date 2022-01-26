@@ -416,7 +416,7 @@ namespace CoreSystems.Platform
             if (BarrelRotateEmitter.Loop)
 			{
 				BarrelRotateEmitter.StopSound(true);
-                BarrelRotateEmitter.PlaySound(System.ReloadSoundPairs, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                BarrelRotateEmitter.PlaySound(System.BarrelRotateSoundPair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
             }
             else
                 BarrelRotateEmitter.StopSound(false);
