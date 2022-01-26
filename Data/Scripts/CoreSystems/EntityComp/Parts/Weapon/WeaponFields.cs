@@ -42,7 +42,7 @@ namespace CoreSystems.Platform
         internal readonly MyEntity3DSoundEmitter ReloadEmitter;
         internal readonly MyEntity3DSoundEmitter PreFiringEmitter;
         internal readonly MyEntity3DSoundEmitter FiringEmitter;
-        internal readonly MyEntity3DSoundEmitter RotateEmitter;
+        internal readonly MyEntity3DSoundEmitter BarrelRotateEmitter;
         internal readonly MyEntity3DSoundEmitter HardPointEmitter;
 
         internal readonly Dictionary<EventTriggers, PartAnimation[]> AnimationsSet;
@@ -281,12 +281,12 @@ namespace CoreSystems.Platform
                 ReloadEmitter.Entity = Comp.CoreEntity;
             }
 
-            if (AvCapable && system.BarrelRotationSound)
+            if (AvCapable && system.BarrelRotateSound)
             {
-                RotateEmitter = System.Session.Emitters.Count > 0 ? System.Session.Emitters.Pop() : new MyEntity3DSoundEmitter(null);
-                RotateEmitter.CanPlayLoopSounds = true;
+                BarrelRotateEmitter = System.Session.Emitters.Count > 0 ? System.Session.Emitters.Pop() : new MyEntity3DSoundEmitter(null);
+                BarrelRotateEmitter.CanPlayLoopSounds = true;
 
-                RotateEmitter.Entity = Comp.CoreEntity;
+                BarrelRotateEmitter.Entity = Comp.CoreEntity;
             }
 
             if (AvCapable)
