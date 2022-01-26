@@ -28,8 +28,13 @@ namespace CoreSystems
         {
             PurgedAll = true;
             FutureEvents.Purge((int)Tick);
-            
-            
+
+            foreach (var p in PlayerControllerMonitor) {
+                var controller = p.Controller;
+                controller.ControlledEntityChanged -= OnPlayerController;
+            }
+
+            PlayerControllerMonitor.Clear();
             foreach (var comp in CompsToStart)
                 if (comp?.Platform != null)
                     CloseComps(comp.CoreEntity);

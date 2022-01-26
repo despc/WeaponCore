@@ -111,6 +111,7 @@ namespace CoreSystems
                     }
 
                     cube.AddedToScene += CameraAddedToScene;
+                    cube.OnClose += CameraOnClose;
                 }
             }
             catch (Exception ex) { Log.Line($"Exception in OnEntityCreate: {ex}", null, true); }
@@ -175,6 +176,12 @@ namespace CoreSystems
             term.AppendingCustomInfo += CameraAppendingCustomInfo;
             myEntity.OnMarkForClose += CameraOnMarkForClose;
             CameraCustomDataChanged(term);
+        }
+
+        private void CameraOnClose(MyEntity myEntity)
+        {
+            myEntity.OnClose -= CameraOnClose;
+            myEntity.AddedToScene -= CameraAddedToScene;
         }
 
         private void CameraAppendingCustomInfo(IMyTerminalBlock term, StringBuilder stringBuilder)

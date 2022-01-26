@@ -394,9 +394,9 @@ namespace CoreSystems.Platform
                     MuzzlePart.Entity.Render.AddRenderObjects();
             }
 
-            if (PlayTurretAv && RotateEmitter != null && !RotateEmitter.IsPlaying)
+            if (PlayTurretAv && BarrelRotateEmitter != null && !BarrelRotateEmitter.IsPlaying)
             { 
-                RotateEmitter.PlaySound(System.RotateSoundPairs, true, false, false, false, false, false);
+                BarrelRotateEmitter.PlaySound(System.BarrelRotateSoundPair, true, false, false, false, false, false);
             }
 
             if (_spinUpTick <= Comp.Session.Tick && spinDown)
@@ -409,8 +409,8 @@ namespace CoreSystems.Platform
                 BarrelRate = 0;
                 BarrelSpinning = false;
 
-                if (PlayTurretAv && RotateEmitter != null && RotateEmitter.IsPlaying)
-                    RotateEmitter.StopSound(true);
+                if (PlayTurretAv && BarrelRotateEmitter != null && BarrelRotateEmitter.IsPlaying)
+                    BarrelRotateEmitter.StopSound(true);
             }
             else BarrelSpinning = true;
 

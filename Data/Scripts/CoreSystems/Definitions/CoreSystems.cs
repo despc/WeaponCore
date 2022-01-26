@@ -108,11 +108,11 @@ namespace CoreSystems.Support
         public readonly MyStringHash SpinPartName;
         public readonly WeaponDefinition Values;
         public readonly AmmoType[] AmmoTypes;
-        public readonly MySoundPair PreFireSoundPairs;
-        public readonly MySoundPair RotateSoundPairs;
+        public readonly MySoundPair PreFireSoundPair;
+        public readonly MySoundPair HardPointSoundPair;
         public readonly MySoundPair ReloadSoundPairs;
-        public readonly MySoundPair BarrelSoundPairs;
-        public readonly MySoundPair NoSoundPairs;
+        public readonly MySoundPair BarrelRotateSoundPair;
+        public readonly MySoundPair NoSoundPair;
 
         public readonly Prediction Prediction;
         public readonly TurretType TurretMovement;
@@ -162,7 +162,7 @@ namespace CoreSystems.Support
         public readonly bool WeaponReloadSound;
         public readonly bool NoAmmoSound;
         public readonly bool HardPointRotationSound;
-        public readonly bool BarrelRotationSound;
+        public readonly bool BarrelRotateSound;
         public readonly bool PreFireSound;
         public readonly bool LockOnFocus;
         public readonly bool HasGuidedAmmo;
@@ -294,7 +294,7 @@ namespace CoreSystems.Support
             HasRequiresTarget = requiresTarget;
 
             HasAmmoSelection = ammoSelections > 1;
-            HardPointSoundSetup(out WeaponReloadSound, out ReloadSoundPairs, out HardPointRotationSound, out RotateSoundPairs, out BarrelRotationSound, out BarrelSoundPairs, out NoAmmoSound, out NoSoundPairs, out PreFireSound, out PreFireSoundPairs, out HardPointAvMaxDistSqr, out FiringSound);
+            HardPointSoundSetup(out WeaponReloadSound, out ReloadSoundPairs, out HardPointRotationSound, out HardPointSoundPair, out BarrelRotateSound, out BarrelRotateSoundPair, out NoAmmoSound, out NoSoundPair, out PreFireSound, out PreFireSoundPair, out HardPointAvMaxDistSqr, out FiringSound);
             HardPointSoundDistMaxSqr(AmmoTypes, out FiringSoundDistSqr, out ReloadSoundDistSqr, out BarrelSoundDistSqr, out HardPointSoundDistSqr, out NoAmmoSoundDistSqr, out HardPointAvMaxDistSqr);
 
             HasBarrelShootAv = BarrelEffect1 || BarrelEffect2 || HardPointRotationSound || FiringSound != FiringSoundState.None;
@@ -548,13 +548,13 @@ namespace CoreSystems.Support
             maxTargetRadius = (float)(maxDiameter > 0 ? maxDiameter * 0.5d : 8192);
         }
 
-        private void HardPointSoundSetup(out bool weaponReloadSound, out MySoundPair reloadSoundPair, out bool hardPointRotationSound, out MySoundPair rotationSoundPair, out bool barrelRotationSound, out MySoundPair barrelSoundPair, out bool noAmmoSound, out MySoundPair noAmmoSoundPair, out bool preFireSound, out MySoundPair preFireSoundPair, out float hardPointAvMaxDistSqr, out FiringSoundState firingSound)
+        private void HardPointSoundSetup(out bool weaponReloadSound, out MySoundPair reloadSoundPair, out bool hardPointRotationSound, out MySoundPair hardPointSoundPair, out bool barrelRotationSound, out MySoundPair barrelSoundPair, out bool noAmmoSound, out MySoundPair noAmmoSoundPair, out bool preFireSound, out MySoundPair preFireSoundPair, out float hardPointAvMaxDistSqr, out FiringSoundState firingSound)
         {
             weaponReloadSound = Values.HardPoint.Audio.ReloadSound != string.Empty;
             reloadSoundPair = weaponReloadSound ? new MySoundPair(Values.HardPoint.Audio.ReloadSound, false) : null;
 
             hardPointRotationSound = Values.HardPoint.Audio.HardPointRotationSound != string.Empty;
-            rotationSoundPair = hardPointRotationSound  ? new MySoundPair(Values.HardPoint.Audio.HardPointRotationSound, false) : null;
+            hardPointSoundPair = hardPointRotationSound  ? new MySoundPair(Values.HardPoint.Audio.HardPointRotationSound, false) : null;
 
             barrelRotationSound = Values.HardPoint.Audio.BarrelRotationSound != string.Empty;
             barrelSoundPair = barrelRotationSound ? new MySoundPair(Values.HardPoint.Audio.BarrelRotationSound, false) : null;
@@ -612,7 +612,7 @@ namespace CoreSystems.Support
                     if (reloadSoundDistSqr > hardPointAvMaxDistSqr) hardPointAvMaxDistSqr = ReloadSoundDistSqr;
 
                 }
-                if (BarrelRotationSound && id == barrelSound)
+                if (BarrelRotateSound && id == barrelSound)
                 {
                     var ob = def.GetObjectBuilder() as MyObjectBuilder_AudioDefinition;
                     if (ob != null) barrelSoundDistSqr = ob.MaxDistance * ob.MaxDistance;

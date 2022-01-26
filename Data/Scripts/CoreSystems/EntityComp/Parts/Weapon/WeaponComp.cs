@@ -648,8 +648,8 @@ namespace CoreSystems.Platform
                         if (w.AvCapable && w.System.WeaponReloadSound)
                             Session.SoundsToClean.Add(new Session.CleanSound { Force = true, Emitter = w.ReloadEmitter, EmitterPool = Session.Emitters, SpawnTick = Session.Tick });
 
-                        if (w.AvCapable && w.System.BarrelRotationSound)
-                            Session.SoundsToClean.Add(new Session.CleanSound { Emitter = w.RotateEmitter, EmitterPool = Session.Emitters, SpawnTick = Session.Tick });
+                        if (w.AvCapable && w.System.BarrelRotateSound)
+                            Session.SoundsToClean.Add(new Session.CleanSound { Emitter = w.BarrelRotateEmitter, EmitterPool = Session.Emitters, SpawnTick = Session.Tick });
                     }
 
                     if (Session.PurgedAll)
@@ -665,7 +665,7 @@ namespace CoreSystems.Platform
                 foreach (var w in Collection)
                 {
                     w.StopReloadSound();
-                    w.StopRotateSound();
+                    w.StopBarrelRotateSound();
                     w.StopShootingAv(false);
                     //w.IsShooting = false;
                 }
