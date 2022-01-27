@@ -145,7 +145,7 @@ namespace CoreSystems.Projectiles
                         {
                             if (shieldInfo.Value.Item2.Item1)
                             {
-                                var shrapnelSpawn = p.Info.IsShrapnel && p.Info.Age < 1;
+                                var shrapnelSpawn = p.Info.IsFragment && p.Info.Age < 1;
                                 if (Vector3D.Transform(!shrapnelSpawn ? info.Origin : target.CoreEntity.PositionComp.WorldMatrixRef.Translation, shieldInfo.Value.Item3.Item1).LengthSquared() > 1)
                                 {
 
@@ -508,7 +508,7 @@ namespace CoreSystems.Projectiles
                         }
                     }
 
-                    if (voxelHit.HasValue && p.Info.IsShrapnel && p.Info.Age == 0)
+                    if (voxelHit.HasValue && p.Info.IsFragment && p.Info.Age == 0)
                     {
                         if (!VoxelIntersect.PointInsideVoxel(voxel, p.Info.System.Session.TmpStorage, voxelHit.Value + (p.Beam.Direction * 1.25f)))
                             voxelHit = null;
@@ -600,7 +600,7 @@ namespace CoreSystems.Projectiles
 
                     lock (Session.Hits)
                     {
-                        if (Session.IsClient && info.AimedShot && aConst.ClientPredictedAmmo && !info.IsShrapnel)
+                        if (Session.IsClient && info.AimedShot && aConst.ClientPredictedAmmo && !info.IsFragment)
                         {
                             var isBeam = aConst.IsBeamWeapon;
                             var vel = isBeam ? Vector3D.Zero : !MyUtils.IsZero(p.Velocity) ? p.Velocity : p.PrevVelocity;

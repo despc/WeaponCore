@@ -32,7 +32,6 @@ namespace CoreSystems.Support
         internal bool HasTravelSound;
         internal bool HitSoundActive;
         internal bool HitSoundInitted;
-        internal bool StartSoundActived;
         internal bool Triggered;
         internal bool Cloaked;
         internal bool Active;
@@ -42,7 +41,7 @@ namespace CoreSystems.Support
         internal bool Back;
         internal bool DetonateFakeExp;
         internal bool LastStep;
-        internal bool IsShrapnel;
+        internal bool IsFragment;
         internal bool AmmoParticleStopped;
         internal bool AmmoParticleInited;
         internal bool FieldParticleStopped;
@@ -160,7 +159,7 @@ namespace CoreSystems.Support
         {
             System = info.System;
             AmmoDef = info.AmmoDef;
-            IsShrapnel = info.IsShrapnel;
+            IsFragment = info.IsFragment;
             SmartOn = smartsOn;
             if (ParentId != ulong.MaxValue) Log.Line($"invalid avshot, parentId:{ParentId}");
             ParentId = info.Id;
@@ -867,34 +866,30 @@ namespace CoreSystems.Support
                 var hitSoundChance = AmmoDef.AmmoAudio.HitPlayChance;
                 HitSoundActive = (hitSoundChance >= 1 || hitSoundChance >= MyUtils.GetRandomDouble(0.0f, 1f));
             }
-            if (IsShrapnel)
+
+            if (AmmoDef.Const.ShotSound)
             {
-                if (AmmoDef.Const.ShotSound && distanceFromCameraSqr <= AmmoDef.Const.ShotSoundDistSqr)
+                if (IsFragment)
                 {
-                    StartSoundActived = true;
-                    FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                    if (AmmoDef.Const.ShotSound && distanceFromCameraSqr <= AmmoDef.Const.ShotSoundDistSqr)
+                    {
+                        FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                        FireEmitter.CanPlayLoopSounds = true;
+                        FireEmitter.Entity = null;
+                        FireEmitter.SetPosition(Origin);
+                        FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, true);
 
-                    FireEmitter.CanPlayLoopSounds = true;
-                    FireEmitter.Entity = null;
-
-                    //FireSound = System.FirePerShotPairs.Count > 0 ? System.FirePerShotPairs.Pop() : new MySoundPair(AmmoDef.Const.ShotSoundStr, false);
-                    
-                    FireEmitter.SetPosition(Origin);
+                    }
                 }
-            }
-            else if (FiringSoundState == WeaponSystem.FiringSoundState.PerShot && distanceFromCameraSqr <= System.FiringSoundDistSqr) {
-                StartSoundActived = true;
+                else if (FiringSoundState == WeaponSystem.FiringSoundState.PerShot && distanceFromCameraSqr <= System.FiringSoundDistSqr)
+                {
 
-                FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
-
-                FireEmitter.CanPlayLoopSounds = true;
-                FireEmitter.Entity = CoreEntity;
-                FireEmitter.SetPosition(Origin);
-            }
-                        
-            if (StartSoundActived) {
-                StartSoundActived = false;
-                FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, true);
+                    FireEmitter = System.Session.Av.FireEmitters.Count > 0 ? System.Session.Av.FireEmitters.Pop() : new MyEntity3DSoundEmitter(null);
+                    FireEmitter.CanPlayLoopSounds = true;
+                    FireEmitter.Entity = CoreEntity;
+                    FireEmitter.SetPosition(Origin);
+                    FireEmitter.PlaySound(AmmoDef.Const.ShotSoundPair, true);
+                }
             }
         }
 
@@ -1196,8 +1191,7 @@ namespace CoreSystems.Support
             TravelSound = false;
             HitSoundActive = false;
             HitSoundInitted = false;
-            StartSoundActived = false;
-            IsShrapnel = false;
+            IsFragment = false;
             HasTravelSound = false;
             HitParticle = ParticleState.None;
             Triggered = false;

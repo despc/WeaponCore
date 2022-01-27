@@ -225,7 +225,7 @@ namespace CoreSystems.Projectiles
                 OriginTargetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
                 HadTarget = true;
             }
-            else OriginTargetPos = Info.IsShrapnel ? PredictedTargetPos : Vector3D.Zero;
+            else OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
             LockedTarget = !Vector3D.IsZero(OriginTargetPos);
 
             if (IsSmart && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
@@ -269,7 +269,7 @@ namespace CoreSystems.Projectiles
 
             MaxTrajectorySqr = Info.MaxTrajectory * Info.MaxTrajectory;
 
-            if (!Info.IsShrapnel) StartSpeed = Info.ShooterVel;
+            if (!Info.IsFragment) StartSpeed = Info.ShooterVel;
 
             MoveToAndActivate = LockedTarget && !aConst.IsBeamWeapon && guidance == GuidanceType.TravelTo;
 
@@ -285,7 +285,7 @@ namespace CoreSystems.Projectiles
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
             PickTarget = (aConst.OverrideTarget || Info.ModOverride && !LockedTarget) && !Info.Target.IsFakeTarget;
-            if (PickTarget || LockedTarget && !Info.IsShrapnel) NewTargets++;
+            if (PickTarget || LockedTarget && !Info.IsFragment) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
             var pruneStaticCheck = Info.Ai.ClosestPlanetSqr * 0.5 < MaxTrajectorySqr || Info.Ai.StaticGridInRange;
@@ -315,10 +315,10 @@ namespace CoreSystems.Projectiles
             }
             else Velocity = StartSpeed + AccelVelocity;
 
-            if (Info.IsShrapnel)
+            if (Info.IsFragment)
                 Vector3D.Normalize(ref Velocity, out Info.Direction);
 
-            InitalStep = !Info.IsShrapnel && aConst.AmmoSkipAccel ? desiredSpeed * StepConst : Velocity * StepConst;
+            InitalStep = !Info.IsFragment && aConst.AmmoSkipAccel ? desiredSpeed * StepConst : Velocity * StepConst;
 
             TravelMagnitude = Velocity * StepConst;
             DeaccelRate = aConst.Ewar || aConst.IsMine ? trajectory.DeaccelTime : IsDrone? 100: 0;
@@ -326,7 +326,7 @@ namespace CoreSystems.Projectiles
 
             if (EnableAv)
             {
-                var originDir = !Info.IsShrapnel ? AccelDir : Info.Direction;
+                var originDir = !Info.IsFragment ? AccelDir : Info.Direction;
                 Info.AvShot = session.Av.AvShotPool.Get();
                 Info.AvShot.Init(Info, IsSmart, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
                 Info.AvShot.SetupSounds(DistanceFromCameraSqr); //Pool initted sounds per Projectile type... this is expensive
@@ -653,7 +653,7 @@ namespace CoreSystems.Projectiles
                     var overMaxTargets = HadTarget && NewTargets > aConst.MaxTargets && aConst.MaxTargets != 0;
                     var fake = Info.Target.IsFakeTarget;
                     var validTarget = fake || Info.Target.IsProjectile || validEntity && !overMaxTargets;
-                    var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsShrapnel);
+                    var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsFragment);
                     var gaveUpChase = !fake && Info.Age - ChaseAge > aConst.MaxChaseTime && HadTarget;
                     var isZombie = aConst.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
                     var seekNewTarget = timeSlot && HadTarget && !validEntity && !overMaxTargets;
@@ -993,7 +993,7 @@ namespace CoreSystems.Projectiles
                 var isZombie = aConst.CanZombie && HadTarget && !fake && !validTarget && ZombieLifeTime > 0 && (ZombieLifeTime + SmartSlot) % 30 == 0;
                 var timeSlot = (Info.Age + SmartSlot) % 30 == 0;
                 var seekNewTarget = timeSlot && HadTarget && !validEntity && !overMaxTargets;
-                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsShrapnel);
+                var seekFirstTarget = !HadTarget && !validTarget && PickTarget && (Info.Age > 120 && timeSlot || Info.Age % 30 == 0 && Info.IsFragment);
                 if ((PickTarget && timeSlot || seekNewTarget || gaveUpChase && validTarget || isZombie || seekFirstTarget) && NewTarget() || validTarget)
                 {
 

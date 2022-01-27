@@ -802,13 +802,11 @@ namespace CoreSystems.Support
             out bool detSound, out MySoundPair detSoundPair, out float hitSoundDistSqr, out float ammoTravelSoundDistSqr, out float ammoSoundMaxDistSqr, out float shotSoundDistSqr, out float detSoundDistSqr, out string rawShotSoundStr, 
             out bool voxelSound, out MySoundPair voxelSoundPair, out bool floatingSound, out MySoundPair floatingSoundPair, out bool playerSound, out MySoundPair playerSoundPair, out bool shieldSound, out MySoundPair shieldSoundPair)
         {
-            var perShot = system.Values.HardPoint.Audio.FiringSoundPerShot;
             var weaponShotSound = !string.IsNullOrEmpty(system.Values.HardPoint.Audio.FiringSound);
             var ammoShotSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.ShotSound);
-            var sharedPerShot = perShot && weaponShotSound;
-            var noWeaponUniqueShot = !perShot && !ammoShotSound && weaponShotSound;
+            var useWeaponShotSound = !IsFragment && weaponShotSound && !ammoShotSound;
 
-            rawShotSoundStr = !IsFragment && (sharedPerShot || noWeaponUniqueShot) ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
+            rawShotSoundStr = useWeaponShotSound ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
 
             hitSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.HitSound);
             hitSoundPair = hitSound ? new MySoundPair(ammoDef.AmmoAudio.HitSound, false) : null;
@@ -832,7 +830,8 @@ namespace CoreSystems.Support
             ammoSoundMaxDistSqr = 0;
             shotSoundDistSqr = 0;
             detSoundDistSqr = 0;
-
+            if (ammoDef.AmmoRound.Contains("HE355mm"))
+                Log.Line($"{ammoDef.AmmoRound} - {shotSound} - {shotSoundPair != null} - {rawShotSoundStr} - {weaponShotSound} - {IsFragment} - {useWeaponShotSound} - {system.Values.HardPoint.Audio.FiringSound}");
             altHitSounds = true;
 
             foreach (var def in session.SoundDefinitions)
