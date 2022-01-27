@@ -82,18 +82,15 @@ namespace CoreSystems.Projectiles
                     if (info.EwarActive && character != null && !genericFields) continue;
 
                     var entSphere = ent.PositionComp.WorldVolume;
-
+                    DsDebugDraw.DrawSphere(entSphere, Color.Blue);
                     if (aConst.CheckFutureIntersection)
                     {
-                        var distSqrToSphere = Vector3D.DistanceSquared(p.Beam.From, entSphere.Center) - entSphere.Radius;
-                        Log.Line($"distSqrToSphere {distSqrToSphere}");
-                        if (distSqrToSphere > p.Beam.Length * p.Beam.Length)
+                        var distSqrToSphere = Vector3D.Distance(p.Position, entSphere.Center);
+                        //Log.Line($"ent{ent}  distSqrToSphere {distSqrToSphere}");
+                        if (distSqrToSphere < closestFutureDistSqr)
                         {
-                            if (distSqrToSphere < closestFutureDistSqr)
-                            {
-                                closestFutureDistSqr = distSqrToSphere;
-                                closestFutureEnt = ent;
-                            }
+                            closestFutureDistSqr = distSqrToSphere;
+                            closestFutureEnt = ent;
                         }
                     }
                     if (useEntityCollection)
@@ -148,6 +145,7 @@ namespace CoreSystems.Projectiles
                             }
                         }
                     }
+                    p.ClosestObstacle = closestFutureEnt;
 
                     HitEntity hitEntity = null;
                     var checkShield = Session.ShieldApiLoaded && Session.ShieldHash == ent.DefinitionId?.SubtypeId && ent.Render.Visible;
@@ -440,7 +438,6 @@ namespace CoreSystems.Projectiles
                         hitEntity.DamageOverTime = aConst.EwarType == Dot;
                         info.HitList.Add(hitEntity);
                     }
-                    p.ClosestObstacle = closestFutureEnt;
                 }
                                 
                 if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)

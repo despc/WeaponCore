@@ -466,7 +466,7 @@ namespace CoreSystems.Projectiles
             var tracking = aConst.DeltaVelocityPerTick <= 0 || (DroneStat==DroneStatus.Dock || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr);
             var newVel = new Vector3D();
             var parentPos = Vector3D.Zero;
-            var parentEnt = Info.Target.CoreEntity;
+            var parentEnt = Info.Target.CoreEntity.GetTopMostParent();
             MyEntity friendEnt = null;//Info.Ai.Construct.Focus && Info.Overrides.Set.AssistFriend
             MyEntity topEnt = null;
             var hasTarget = (targetEnt != null || !targetEnt.MarkedForClose);
@@ -476,9 +476,9 @@ namespace CoreSystems.Projectiles
             try
             {
                 //Logic to handle loss of target and reassigment to friendly target
-                if (hasObstacle && ClosestObstacle!=parentEnt) Log.Line($"ClosestObstacle{ClosestObstacle} Beam length {Beam.Length}  CheckBeam Length {CheckBeam.Length} Dist to obstacle {Vector3D.Distance(ClosestObstacle.PositionComp.GetPosition(),Position)}");
-                
-                if (hasObstacle) topEnt = ClosestObstacle.GetTopMostParent();
+                if (hasObstacle) Log.Line($"ClosestObstacle{ClosestObstacle} Beam length {Math.Truncate(Beam.Length)}  CheckBeam Length {Math.Truncate(CheckBeam.Length)} Dist to obstacle {Vector3D.Distance(ClosestObstacle.PositionComp.GetPosition(),Position)}");
+
+                if (hasObstacle && ClosestObstacle.GetTopMostParent() != parentEnt) topEnt = ClosestObstacle.GetTopMostParent();
                 else if (hasTarget && DroneMsn==DroneMission.Attack)
                 {
                     topEnt = targetEnt.GetTopMostParent();                 
