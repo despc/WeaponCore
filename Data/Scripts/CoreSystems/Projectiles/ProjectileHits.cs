@@ -82,17 +82,21 @@ namespace CoreSystems.Projectiles
                     if (info.EwarActive && character != null && !genericFields) continue;
 
                     var entSphere = ent.PositionComp.WorldVolume;
-                    DsDebugDraw.DrawSphere(entSphere, Color.Blue);
-                    if (aConst.CheckFutureIntersection)
-                    {
-                        var distSqrToSphere = Vector3D.Distance(p.Position, entSphere.Center);
-                        //Log.Line($"ent{ent}  distSqrToSphere {distSqrToSphere}");
-                        if (distSqrToSphere < closestFutureDistSqr)
+                    //DsDebugDraw.DrawSphere(entSphere, Color.Blue);
+                        if (aConst.CheckFutureIntersection)
                         {
-                            closestFutureDistSqr = distSqrToSphere;
-                            closestFutureEnt = ent;
+                            var distSqrToSphere = Vector3D.DistanceSquared(p.Beam.From, entSphere.Center);
+                            if (distSqrToSphere > p.Beam.Length * p.Beam.Length)
+                            {
+                                if (distSqrToSphere < closestFutureDistSqr)
+                                {
+                                    closestFutureDistSqr = distSqrToSphere;
+                                    closestFutureEnt = ent;                        
+                                }
+                                //continue;
+                            }
                         }
-                    }
+
                     if (useEntityCollection)
                     {
 
@@ -145,7 +149,6 @@ namespace CoreSystems.Projectiles
                             }
                         }
                     }
-                    p.ClosestObstacle = closestFutureEnt;
 
                     HitEntity hitEntity = null;
                     var checkShield = Session.ShieldApiLoaded && Session.ShieldHash == ent.DefinitionId?.SubtypeId && ent.Render.Visible;
@@ -439,7 +442,8 @@ namespace CoreSystems.Projectiles
                         info.HitList.Add(hitEntity);
                     }
                 }
-                                
+                p.ClosestObstacle = closestFutureEnt;
+
                 if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;
