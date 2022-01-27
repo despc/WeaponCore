@@ -857,6 +857,7 @@ namespace CoreSystems.Support
                 var hitSoundChance = AmmoDef.AmmoAudio.HitPlayChance;
                 HitSoundActive = (hitSoundChance >= 1 || hitSoundChance >= MyUtils.GetRandomDouble(0.0f, 1f));
             }
+            //Log.Line($"{AmmoDef.AmmoRound} - IsFragment:{IsFragment} - ShotSound: {AmmoDef.Const.ShotSound}");
 
             if (AmmoDef.Const.ShotSound)
             {
