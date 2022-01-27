@@ -801,34 +801,25 @@ namespace CoreSystems.Support
                 if (hitSound) {
 
                     MySoundPair pair = null;
-                    if (!AmmoDef.Const.AltHitSounds)                    {
-                        pair = AmmoDef.Const.HitSoundPair;
+                    var shield = Hit.Entity as IMyUpgradeModule;
+                    var voxel = Hit.Entity as MyVoxelBase;
+                    var player = Hit.Entity as IMyCharacter;
+                    var floating = Hit.Entity as MyFloatingObject;
+
+                    if (voxel != null && AmmoDef.Const.VoxelSound) {
+                        pair = AmmoDef.Const.VoxelSoundPair;
                     }
-                    else {
-
-                        var shield = Hit.Entity as IMyUpgradeModule;
-                        var voxel = Hit.Entity as MyVoxelBase;
-                        var player = Hit.Entity as IMyCharacter;
-                        var floating = Hit.Entity as MyFloatingObject;
-
-                        if (voxel != null && AmmoDef.Const.VoxelSound) {
-                            pair = AmmoDef.Const.VoxelSoundPair;
-                        }
-                        else if (player != null && AmmoDef.Const.PlayerSound) {
-                            pair = AmmoDef.Const.PlayerSoundPair;
-                        }
-                        else if (floating != null && AmmoDef.Const.FloatingSound) {
-                            pair = AmmoDef.Const.FloatingSoundPair;
-                        }
-                        else {
-
-                            if (shield != null && AmmoDef.Const.ShieldSound) {
-                                pair = AmmoDef.Const.ShieldSoundPair;
-                            }
-                            else if (AmmoDef.Const.HitSound) {
-                                pair = AmmoDef.Const.HitSoundPair;
-                            }
-                        }
+                    else if (player != null && AmmoDef.Const.PlayerSound) {
+                        pair = AmmoDef.Const.PlayerSoundPair;
+                    }
+                    else if (floating != null && AmmoDef.Const.FloatingSound) {
+                        pair = AmmoDef.Const.FloatingSoundPair;
+                    }
+                    else if (shield != null && AmmoDef.Const.ShieldSound) {
+                        pair = AmmoDef.Const.ShieldSoundPair;
+                    }
+                    else if (AmmoDef.Const.HitSound) {
+                        pair = AmmoDef.Const.HitSoundPair;
                     }
 
                     if (pair != null) {
