@@ -20,7 +20,6 @@ namespace CoreSystems.Support
         internal readonly Dictionary<ulong, MyParticleEffect> BeamEffects = new Dictionary<ulong, MyParticleEffect>();
 
         internal readonly List<AvShot> AvShots = new List<AvShot>(1024);
-        internal readonly List<HitSounds> RunningSounds = new List<HitSounds>(128);
         internal readonly Stack<AfterGlow> Glows = new Stack<AfterGlow>();
         internal readonly Stack<MyEntity3DSoundEmitter> FireEmitters = new Stack<MyEntity3DSoundEmitter>();
         internal readonly Stack<MyEntity3DSoundEmitter> TravelEmitters = new Stack<MyEntity3DSoundEmitter>();
@@ -59,7 +58,6 @@ namespace CoreSystems.Support
         {
             if (Effects1.Count > 0) RunAvEffects1();
             if (Effects2.Count > 0) RunAvEffects2();
-            if (RunningSounds.Count > 0) PersistentSounds();
             if (ParticlesToProcess.Count > 0) Session.ProcessParticles();
 
             for (int i = AvShots.Count - 1; i >= 0; i--)
@@ -104,12 +102,12 @@ namespace CoreSystems.Support
 
                     if (av.HasTravelSound)
                     {
-                        if (!av.AmmoSound)
+                        if (!av.TravelSound)
                         {
                             double distSqr;
                             Vector3D.DistanceSquared(ref av.TracerFront, ref Session.CameraPos, out distSqr);
                             if (distSqr <= av.AmmoDef.Const.AmmoTravelSoundDistSqr)
-                                av.AmmoSoundStart();
+                                av.TravelSoundStart();
                         }
                         else av.TravelEmitter.SetPosition(av.TracerFront);
                     }
@@ -352,20 +350,6 @@ namespace CoreSystems.Support
             }
 
             if (av.TracerShrinks.Count == 0) av.ResetHit();
-        }
-
-        internal void PersistentSounds()
-        {
-            for (int i = 0; i < RunningSounds.Count; i++)
-            {
-                var av = RunningSounds[i];
-
-                av.Emitter.SetPosition(av.Position);
-                av.Emitter.PlaySound(av.SoundPair);
-
-                Session.SoundsToClean.Add(new Session.CleanSound { DelayedReturn = true, Emitter = av.Emitter, EmitterPool = PersistentEmitters, SpawnTick = Session.Tick });
-            }
-            RunningSounds.Clear();
         }
 
         internal void RunAvEffects1()

@@ -438,8 +438,15 @@ namespace CoreSystems
                 if (justClean || force || !sound.Emitter.IsPlaying || (age > 4 && sound.Force || delayedClean))
                 {
                     var loop = sound.Emitter.Loop;
-                    if (!justClean && !delayedClean && (sound.Force || loop)) {
-                        sound.Emitter.StopSound(loop);
+                    if (!justClean && (sound.Force || loop)) {
+
+                        if (loop && sound.Pair != null)
+                        {
+                            sound.Emitter.StopSound(true);
+                            sound.Emitter.PlaySound(sound.Pair, stopPrevious: false, skipIntro: true, force2D: false, alwaysHearOnRealistic: false, skipToEnd: true);
+                        }
+                        else
+                            sound.Emitter.StopSound(false);
                     }
                     sound.Emitter.Entity = null;
                     sound.EmitterPool.Push(sound.Emitter);
