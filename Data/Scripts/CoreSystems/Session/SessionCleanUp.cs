@@ -239,7 +239,6 @@ namespace CoreSystems
             Av.Effects1.Clear();
             Av.Effects2.Clear();
             Av.AvShots.Clear();
-            Av.RunningSounds.Clear();
 
             foreach (var errorpkt in ClientSideErrorPkt)
                 errorpkt.Packet.CleanUp();

@@ -884,6 +884,7 @@ namespace CoreSystems
         {
             internal Stack<MyEntity3DSoundEmitter> EmitterPool;
             internal MyEntity3DSoundEmitter Emitter;
+            internal MySoundPair Pair;
             internal uint SpawnTick;
             internal bool Force;
             internal bool DelayedReturn;

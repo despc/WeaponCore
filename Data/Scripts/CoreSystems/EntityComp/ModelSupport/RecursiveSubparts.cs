@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -78,7 +79,8 @@ namespace CoreSystems.Support
                                 _subparts.Add(res);
                                 NameToEntity[name] = res;
                                 EntityToName[res] = name;
-                                if (name.Equals(VanillaBase) || name.Equals(VanillaBarrels))
+                                var sorter = Entity as MyConveyorSorter;
+                                if (sorter == null && (name.Equals(VanillaBase) || name.Equals(VanillaBarrels)))
                                     VanillaSubparts[res] = name;
                             }
                         }

@@ -315,7 +315,7 @@ namespace CoreSystems.Projectiles
                 var target = info.Target;
                 var targetEnt = target.TargetEntity;
 
-                if (!info.IsShrapnel && !p.DynamicGuidance && targetEnt != null)
+                if (!info.IsFragment && !p.DynamicGuidance && targetEnt != null)
                 {
                     var targetCenter = targetEnt.PositionComp.WorldAABB.Center;
                     double distSqrToTarget;

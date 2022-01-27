@@ -65,7 +65,7 @@ namespace CoreSystems.Support
         internal float BaseDamagePool;
         internal float BaseHealthPool;
         internal float BaseEwarPool;
-        internal bool IsShrapnel;
+        internal bool IsFragment;
         internal bool EwarAreaPulse;
         internal bool EwarActive;
         internal bool LockOnFireState;
@@ -118,13 +118,13 @@ namespace CoreSystems.Support
 
             Target.Reset(System.Session.Tick, Target.States.ProjectileClosed);
             HitList.Clear();
-            if (IsShrapnel)
+            if (IsFragment)
             {
                 if (VoxelCache != null && System.Session != null)
                 {
                     System.Session.UniqueMuzzleId = VoxelCache;
                 }
-                else Log.Line("IsShrapnel voxelcache return failure");
+                else Log.Line("HasFragment voxelcache return failure");
             }
 
             if (PrimeEntity != null)
@@ -156,7 +156,7 @@ namespace CoreSystems.Support
             AmmoDef = null;
             WeaponCache = null;
             VoxelCache = null;
-            IsShrapnel = false;
+            IsFragment = false;
             EwarAreaPulse = false;
             EwarActive = false;
             LockOnFireState = false;
@@ -513,7 +513,7 @@ namespace CoreSystems.Support
                 target.CoreCube = frag.CoreCube;
                 target.CoreIsCube = frag.CoreIsCube;
                 info.Overrides = frag.Overrides;
-                info.IsShrapnel = true;
+                info.IsFragment = true;
                 info.PartId = frag.WeaponId;
                 info.MuzzleId = frag.MuzzleId;
                 info.UniqueMuzzleId = session.UniqueMuzzleId.Id;
