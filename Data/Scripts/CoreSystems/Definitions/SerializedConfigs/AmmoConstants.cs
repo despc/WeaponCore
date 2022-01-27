@@ -225,7 +225,7 @@ namespace CoreSystems.Support
         public readonly bool FragPointAtTarget;
         public readonly bool ProjectileSync;
         public readonly bool HasFragGroup;
-        public readonly bool IsFragment;
+        public readonly bool HasFragment;
         public readonly bool FragmentPattern;
         public readonly bool WeaponPattern;
         public readonly bool SkipAimChecks;
@@ -345,8 +345,12 @@ namespace CoreSystems.Support
                 if (ammoType.AmmoRound.Equals(ammo.AmmoDef.Fragment.AmmoRound))
                     FragmentId = i;
             }
+            HasFragment = FragmentId > -1;
 
-            IsFragment = FragmentId > -1;
+            if (ammo.AmmoDef.AmmoRound.Contains("Flak100mm"))
+            {
+                Log.Line($"{wDef.Ammos[FragmentId].AmmoRound}");
+            }
 
             LoadModifiers(session, ammo, out AmmoModsFound);
             float shieldBypassRaw;
@@ -407,7 +411,7 @@ namespace CoreSystems.Support
             CustomDetParticle = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle);
             DetParticleStr = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle) ? ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomParticle : "Explosion_Missile";
             CustomExplosionSound = !string.IsNullOrEmpty(ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomSound);
-            DetSoundStr = CustomExplosionSound ? ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomSound : !IsFragment ? "WepSmallMissileExpl" : string.Empty;
+            DetSoundStr = CustomExplosionSound ? ammo.AmmoDef.AreaOfDamage.EndOfLife.CustomSound : IsTurretSelectable ? "WepSmallMissileExpl" : string.Empty;
             FieldParticle = !string.IsNullOrEmpty(ammo.AmmoDef.Ewar.Field.Particle.Name);
 
             Fields(ammo.AmmoDef, out PulseInterval, out PulseChance, out Pulse, out PulseGrowTime);
@@ -439,7 +443,7 @@ namespace CoreSystems.Support
             var clientPredictedAmmoDisabled = AmmoModsFound && _modifierMap[ClientPredAmmoStr].HasData() && _modifierMap[ClientPredAmmoStr].GetAsBool;
             var predictionEligible = session.IsClient || session.DedicatedServer;
 
-            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && !IsFragment && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
+            ClientPredictedAmmo = predictionEligible && FixedFireAmmo && IsTurretSelectable && RealShotsPerMin <= 120 && !clientPredictedAmmoDisabled;
 
             if (ClientPredictedAmmo)
                 Log.Line($"{ammo.AmmoDef.AmmoRound} is enabled for client prediction: {FragmentId}");
@@ -557,15 +561,15 @@ namespace CoreSystems.Support
             fragDropVelocity = ammo.AmmoDef.Fragment.DropVelocity;
             fragMaxChildren = ammo.AmmoDef.Fragment.MaxChildren > 0 ? ammo.AmmoDef.Fragment.MaxChildren : int.MaxValue;
             fragIgnoreArming = ammo.AmmoDef.Fragment.IgnoreArming;
-            fragOnArmed = ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable && ArmOnlyOnHit && !FragIgnoreArming && IsFragment;
-            fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && IsFragment;
+            fragOnArmed = ammo.AmmoDef.AreaOfDamage.EndOfLife.Enable && ArmOnlyOnHit && !FragIgnoreArming && HasFragment;
+            fragOnEnd = !FragOnArmed && !ammo.AmmoDef.Fragment.TimedSpawns.Enable && HasFragment;
             hasFragOffset = !Vector3D.IsZero(ammo.AmmoDef.Fragment.AdvOffset);
             fragOffset = ammo.AmmoDef.Fragment.AdvOffset;
         }
 
         private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out PointTypes pointType)
         {
-            timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable && IsFragment;
+            timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable && HasFragment;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
             interval = ammo.AmmoDef.Fragment.TimedSpawns.Interval;
             maxSpawns = ammo.AmmoDef.Fragment.TimedSpawns.MaxSpawns;
@@ -803,12 +807,13 @@ namespace CoreSystems.Support
         {
             var weaponShotSound = !string.IsNullOrEmpty(system.Values.HardPoint.Audio.FiringSound);
             var ammoShotSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.ShotSound);
-            var useWeaponShotSound = !IsFragment && weaponShotSound && !ammoShotSound;
+            var useWeaponShotSound = IsTurretSelectable && weaponShotSound && !ammoShotSound;
 
             rawShotSoundStr = useWeaponShotSound ? system.Values.HardPoint.Audio.FiringSound : ammoDef.AmmoAudio.ShotSound;
 
             hitSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.HitSound);
             hitSoundPair = hitSound ? new MySoundPair(ammoDef.AmmoAudio.HitSound, false) : null;
+
 
             ammoTravelSound = !string.IsNullOrEmpty(ammoDef.AmmoAudio.TravelSound);
             travelSoundPair = ammoTravelSound ? new MySoundPair(ammoDef.AmmoAudio.TravelSound, false) : null;
@@ -818,6 +823,7 @@ namespace CoreSystems.Support
 
             detSound = !string.IsNullOrEmpty(DetSoundStr) && !ammoDef.AreaOfDamage.EndOfLife.NoSound;
             detSoundPair = detSound ? new MySoundPair(DetSoundStr, false) : null;
+
 
             var hitSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.HitSound);
             var travelSoundStr = string.Concat(Arc, ammoDef.AmmoAudio.TravelSound);
@@ -964,7 +970,7 @@ namespace CoreSystems.Support
         {
             var s = system;
             var a = ammoDef.AmmoDef;
-            var hasShrapnel = IsFragment;
+            var hasShrapnel = HasFragment;
             var l = wDef.HardPoint.Loading;
 
 

@@ -124,7 +124,7 @@ namespace CoreSystems.Support
                 {
                     System.Session.UniqueMuzzleId = VoxelCache;
                 }
-                else Log.Line("IsFragment voxelcache return failure");
+                else Log.Line("HasFragment voxelcache return failure");
             }
 
             if (PrimeEntity != null)
