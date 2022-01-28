@@ -59,6 +59,8 @@ namespace CoreSystems.Projectiles
                 var lastpos = p.LastPosition;
                 var curpos = p.Position;
                 var thickness = p.Info.AmmoDef.Const.CollisionSize;
+                var closestFutureDistSqr = double.MaxValue;
+                MyEntity closestFutureEnt = null;
                 p.ProjObb.Center = curpos + (curpos - lastpos) * 0.5f;
                 p.ProjObb.Orientation = Quaternion.CreateFromTwoVectors(lastpos, curpos);
                 p.ProjObb.HalfExtent = new Vector3D(p.ProjObb.Orientation.Length() / 2 + thickness, thickness, thickness);
@@ -80,6 +82,21 @@ namespace CoreSystems.Projectiles
                     if (info.EwarActive && character != null && !genericFields) continue;
 
                     var entSphere = ent.PositionComp.WorldVolume;
+                    //DsDebugDraw.DrawSphere(entSphere, Color.Blue);
+                        if (aConst.CheckFutureIntersection)
+                        {
+                            var distSqrToSphere = Vector3D.DistanceSquared(p.Beam.From, entSphere.Center);
+                            if (distSqrToSphere > p.Beam.Length * p.Beam.Length)
+                            {
+                                if (distSqrToSphere < closestFutureDistSqr)
+                                {
+                                    closestFutureDistSqr = distSqrToSphere;
+                                    closestFutureEnt = ent;                        
+                                }
+                                //continue;
+                            }
+                        }
+
                     if (useEntityCollection)
                     {
 
@@ -99,7 +116,6 @@ namespace CoreSystems.Projectiles
                         var transform = ent.PositionComp.WorldMatrixRef;
                         var box = ent.PositionComp.LocalAABB;
                         var obb = new MyOrientedBoundingBoxD(box, transform);
-
                         if (lineCheck && obb.Intersects(ref extBeam) == null || !lineCheck && !obb.Intersects(ref p.PruneSphere)) continue;
                     }
 
@@ -426,7 +442,8 @@ namespace CoreSystems.Projectiles
                         info.HitList.Add(hitEntity);
                     }
                 }
-                                
+                p.ClosestObstacle = closestFutureEnt;
+
                 if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;

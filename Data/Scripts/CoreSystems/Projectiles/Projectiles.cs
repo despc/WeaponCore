@@ -350,6 +350,7 @@ namespace CoreSystems.Projectiles
                 var triggerRange = aConst.EwarTriggerRange > 0 && !info.EwarAreaPulse ? aConst.EwarTriggerRange : 0;
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
                 p.Beam = useEwarSphere ? new LineD(p.Position + (-info.Direction * aConst.EwarTriggerRange), p.Position + (info.Direction * aConst.EwarTriggerRange)) : new LineD(p.LastPosition, p.Position);
+                p.CheckBeam = p.Info.AmmoDef.Const.CheckFutureIntersection ? new LineD(p.Beam.From, p.Beam.From + (p.Beam.Direction * (p.Beam.Length + p.MaxSpeed))) : p.Beam;
 
                 if (p.DeaccelRate <= 0 && p.State != ProjectileState.OneAndDone && (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr || info.Age > aConst.MaxLifeTime)) {
 
@@ -423,15 +424,13 @@ namespace CoreSystems.Projectiles
                 {
                     if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
-
                     MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
                 }
                 else if (p.LineCheck)
                 {
                     if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
-
-                    MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref p.Beam, p.MySegmentList, p.PruneQuery);
+                    MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref p.CheckBeam, p.MySegmentList, p.PruneQuery);
                 }
 
                 p.CheckType = p.SphereCheck ? CheckTypes.Sphere : CheckTypes.Ray;

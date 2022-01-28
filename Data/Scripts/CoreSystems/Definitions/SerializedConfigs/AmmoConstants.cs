@@ -135,6 +135,7 @@ namespace CoreSystems.Support
         public readonly int FragGroupSize;
         public readonly int FragGroupDelay;
 
+        public readonly bool CheckFutureIntersection;
         public readonly bool OverrideTarget;
         public readonly bool HasEjectEffect;
         public readonly bool Pulse;
@@ -237,6 +238,7 @@ namespace CoreSystems.Support
         public readonly bool PlayerSound;
         public readonly bool FloatingSound;
         public readonly bool ShieldSound;
+        public readonly float DirectAimCone;
         public readonly float FragRadial;
         public readonly float FragDegrees;
         public readonly float FragmentOffset;
@@ -388,10 +390,11 @@ namespace CoreSystems.Support
             OverrideTarget = ammo.AmmoDef.Trajectory.Smarts.OverideTarget;
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
+            CheckFutureIntersection = ammo.AmmoDef.Trajectory.Smarts.CheckFutureIntersection;
 
-            
+
             Fragments(ammo, out HasFragmentOffset, out HasNegFragmentOffset, out FragmentOffset, out FragRadial, out FragDegrees, out FragReverse, out FragDropVelocity, out FragMaxChildren, out FragIgnoreArming, out FragOnArmed, out FragOnEnd, out HasAdvFragOffset, out FragOffset);
-            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragGroupSize, out FragGroupDelay, out FragProximity, out HasFragProximity, out FragParentDies, out FragPointAtTarget, out HasFragGroup, out FragPointType);
+            TimedSpawn(ammo, out TimedFragments, out FragStartTime, out FragInterval, out MaxFrags, out FragGroupSize, out FragGroupDelay, out FragProximity, out HasFragProximity, out FragParentDies, out FragPointAtTarget, out HasFragGroup, out FragPointType, out DirectAimCone);
 
             FallOffDistance = AmmoModsFound && _modifierMap[FallOffDistanceStr].HasData() ? _modifierMap[FallOffDistanceStr].GetAsFloat : ammo.AmmoDef.DamageScales.FallOff.Distance;
 
@@ -562,7 +565,7 @@ namespace CoreSystems.Support
             fragOffset = ammo.AmmoDef.Fragment.AdvOffset;
         }
 
-        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out PointTypes pointType)
+        private void TimedSpawn(WeaponSystem.AmmoType ammo, out bool timedFragments, out int startTime, out int interval, out int maxSpawns, out int groupSize, out int groupDelay, out double proximity, out bool hasProximity, out bool parentDies, out bool pointAtTarget, out bool hasGroup, out PointTypes pointType, out float directAimCone)
         {
             timedFragments = ammo.AmmoDef.Fragment.TimedSpawns.Enable && HasFragment;
             startTime = ammo.AmmoDef.Fragment.TimedSpawns.StartTime;
@@ -576,6 +579,7 @@ namespace CoreSystems.Support
             groupDelay = ammo.AmmoDef.Fragment.TimedSpawns.GroupDelay;
             hasGroup = groupSize > 0 && groupDelay > 0;
             pointType = ammo.AmmoDef.Fragment.TimedSpawns.PointType;
+            directAimCone = MathHelper.ToRadians(Math.Max(ammo.AmmoDef.Fragment.TimedSpawns.DirectAimCone,1));
         }
 
         private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponSystem system, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out bool weaponPattern, out bool fragmentPattern)

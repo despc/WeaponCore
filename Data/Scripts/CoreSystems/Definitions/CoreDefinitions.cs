@@ -819,6 +819,7 @@ namespace CoreSystems.Support
                     [ProtoMember(8)] internal int GroupSize;
                     [ProtoMember(9)] internal int GroupDelay;
                     [ProtoMember(10)] internal PointTypes PointType;
+                    [ProtoMember(11)] internal float DirectAimCone;
                 }
             }
 
@@ -1158,6 +1159,7 @@ namespace CoreSystems.Support
                     [ProtoMember(10)] internal bool KeepAliveAfterTargetLoss;
                     [ProtoMember(11)] internal float OffsetRatio;
                     [ProtoMember(12)] internal int OffsetTime;
+                    [ProtoMember(13)] internal bool CheckFutureIntersection;
                 }
 
                 [ProtoContract]
