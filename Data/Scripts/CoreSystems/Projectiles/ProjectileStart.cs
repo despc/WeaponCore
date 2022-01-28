@@ -45,6 +45,7 @@ namespace CoreSystems.Projectiles
                 target.IsFakeTarget = comp.FakeMode;
                 target.CoreCube = comp.Cube;
                 target.CoreEntity = comp.CoreEntity;
+                target.CoreParent = comp.TopEntity;
 
                 info.DummyTargets = null;
                 if (comp.FakeMode)

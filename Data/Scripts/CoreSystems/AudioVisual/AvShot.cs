@@ -993,10 +993,7 @@ namespace CoreSystems.Support
             if (Vector3D.IsZero(TracerFront)) TracerFront = EndState.EndPos;
 
             if (AmmoDef.Const.AmmoParticle)
-            {
-                var forceClose = !(AmmoEffect != null && AmmoEffect.Loop && !AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Restart);
-                DisposeAmmoEffect(forceClose, false);
-            }
+                DisposeAmmoEffect(AmmoDef.AmmoGraphics.Particles.Ammo.Extras.Restart, false);
 
             if (EndState.DetonateEffect)
             {

@@ -84,6 +84,7 @@ namespace CoreSystems.Projectiles
         internal bool Intersecting;
         internal bool FinalizeIntersection;
         internal bool Asleep;
+        internal bool SmartReady;
 
         internal enum DroneStatus
         {
@@ -174,6 +175,7 @@ namespace CoreSystems.Projectiles
             WasTracking = false;
             Intersecting = false;
             Asleep = false;
+            SmartReady = false;
             EndStep = 0;
             Info.PrevDistanceTraveled = 0;
             Info.DistanceTraveled = 0;
@@ -984,9 +986,17 @@ namespace CoreSystems.Projectiles
         {
             Vector3D newVel;
             var aConst = Info.AmmoDef.Const;
-            if (aConst.DeltaVelocityPerTick <= 0 || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr)
-            {
 
+            var startTrack = SmartReady || Info.Target.CoreParent == null || Info.Target.CoreParent.MarkedForClose;
+
+            if (!startTrack && Info.DistanceTraveled * Info.DistanceTraveled >= aConst.SmartsDelayDistSqr) {
+                var lineCheck = new LineD(Position, Position + (Info.Direction * 10000f), 10000f);
+                startTrack = !new MyOrientedBoundingBoxD(Info.Target.CoreParent.PositionComp.LocalAABB, Info.Target.CoreParent.PositionComp.WorldMatrixRef).Intersects(ref lineCheck).HasValue;
+            }
+
+            if (startTrack)
+            {
+                SmartReady = true;
                 var smarts = Info.AmmoDef.Trajectory.Smarts;
                 var fake = Info.Target.IsFakeTarget;
                 var gaveUpChase = !fake && Info.Age - ChaseAge > aConst.MaxChaseTime && HadTarget;
