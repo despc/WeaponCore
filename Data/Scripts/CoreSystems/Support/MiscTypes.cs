@@ -12,6 +12,7 @@ namespace CoreSystems.Support
 {
     internal class Target
     {
+        internal readonly List<MyCubeBlock> Top5 = new List<MyCubeBlock>();
         internal States PreviousState = States.NotSet;
         internal States CurrentState = States.NotSet;
         internal bool HasTarget;
@@ -29,10 +30,11 @@ namespace CoreSystems.Support
         internal MyEntity CoreEntity;
         internal MyEntity CoreParent;
         internal MyEntity TargetEntity;
+        internal MyEntity ClosestObstacle;
         internal MyCubeBlock CoreCube;
         internal Projectile Projectile;
-        internal int[] TargetDeck = new int[0];
-        internal int[] BlockDeck = new int[0];
+        internal int[] TargetDeck = Array.Empty<int>();
+        internal int[] BlockDeck = Array.Empty<int>();
         internal int TargetPrevDeckLen;
         internal int BlockPrevDeckLen;
         internal uint ExpiredTick;
@@ -44,14 +46,12 @@ namespace CoreSystems.Support
         internal double OrigDistance;
         internal long TargetId;
         internal long TopEntityId;
-        internal readonly List<MyCubeBlock> Top5 = new List<MyCubeBlock>();
 
         public enum States
         {
             NotSet,
             ControlReset,
             Expired,
-            ClearTargets,
             WeaponNotReady,
             AnimationOff,
             Designator,
@@ -70,10 +70,8 @@ namespace CoreSystems.Support
             RayCheckMiss,
             ServerReset,
             Transfered,
-            Invalid,
             Fake,
             FiredBurst,
-            NoMagsToLoad,
             AiLost,
             Offline,
             LostTracking,
@@ -201,19 +199,6 @@ namespace CoreSystems.Support
             StateChange(true, States.Acquired);
         }
 
-        internal void LockTarget(Weapon w, MyEntity ent)
-        {
-            double rayDist;
-            var targetPos = ent.PositionComp.WorldAABB.Center;
-            Vector3D.Distance(ref w.MyPivotPos, ref targetPos, out rayDist);
-            var shortDist = rayDist - 1;
-            var origDist = rayDist;
-            var topEntId = ent.GetTopMostParent().EntityId;
-
-            Set(ent, targetPos, shortDist, origDist, topEntId);
-            if (w.System.Session.MpActive && !w.System.Session.IsClient)
-                PushTargetToClient(w);
-        }
 
         internal void SetFake(uint expiredTick, Vector3D pos)
         {
@@ -226,6 +211,7 @@ namespace CoreSystems.Support
         internal void Reset(uint expiredTick, States reason, bool expire = true)
         {
             TargetEntity = null;
+            ClosestObstacle = null;
             IsProjectile = false;
             IsFakeTarget = false;
             IsAligned = false;

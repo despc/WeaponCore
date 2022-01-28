@@ -187,14 +187,14 @@ namespace CoreSystems.Projectiles
                             }
                         }
 
-                        if (aConst.AmmoSkipAccel && p.IsDrone)
+                        if (aConst.AmmoSkipAccel && aConst.IsDrone)
                             p.RunDrone(targetEnt);
                     }
 
                     if (!aConst.AmmoSkipAccel && !info.EwarAreaPulse) {
 
                         if (p.IsSmart) p.RunSmart();
-                        else if (p.IsDrone) p.RunDrone(targetEnt);
+                        else if (aConst.IsDrone) p.RunDrone(targetEnt);
                         else {
                             var accel = true;
                             Vector3D newVel;
@@ -226,7 +226,7 @@ namespace CoreSystems.Projectiles
                     }
                     else if (p.IsSmart)
                         p.RunSmart();
-                    else if (p.IsDrone) 
+                    else if (aConst.IsDrone) 
                         p.RunDrone(targetEnt);
 
                     if (p.State == ProjectileState.OneAndDone) {
@@ -251,7 +251,7 @@ namespace CoreSystems.Projectiles
                     Vector3D.Dot(ref info.Direction, ref p.TravelMagnitude, out distChanged);
                     info.DistanceTraveled += Math.Abs(distChanged);
 
-                    if (p.DynamicGuidance) {
+                    if (aConst.DynamicGuidance) {
                         if (p.PruningProxyId != -1) {
                             var sphere = new BoundingSphereD(p.Position, aConst.LargestHitSize);
                             BoundingBoxD result;
@@ -315,7 +315,7 @@ namespace CoreSystems.Projectiles
                 var target = info.Target;
                 var targetEnt = target.TargetEntity;
 
-                if (!info.IsFragment && !p.DynamicGuidance && targetEnt != null)
+                if (!info.IsFragment && !aConst.DynamicGuidance && targetEnt != null)
                 {
                     var targetCenter = targetEnt.PositionComp.WorldAABB.Center;
                     double distSqrToTarget;
@@ -350,7 +350,7 @@ namespace CoreSystems.Projectiles
                 var triggerRange = aConst.EwarTriggerRange > 0 && !info.EwarAreaPulse ? aConst.EwarTriggerRange : 0;
                 var useEwarSphere = (triggerRange > 0 || info.EwarActive) && aConst.Pulse;
                 p.Beam = useEwarSphere ? new LineD(p.Position + (-info.Direction * aConst.EwarTriggerRange), p.Position + (info.Direction * aConst.EwarTriggerRange)) : new LineD(p.LastPosition, p.Position);
-                p.CheckBeam = p.Info.AmmoDef.Const.CheckFutureIntersection ? new LineD(p.Beam.From, p.Beam.From + (p.Beam.Direction * (p.Beam.Length + p.MaxSpeed))) : p.Beam;
+                p.CheckBeam = p.Info.AmmoDef.Const.CheckFutureIntersection ? new LineD(p.Beam.From, p.Beam.From + (p.Beam.Direction * (p.Beam.Length + p.MaxSpeed)), p.Beam.Length + p.MaxSpeed) : p.Beam;
 
                 if (p.DeaccelRate <= 0 && p.State != ProjectileState.OneAndDone && (info.DistanceTraveled * info.DistanceTraveled >= p.DistanceToTravelSqr || info.Age > aConst.MaxLifeTime)) {
 
@@ -379,8 +379,7 @@ namespace CoreSystems.Projectiles
                     info.Hit.LastHit = p.Position;
                 }
 
-                p.SphereCheck = false;
-                p.LineCheck = false;
+                var sphereCheck = false;
 
                 if (p.MineSeeking && !p.MineTriggered)
                     p.SeekEnemy();
@@ -400,18 +399,23 @@ namespace CoreSystems.Projectiles
                     }
                     else
                         p.PruneSphere = new BoundingSphereD(p.Position, triggerRange);
-                    p.SphereCheck = true;
+
+                    sphereCheck = true;
                 }
                 else if (aConst.CollisionIsLine)
                 {
                     p.PruneSphere.Center = p.Position;
                     p.PruneSphere.Radius = aConst.CollisionSize;
-                    if (aConst.IsBeamWeapon || p.PruneSphere.Contains(p.DeadSphere) == ContainmentType.Disjoint)
-                        p.LineCheck = true;
+                    if (aConst.IsBeamWeapon || info.DistanceTraveled > aConst.CollisionSize + 1.35f) {
+                        
+                        if (aConst.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
+                            p.CheckForNearVoxel(60);
+                        MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref p.CheckBeam, p.MySegmentList, p.PruneQuery);
+                    }
                 }
                 else
                 {
-                    p.SphereCheck = true;
+                    sphereCheck = true;
                     p.PruneSphere = new BoundingSphereD(p.Position, 0).Include(new BoundingSphereD(p.LastPosition, 0));
                     if (p.PruneSphere.Radius < aConst.CollisionSize)
                     {
@@ -420,20 +424,13 @@ namespace CoreSystems.Projectiles
                     }
                 }
 
-                if (p.SphereCheck)
-                {
-                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
+                if (sphereCheck) {
+                    if (aConst.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
                         p.CheckForNearVoxel(60);
                     MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
                 }
-                else if (p.LineCheck)
-                {
-                    if (p.DynamicGuidance && p.PruneQuery == MyEntityQueryType.Dynamic && Session.Tick60)
-                        p.CheckForNearVoxel(60);
-                    MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref p.CheckBeam, p.MySegmentList, p.PruneQuery);
-                }
 
-                p.CheckType = p.SphereCheck ? CheckTypes.Sphere : CheckTypes.Ray;
+                p.CheckType = sphereCheck ? CheckTypes.Sphere : CheckTypes.Ray;
 
                 info.ShieldBypassed = info.ShieldKeepBypass;
                 info.ShieldKeepBypass = false;
@@ -468,7 +465,7 @@ namespace CoreSystems.Projectiles
                         var vs = vp.AvShot;
 
                         vp.TracerLength = info.TracerLength;
-                        vs.Init(vp, p.IsSmart, p.AccelInMetersPerSec * StepConst, p.MaxSpeed, ref p.AccelDir);
+                        vs.Init(vp, false, p.AccelInMetersPerSec * StepConst, p.MaxSpeed, ref p.AccelDir);
 
                         if (info.BaseDamagePool <= 0 || p.State == ProjectileState.Depleted)
                             vs.ProEnded = true;

@@ -60,7 +60,6 @@ namespace CoreSystems.Projectiles
                 var curpos = p.Position;
                 var thickness = p.Info.AmmoDef.Const.CollisionSize;
                 var closestFutureDistSqr = double.MaxValue;
-                MyEntity closestFutureEnt = null;
                 p.ProjObb.Center = curpos + (curpos - lastpos) * 0.5f;
                 p.ProjObb.Orientation = Quaternion.CreateFromTwoVectors(lastpos, curpos);
                 p.ProjObb.HalfExtent = new Vector3D(p.ProjObb.Orientation.Length() / 2 + thickness, thickness, thickness);
@@ -69,6 +68,7 @@ namespace CoreSystems.Projectiles
                 if (Session.WaterApiLoaded && info.MyPlanet != null)
                     Session.WaterMap.TryGetValue(info.MyPlanet.EntityId, out water);
 
+                MyEntity closestFutureEnt = null;
                 IMyTerminalBlock iShield = null;
                 for (int i = 0; i < collectionCount; i++) {
                     var ent = !useEntityCollection ? p.MySegmentList[i].Element : entityCollection[i];
@@ -76,7 +76,7 @@ namespace CoreSystems.Projectiles
                     var grid = ent as MyCubeGrid;
                     var entIsSelf = grid != null && firingCube != null && (grid == firingCube.CubeGrid || firingCube.CubeGrid.IsSameConstructAs(grid));
 
-                    if (entIsSelf && p.IsSmart || ent.MarkedForClose || !ent.InScene || ent == info.MyShield || !isGrid && ent == ai.TopEntity) continue;
+                    if (entIsSelf && aConst.IsSmart || ent.MarkedForClose || !ent.InScene || ent == info.MyShield || !isGrid && ent == ai.TopEntity) continue;
 
                     var character = ent as IMyCharacter;
                     if (info.EwarActive && character != null && !genericFields) continue;
@@ -220,7 +220,7 @@ namespace CoreSystems.Projectiles
                     if (voxel != null && voxel == voxel?.RootVoxel && !ignoreVoxels)
                     {
 
-                        if ((ent == info.MyPlanet && !(p.LinePlanetCheck || p.DynamicGuidance)) || !p.LinePlanetCheck && isBeam)
+                        if ((ent == info.MyPlanet && !(p.LinePlanetCheck || aConst.DynamicGuidance)) || !p.LinePlanetCheck && isBeam)
                             continue;
 
                         VoxelIntersectBranch voxelState = VoxelIntersectBranch.None;
@@ -442,7 +442,8 @@ namespace CoreSystems.Projectiles
                         info.HitList.Add(hitEntity);
                     }
                 }
-                p.ClosestObstacle = closestFutureEnt;
+
+                target.ClosestObstacle = closestFutureEnt;
 
                 if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {

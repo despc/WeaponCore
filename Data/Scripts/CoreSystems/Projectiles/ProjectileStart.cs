@@ -83,8 +83,6 @@ namespace CoreSystems.Projectiles
                 else shotFade = 0;
                 info.ShotFade = shotFade;
                 p.PredictedTargetPos = wTarget.TargetPos;
-                p.DeadSphere.Center = w.MyPivotPos;
-                p.DeadSphere.Radius = ai.AiType == Ai.AiTypes.Grid ? ai.GridEntity.GridSizeHalf + 0.1 : 0.5f;
 
                 if (aConst.FeelsGravity && Session.Tick - w.GravityTick > 60)
                 {

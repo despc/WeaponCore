@@ -238,6 +238,9 @@ namespace CoreSystems.Support
         public readonly bool PlayerSound;
         public readonly bool FloatingSound;
         public readonly bool ShieldSound;
+        public readonly bool IsDrone;
+        public readonly bool IsSmart;
+        public readonly bool DynamicGuidance;
         public readonly float DirectAimCone;
         public readonly float FragRadial;
         public readonly float FragDegrees;
@@ -357,6 +360,8 @@ namespace CoreSystems.Support
             IsMine = ammo.AmmoDef.Trajectory.Guidance == DetectFixed || ammo.AmmoDef.Trajectory.Guidance == DetectSmart || ammo.AmmoDef.Trajectory.Guidance == DetectTravelTo;
             IsField = ammo.AmmoDef.Ewar.Mode == EwarMode.Field || ammo.AmmoDef.Trajectory.DeaccelTime > 0;
             IsHybrid = ammo.AmmoDef.HybridRound;
+            IsDrone = ammo.AmmoDef.Trajectory.Guidance == DroneAdvanced;
+            IsSmart = ammo.AmmoDef.Trajectory.Guidance == Smart;
             IsTurretSelectable = !ammo.IsShrapnel && ammo.AmmoDef.HardPointUsable;
 
             AmmoParticleShrinks = ammo.AmmoDef.AmmoGraphics.Particles.Ammo.ShrinkByDistance;
@@ -470,6 +475,7 @@ namespace CoreSystems.Support
             MinOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MinLength;
             MaxOffsetLength = ammo.AmmoDef.AmmoGraphics.Lines.OffsetEffect.MaxLength;
             CanReportTargetStatus = RequiresTarget && system.TrackGrids && !system.DesignatorWeapon && PeakDps > 0;
+            DynamicGuidance = ammo.AmmoDef.Trajectory.Guidance != None && ammo.AmmoDef.Trajectory.Guidance != TravelTo && !IsBeamWeapon;
 
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
@@ -708,7 +714,7 @@ namespace CoreSystems.Support
 
         private void Beams(AmmoDef ammoDef, out bool isBeamWeapon, out bool virtualBeams, out bool rotateRealBeam, out bool convergeBeams, out bool oneHitParticle, out bool offsetEffect)
         {
-            isBeamWeapon = ammoDef.Beams.Enable;
+            isBeamWeapon = ammoDef.Beams.Enable && ammoDef.Trajectory.Guidance == None;
             virtualBeams = ammoDef.Beams.VirtualBeams && IsBeamWeapon;
             rotateRealBeam = ammoDef.Beams.RotateRealBeam && VirtualBeams;
             convergeBeams = !RotateRealBeam && ammoDef.Beams.ConvergeBeams && VirtualBeams;

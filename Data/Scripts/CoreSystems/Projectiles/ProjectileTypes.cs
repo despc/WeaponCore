@@ -454,7 +454,6 @@ namespace CoreSystems.Support
                 frag.DoDamage = info.DoDamage;
                 frag.PredictedTargetPos = p.PredictedTargetPos;
                 frag.Velocity = !aConst.FragDropVelocity ? p.Velocity : Vector3D.Zero;
-                frag.DeadSphere = p.DeadSphere;
                 frag.LockOnFireState = info.LockOnFireState;
                 frag.IgnoreShield = info.ShieldBypassed && aConst.ShieldDamageBypassMod > 0;
                 var posValue = aConst.FragDegrees;
@@ -525,7 +524,6 @@ namespace CoreSystems.Support
                 info.BaseDamagePool = aConst.BaseDamage;
                 p.PredictedTargetPos = frag.PredictedTargetPos;
                 info.Direction = frag.Direction;
-                p.DeadSphere = frag.DeadSphere;
                 p.StartSpeed = frag.Velocity;
                 info.LockOnFireState = frag.LockOnFireState;
                 info.MaxTrajectory = aConst.MaxTrajectory;
@@ -565,7 +563,6 @@ namespace CoreSystems.Support
         public Vector3D Direction;
         public Vector3D Velocity;
         public Vector3D PredictedTargetPos;
-        public BoundingSphereD DeadSphere;
         public int WeaponId;
         public int MuzzleId;
         public int Depth;

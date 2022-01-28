@@ -46,7 +46,6 @@ namespace CoreSystems.Projectiles
         internal LineD Beam;
         internal LineD CheckBeam;
         internal BoundingSphereD PruneSphere;
-        internal BoundingSphereD DeadSphere;
         internal MyOrientedBoundingBoxD ProjObb;
         internal double AccelInMetersPerSec;
         internal double DistanceToTravelSqr;
@@ -57,7 +56,6 @@ namespace CoreSystems.Projectiles
         internal double MaxTrajectorySqr;
         internal double PrevEndPointToCenterSqr;
         internal float DesiredSpeed;
-        internal MyEntity ClosestObstacle;
         internal int DeaccelRate;
         internal int ChaseAge;
         internal int EndStep;
@@ -71,7 +69,6 @@ namespace CoreSystems.Projectiles
         internal bool EnableAv;
         internal bool MoveToAndActivate;
         internal bool LockedTarget;
-        internal bool DynamicGuidance;
         internal bool LinePlanetCheck;
         internal bool IsSmart;
         internal bool MineSeeking;
@@ -86,10 +83,7 @@ namespace CoreSystems.Projectiles
         internal bool WasTracking;
         internal bool Intersecting;
         internal bool FinalizeIntersection;
-        internal bool SphereCheck;
-        internal bool LineCheck;
         internal bool Asleep;
-        internal bool IsDrone;
 
         internal enum DroneStatus
         {
@@ -106,7 +100,7 @@ namespace CoreSystems.Projectiles
         {
             Attack,
             Defend,
-            RTB,
+            Rtb,
         }
 
         internal enum CheckTypes
@@ -181,7 +175,6 @@ namespace CoreSystems.Projectiles
             Intersecting = false;
             Asleep = false;
             EndStep = 0;
-            ClosestObstacle = null;
             Info.PrevDistanceTraveled = 0;
             Info.DistanceTraveled = 0;
             PrevEndPointToCenterSqr = double.MaxValue;
@@ -190,8 +183,7 @@ namespace CoreSystems.Projectiles
             var trajectory = ammoDef.Trajectory;
             var guidance = trajectory.Guidance;
             CachedId = Info.MuzzleId == -1 ? Info.WeaponCache.VirutalId : Info.MuzzleId;
-            DynamicGuidance = guidance != GuidanceType.None && guidance != GuidanceType.TravelTo && !aConst.IsBeamWeapon;
-            if (DynamicGuidance && session.AntiSmartActive) DynTrees.RegisterProjectile(this);
+            if (aConst.DynamicGuidance && session.AntiSmartActive) DynTrees.RegisterProjectile(this);
 
             Info.MyPlanet = Info.Ai.MyPlanet;
             
@@ -205,18 +197,8 @@ namespace CoreSystems.Projectiles
             Info.InPlanetGravity = Info.Ai.InPlanetGravity;
             Info.Ai.ProjectileTicker = Info.Ai.Session.Tick;
 
-            IsDrone = guidance == GuidanceType.DroneAdvanced; //&& aConst.TimedFragments
-
-            if (guidance == GuidanceType.Smart && DynamicGuidance)
-            {
-                IsSmart = true;
-                SmartSlot = Info.Random.Range(0, 10);
-            }
-            else
-            {
-                IsSmart = false;
-                SmartSlot = 0;
-            }
+            IsSmart = aConst.IsSmart;
+            SmartSlot = aConst.IsSmart ? Info.Random.Range(0, 10) : 0;
 
             if (Info.Target.IsProjectile)
             {
@@ -231,7 +213,7 @@ namespace CoreSystems.Projectiles
             else OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
             LockedTarget = !Vector3D.IsZero(OriginTargetPos);
 
-            if (IsSmart && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
+            if (aConst.IsSmart && aConst.TargetOffSet && (LockedTarget || Info.Target.IsFakeTarget))
             {
                 OffSetTarget();
             }
@@ -292,7 +274,7 @@ namespace CoreSystems.Projectiles
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
             var pruneStaticCheck = Info.Ai.ClosestPlanetSqr * 0.5 < MaxTrajectorySqr || Info.Ai.StaticGridInRange;
-            PruneQuery = (DynamicGuidance && pruneStaticCheck) || aConst.FeelsGravity && staticIsInRange || !DynamicGuidance && !aConst.FeelsGravity && staticIsInRange ? MyEntityQueryType.Both : MyEntityQueryType.Dynamic;
+            PruneQuery = (aConst.DynamicGuidance && pruneStaticCheck) || aConst.FeelsGravity && staticIsInRange || !aConst.DynamicGuidance && !aConst.FeelsGravity && staticIsInRange ? MyEntityQueryType.Both : MyEntityQueryType.Dynamic;
 
             if (Info.Ai.PlanetSurfaceInRange && Info.Ai.ClosestPlanetSqr <= MaxTrajectorySqr)
             {
@@ -300,7 +282,7 @@ namespace CoreSystems.Projectiles
                 PruneQuery = MyEntityQueryType.Both;
             }
 
-            if (DynamicGuidance && PruneQuery == MyEntityQueryType.Dynamic && staticIsInRange) CheckForNearVoxel(60);
+            if (aConst.DynamicGuidance && PruneQuery == MyEntityQueryType.Dynamic && staticIsInRange) CheckForNearVoxel(60);
 
             var accelPerSec = trajectory.AccelPerSec;
             AccelInMetersPerSec = !aConst.AmmoSkipAccel ? accelPerSec : DesiredSpeed;
@@ -324,14 +306,14 @@ namespace CoreSystems.Projectiles
             InitalStep = !Info.IsFragment && aConst.AmmoSkipAccel ? desiredSpeed * StepConst : Velocity * StepConst;
 
             TravelMagnitude = Velocity * StepConst;
-            DeaccelRate = aConst.Ewar || aConst.IsMine ? trajectory.DeaccelTime : IsDrone? 100: 0;
+            DeaccelRate = aConst.Ewar || aConst.IsMine ? trajectory.DeaccelTime : aConst.IsDrone ? 100: 0;
             State = !aConst.IsBeamWeapon ? ProjectileState.Alive : ProjectileState.OneAndDone;
 
             if (EnableAv)
             {
                 var originDir = !Info.IsFragment ? AccelDir : Info.Direction;
                 Info.AvShot = session.Av.AvShotPool.Get();
-                Info.AvShot.Init(Info, IsSmart, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
+                Info.AvShot.Init(Info, aConst.IsSmart, AccelInMetersPerSec * StepConst, MaxSpeed, ref originDir);
                 Info.AvShot.SetupSounds(DistanceFromCameraSqr); //Pool initted sounds per Projectile type... this is expensive
                 if (aConst.HitParticle && !aConst.IsBeamWeapon || aConst.EndOfLifeAoe && !ammoDef.AreaOfDamage.EndOfLife.NoVisuals)
                 {
@@ -439,7 +421,7 @@ namespace CoreSystems.Projectiles
                 VrPros.Clear();
             }
 
-            if (DynamicGuidance && session.AntiSmartActive)
+            if (aConst.DynamicGuidance && session.AntiSmartActive)
                 DynTrees.UnregisterProjectile(this);
 
             var target = Info.Target;
@@ -472,8 +454,8 @@ namespace CoreSystems.Projectiles
             var hasTarget = (targetEnt != null || !targetEnt.MarkedForClose);
             var hasParent = (parentEnt != null || !parentEnt.MarkedForClose);
             //var hasFriend = (friendEnt != null || !friendEnt.MarkedForClose);
-            var closestObstacle = ClosestObstacle;
-            ClosestObstacle = null;
+            var closestObstacle = Info.Target.ClosestObstacle;
+            Info.Target.ClosestObstacle = null;
             
             var hasObstacle = closestObstacle != parentEnt && closestObstacle != null;
             try
@@ -491,7 +473,7 @@ namespace CoreSystems.Projectiles
                     topEnt = parentEnt.GetTopMostParent();
                     DroneMsn = DroneMission.Defend;//Try to return to parent in defensive state
                 }
-                else if (DroneMsn==DroneMission.RTB)
+                else if (DroneMsn==DroneMission.Rtb)
                 {
                     if (hasParent)
                         topEnt = parentEnt.GetTopMostParent();
@@ -573,7 +555,7 @@ namespace CoreSystems.Projectiles
                                 var rayTestPath = new RayD(Position, Vector3D.Normalize(parentPos - Position));//Check for clear LOS home
                                 if (rayTestPath.Intersects(orbitSphereClose)==null)
                                 { 
-                                    DroneMsn = DroneMission.RTB;
+                                    DroneMsn = DroneMission.Rtb;
                                     DroneStat = DroneStatus.Transit;
                                 }
                             }
@@ -613,14 +595,14 @@ namespace CoreSystems.Projectiles
                             var rayTestPath = new RayD(Position, Vector3D.Normalize(parentPos - Position));//Check for clear LOS home
                             if (rayTestPath.Intersects(orbitSphereClose) == null)
                             {
-                                DroneMsn = DroneMission.RTB;
+                                DroneMsn = DroneMission.Rtb;
                                 DroneStat = DroneStatus.Transit;
                             }
                         }
                     }
                     
                     break;
-                case DroneMission.RTB:
+                case DroneMission.Rtb:
                     orbitSphere.Radius += MaxSpeed;
                     orbitSphereFar.Radius += MaxSpeed*2;   
                     orbitSphereClose.Radius = targetSphere.Radius;
@@ -736,7 +718,7 @@ namespace CoreSystems.Projectiles
 
 
                 case DroneStatus.Approach:
-                    if (DroneMsn == DroneMission.RTB)//Check for LOS to docking target
+                    if (DroneMsn == DroneMission.Rtb)//Check for LOS to docking target
                     {
                     var returnTargetTest = new Vector3D(parentCubePos + parentCubeOrientation.Forward * orbitSphere.Radius);
                     var droneNavTargetAim = Vector3D.Normalize(returnTargetTest - Position);
@@ -901,7 +883,7 @@ namespace CoreSystems.Projectiles
                 newVel = Velocity += (Info.Direction * Info.AmmoDef.Const.DeltaVelocityPerTick);
             VelocityLengthSqr = newVel.LengthSquared();
 
-            if (VelocityLengthSqr > MaxSpeedSqr || (DeaccelRate <100&&IsDrone)) newVel = Info.Direction * MaxSpeed*DeaccelRate/100;
+            if (VelocityLengthSqr > MaxSpeedSqr || (DeaccelRate <100 && Info.AmmoDef.Const.IsDrone)) newVel = Info.Direction * MaxSpeed*DeaccelRate/100;
             Velocity = newVel;
         }
 
@@ -1435,7 +1417,6 @@ namespace CoreSystems.Projectiles
             if (Info.AmmoDef.Trajectory.Guidance == GuidanceType.DetectSmart)
             {
                 IsSmart = false;
-                IsSmart = false;
                 SmartSlot = 0;
                 TargetOffSet = Vector3D.Zero;
             }
@@ -1625,8 +1606,7 @@ namespace CoreSystems.Projectiles
                 if (!fireOnTarget)
                 {
                     pointDir = Info.Direction;
-
-                    if (IsDrone)
+                    if (aConst.IsDrone)
                     {
                         MathFuncs.Cone aimCone;
                         var targetSphere = new BoundingSphereD(PredictedTargetPos, Info.Target.TargetEntity.PositionComp.LocalVolume.Radius);  
@@ -1635,11 +1615,10 @@ namespace CoreSystems.Projectiles
                         aimCone.ConeAngle = aConst.DirectAimCone;
                         if (!MathFuncs.TargetSphereInCone(ref targetSphere, ref aimCone)) break;
                     }
-
-               }
-
+                }
                 else if (!TrajectoryEstimation(fragAmmoDef, ref newOrigin, out pointDir))
                     continue;
+
                 spawn = true;
 
                 if (fragAmmoDef.Const.HasAdvFragOffset)
