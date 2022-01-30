@@ -23,6 +23,7 @@ namespace CoreSystems.Support
         internal bool IsTargetStorage;
         internal bool ClientDirty;
         internal bool CoreIsCube;
+        internal bool IsDrone;
         internal Part Part;
         internal MyEntity CoreEntity;
         internal MyEntity CoreParent;
@@ -54,8 +55,6 @@ namespace CoreSystems.Support
             WasFake,
             IsEntity,
             WasEntity,
-            IsDrone,
-            WasDrone,
         }
 
         public enum States
@@ -183,9 +182,7 @@ namespace CoreSystems.Support
 
         internal void TransferTo(Target target, uint expireTick, bool drone = false)
         {
-            if (drone)
-                TargetState = TargetStates.IsDrone;
-            
+            target.IsDrone = drone;
             target.TargetEntity = TargetEntity;
             target.Projectile = Projectile;
             target.TargetPos = TargetPos;
@@ -242,14 +239,12 @@ namespace CoreSystems.Support
                 case TargetStates.IsEntity:
                     TargetState = TargetStates.WasEntity;
                     break;
-                case TargetStates.IsDrone:
-                    TargetState = TargetStates.WasDrone;
-                    break;
                 default:
                     TargetState = TargetStates.None;
                     break;
             }
 
+            IsDrone = false;
             TargetEntity = null;
             ClosestObstacle = null;
             IsAligned = false;
