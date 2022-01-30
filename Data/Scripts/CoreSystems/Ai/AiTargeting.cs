@@ -171,7 +171,7 @@ namespace CoreSystems.Support
                     if (!AcquireBlock(s, w.Comp.Ai, target, info, predictedMuzzlePos, w.TargetData.WeaponRandom, Acquire, ref waterSphere, ref w.XorRnd, w, true)) continue;
                     target.TransferTo(w.Target, w.Comp.Session.Tick, true);
 
-                    var validTarget = w.Target.TargetEntity != null;
+                    var validTarget = w.Target.TargetState == Target.TargetStates.IsEntity;
 
                     if (validTarget)
                     {
@@ -194,7 +194,6 @@ namespace CoreSystems.Support
             var info = p.Info;
             var s = info.System;
             var target = info.Target;
-            s.Session.InnerStallReporter.Start("ReacquireTarget", 5);
             p.ChaseAge = info.Age;
             var ai = info.Ai;
             var weaponPos = p.Position;
@@ -225,7 +224,7 @@ namespace CoreSystems.Support
 
 
             MyEntity topTarget = null;
-            if (lockedToTarget && target.TargetEntity != null) {
+            if (lockedToTarget && target.TargetState == Target.TargetStates.IsEntity) {
                 topTarget = target.TargetEntity.GetTopMostParent() ?? alphaInfo?.Target;
                 if (topTarget != null && topTarget.MarkedForClose)
                     topTarget = null;
@@ -287,18 +286,118 @@ namespace CoreSystems.Support
                 if (Obstruction(ref tInfo, ref targetPos, p))
                     continue;
 
-                double rayDist;
-                Vector3D.Distance(ref weaponPos, ref targetPos, out rayDist);
-                var shortDist = rayDist;
-                var origDist = rayDist;
                 var topEntId = tInfo.Target.GetTopMostParent().EntityId;
-                target.Set(tInfo.Target, targetPos, shortDist, origDist, topEntId);
+                target.Set(tInfo.Target, targetPos, 0, 0, topEntId);
                 acquired = true;
                 break;
             }
             if (!acquired && !lockedToTarget) target.Reset(s.Session.Tick, Target.States.NoTargetsSeen);
-            s.Session.InnerStallReporter.End();
             return acquired;
+        }
+
+        internal static bool ReAcquireProjectile(Projectile p)
+        {
+            var info = p.Info;
+            var s = info.System;
+            var target = info.Target;
+            p.ChaseAge = info.Age;
+            var ai = info.Ai;
+            var physics = s.Session.Physics;
+            var weaponPos = p.Position;
+
+            var collection = ai.GetProCache();
+            var numOfTargets = collection.Count;
+            var lockedOnly = s.Values.Targeting.LockedSmartOnly;
+            var smartOnly = s.Values.Targeting.IgnoreDumbProjectiles;
+            var found = false;
+            if (s.ClosestFirst)
+            {
+                int length = collection.Count;
+                for (int h = length / 2; h > 0; h /= 2)
+                {
+                    for (int i = h; i < length; i += 1)
+                    {
+                        var tempValue = collection[i];
+                        double temp;
+                        Vector3D.DistanceSquared(ref collection[i].Position, ref weaponPos, out temp);
+
+                        int j;
+                        for (j = i; j >= h && Vector3D.DistanceSquared(collection[j - h].Position, weaponPos) > temp; j -= h)
+                            collection[j] = collection[j - h];
+
+                        collection[j] = tempValue;
+                    }
+                }
+            }
+
+            var numToRandomize = s.ClosestFirst ? s.Values.Targeting.TopTargets : numOfTargets;
+            if (target.TargetPrevDeckLen < numOfTargets) {
+                target.TargetDeck = new int[numOfTargets];
+                target.TargetPrevDeckLen = numOfTargets;
+            }
+
+            for (int i = 0; i < numOfTargets; i++) {
+                var j = i < numToRandomize ? info.Random.Range(0, i + 1) : i;
+                target.TargetDeck[i] = target.TargetDeck[j];
+                target.TargetDeck[j] = 0 + i;
+            }
+            var deck = target.TargetDeck;
+            for (int x = 0; x < numOfTargets; x++)
+            {
+                var card = deck[x];
+                var lp = collection[card];
+                if (smartOnly && !lp.IsSmart || lockedOnly && !lp.IsSmart || lp.MaxSpeed > s.MaxTargetSpeed || lp.MaxSpeed <= 0 || lp.State != Projectile.ProjectileState.Alive) continue;
+
+                var needsCast = false;
+                for (int i = 0; i < ai.Obstructions.Count; i++)
+                {
+                    var ent = ai.Obstructions[i];
+                    var obsSphere = ent.PositionComp.WorldVolume;
+
+                    var dir = lp.Position - weaponPos;
+                    var ray = new RayD(ref weaponPos, ref dir);
+
+                    if (ray.Intersects(obsSphere) != null)
+                    {
+                        var transform = ent.PositionComp.WorldMatrixRef;
+                        var box = ent.PositionComp.LocalAABB;
+                        var obb = new MyOrientedBoundingBoxD(box, transform);
+                        if (obb.Intersects(ref ray) != null)
+                        {
+                            needsCast = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (needsCast)
+                {
+                    IHitInfo hitInfo;
+                    physics.CastRay(weaponPos, lp.Position, out hitInfo, 15);
+                    if (hitInfo?.HitEntity == null)
+                    {
+                        target.Set(null, lp.Position, 0, 0, long.MaxValue, lp);
+                        p.OriginTargetPos = target.Projectile.Position;
+                        target.Projectile.Seekers.Add(p);
+                        found = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    Vector3D? hitInfo;
+                    if (ai.AiType == AiTypes.Grid && GridIntersection.BresenhamGridIntersection(ai.GridEntity, ref weaponPos, ref lp.Position, out hitInfo, target.CoreCube, ai))
+                        continue;
+
+                    target.Set(null, lp.Position, 0, 0, long.MaxValue, lp);
+                    p.OriginTargetPos = target.Projectile.Position;
+                    target.Projectile.Seekers.Add(p);
+                    found = true;
+                    break;
+                }
+            }
+
+            return found;
         }
 
         private static void AcquireTopMostEntity(Weapon w, out TargetType targetType, bool attemptReset = false, MyEntity targetGrid = null)
@@ -426,7 +525,7 @@ namespace CoreSystems.Support
                         targetType = TargetType.Other;
                         target.TransferTo(w.Target, w.Comp.Session.Tick);
 
-                        if (targetType == TargetType.Other && w.Target.TargetEntity != null)
+                        if (targetType == TargetType.Other && w.Target.TargetState == Target.TargetStates.IsEntity)
                             ai.Session.NewThreat(w);
 
                         return;
@@ -465,7 +564,7 @@ namespace CoreSystems.Support
                             
                             w.FoundTopMostTarget = true;
 
-                            if (targetType == TargetType.Other && w.Target.TargetEntity != null)
+                            if (targetType == TargetType.Other && w.Target.TargetState == Target.TargetStates.IsEntity)
                                 ai.Session.NewThreat(w);
 
                             return;
@@ -476,7 +575,7 @@ namespace CoreSystems.Support
                 }
 
                 if (!attemptReset || !w.Target.HasTarget) targetType = TargetType.None;
-                else targetType = w.Target.IsProjectile ? TargetType.Projectile : TargetType.Other;
+                else targetType = w.Target.TargetState == Target.TargetStates.IsProjectile ? TargetType.Projectile : TargetType.Other;
 
             }
             catch (Exception ex) { Log.Line($"Exception in AcquireTopMostEntity: {ex}"); targetType = TargetType.None; }

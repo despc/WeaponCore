@@ -176,7 +176,7 @@ namespace CoreSystems.Support
         public readonly double ElStep;
         public readonly double HomeAzimuth;
         public readonly double HomeElevation;
-
+        public readonly double MaxLockRange;
         public readonly float Barrel1AvTicks;
         public readonly float Barrel2AvTicks;
         public readonly float WepCoolDown;
@@ -267,11 +267,15 @@ namespace CoreSystems.Support
             TrackTargets = Values.HardPoint.Ai.TrackTargets;
 
             var requiresTarget = TrackTargets;
+            if (values.HardPoint.Ai.LockOnFocus && values.Targeting.MaxTargetDistance > MaxLockRange)
+                MaxLockRange = values.Targeting.MaxTargetDistance;
+
             for (int i = 0; i < AmmoTypes.Length; i++)
             {
 
                 var ammo = AmmoTypes[i];
                 ammo.AmmoDef.Const = new AmmoConstants(ammo, Values, Session, this, i);
+
                 if (ammo.AmmoDef.Const.GuidedAmmoDetected)
                     HasGuidedAmmo = true;
 

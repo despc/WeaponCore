@@ -581,9 +581,9 @@ namespace CoreSystems
         internal void SendClientNotify(long id, string message, bool singleClient = false, string color = null, int duration = 0)
         {
             ulong senderId = 0;
-            IMyPlayer player = null;
+            PlayerMap player = null;
             if (singleClient && Players.TryGetValue(id, out player))
-                senderId = player.SteamUserId;
+                senderId = player.Player.SteamUserId;
 
             PacketsToClient.Add(new PacketInfo
             {

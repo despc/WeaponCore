@@ -39,13 +39,18 @@ namespace CoreSystems.Projectiles
                 info.AmmoDef = a;
                 info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
                 info.Overrides = repo.Values.Set.Overrides;
-                target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
-                target.Projectile = wTarget.Projectile;
-                target.IsProjectile = wTarget.Projectile != null;
-                target.IsFakeTarget = comp.FakeMode;
+
                 target.CoreCube = comp.Cube;
                 target.CoreEntity = comp.CoreEntity;
                 target.CoreParent = comp.TopEntity;
+
+                target.Projectile = wTarget.Projectile;
+                target.TargetEntity = t != Kind.Client ? wTarget.TargetEntity : gen.TargetEnt;
+
+                target.TargetState = wTarget.TargetState;
+
+                if (t == Kind.Client)
+                    target.TargetState = Target.TargetStates.IsEntity;
 
                 info.DummyTargets = null;
                 if (comp.FakeMode)
@@ -56,7 +61,7 @@ namespace CoreSystems.Projectiles
                 info.WeaponCache = w.WeaponCache;
 
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
-                info.LockOnFireState = (w.LockOnFireState || !aConst.TargetOverrideDetected && wTarget.TargetEntity != null);
+                info.LockOnFireState = (w.LockOnFireState || !aConst.TargetOverrideDetected && wTarget.TargetState == Target.TargetStates.IsEntity);
                 info.ModOverride = comp.ModOverride;
                 info.ShooterVel = ai.GridVel;
 

@@ -7,6 +7,7 @@ using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game;
@@ -150,7 +151,7 @@ namespace CoreSystems
                     if (Session.MpActive)
                     {
                         foreach (var player in Session.Players)
-                            NetworkTransfer(false, player.Value.SteamUserId);
+                            NetworkTransfer(false, player.Value.Player.SteamUserId);
                     }
                 }
                 else
@@ -931,6 +932,16 @@ namespace CoreSystems
             public bool CheckForAnyPart = false;
         }
     }
+
+    public class PlayerMap
+    {
+        public readonly MyDefinitionBase TargetFocusDef = new MyDefinitionBase();
+        public IMyPlayer Player;
+        public long PlayerId;
+        public MyEntity TargetFocus;
+        public MyEntity TargetLock;
+    }
+
     public class WaterData
     {
         public WaterData(MyPlanet planet)

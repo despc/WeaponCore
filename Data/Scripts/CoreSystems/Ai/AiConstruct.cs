@@ -151,7 +151,7 @@ namespace CoreSystems.Support
             internal double PreviousTotalEffect;
             internal double AddEffect;
             internal double AverageEffect;
-
+            internal double MaxLockRange;
             internal enum RefreshCaller
             {
                 Init,
@@ -176,6 +176,7 @@ namespace CoreSystems.Support
                     Ai leadingAi = null;
                     Ai largestAi = null;
                     int leadingBlocks = 0;
+                    var maxLockRange = 0d;
                     foreach (var grid in ai.SubGrids) {
 
                         Ai thisAi;
@@ -197,7 +198,13 @@ namespace CoreSystems.Support
                                 largestAi = thisAi;
                             }
                             BlockCount += blockCount;
-                            if (thisAi != null) OptimalDps += thisAi.OptimalDps;
+
+                            if (thisAi != null)
+                            {
+                                OptimalDps += thisAi.OptimalDps;
+                                if (thisAi.Construct.MaxLockRange > maxLockRange)
+                                    maxLockRange = thisAi.Construct.MaxLockRange;
+                            }
                         }
                         else Log.Line($"ConstructRefresh Failed sub no GridMap, sub is caller:{grid == ai.TopEntity}");
                     }
@@ -207,10 +214,14 @@ namespace CoreSystems.Support
                         //Log.Line($"[rootAi is null in Update] - caller:{caller}, forcing rootAi to caller - inGridTarget:{ai.Session.EntityAIs.ContainsKey(ai.TopEntity)} -  myGridMarked:{ai.TopEntity.MarkedForClose} - aiMarked:{ai.MarkedForClose} - inScene:{ai.TopEntity.InScene} - lastClosed:{ai.AiCloseTick} - aiSpawned:{ai.AiSpawnTick} - diff:{ai.AiSpawnTick - ai.AiCloseTick} - sinceSpawn:{ai.Session.Tick - ai.AiSpawnTick} - entId:{ai.TopEntity.EntityId}");
                         RootAi = ai;
                     }
-                    
-                    if (LargestAi == null)
+
+                    if (LargestAi == null) {
                         LargestAi = ai;
-                    
+                        if (ai.Construct.MaxLockRange > maxLockRange)
+                            maxLockRange = ai.Construct.MaxLockRange;
+                    }
+
+                    RootAi.Construct.MaxLockRange = maxLockRange;
                     UpdatePartCounters(ai);
                     return;
                 }
@@ -265,6 +276,10 @@ namespace CoreSystems.Support
             internal void UpdateConstructsPlayers(MyEntity entity, long playerId, bool updateAdd)
             {
                 if (RootAi.AiType == AiTypes.Grid) {
+
+                    if (RootAi.Session.DedicatedServer || RootAi.Session.IsHost)
+                        RootAi.Construct.UpdatePlayerLockState(playerId, !updateAdd);
+
                     foreach (var sub in RootAi.SubGrids) {
 
                         Ai ai;
@@ -274,6 +289,10 @@ namespace CoreSystems.Support
                 }
                 else
                     UpdateActiveControlDictionary(RootAi, entity, playerId, updateAdd);
+            }
+
+            internal void UpdatePlayerLockState(long playerId, bool setDefault)
+            {
             }
 
             public static void UpdateActiveControlDictionary(Ai ai, MyEntity entity, long playerId, bool updateAdd)

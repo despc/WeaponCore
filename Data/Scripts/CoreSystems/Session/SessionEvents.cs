@@ -7,6 +7,7 @@ using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.Definitions;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
@@ -418,22 +419,22 @@ namespace CoreSystems
             try
             {
                 PlayerEventId++;
-                IMyPlayer removedPlayer;
+                PlayerMap removedPlayer;
                 if (Players.TryRemove(l, out removedPlayer))
                 {
                     long playerId;
 
-                    SteamToPlayer.TryRemove(removedPlayer.SteamUserId, out playerId);
-                    PlayerEntityIdInRange.Remove(removedPlayer.SteamUserId);
+                    SteamToPlayer.TryRemove(removedPlayer.Player.SteamUserId, out playerId);
+                    PlayerEntityIdInRange.Remove(removedPlayer.Player.SteamUserId);
                     PlayerMouseStates.Remove(playerId);
                     PlayerDummyTargets.Remove(playerId);
-                    if (PlayerControllerMonitor.Remove(removedPlayer))
-                        removedPlayer.Controller.ControlledEntityChanged -= OnPlayerController;
+                    if (PlayerControllerMonitor.Remove(removedPlayer.Player))
+                        removedPlayer.Player.Controller.ControlledEntityChanged -= OnPlayerController;
 
                     if (IsServer && MpActive)
                         SendPlayerConnectionUpdate(l, false);
 
-                    if (AuthorIds.Contains(removedPlayer.SteamUserId))
+                    if (AuthorIds.Contains(removedPlayer.Player.SteamUserId))
                         ConnectedAuthors.Remove(playerId);
                 }
             }
@@ -444,7 +445,9 @@ namespace CoreSystems
         {
             if (player.IdentityId == id)
             {
-                Players[id] = player;
+                if (!Players.ContainsKey(id))
+                    BuildPlayerMap(player, id);
+
                 SteamToPlayer[player.SteamUserId] = id;
                 PlayerMouseStates[id] = new InputStateData();
                 PlayerDummyTargets[id] = new FakeTargets();
@@ -472,20 +475,27 @@ namespace CoreSystems
             return false;
         }
 
-        private void OnPlayerController(IMyControllableEntity arg1, IMyControllableEntity arg2)
+        private void BuildPlayerMap(IMyPlayer player, long id)
+        {
+            Players[id] = new PlayerMap { Player = player, PlayerId = id, TargetFocus = null, TargetLock = null};
+        }
+
+        private void OnPlayerController(IMyControllableEntity exit, IMyControllableEntity enter)
         {
             try
             {
-                var ent1 = arg1 as MyEntity;
-                var ent2 = arg2 as MyEntity;
+                Log.Line($"[player] exit:{exit is MyCockpit} - enter:{enter is MyCockpit} - exitId:{exit?.ControllerInfo?.ControllingIdentityId} - enterId:{enter?.ControllerInfo?.ControllingIdentityId}");
+
+                var ent1 = exit as MyEntity;
+                var ent2 = enter as MyEntity;
                 HashSet<long> players;
 
                 if (ent1 != null)
                 {
                     var cube = ent1 as MyCubeBlock;
-                    if (cube != null && PlayerGrids.TryGetValue(cube.CubeGrid, out players) && arg2 != null)
+                    if (cube != null && PlayerGrids.TryGetValue(cube.CubeGrid, out players) && enter?.ControllerInfo != null)
                     {
-                        players.Remove(arg2.ControllerInfo.ControllingIdentityId);
+                        players.Remove(enter.ControllerInfo.ControllingIdentityId);
 
                         if (players.Count == 0)
                         {
@@ -497,16 +507,16 @@ namespace CoreSystems
                 {
                     var cube = ent2 as MyCubeBlock;
 
-                    if (cube != null)
+                    if (cube != null && enter?.ControllerInfo != null)
                     {
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
-                            players.Add(arg2.ControllerInfo.ControllingIdentityId);
+                            players.Add(enter.ControllerInfo.ControllingIdentityId);
                         }
                         else
                         {
                             players = PlayerGridPool.Get();
-                            players.Add(arg2.ControllerInfo.ControllingIdentityId);
+                            players.Add(enter.ControllerInfo.ControllingIdentityId);
                             PlayerGrids[cube.CubeGrid] = players;
                         }
 

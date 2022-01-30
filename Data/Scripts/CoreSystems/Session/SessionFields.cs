@@ -11,6 +11,7 @@ using Jakaria;
 using ParallelTasks;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using Sandbox.ModAPI.Weapons;
@@ -115,7 +116,7 @@ namespace CoreSystems
 
         internal readonly ConcurrentDictionary<MyEntity, Ai> EntityToMasterAi = new ConcurrentDictionary<MyEntity, Ai>();
         internal readonly ConcurrentDictionary<MyEntity, Ai> EntityAIs = new ConcurrentDictionary<MyEntity, Ai>();
-        internal readonly ConcurrentDictionary<long, IMyPlayer> Players = new ConcurrentDictionary<long, IMyPlayer>();
+        internal readonly ConcurrentDictionary<long, PlayerMap> Players = new ConcurrentDictionary<long, PlayerMap>();
         internal readonly ConcurrentDictionary<long, IMyCharacter> Admins = new ConcurrentDictionary<long, IMyCharacter>();
         internal readonly ConcurrentDictionary<IMyCharacter, IMyPlayer> AdminMap = new ConcurrentDictionary<IMyCharacter, IMyPlayer>();
         internal readonly ConcurrentDictionary<ulong, long> SteamToPlayer = new ConcurrentDictionary<ulong, long>();
@@ -274,6 +275,7 @@ namespace CoreSystems
         internal IMyBlockPlacerBase Placer;
         internal IMyTerminalBlock LastTerminal;
         internal Ai TrackingAi;
+
         internal ApiServer ApiServer;
         internal MyCockpit ActiveCockPit;
         internal MyCubeBlock ActiveControlBlock;
@@ -317,7 +319,7 @@ namespace CoreSystems
         internal object InitObj = new object();
 
         internal uint Tick;
-        internal uint LastDamageTick;
+        internal uint ClientDestroyBlockTick;
         internal uint ReInitTick;
         internal int WeaponIdCounter;
         internal int PlayerEventId;

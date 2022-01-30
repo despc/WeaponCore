@@ -18,8 +18,6 @@ namespace CoreSystems.Support
         internal bool HasTarget;
         internal bool IsAligned;
         internal bool SoftProjetileReset;
-        internal bool IsProjectile;
-        internal bool IsFakeTarget;
         internal bool TargetChanged;
         internal bool ParentIsPart;
         internal bool IsTargetStorage;
@@ -41,11 +39,23 @@ namespace CoreSystems.Support
         internal uint ResetTick;
         internal uint ProjectileEndTick;
         internal BlockTypes LastBlockType;
+        internal TargetStates TargetState;
         internal Vector3D TargetPos;
         internal double HitShortDist;
         internal double OrigDistance;
         internal long TargetId;
         internal long TopEntityId;
+
+        public enum TargetStates
+        {
+            None,
+            IsProjectile,
+            WasProjectile,
+            IsFake,
+            WasFake,
+            IsEntity,
+            WasEntity,
+        }
 
         public enum States
         {
@@ -144,7 +154,7 @@ namespace CoreSystems.Support
                 {
                     StateChange(true, tData.EntityId == -2 ? States.Fake : States.Acquired);
 
-                    if (w.Target.IsProjectile)
+                    if (w.Target.TargetState == TargetStates.IsProjectile)
                     {
 
                         Ai.TargetType targetType;
@@ -175,12 +185,20 @@ namespace CoreSystems.Support
             target.IsDrone = drone;
             target.TargetEntity = TargetEntity;
             target.Projectile = Projectile;
-            target.IsProjectile = target.Projectile != null;
-            target.IsFakeTarget = IsFakeTarget;
             target.TargetPos = TargetPos;
             target.HitShortDist = HitShortDist;
             target.OrigDistance = OrigDistance;
             target.TopEntityId = TopEntityId;
+
+            if (target.Projectile != null)
+                target.TargetState = TargetStates.IsProjectile;
+            else if (TargetState == TargetStates.IsFake)
+                target.TargetState = TargetStates.IsFake;
+            else if (TargetEntity != null)
+                target.TargetState = TargetStates.IsEntity;
+            else
+                target.TargetState = TargetStates.None;
+
             target.StateChange(HasTarget, CurrentState);
             Reset(expireTick, States.Transfered);
         }
@@ -190,12 +208,20 @@ namespace CoreSystems.Support
         {
             TargetEntity = ent;
             Projectile = projectile;
-            IsProjectile = projectile != null;
-            IsFakeTarget = isFakeTarget;
             TargetPos = pos;
             HitShortDist = shortDist;
             OrigDistance = origDist;
             TopEntityId = topEntId;
+
+            if (projectile != null)
+                TargetState = TargetStates.IsProjectile;
+            else if (isFakeTarget)
+                TargetState = TargetStates.IsFake;
+            else if (ent != null)
+                TargetState = TargetStates.IsEntity;
+            else
+                TargetState = TargetStates.None;
+
             StateChange(true, States.Acquired);
         }
 
@@ -203,17 +229,31 @@ namespace CoreSystems.Support
         internal void SetFake(uint expiredTick, Vector3D pos)
         {
             Reset(expiredTick, States.Fake, false);
-            IsFakeTarget = true;
+            TargetState = TargetStates.IsFake;
             TargetPos = pos;
             StateChange(true, States.Fake);
         }
 
         internal void Reset(uint expiredTick, States reason, bool expire = true)
         {
+            switch (TargetState)
+            {
+                case TargetStates.IsProjectile:
+                    TargetState = TargetStates.WasProjectile;
+                    break;
+                case TargetStates.IsFake:
+                    TargetState = TargetStates.WasFake;
+                    break;
+                case TargetStates.IsEntity:
+                    TargetState = TargetStates.WasEntity;
+                    break;
+                default:
+                    TargetState = TargetStates.None;
+                    break;
+            }
+
             TargetEntity = null;
             ClosestObstacle = null;
-            IsProjectile = false;
-            IsFakeTarget = false;
             IsAligned = false;
             Projectile = null;
             IsDrone = false;
@@ -254,13 +294,21 @@ namespace CoreSystems.Support
 
         internal void SetTargetId(bool setTarget, States reason)
         {
-            if (IsProjectile)
-                TargetId = -1;
-            else if (IsFakeTarget)
-                TargetId = -2;
-            else if (TargetEntity != null)
-                TargetId = TargetEntity.EntityId;
-            else TargetId = 0;
+            switch (TargetState)
+            {
+                case TargetStates.IsProjectile:
+                    TargetId = -1;
+                    break;
+                case TargetStates.IsFake:
+                    TargetId = -2;
+                    break;
+                case TargetStates.IsEntity:
+                    TargetId = TargetEntity.EntityId;
+                    break;
+                default:
+                    TargetId = 0;
+                    break;
+            }
         }
     }
 

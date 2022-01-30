@@ -386,26 +386,26 @@ namespace CoreSystems
 
                     foreach (var p in Players.Values)
                     {
-                        var notSender = p.SteamUserId != packetInfo.Packet.SenderId;
+                        var notSender = p.Player.SteamUserId != packetInfo.Packet.SenderId;
                         var sendPacket = notSender && packetInfo.Entity == null;
                         if (!sendPacket && notSender)
                         {
-                            if (PlayerEntityIdInRange.ContainsKey(p.SteamUserId))
+                            if (PlayerEntityIdInRange.ContainsKey(p.Player.SteamUserId))
                             {
-                                if (PlayerEntityIdInRange[p.SteamUserId].Contains(entityId)) {
+                                if (PlayerEntityIdInRange[p.Player.SteamUserId].Contains(entityId)) {
                                     sendPacket = true;
                                 }
                                 else  {
                                     Ai rootAi;
                                     var grid = packetInfo.Entity.GetTopMostParent() as MyCubeGrid;
-                                    if (grid != null && EntityToMasterAi.TryGetValue(grid, out rootAi) && PlayerEntityIdInRange[p.SteamUserId].Contains(rootAi.TopEntity.EntityId))
+                                    if (grid != null && EntityToMasterAi.TryGetValue(grid, out rootAi) && PlayerEntityIdInRange[p.Player.SteamUserId].Contains(rootAi.TopEntity.EntityId))
                                         sendPacket = true;
                                 }
                             }
                         }
 
                         if (sendPacket)
-                            MyModAPIHelper.MyMultiplayer.Static.SendMessageTo(ClientPacketId, bytes, p.SteamUserId, true);
+                            MyModAPIHelper.MyMultiplayer.Static.SendMessageTo(ClientPacketId, bytes, p.Player.SteamUserId, true);
                     }
                 }
             }

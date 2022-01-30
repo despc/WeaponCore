@@ -239,7 +239,7 @@ namespace CoreSystems
             ActiveMarks.Clear();
             foreach (var pair in PlayerDummyTargets)
             {
-                IMyPlayer player;
+                PlayerMap player;
                 if (Players.TryGetValue(pair.Key, out player))
                 {
                     var painted = pair.Value.PaintedTarget;
@@ -247,7 +247,7 @@ namespace CoreSystems
                     if (painted.EntityId != 0 && MyEntities.TryGetEntityById(painted.EntityId, out target))
                     {
                         var grid = target as MyCubeGrid;
-                        if (player.IdentityId == PlayerId && grid != null && !Settings.ClientConfig.StikcyPainter)
+                        if (player.Player.IdentityId == PlayerId && grid != null && !Settings.ClientConfig.StikcyPainter)
                         {
 
                             var v3 = grid.LocalToGridInteger(painted.LocalPosition);
@@ -266,12 +266,12 @@ namespace CoreSystems
                                 }
                             }
                         }
-                        var rep = MyIDModule.GetRelationPlayerPlayer(PlayerId, player.IdentityId);
+                        var rep = MyIDModule.GetRelationPlayerPlayer(PlayerId, player.Player.IdentityId);
                         var self = rep == MyRelationsBetweenPlayers.Self;
                         var friend = rep == MyRelationsBetweenPlayers.Allies;
                         var neut = rep == MyRelationsBetweenPlayers.Neutral;
                         var color = neut ? new Vector4(1, 1, 1, 1) : self ? new Vector4(0.025f, 1f, 0.25f, 2) : friend ? new Vector4(0.025f, 0.025f, 1, 2) : new Vector4(1, 0.025f, 0.025f, 2);
-                        ActiveMarks.Add(new MyTuple<IMyPlayer, Vector4, Ai.FakeTarget>(player, color, painted));
+                        ActiveMarks.Add(new MyTuple<IMyPlayer, Vector4, Ai.FakeTarget>(player.Player, color, painted));
                     }
                 }
             }

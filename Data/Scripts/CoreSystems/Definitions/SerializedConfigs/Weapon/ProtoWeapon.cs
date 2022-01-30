@@ -391,6 +391,7 @@ namespace CoreSystems
 
                 var newProjectile = EntityId == -1;
                 var noTarget = EntityId == 0;
+                var fakeTarget = EntityId == -2;
 
                 if (!w.ActiveAmmoDef.AmmoDef.Const.Reloadable && !noTarget)
                     w.ProjectileCounter = 0;
@@ -399,9 +400,9 @@ namespace CoreSystems
                 {
                     target.ProjectileEndTick = 0;
                     target.SoftProjetileReset = false;
-                    target.IsProjectile = true;
+                    target.TargetState = Target.TargetStates.IsProjectile;
                 }
-                else if (noTarget && target.IsProjectile)
+                else if (noTarget && target.TargetState == Target.TargetStates.IsProjectile)
                 {
                     target.SoftProjetileReset = true;
                     target.ProjectileEndTick = w.System.Session.Tick + 62;
@@ -410,12 +411,14 @@ namespace CoreSystems
                 {
                     target.ProjectileEndTick = 0;
                     target.SoftProjetileReset = false;
-                    target.IsProjectile = false;
+
+                    if (target.TargetState == Target.TargetStates.IsProjectile)
+                        target.TargetState = Target.TargetStates.WasProjectile;
                 }
 
+                if (fakeTarget)
+                    target.TargetState = Target.TargetStates.IsFake;
 
-
-                target.IsFakeTarget = EntityId == -2;
                 target.TargetPos = TargetPos;
                 target.ClientDirty = true;
                 return true;

@@ -3,6 +3,7 @@ using CoreSystems.Platform;
 using CoreSystems.Projectiles;
 using CoreSystems.Support;
 using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
 using VRageMath;
 using static CoreSystems.Support.Target;
 using static CoreSystems.Support.CoreComponent.Start;
@@ -211,6 +212,7 @@ namespace CoreSystems
                     }
 
                     var wValues = wComp.Data.Repo.Values;
+
                     var focusTargets = wValues.Set.Overrides.FocusTargets;
                     if (IsServer && wValues.State.PlayerId > 0 && !ai.Data.Repo.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
@@ -343,7 +345,7 @@ namespace CoreSystems
                                 w.Target.Reset(Tick, States.Expired, !wComp.ManualMode);
                             else if (!IsClient && w.Target.TargetEntity != null && (wComp.UserControlled && !w.System.SuppressFire || w.Target.TargetEntity.MarkedForClose || Tick60 && (focusTargets && !focus.ValidFocusTarget(w) || Tick60 && !focusTargets && !w.TurretController && aConst.RequiresTarget && !w.TargetInRange(w.Target.TargetEntity))))
                                 w.Target.Reset(Tick, States.Expired);
-                            else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
+                            else if (!IsClient && w.Target.Projectile != null && (!ai.LiveProjectile.Contains(w.Target.Projectile) || w.Target.TargetState == TargetStates.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive)) {
                                 w.Target.Reset(Tick, States.Expired);
                                 w.FastTargetResetTick = Tick + 6;
                             }
@@ -359,7 +361,9 @@ namespace CoreSystems
 
                                     if (!w.System.TrackTargets && !IsClient) {
 
-                                        if ((wComp.TrackingWeapon.Target.Projectile != w.Target.Projectile || w.Target.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive || wComp.TrackingWeapon.Target.TargetEntity != w.Target.TargetEntity || wComp.TrackingWeapon.Target.IsFakeTarget != w.Target.IsFakeTarget))
+                                        var trackingWeaponIsFake = wComp.TrackingWeapon.Target.TargetState == TargetStates.IsFake;
+                                        var thisWeaponIsFake = w.Target.TargetState == TargetStates.IsFake;
+                                        if ((wComp.TrackingWeapon.Target.Projectile != w.Target.Projectile || w.Target.TargetState == TargetStates.IsProjectile && w.Target.Projectile.State != Projectile.ProjectileState.Alive || wComp.TrackingWeapon.Target.TargetEntity != w.Target.TargetEntity || trackingWeaponIsFake != thisWeaponIsFake))
                                             w.Target.Reset(Tick, States.Expired);
                                         else
                                             w.TargetLock = true;
@@ -382,7 +386,7 @@ namespace CoreSystems
                         /// 
                         
 
-                        var seek = wComp.FakeMode && !w.Target.IsFakeTarget || aConst.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
+                        var seek = wComp.FakeMode && w.Target.TargetState != TargetStates.IsFake || aConst.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
                         
                         if (!IsClient && (seek || aConst.RequiresTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
                         {
@@ -408,7 +412,7 @@ namespace CoreSystems
 
                         var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         var canShoot = !w.PartState.Overheated && !reloading && !w.System.DesignatorWeapon;
-                        var paintedTarget = wComp.PainterMode && w.Target.IsFakeTarget && w.Target.IsAligned;
+                        var paintedTarget = wComp.PainterMode && w.Target.TargetState == TargetStates.IsFake && w.Target.IsAligned;
                         var validShootStates = paintedTarget || w.PartState.Action == TriggerOn || w.PartState.Action == TriggerOnce || w.AiShooting && w.PartState.Action == TriggerOff;
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;

@@ -76,7 +76,7 @@ namespace CoreSystems.Projectiles
                     var grid = ent as MyCubeGrid;
                     var entIsSelf = grid != null && firingCube != null && (grid == firingCube.CubeGrid || firingCube.CubeGrid.IsSameConstructAs(grid));
 
-                    if (entIsSelf && aConst.IsSmart || ent.MarkedForClose || !ent.InScene || ent == info.MyShield || !isGrid && ent == ai.TopEntity) continue;
+                    if (entIsSelf && aConst.IsSmart && !info.SmartReady || ent.MarkedForClose || !ent.InScene || ent == info.MyShield || !isGrid && ent == ai.TopEntity) continue;
 
                     var character = ent as IMyCharacter;
                     if (info.EwarActive && character != null && !genericFields) continue;
@@ -167,7 +167,7 @@ namespace CoreSystems.Projectiles
 
                                     p.EntitiesNear = true;
                                     var dist = MathFuncs.IntersectEllipsoid(shieldInfo.Value.Item3.Item1, shieldInfo.Value.Item3.Item2, new RayD(p.Beam.From, p.Beam.Direction));
-                                    if (target.IsProjectile && Vector3D.Transform(target.Projectile.Position, shieldInfo.Value.Item3.Item1).LengthSquared() <= 1)
+                                    if (target.TargetState == Target.TargetStates.IsProjectile && Vector3D.Transform(target.Projectile.Position, shieldInfo.Value.Item3.Item1).LengthSquared() <= 1)
                                         projetileInShield = true;
 
                                     var shieldIntersect = dist != null && (dist.Value < p.Beam.Length || info.EwarActive);
@@ -341,7 +341,7 @@ namespace CoreSystems.Projectiles
                         {
 
                             hitEntity = HitEntityPool.Get();
-                            if (entIsSelf && !selfDamage)
+                            if (entIsSelf && !selfDamage && !info.SmartReady)
                             {
 
                                 if (!isBeam && p.Beam.Length <= grid.GridSize * 2 && !goCritical)
@@ -445,7 +445,7 @@ namespace CoreSystems.Projectiles
 
                 target.ClosestObstacle = closestFutureEnt;
 
-                if (target.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
+                if (target.TargetState == Target.TargetStates.IsProjectile && aConst.NonAntiSmartEwar && !projetileInShield)
                 {
                     var detonate = p.State == Projectile.ProjectileState.Detonate;
                     var hitTolerance = detonate ? aConst.EndOfLifeRadius : aConst.ByBlockHitRadius > aConst.CollisionSize ? aConst.ByBlockHitRadius : aConst.CollisionSize;
@@ -873,7 +873,7 @@ namespace CoreSystems.Projectiles
                                     var hitDist = obb.Intersects(ref beam) ?? Vector3D.Distance(beam.From, obb.Center);
                                     var hitPos = beam.From + (beam.Direction * hitDist);
 
-                                    if (hitEnt.SelfHit)
+                                    if (hitEnt.SelfHit && !info.SmartReady)
                                     {
                                         if (Vector3D.DistanceSquared(hitPos, hitEnt.Info.Origin) <= grid.GridSize * 3)
                                         {

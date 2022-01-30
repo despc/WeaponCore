@@ -301,7 +301,7 @@ namespace CoreSystems.Support
             var elStep = MathHelperD.Clamp(desiredElevation - weapon.Elevation, -system.ElStep, system.ElStep);
 
             // epsilon based on target type and distance
-            var epsilon = target.IsProjectile || system.Session.Tick120 ? 1E-06d : targetDistSqr <= 640000 ? 1E-03d : targetDistSqr <= 3240000 ? 1E-04d : 1E-05d;
+            var epsilon = target.TargetState == Target.TargetStates.IsProjectile || system.Session.Tick120 ? 1E-06d : targetDistSqr <= 640000 ? 1E-03d : targetDistSqr <= 3240000 ? 1E-04d : 1E-05d;
 
             // check if step is within epsilon of zero;
             var azLocked = MyUtils.IsZero(azStep, (float)epsilon);

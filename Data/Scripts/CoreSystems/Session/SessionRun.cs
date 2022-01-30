@@ -65,7 +65,7 @@ namespace CoreSystems
 
                 if (IsClient)  {
 
-                    if (Tick - LastDamageTick == 180) {
+                    if (Tick - ClientDestroyBlockTick == 30) {
                         _slimHealthClient.Clear();
                         _destroyedSlimsClient.Clear();
                     }

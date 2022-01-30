@@ -252,9 +252,9 @@ namespace CoreSystems.Platform
             {
                 targetCenter = fakeTargetInfo.WorldPosition;
             }
-            else if (target.IsProjectile)
+            else if (target.TargetState == Target.TargetStates.IsProjectile)
                 targetCenter = target.Projectile?.Position ?? Vector3D.Zero;
-            else if (!target.IsFakeTarget)
+            else if (target.TargetState != Target.TargetStates.IsFake)
                 targetCenter = target.TargetEntity?.PositionComp.WorldAABB.Center ?? Vector3D.Zero;
             else
                 targetCenter = Vector3D.Zero;
@@ -320,9 +320,9 @@ namespace CoreSystems.Platform
             Ai.FakeTarget.FakeWorldTargetInfo fakeTargetInfo = null;
             if (baseData.Set.Overrides.Control != ProtoWeaponOverrides.ControlModes.Auto && w.ValidFakeTargetInfo(baseData.State.PlayerId, out fakeTargetInfo))
                 targetCenter = fakeTargetInfo.WorldPosition;
-            else if (target.IsProjectile)
+            else if (target.TargetState == Target.TargetStates.IsProjectile)
                 targetCenter = target.Projectile?.Position ?? Vector3D.Zero;
-            else if (!target.IsFakeTarget)
+            else if (target.TargetState != Target.TargetStates.IsFake)
                 targetCenter = target.TargetEntity?.PositionComp.WorldAABB.Center ?? Vector3D.Zero;
             else
                 targetCenter = Vector3D.Zero;
@@ -574,6 +574,7 @@ namespace CoreSystems.Platform
             var ammoDef = weapon.ActiveAmmoDef.AmmoDef;
             if (ai.VelocityUpdateTick != session.Tick)
             {
+                ai.TopEntityVolume.Center = ai.TopEntity.PositionComp.WorldVolume.Center;
                 ai.GridVel = ai.GridEntity.Physics?.LinearVelocity ?? Vector3D.Zero;
                 ai.IsStatic = ai.GridEntity.Physics?.IsStatic ?? false;
                 ai.VelocityUpdateTick = session.Tick;
@@ -784,7 +785,7 @@ namespace CoreSystems.Platform
             var trackingCheckPosition = ScopeDistToCheckPos > 0 ? scopeInfo.Position - (scopeInfo.Direction * ScopeDistToCheckPos) : scopeInfo.Position;
             var overrides = Comp.Data.Repo.Values.Set.Overrides;
 
-            if (System.Session.DebugLos && Target.TargetEntity != null)
+            if (System.Session.DebugLos && Target.TargetState == Target.TargetStates.IsEntity)
             {
                 var trackPos = BarrelOrigin + (MyPivotFwd * MuzzleDistToBarrelCenter);
                 var targetTestPos = Target.TargetEntity.PositionComp.WorldAABB.Center;
@@ -829,7 +830,7 @@ namespace CoreSystems.Platform
 
             Comp.LastRayCastTick = tick;
 
-            if (Target.IsFakeTarget)
+            if (Target.TargetState == Target.TargetStates.IsFake)
             {
                 Casting = true;
                 Comp.Session.Physics.CastRayParallel(ref trackingCheckPosition, ref Target.TargetPos, CollisionLayers.DefaultCollisionLayer, ManualShootRayCallBack);
@@ -839,7 +840,7 @@ namespace CoreSystems.Platform
             if (Comp.FakeMode) return true;
 
 
-            if (Target.IsProjectile)
+            if (Target.TargetState == Target.TargetStates.IsProjectile)
             {
                 if (!Comp.Ai.LiveProjectile.Contains(Target.Projectile))
                 {
@@ -848,7 +849,7 @@ namespace CoreSystems.Platform
                     return false;
                 }
             }
-            if (!Target.IsProjectile)
+            if (Target.TargetState != Target.TargetStates.IsProjectile)
             {
                 var character = Target.TargetEntity as IMyCharacter;
                 if ((Target.TargetEntity == null || Target.TargetEntity.MarkedForClose) || character != null && (character.IsDead || character.Integrity <= 0 || Comp.Session.AdminMap.ContainsKey(character)))

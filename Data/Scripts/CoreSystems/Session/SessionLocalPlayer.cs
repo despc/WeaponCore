@@ -4,6 +4,7 @@ using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage;
@@ -32,7 +33,6 @@ namespace CoreSystems
                 ActiveCockPit = cockPit;
             else ActiveCockPit = null;
 
-
             long oldControlId;
             var controlledEntity = ActiveCockPit ?? ActiveControlBlock ?? PlayerHandWeapon?.Owner;
             var topEntity = ActiveControlBlock != null ? controlledEntity?.GetTopMostParent() : controlledEntity;
@@ -47,6 +47,8 @@ namespace CoreSystems
 
                 if (oldControlId != controlledEntity.EntityId)
                 {
+                    TrackingAi.Construct.UpdatePlayerLockState(PlayerId, false);
+
                     SendActiveControlUpdate(TrackingAi, controlledEntity, true);
                     TargetLeadUpdate();
                 }
@@ -62,6 +64,7 @@ namespace CoreSystems
                     MyCubeBlock oldBlock;
                     if (TrackingAi.Data.Repo.ControllingPlayers.TryGetValue(PlayerId, out oldControlId) && MyEntities.TryGetEntityById(oldControlId, out oldBlock, true))
                     {
+                        TrackingAi.Construct.UpdatePlayerLockState(PlayerId, true);
 
                         if (IsServer) TrackingAi.Construct.UpdateConstructsPlayers(controlledEntity, PlayerId, false);
 

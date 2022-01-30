@@ -76,6 +76,7 @@ namespace CoreSystems.Support
         internal bool ShieldBypassed;
         internal bool ShieldKeepBypass;
         internal bool ShieldInLine;
+        internal bool SmartReady;
         internal float ShieldResistMod = 1f;
         internal float ShieldBypassMod = 1f;
 
@@ -166,6 +167,7 @@ namespace CoreSystems.Support
             ShieldBypassed = false;
             ShieldInLine = false;
             ShieldKeepBypass = false;
+            SmartReady = false;
             TriggerGrowthSteps = 0;
             SpawnDepth = 0;
             PartId = 0;
@@ -435,8 +437,8 @@ namespace CoreSystems.Support
                 frag.AmmoDef = ammoDef;
                 
                 frag.Depth = info.SpawnDepth + 1;
+                frag.TargetState = target.TargetState;
                 frag.TargetEntity = target.TargetEntity;
-                frag.IsFakeTarget = target.IsFakeTarget;
                 frag.TargetProjectile = target.Projectile;
 
                 frag.Overrides = info.Overrides;
@@ -504,13 +506,15 @@ namespace CoreSystems.Support
                 info.TriggerEntity = frag.TriggerEntity;
                 var target = info.Target;
                 target.TargetEntity = frag.TargetEntity;
-                target.IsFakeTarget = frag.IsFakeTarget;
+                target.TargetState = frag.TargetState;
                 target.Projectile = frag.TargetProjectile;
-                target.IsProjectile = frag.TargetProjectile != null;
                 target.CoreEntity = frag.CoreEntity;
                 target.CoreParent = frag.CoreParent;
                 target.CoreCube = frag.CoreCube;
                 target.CoreIsCube = frag.CoreIsCube;
+
+                target.TargetState = frag.TargetState;
+
                 info.Overrides = frag.Overrides;
                 info.IsFragment = true;
                 info.PartId = frag.WeaponId;
@@ -571,7 +575,7 @@ namespace CoreSystems.Support
         public bool LockOnFireState;
         public bool IgnoreShield;
         public bool CoreIsCube;
-        public bool IsFakeTarget;
+        public Target.TargetStates TargetState;
         public float Radial;
     }
 

@@ -23,14 +23,12 @@ namespace CoreSystems
         private bool _shieldNull;
         internal void ProcessHits()
         {
-            LastDamageTick = Tick;
             _shieldNull = false;
             for (int x = 0; x < Hits.Count; x++)
             {
 
                 var p = Hits[x];
                 var info = p.Info;
-
 
                 var maxObjects = info.AmmoDef.Const.MaxObjectsHit;
                 var phantom = info.AmmoDef.BaseDamage <= 0;
@@ -39,27 +37,28 @@ namespace CoreSystems
                     info.BaseDamagePool = 0;
 
                 var pInvalid = (int)p.State > 3;
-                var tInvalid = info.Target.IsProjectile && (int)info.Target.Projectile.State > 1;
+                var tInvalid = info.Target.TargetState == Target.TargetStates.IsProjectile && (int)info.Target.Projectile.State > 1;
                 if (tInvalid) info.Target.Reset(Tick, Target.States.ProjectileClosed);
                 var skip = pInvalid || tInvalid;
+
+
                 for (int i = 0; i < info.HitList.Count; i++)
                 {
                     var hitEnt = info.HitList[i];
                     var hitMax = info.ObjectsHit >= maxObjects;
+
                     var outOfPew = info.BaseDamagePool <= 0 && !(phantom && hitEnt.EventType == HitEntity.Type.Effect);
 
-                    if (outOfPew && p.State == Projectile.ProjectileState.Detonate && i != info.HitList.Count - 1)
-                    {
+                    if (outOfPew && p.State == Projectile.ProjectileState.Detonate && i != info.HitList.Count - 1) {
                         outOfPew = false;
                         info.BaseDamagePool = 0.01f;
-
                     }
+
                     if (skip || hitMax || outOfPew)
                     {
                         if (hitMax || outOfPew || pInvalid)
-                        {
                             p.State = Projectile.ProjectileState.Depleted;
-                        }
+
                         Projectiles.HitEntityPool.Return(hitEnt);
                         continue;
                     }
@@ -287,8 +286,8 @@ namespace CoreSystems
                 Log.Line($"DamageGrid first null check hit");
                 return;
             }
-
-            if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || (!t.AmmoDef.Const.SelfDamage && !t.AmmoDef.Const.IsCriticalReaction) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
+            
+            if (t.AmmoDef.DamageScales.Shields.Type == ShieldDef.ShieldType.Heal || (!t.AmmoDef.Const.SelfDamage && !t.AmmoDef.Const.IsCriticalReaction && !t.SmartReady) && t.Ai.AiType == Ai.AiTypes.Grid && t.Ai.GridEntity.IsInSameLogicalGroupAs(grid) || !grid.DestructibleBlocks || grid.Immune || grid.GridGeneralDamageModifier <= 0)
             {
                 t.BaseDamagePool = 0;
                 return;
@@ -297,8 +296,8 @@ namespace CoreSystems
             //Global & modifiers
             var canDamage = t.DoDamage;
 
-            //_destroyedSlims.Clear();
-            _destroyedSlimsClient.Clear();
+            _destroyedSlims.Clear();
+            //_destroyedSlimsClient.Clear();
 
             var directDmgGlobal = Settings.Enforcement.DirectDamageModifer * hitEnt.DamageMulti;
             var areaDmgGlobal = Settings.Enforcement.AreaDamageModifer * hitEnt.DamageMulti;
@@ -402,7 +401,9 @@ namespace CoreSystems
                 rootBlock = rootInfo.Block;
                 if (!detRequested)
                 {
-                    if (IsServer && _destroyedSlims.Contains(rootBlock) || IsClient && _destroyedSlimsClient.Contains(rootBlock)) continue;
+                    if (IsServer && _destroyedSlims.Contains(rootBlock) || IsClient && _destroyedSlimsClient.Contains(rootBlock))
+                        continue;
+
                     if (rootBlock.IsDestroyed)
                     {
                         destroyed++;
@@ -413,7 +414,6 @@ namespace CoreSystems
                         }
                         else
                             _destroyedSlims.Add(rootBlock);
-
                         continue;
                     }
                     var fatBlock = rootBlock.FatBlock as MyCubeBlock;
@@ -662,12 +662,15 @@ namespace CoreSystems
                             destroyed++;
                             if (IsClient)
                             {
+                                ClientDestroyBlockTick = Tick;
                                 _destroyedSlimsClient.Add(block);
                                 if (_slimHealthClient.ContainsKey(block))
                                     _slimHealthClient.Remove(block);
                             }
                             else
+                            {
                                 _destroyedSlims.Add(block);
+                            }
                         }
 
 
@@ -916,7 +919,7 @@ namespace CoreSystems
                         {
                             attacker.DamageDone += objHp;
                             sTarget.Info.BaseHealthPool = 0;
-                            sTarget.State = Projectile.ProjectileState.Destroy;
+                            sTarget.State = Projectile.ProjectileState.Detonated;
                         }
                         else
                         {

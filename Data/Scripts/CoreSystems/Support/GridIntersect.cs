@@ -38,8 +38,6 @@ namespace CoreSystems.Support
                     var subDist = sub.PositionComp.WorldVolume.Intersects(ray);
                     if (subDist.HasValue)
                     {
-                        //var rotMatrix = Quaternion.CreateFromRotationMatrix(ai.MyGrid.WorldMatrix);
-                        //var obb = new MyOrientedBoundingBoxD(ai.MyGrid.PositionComp.WorldAABB.Center, ai.MyGrid.PositionComp.LocalAABB.HalfExtents, rotMatrix);
                         var box = ai.TopEntity.PositionComp.LocalAABB;
                         var obb = new MyOrientedBoundingBoxD(box, gridMatrix);
 

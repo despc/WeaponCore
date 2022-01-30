@@ -119,6 +119,7 @@ namespace CoreSystems.Projectiles
                 var aConst = info.AmmoDef.Const;
                 var target = info.Target;
                 var targetEnt = target.TargetEntity;
+                var targetState = target.TargetState;
                 var ai = p.Info.Ai;
                 ++info.Age;
                 ++ai.MyProjectiles;
@@ -134,6 +135,7 @@ namespace CoreSystems.Projectiles
                 }
                 switch (p.State) {
                     case ProjectileState.Destroy:
+                    case ProjectileState.Detonated:
                         p.DestroyProjectile();
                         continue;
                     case ProjectileState.Dead:
@@ -150,9 +152,11 @@ namespace CoreSystems.Projectiles
                         continue;
                 }
 
-                if (target.IsProjectile)
-                    if (target.Projectile.State != ProjectileState.Alive)
-                        p.UnAssignProjectile(true);
+                if (target.TargetState == Target.TargetStates.IsProjectile && target.Projectile.State != ProjectileState.Alive) {
+                    target.Projectile.Seekers.Remove(p);
+                    target.Reset(Session.Tick, Target.States.ProjectileClosed);
+                }
+
 
                 if (!p.AtMaxRange) {
 
@@ -178,7 +182,7 @@ namespace CoreSystems.Projectiles
                         {
                             if (!aConst.HasFragProximity)
                                 p.SpawnShrapnel();
-                            else if (targetEnt != null)
+                            else if (targetState == Target.TargetStates.IsEntity)
                             {
                                 var topEnt = targetEnt.GetTopMostParent();
                                 var inflatedSize = aConst.FragProximity + topEnt.PositionComp.LocalVolume.Radius;
@@ -435,7 +439,7 @@ namespace CoreSystems.Projectiles
                 info.ShieldBypassed = info.ShieldKeepBypass;
                 info.ShieldKeepBypass = false;
 
-                if (info.Target.IsProjectile || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0)
+                if (target.TargetState == Target.TargetStates.IsProjectile || p.CheckType == CheckTypes.Ray && p.MySegmentList.Count > 0 || p.CheckType == CheckTypes.Sphere && p.MyEntityList.Count > 0)
                 {
                     lock (ValidateHits)
                         ValidateHits.Add(p);

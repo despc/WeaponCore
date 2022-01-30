@@ -48,6 +48,7 @@ namespace CoreSystems.Support
     internal class WeaponStructure : CoreStructure
     {
         internal bool TurretAttached;
+        internal double MaxLockRange = 10000;
         internal WeaponStructure(Session session, KeyValuePair<string, Dictionary<string, MyTuple<string, string, string, string>>> tDef, List<WeaponDefinition> wDefList, string modPath)
         {
             Session = session;
@@ -139,6 +140,9 @@ namespace CoreSystems.Support
                 var partHash = (tDef.Key + partNameIdHash + elevationNameHash + muzzletNameHash + azimuthNameHash).GetHashCode();
                 HashToId.Add(partHash, partId);
                 var coreSystem = new WeaponSystem(Session, partNameIdHash, muzzletNameHash, azimuthNameHash, elevationNameHash, spinNameHash, weaponDef, typeName, weaponAmmo, partHash, partId);
+
+                if (coreSystem.MaxLockRange > MaxLockRange)
+                    MaxLockRange = coreSystem.MaxLockRange;
 
                 if (coreSystem.Values.HardPoint.Ai.TurretAttached && !TurretAttached)
                     TurretAttached = true;

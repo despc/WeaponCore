@@ -653,11 +653,11 @@ namespace CoreSystems.Api
             if (comp?.Platform != null && comp.Platform.State == Ready && comp.Platform.Weapons.Count > weaponId)
             {
                 var weapon = comp.Platform.Weapons[weaponId];
-                if (weapon.Target.IsFakeTarget)
+                if (weapon.Target.TargetState == Target.TargetStates.IsFake)
                     return new MyTuple<bool, bool, bool, IMyEntity>(true, false, true, null);
-                if (weapon.Target.IsProjectile)
+                if (weapon.Target.TargetState == Target.TargetStates.IsProjectile)
                     return new MyTuple<bool, bool, bool, IMyEntity>(true, true, false, null);
-                return new MyTuple<bool, bool, bool, IMyEntity>(weapon.Target.TargetEntity != null, false, false, weapon.Target.TargetEntity);
+                return new MyTuple<bool, bool, bool, IMyEntity>(weapon.Target.TargetState == Target.TargetStates.IsEntity, false, false, weapon.Target.TargetEntity);
             }
 
             return new MyTuple<bool, bool, bool, IMyEntity>(false, false, false, null);

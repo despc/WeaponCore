@@ -118,7 +118,11 @@ namespace CoreSystems.Platform
             internal void OnAddedToSceneWeaponTasks(bool firstRun)
             {
                 var maxTrajectory1 = 0f;
-                
+
+                var weaponStructure = (WeaponStructure)Platform.Structure;
+                if (weaponStructure.MaxLockRange > Ai.Construct.MaxLockRange)
+                    Ai.Construct.MaxLockRange = weaponStructure.MaxLockRange;
+
                 if (firstRun && TypeSpecific == CompTypeSpecific.Phantom)
                     Ai.AiOwner = CustomIdentity;
                 

@@ -329,15 +329,16 @@ namespace CoreSystems
             return false;
         }
 
+
         private void CheckAdminRights()
         {
             const string spider = "Space_spider";
             const string wolf = "SpaceWolf";
             foreach (var item in Players) {
 
-                var pLevel = item.Value.PromoteLevel;
+                var pLevel = item.Value.Player.PromoteLevel;
                 var playerId = item.Key;
-                var player = item.Value;
+                var player = item.Value.Player;
                 var wasAdmin = Admins.ContainsKey(playerId);
 
                 if (pLevel == MyPromoteLevel.Admin || pLevel == MyPromoteLevel.Owner || pLevel == MyPromoteLevel.SpaceMaster) {
@@ -815,7 +816,7 @@ namespace CoreSystems
                 if (!string.IsNullOrEmpty(modPath))
                     ModInfo.TryAdd(mod.GetPath(), mod);
 
-                if (mod.PublishedFileId == 1918681825 || mod.PublishedFileId == 2189703321 || mod.PublishedFileId == 2496225055 || mod.PublishedFileId == 2726343161)
+                if (mod.PublishedFileId == 1918681825 || mod.PublishedFileId == 2189703321 || mod.PublishedFileId == 2496225055 || mod.PublishedFileId == 2726343161 || mod.PublishedFileId == 2734980390)
                     validId = true;
 
                 if (mod.PublishedFileId == 1365616918 || mod.PublishedFileId == 2372872458) ShieldMod = true;
@@ -825,7 +826,7 @@ namespace CoreSystems
                     ReplaceVanilla = true;
                 else if (mod.GetPath().Contains("AppData\\Roaming\\SpaceEngineers\\Mods\\VanillaReplacement") || mod.Name.StartsWith("WCVanilla") || mod.FriendlyName.StartsWith("WCVanilla"))
                     ReplaceVanilla = true;
-                else if (mod.PublishedFileId == 2189703321 || mod.PublishedFileId == 2496225055 || mod.PublishedFileId == 2726343161) 
+                else if (mod.PublishedFileId == 2189703321 || mod.PublishedFileId == 2496225055 || mod.PublishedFileId == 2726343161 || mod.PublishedFileId == 2734980390) 
                     DebugMod = true;
                 else if (mod.PublishedFileId == 2200451495)
                     WaterMod = true;
@@ -926,15 +927,15 @@ namespace CoreSystems
                 Ai.TargetInfo info;
                 if (topmost != null && w.BaseComp.Ai.Construct.RootAi.Construct.PreviousTargets.Add(topmost) && w.BaseComp.Ai.Targets.TryGetValue(topmost, out info))
                 {
-                    IMyPlayer weaponOwner;
+                    PlayerMap weaponOwner;
                     Players.TryGetValue(ownerId, out weaponOwner);
-                    var wOwner = weaponOwner != null && !string.IsNullOrEmpty(weaponOwner.DisplayName) ? $"{weaponOwner.DisplayName}({ownerId})" : $"{ownerId}";
+                    var wOwner = weaponOwner != null && !string.IsNullOrEmpty(weaponOwner.Player.DisplayName) ? $"{weaponOwner.Player.DisplayName}({ownerId})" : $"{ownerId}";
                     var weaponFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(ownerId);
                     var wFaction = weaponFaction != null && !string.IsNullOrEmpty(weaponFaction.Name) ? $"{weaponFaction.Name}({weaponFaction.FactionId})" : "NA";
 
-                    IMyPlayer aiOwner;
+                    PlayerMap aiOwner;
                     Players.TryGetValue(w.BaseComp.Ai.AiOwner, out aiOwner);
-                    var aOwner = aiOwner != null && !string.IsNullOrEmpty(aiOwner.DisplayName) ? $"{aiOwner.DisplayName}({w.BaseComp.Ai.AiOwner})" : $"{w.BaseComp.Ai.AiOwner}";
+                    var aOwner = aiOwner != null && !string.IsNullOrEmpty(aiOwner.Player.DisplayName) ? $"{aiOwner.Player.DisplayName}({w.BaseComp.Ai.AiOwner})" : $"{w.BaseComp.Ai.AiOwner}";
                     var aiFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(w.BaseComp.Ai.AiOwner);
                     var aFaction = aiFaction != null && !string.IsNullOrEmpty(aiFaction.Name) ? $"{aiFaction.Name}({aiFaction.FactionId})" : "NA";
 
