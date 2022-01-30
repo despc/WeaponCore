@@ -212,22 +212,29 @@ namespace CoreSystems.Projectiles
             IsSmart = aConst.IsSmart;
             SmartSlot = aConst.IsSmart ? Info.Random.Range(0, 10) : 0;
 
-            if (Info.Target.TargetState == Target.TargetStates.IsProjectile)
+            switch (Info.Target.TargetState)
             {
-                OriginTargetPos = Info.Target.Projectile.Position;
-                Info.Target.Projectile.Seekers.Add(this);
+                case Target.TargetStates.WasProjectile:
+                    HadTarget = HadTargetState.Projectile;
+                    OriginTargetPos = PredictedTargetPos;
+                    break;
+                case Target.TargetStates.IsProjectile:
+                    HadTarget = HadTargetState.Projectile;
+                    OriginTargetPos = Info.Target.Projectile.Position;
+                    Info.Target.Projectile.Seekers.Add(this);
+                    break;
+                case Target.TargetStates.IsFake:
+                    OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
+                    HadTarget = HadTargetState.Fake;
+                    break;
+                case Target.TargetStates.IsEntity:
+                    OriginTargetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
+                    HadTarget = HadTargetState.Entity;
+                    break;
+                default:
+                    OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
+                    break;
             }
-            else if (Info.Target.TargetState == Target.TargetStates.IsFake)
-            {
-                OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
-                HadTarget = HadTargetState.Fake;
-            }
-            else if (Info.Target.TargetState == Target.TargetStates.IsEntity)
-            {
-                OriginTargetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
-                HadTarget = HadTargetState.Entity;
-            }
-            else OriginTargetPos = Info.IsFragment ? PredictedTargetPos : Vector3D.Zero;
 
             LockedTarget = !Vector3D.IsZero(OriginTargetPos);
 
