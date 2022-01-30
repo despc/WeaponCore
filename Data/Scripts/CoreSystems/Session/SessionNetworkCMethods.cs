@@ -345,7 +345,7 @@ namespace CoreSystems
                 data.Report.PacketValid = true;
             }
             else
-                return Error(data, Msg("No PlayerId Found"));
+                return Error(data, Msg($"No PlayerId Found: {EntityToMasterAi.ContainsKey(cube.CubeGrid)} - {SteamToPlayer.ContainsKey(packet.SenderId)}"));
 
             return true;
         }

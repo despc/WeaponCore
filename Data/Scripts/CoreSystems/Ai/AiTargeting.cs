@@ -196,6 +196,7 @@ namespace CoreSystems.Support
             var target = info.Target;
             p.ChaseAge = info.Age;
             var ai = info.Ai;
+            var aConst = info.AmmoDef.Const;
             var weaponPos = p.Position;
             var overRides = info.Overrides;
             var attackNeutrals = overRides.Neutrals;
@@ -219,12 +220,12 @@ namespace CoreSystems.Support
             TargetInfo alphaInfo = null;
             int offset = 0;
             MyEntity fTarget;
-            if (ai.Construct.Data.Repo.FocusData.Target > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target, out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
+            if (!aConst.OverrideTarget && ai.Construct.Data.Repo.FocusData.Target > 0 && MyEntities.TryGetEntityById(ai.Construct.Data.Repo.FocusData.Target, out fTarget) && ai.Targets.TryGetValue(fTarget, out alphaInfo))
                 offset++;
 
 
             MyEntity topTarget = null;
-            if (lockedToTarget && target.TargetState == Target.TargetStates.IsEntity) {
+            if (lockedToTarget && !aConst.OverrideTarget && target.TargetState == Target.TargetStates.IsEntity) {
                 topTarget = target.TargetEntity.GetTopMostParent() ?? alphaInfo?.Target;
                 if (topTarget != null && topTarget.MarkedForClose)
                     topTarget = null;

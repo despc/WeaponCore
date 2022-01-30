@@ -123,7 +123,7 @@ namespace CoreSystems.Control
             action.Name = new StringBuilder(Localization.GetText("ActionControlModes"));
             action.Action = CustomActions.TerminalActionControlMode;
             action.Writer = CustomActions.ControlStateWriter;
-            action.Enabled = TerminalHelpers.TurretOrGuidedAmmo;
+            action.Enabled = TerminalHelpers.TurretOrGuidedAmmoAny;
             action.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);

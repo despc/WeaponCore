@@ -290,10 +290,8 @@ namespace CoreSystems.Platform
 
                 Data.Repo.Values.State.TerminalActionSetter(this, cycleSomething ? TriggerActions.TriggerOff : action);
 
-                if (action == TriggerActions.TriggerClick && HasTurret && !cycleShootClick)
+                if (action == TriggerActions.TriggerClick || action == TriggerActions.TriggerOn)
                     Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Ui;
-                else if (action == TriggerActions.TriggerClick && !cycleShootClick || action == TriggerActions.TriggerOnce || action == TriggerActions.TriggerOn)
-                    Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Toolbar;
                 else
                     Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
 
@@ -301,6 +299,16 @@ namespace CoreSystems.Platform
                 var noReset = !Data.Repo.Values.State.TrackingReticle;
                 var newId = action == TriggerActions.TriggerOff && noReset ? -1 : playerId;
                 Data.Repo.Values.State.PlayerId = newId;
+            }
+
+            internal void RequestShootOnce(long playerId)
+            {
+                if (IsDisabled) return;
+
+                if (IsBlock && Session.HandlesInput)
+                    Session.TerminalMon.HandleInputUpdate(this);
+
+                Data.Repo.Values.State.PlayerId = Session.PlayerId;
             }
 
             internal void RequestShootUpdate(TriggerActions action, long playerId)
@@ -394,7 +402,7 @@ namespace CoreSystems.Platform
 
                 var tAction = Data.Repo.Values.State.TerminalAction;
                 if (tAction == TriggerActions.TriggerOnce || tAction == TriggerActions.TriggerClick)
-                    Data.Repo.Values.State.TerminalActionSetter(this, TriggerActions.TriggerOff, Session.MpActive);
+                    Data.Repo.Values.State.TerminalActionSetter(this, TriggerActions.TriggerOff);
                 if (Session.MpActive)
                     Session.SendComp(this);
             }

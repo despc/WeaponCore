@@ -261,6 +261,11 @@ namespace CoreSystems.Control
         {
             return HasTurret(block) || GuidedAmmo(block, true);
         }
+
+        internal static bool TurretOrGuidedAmmoAny(IMyTerminalBlock block)
+        {
+            return HasTurret(block) || GuidedAmmo(block, false);
+        }
         internal static bool GuidedAmmoNoTurret(IMyTerminalBlock block)
         {
             return GuidedAmmo(block) && NoTurret(block);

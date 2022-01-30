@@ -296,7 +296,6 @@ namespace CoreSystems
         {
             None,
             Ui,
-            Toolbar,
             Camera
         }
 
@@ -327,17 +326,14 @@ namespace CoreSystems
             return false;
         }
 
-        public void TerminalActionSetter(Weapon.WeaponComponent comp, TriggerActions action, bool syncWeapons = false, bool updateWeapons = true)
+        public void TerminalActionSetter(Weapon.WeaponComponent comp, TriggerActions action)
         {
             TerminalAction = action;
 
-            if (updateWeapons)
-            {
-                for (int i = 0; i < Weapons.Length; i++)
-                    Weapons[i].Action = action;
-            }
+            for (int i = 0; i < Weapons.Length; i++)
+                Weapons[i].Action = action;
 
-            if (syncWeapons)
+            if (comp.Session.MpActive && comp.Session.IsServer)
                 comp.Session.SendState(comp);
         }
     }

@@ -615,7 +615,8 @@ namespace CoreSystems.Support
             if (!pattern.SkipParent && pattern.Mode != AmmoDef.PatternDef.PatternModes.Fragment)
                 ammoPattern[indexPos++] = ammo.AmmoDef;
 
-            var validPatterns = 0; 
+            var validPatterns = 0;
+            var fragTargetOverride = false;
             if (enabled)
             {
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
@@ -637,8 +638,8 @@ namespace CoreSystems.Support
 
                             if (!antiSmart && ammoDef.Ewar.Type == EwarType.AntiSmart)
                                 antiSmart = true;
-                            if (!targetOverride && hasGuidance && ammoDef.Trajectory.Smarts.OverideTarget)
-                                targetOverride = true;
+                            if (hasGuidance && ammoDef.Trajectory.Smarts.OverideTarget)
+                                fragTargetOverride = true;
                         }
                     }
                 }
@@ -651,7 +652,7 @@ namespace CoreSystems.Support
 
             guidedDetected = guidedAmmo;
             hasAntiSmart = antiSmart;
-            hasTargetOverride = targetOverride;
+            hasTargetOverride = targetOverride || fragTargetOverride;
 
             requiresTarget = guidedAmmo && !targetOverride || system.TrackTargets;
         }

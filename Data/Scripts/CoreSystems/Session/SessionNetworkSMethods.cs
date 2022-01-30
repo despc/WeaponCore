@@ -31,7 +31,7 @@ namespace CoreSystems
                 data.Report.PacketValid = true;
             }
             else
-                return Error(data, Msg("Player Not Found"));
+                return Error(data, Msg($"No PlayerId Found: entId:{ent.EntityId} - senderId: {packet.SenderId} - found: {SteamToPlayer.ContainsKey(packet.SenderId)}"));
 
             return true;
         }

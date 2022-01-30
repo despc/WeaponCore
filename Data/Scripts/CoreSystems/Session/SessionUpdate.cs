@@ -223,7 +223,7 @@ namespace CoreSystems
                     var cMode = wValues.Set.Overrides.Control;
                     if (HandlesInput) {
 
-                        if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wValues.State.Control != ControlMode.Toolbar)
+                        if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wValues.State.Control != ControlMode.Ui)
                             wComp.RequestShootUpdate(TriggerClick, PlayerId);
 
                         var wasTrack = wValues.State.TrackingReticle;

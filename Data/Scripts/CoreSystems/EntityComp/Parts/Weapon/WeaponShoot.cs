@@ -383,7 +383,7 @@ namespace CoreSystems.Platform
             if (System.Session.IsServer)
             {
                 if (PartState.Action == TriggerActions.TriggerOnce && ShotQueueEmpty())
-                    Comp.Data.Repo.Values.State.TerminalActionSetter(Comp, TriggerActions.TriggerOff, true, false);
+                    Comp.Data.Repo.Values.State.TerminalActionSetter(Comp, TriggerActions.TriggerOff);
             }
         }
 
