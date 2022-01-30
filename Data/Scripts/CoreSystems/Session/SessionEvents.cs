@@ -484,7 +484,7 @@ namespace CoreSystems
         {
             try
             {
-                Log.Line($"[player] exit:{exit is MyCockpit} - enter:{enter is MyCockpit} - exitId:{exit?.ControllerInfo?.ControllingIdentityId} - enterId:{enter?.ControllerInfo?.ControllingIdentityId}");
+                //Log.Line($"[player] exit:{exit is MyCockpit} - enter:{enter is MyCockpit} - exitId:{exit?.ControllerInfo?.ControllingIdentityId} - enterId:{enter?.ControllerInfo?.ControllingIdentityId}");
 
                 var ent1 = exit as MyEntity;
                 var ent2 = enter as MyEntity;

@@ -22,7 +22,6 @@ namespace CoreSystems.Support
         internal bool ParentIsPart;
         internal bool IsTargetStorage;
         internal bool ClientDirty;
-        internal bool IsDrone;
         internal bool CoreIsCube;
         internal Part Part;
         internal MyEntity CoreEntity;
@@ -55,6 +54,8 @@ namespace CoreSystems.Support
             WasFake,
             IsEntity,
             WasEntity,
+            IsDrone,
+            WasDrone,
         }
 
         public enum States
@@ -182,22 +183,16 @@ namespace CoreSystems.Support
 
         internal void TransferTo(Target target, uint expireTick, bool drone = false)
         {
-            target.IsDrone = drone;
+            if (drone)
+                TargetState = TargetStates.IsDrone;
+            
             target.TargetEntity = TargetEntity;
             target.Projectile = Projectile;
             target.TargetPos = TargetPos;
             target.HitShortDist = HitShortDist;
             target.OrigDistance = OrigDistance;
             target.TopEntityId = TopEntityId;
-
-            if (target.Projectile != null)
-                target.TargetState = TargetStates.IsProjectile;
-            else if (TargetState == TargetStates.IsFake)
-                target.TargetState = TargetStates.IsFake;
-            else if (TargetEntity != null)
-                target.TargetState = TargetStates.IsEntity;
-            else
-                target.TargetState = TargetStates.None;
+            target.TargetState = TargetState;
 
             target.StateChange(HasTarget, CurrentState);
             Reset(expireTick, States.Transfered);
@@ -247,6 +242,9 @@ namespace CoreSystems.Support
                 case TargetStates.IsEntity:
                     TargetState = TargetStates.WasEntity;
                     break;
+                case TargetStates.IsDrone:
+                    TargetState = TargetStates.WasDrone;
+                    break;
                 default:
                     TargetState = TargetStates.None;
                     break;
@@ -256,7 +254,6 @@ namespace CoreSystems.Support
             ClosestObstacle = null;
             IsAligned = false;
             Projectile = null;
-            IsDrone = false;
             TargetPos = Vector3D.Zero;
             HitShortDist = 0;
             OrigDistance = 0;
