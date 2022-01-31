@@ -143,7 +143,7 @@ namespace CoreSystems
                     }
                     if (pComp.Status != Started)
                         pComp.HealthCheck();
-
+                    var burstShots = (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootBurstStateId);
                     if (pComp.Platform.State != CorePlatform.PlatformState.Ready || pComp.IsDisabled || pComp.IsAsleep || pComp.CoreEntity.MarkedForClose || pComp.LazyUpdate && !ai.DbUpdated && Tick > pComp.NextLazyUpdateStart)
                         continue;
 
@@ -174,9 +174,13 @@ namespace CoreSystems
 
                         var reloading = p.ActiveAmmoDef.AmmoDef.Const.Reloadable && p.ClientMakeUpShots == 0 && (p.Loading || p.ProtoWeaponAmmo.CurrentAmmo == 0);
                         var canShoot = !p.PartState.Overheated && !reloading && !p.System.DesignatorWeapon;
-                        var validShootStates = p.PartState.Action == TriggerOn || (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootBurstStateId) || p.AiShooting && p.PartState.Action == TriggerOff;
+
+                        var autoShot =  p.PartState.Action == TriggerOn || p.AiShooting && p.PartState.Action == TriggerOff;
+
+                        var anyShot = autoShot && !burstShots || p.BurstCount > 0;
+
                         var delayedFire = p.System.DelayCeaseFire && !p.Target.IsAligned && Tick - p.CeaseFireDelayTick <= p.System.CeaseFireDelay;
-                        var shoot = (validShootStates || p.FinishShots || delayedFire);
+                        var shoot = (anyShot || p.FinishShots || delayedFire);
                         var shotReady = canShoot && (shoot || p.LockOnFireState);
 
                         if (shotReady) {

@@ -46,7 +46,7 @@ namespace CoreSystems.Api
                 ["SetAiFocus"] = new Func<IMyEntity, IMyEntity, int, bool>(SetAiFocus),
                 ["GetWeaponTarget"] = new Func<Sandbox.ModAPI.IMyTerminalBlock, int, MyTuple<bool, bool, bool, IMyEntity>>(GetWeaponTarget),
                 ["SetWeaponTarget"] = new Action<Sandbox.ModAPI.IMyTerminalBlock, IMyEntity, int>(SetWeaponTarget),
-                ["FireWeaponOnce"] = new Action<Sandbox.ModAPI.IMyTerminalBlock, bool, int>(FireWeaponMany),
+                ["FireWeaponOnce"] = new Action<Sandbox.ModAPI.IMyTerminalBlock, bool, int>(FireWeaponBurst),
                 ["ToggleWeaponFire"] = new Action<Sandbox.ModAPI.IMyTerminalBlock, bool, bool, int>(ToggleWeaponFire),
                 ["IsWeaponReadyToFire"] = new Func<Sandbox.ModAPI.IMyTerminalBlock, int, bool, bool, bool>(IsWeaponReadyToFire),
                 ["GetMaxWeaponRange"] = new Func<Sandbox.ModAPI.IMyTerminalBlock,int, float>(GetMaxWeaponRange),
@@ -110,7 +110,7 @@ namespace CoreSystems.Api
                 ["SetAiFocus"] = new Func<IMyTerminalBlock, long, int, bool>(PbSetAiFocus),
                 ["GetWeaponTarget"] = new Func<IMyTerminalBlock, int, MyDetectedEntityInfo>(PbGetWeaponTarget),
                 ["SetWeaponTarget"] = new Action<IMyTerminalBlock, long, int>(PbSetWeaponTarget),
-                ["FireWeaponOnce"] = new Action<IMyTerminalBlock, bool, int>(PbFireWeaponMany),
+                ["FireWeaponOnce"] = new Action<IMyTerminalBlock, bool, int>(PbFireWeaponBurst),
                 ["ToggleWeaponFire"] = new Action<IMyTerminalBlock, bool, bool, int>(PbToggleWeaponFire),
                 ["IsWeaponReadyToFire"] = new Func<IMyTerminalBlock, int, bool, bool, bool>(PbIsWeaponReadyToFire),
                 ["GetMaxWeaponRange"] = new Func<IMyTerminalBlock, int, float>(PbGetMaxWeaponRange),
@@ -287,9 +287,9 @@ namespace CoreSystems.Api
             ToggleWeaponFire((Sandbox.ModAPI.IMyTerminalBlock) arg1, arg2, arg3, arg4);
         }
 
-        private void PbFireWeaponMany(object arg1, bool arg2, int arg3)
+        private void PbFireWeaponBurst(object arg1, bool arg2, int arg3)
         {
-            FireWeaponMany((Sandbox.ModAPI.IMyTerminalBlock) arg1, arg2, arg3);
+            FireWeaponBurst((Sandbox.ModAPI.IMyTerminalBlock) arg1, arg2, arg3);
         }
 
         private void PbSetWeaponTarget(object arg1, long arg2, int arg3)
@@ -671,7 +671,7 @@ namespace CoreSystems.Api
                 Ai.AcquireTarget(comp.Platform.Weapons[weaponId], false, (MyEntity)target);
         }
 
-        private static void FireWeaponMany(Sandbox.ModAPI.IMyTerminalBlock weaponBlock, bool allWeapons = true, int weaponId = 0)
+        private static void FireWeaponBurst(Sandbox.ModAPI.IMyTerminalBlock weaponBlock, bool allWeapons = true, int weaponId = 0)
         {
             var comp = weaponBlock.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp?.Platform != null && comp.Platform.State == Ready && comp.Platform.Weapons.Count > weaponId)
