@@ -1685,7 +1685,7 @@ namespace CoreSystems.Projectiles
                     Vector3D advOffSet;
                     var offSet = fragAmmoDef.Const.FragOffset;
                     Vector3D.Rotate(ref offSet, ref matrix, out advOffSet);
-                    newOrigin += offSet;
+                    newOrigin += advOffSet;
                 }
 
 
