@@ -135,7 +135,7 @@ namespace CoreSystems.Support
         public readonly int BarrelsPerShot;
         public readonly int BarrelSpinRate;
         public readonly int ShotsPerBurst;
-
+        public readonly int MaxAmmoCount;
         public readonly bool HasAntiSmart;
         public readonly bool HasAmmoSelection;
         public readonly bool HasEjector;
@@ -276,22 +276,33 @@ namespace CoreSystems.Support
                 var ammo = AmmoTypes[i];
                 ammo.AmmoDef.Const = new AmmoConstants(ammo, Values, Session, this, i);
 
-                if (ammo.AmmoDef.Const.GuidedAmmoDetected)
+                var aConst = ammo.AmmoDef.Const;
+                if (aConst.GuidedAmmoDetected)
                     HasGuidedAmmo = true;
 
-                if (ammo.AmmoDef.Const.ProjectileSync)
+                if (aConst.ProjectileSync)
                     HasProjectileSync = true;
 
-                if (ammo.AmmoDef.Const.AntiSmartDetected)
+                if (aConst.AntiSmartDetected)
                     HasAntiSmart = true;
 
-                if (ammo.AmmoDef.Const.IsTurretSelectable)
+                if (aConst.IsTurretSelectable)
+                {
                     ++ammoSelections;
 
-                if (ammo.AmmoDef.Const.ChargSize > ApproximatePeakPower)
+                    var targetAmmoSize = aConst.MagsToLoad * aConst.MagazineSize;
+                    var beam = aConst.IsBeamWeapon;
+                    var fireFull = aConst.MustCharge && aConst.Reloadable || AlwaysFireFull;
+                    var ammoLoadSize = MathHelper.Clamp(targetAmmoSize, 1, fireFull ? 1 : beam ? 60 : targetAmmoSize);
+
+                    if (ammoLoadSize > MaxAmmoCount)
+                        MaxAmmoCount = ammoLoadSize;
+                }
+
+                if (aConst.ChargSize > ApproximatePeakPower)
                     ApproximatePeakPower = ammo.AmmoDef.Const.ChargSize;
 
-                if (ammo.AmmoDef.Const.RequiresTarget)
+                if (aConst.RequiresTarget)
                     requiresTarget = true;
             }
 

@@ -174,7 +174,7 @@ namespace CoreSystems
 
                         var reloading = p.ActiveAmmoDef.AmmoDef.Const.Reloadable && p.ClientMakeUpShots == 0 && (p.Loading || p.ProtoWeaponAmmo.CurrentAmmo == 0);
                         var canShoot = !p.PartState.Overheated && !reloading && !p.System.DesignatorWeapon;
-                        var validShootStates = p.PartState.Action == TriggerOn || p.PartState.Action == TriggerOnce || p.AiShooting && p.PartState.Action == TriggerOff;
+                        var validShootStates = p.PartState.Action == TriggerOn || (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootBurstStateId) || p.AiShooting && p.PartState.Action == TriggerOff;
                         var delayedFire = p.System.DelayCeaseFire && !p.Target.IsAligned && Tick - p.CeaseFireDelayTick <= p.System.CeaseFireDelay;
                         var shoot = (validShootStates || p.FinishShots || delayedFire);
                         var shotReady = canShoot && (shoot || p.LockOnFireState);
@@ -256,6 +256,7 @@ namespace CoreSystems
 
                     var compManualMode = wValues.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
+                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootBurstStateId;
 
                     if (Tick60) {
                         var add = wComp.TotalEffect - wComp.PreviousTotalEffect;
@@ -413,10 +414,16 @@ namespace CoreSystems
                         var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         var canShoot = !w.PartState.Overheated && !reloading && !w.System.DesignatorWeapon;
                         var paintedTarget = wComp.PainterMode && w.Target.TargetState == TargetStates.IsFake && w.Target.IsAligned;
-                        var validShootStates = paintedTarget || w.PartState.Action == TriggerOn || w.PartState.Action == TriggerOnce || w.AiShooting && w.PartState.Action == TriggerOff;
+                        
+                        var autoShot = paintedTarget || w.PartState.Action == TriggerOn || w.AiShooting && w.PartState.Action == TriggerOff;
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
+                        var controlledShot = (manualShot || autoShot);
+
+                        var anyShot = controlledShot && !burstShots || w.BurstCount > 0;
+
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
-                        var shootRequest = (validShootStates || manualShot || w.FinishShots || delayedFire);
+                        var shootRequest = (anyShot || w.FinishShots || delayedFire);
+
                         w.LockOnFireState = shootRequest && (w.System.LockOnFocus && !w.Comp.ModOverride) && construct.Data.Repo.FocusData.HasFocus && focus.FocusInRange(w);
                         var shotReady = canShoot && (shootRequest && (!w.System.LockOnFocus || w.Comp.ModOverride) || w.LockOnFireState);
                         var shoot = shotReady && ai.CanShoot && (!aConst.RequiresTarget || w.Target.HasTarget || wValues.Set.Overrides.Override || compManualMode);
@@ -424,9 +431,9 @@ namespace CoreSystems
                         if (shoot) {
 
                             if (MpActive && HandlesInput && !ManualShot)
-                                ManualShot = !validShootStates && !w.FinishShots && !delayedFire;
+                                ManualShot = !autoShot && !w.FinishShots && !delayedFire;
 
-                            if (w.System.DelayCeaseFire && (validShootStates || manualShot || w.FinishShots))
+                            if (w.System.DelayCeaseFire && (autoShot || manualShot || w.FinishShots))
                                 w.CeaseFireDelayTick = Tick;
 
                             ShootingWeapons.Add(w);

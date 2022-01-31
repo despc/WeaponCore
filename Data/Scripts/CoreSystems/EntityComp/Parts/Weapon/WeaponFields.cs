@@ -134,6 +134,7 @@ namespace CoreSystems.Platform
         internal uint LastInventoryTick;
         internal uint StopBarrelAvTick;
         internal int ProposedAmmoId = -1;
+        internal int BurstCount;
         internal int FireCounter;
         internal int RateOfFire;
         internal int BarrelSpinRate;

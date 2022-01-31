@@ -111,7 +111,7 @@ namespace CoreSystems
             CreateCustomActions<T>.CreateShoot(session);
             CreateCustomActions<T>.CreateShootOn(session);
             CreateCustomActions<T>.CreateShootOff(session);
-            CreateCustomActions<T>.CreateShootOnce(session);
+            CreateCustomActions<T>.CreateShootBurst(session);
             CreateCustomActionSet<T>(session);
         }
 
@@ -181,6 +181,7 @@ namespace CoreSystems
             }
         }
 
+        private const string BurstStr = "Fire Burst";
         internal static void AlterActions<T>(Session session)
         {
             List<IMyTerminalAction> actions;
@@ -210,8 +211,23 @@ namespace CoreSystems
                                 oldAction(blk);
                             return;
                         }
-                        comp.RequestShootUpdate(TriggerOnce, comp.Session.MpServer ? comp.Session.PlayerId : -1);
+                        comp.RequestShootBurst(comp.Session.MpServer ? comp.Session.PlayerId : -1);
                     };
+                    
+                    var oldWriter = a.Writer;
+                    a.Writer = (blk, sb) => {
+
+                        var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
+                        if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+                        {
+                            oldWriter(blk, sb);
+                            return;
+                        }
+                        sb.Append("Burst");
+
+                    };
+                    a.Name.Clear();
+                    a.Name.Append(BurstStr);
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot")) {

@@ -21,14 +21,14 @@ namespace CoreSystems.Control
             session.CustomActions.Add(action);
         }
 
-        public static void CreateShootOnce(Session session)
+        public static void CreateShootBurst(Session session)
         {
-            var action = MyAPIGateway.TerminalControls.CreateAction<T>("ShootOnce");
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("ActionBurst");
             action.Icon = @"Textures\GUI\Icons\Actions\SwitchOn.dds";
-            action.Name = new StringBuilder(Localization.GetText("ActionShootOnce"));
-            action.Action = CustomActions.TerminalActionShootOnce;
+            action.Name = new StringBuilder(Localization.GetText("ActionBurst"));
+            action.Action = CustomActions.TerminalActionShootBurst;
             action.Writer = TerminalHelpers.EmptyStringBuilder;
-            action.Enabled = TerminalHelpers.ShootOnceWeapon;
+            action.Enabled = TerminalHelpers.ShootBurstWeapon;
             action.ValidForGroups = false;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);

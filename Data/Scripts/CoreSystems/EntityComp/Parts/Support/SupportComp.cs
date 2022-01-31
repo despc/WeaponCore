@@ -75,7 +75,7 @@ namespace CoreSystems.Platform
                 Data.Repo.Values.Set.Overrides.Control = ProtoSupportOverrides.ControlModes.Auto;
 
                 var tAction = Data.Repo.Values.State.TerminalAction;
-                if (tAction == TriggerActions.TriggerOnce || tAction == TriggerActions.TriggerClick)
+                if (tAction == TriggerActions.TriggerClick)
                     Data.Repo.Values.State.TerminalActionSetter(this, TriggerActions.TriggerOff, Session.MpActive);
                 if (Session.MpActive)
                     Session.SendComp(this);

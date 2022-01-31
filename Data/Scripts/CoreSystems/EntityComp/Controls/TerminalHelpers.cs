@@ -15,6 +15,8 @@ namespace CoreSystems.Control
     {
         internal static void AddUiControls<T>(Session session) where T : IMyTerminalBlock
         {
+            AddWeaponBurstSliderRange<T>(session, "Burst Count", Localization.GetText("TerminalBurstShotsTitle"), Localization.GetText("TerminalBurstShotsTooltip"), BlockUi.GetBurstCount, BlockUi.RequestSetBurstCount, CanBurst, BlockUi.GetMinBurstCount, BlockUi.GetMaxBurstCount, true);
+
             AddOnOffSwitchNoAction<T>(session, "ReportTarget", Localization.GetText("TerminalReportTargetTitle"), Localization.GetText("TerminalReportTargetTooltip"), BlockUi.GetReportTarget, BlockUi.RequestSetReportTarget,true, UiReportTarget);
 
             AddSliderDamage<T>(session, "Weapon Damage", Localization.GetText("TerminalWeaponDamageTitle"), Localization.GetText("TerminalWeaponDamageTooltip"), BlockUi.GetDps, BlockUi.RequestSetDps, UiStrengthSlider);
@@ -104,7 +106,7 @@ namespace CoreSystems.Control
             return true;
         }
 
-        internal static bool ShootOnceWeapon(IMyTerminalBlock block)
+        internal static bool ShootBurstWeapon(IMyTerminalBlock block)
         {
             var comp = block.Components.Get<CoreComponent>();
 
@@ -191,6 +193,12 @@ namespace CoreSystems.Control
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && (comp.HasTracking || comp.HasGuidance);
+        }
+
+        internal static bool CanBurst(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready;
         }
 
         internal static bool CanBeArmed(IMyTerminalBlock block)
@@ -331,6 +339,15 @@ namespace CoreSystems.Control
             builder.Append(message);
         }
 
+        internal static void SliderWeaponBurstWriterRange(IMyTerminalBlock block, StringBuilder builder)
+        {
+
+            var value = (long)Math.Round(BlockUi.GetBurstCount(block), 0);
+            var message = value > 0 ? value.ToString() : "Disabled";
+
+            builder.Append(message);
+        }
+
         internal static void SliderCriticalTimerWriterRange(IMyTerminalBlock block, StringBuilder builder)
         {
 
@@ -391,6 +408,27 @@ namespace CoreSystems.Control
             c.Getter = getter;
             c.Setter = setter;
             c.Writer = SliderWeaponCameraWriterRange;
+
+            if (minGetter != null)
+                c.SetLimits(minGetter, maxGetter);
+
+            MyAPIGateway.TerminalControls.AddControl<T>(c);
+            session.CustomControls.Add(c);
+
+            return c;
+        }
+
+        internal static IMyTerminalControlSlider AddWeaponBurstSliderRange<T>(Session session, string name, string title, string tooltip, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Func<IMyTerminalBlock, bool> visibleGetter, Func<IMyTerminalBlock, float> minGetter = null, Func<IMyTerminalBlock, float> maxGetter = null, bool group = false) where T : IMyTerminalBlock
+        {
+            var c = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, T>(name);
+
+            c.Title = MyStringId.GetOrCompute(title);
+            c.Tooltip = MyStringId.GetOrCompute(tooltip);
+            c.Enabled = Istrue;
+            c.Visible = visibleGetter;
+            c.Getter = getter;
+            c.Setter = setter;
+            c.Writer = SliderWeaponBurstWriterRange;
 
             if (minGetter != null)
                 c.SetLimits(minGetter, maxGetter);

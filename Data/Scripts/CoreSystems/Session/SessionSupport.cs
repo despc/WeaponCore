@@ -1009,6 +1009,12 @@ namespace CoreSystems
                 comp.DefaultAmmoId = ammoType.AmmoDef.Const.AmmoIdxPos;
 
             comp.DefaultReloads = (int)defaultReloads;
+
+            if (trigger == TriggerOnce) {
+                comp.RequestShootBurst(0);
+                trigger = TriggerOff;
+            }
+
             comp.DefaultTrigger = trigger;
             comp.HasCloseConsition = closeWhenOutOfAmmo;
             comp.CustomIdentity = identity;

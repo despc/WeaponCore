@@ -19,14 +19,11 @@ namespace CoreSystems
         public void ResetToFreshLoadState(Weapon.WeaponComponent comp)
         {
             Values.State.TrackingReticle = false;
+            Values.State.ShootBurstStateId = 0;
             Values.Set.DpsModifier = 1;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
-
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
-
-            if (Values.State.TerminalAction == TriggerActions.TriggerOnce)
-                Values.State.TerminalAction = TriggerActions.TriggerOff;
 
             if (comp.DefaultTrigger != TriggerActions.TriggerOff)
                 Values.State.TerminalAction = comp.DefaultTrigger;
@@ -44,8 +41,6 @@ namespace CoreSystems
                 
                 ws.Heat = 0;
                 ws.Overheated = false;
-                if (ws.Action == TriggerActions.TriggerOnce)
-                    ws.Action = TriggerActions.TriggerOff;
 
                 if (comp.DefaultTrigger != TriggerActions.TriggerOff)
                 {
@@ -307,6 +302,7 @@ namespace CoreSystems
         [ProtoMember(6)] public TriggerActions TerminalAction;
         [ProtoMember(7)] public bool CountingDown;
         [ProtoMember(8)] public bool CriticalReaction;
+        [ProtoMember(9)] public int ShootBurstStateId;
 
         public bool Sync(Weapon.WeaponComponent comp, ProtoWeaponState sync, Caller caller)
         {
@@ -319,6 +315,8 @@ namespace CoreSystems
                 TerminalAction = sync.TerminalAction;
                 CountingDown = sync.CountingDown;
                 CriticalReaction = sync.CriticalReaction;
+                ShootBurstStateId = sync.ShootBurstStateId;
+
                 for (int i = 0; i < sync.Weapons.Length; i++)
                     comp.Platform.Weapons[i].PartState.Sync(sync.Weapons[i]);
                 return true;
@@ -470,6 +468,7 @@ namespace CoreSystems
         [ProtoMember(20)] public bool Armed;
         [ProtoMember(21)] public long ArmedTimer;
         [ProtoMember(22)] public bool Override;
+        [ProtoMember(23)] public int BurstCount;
 
         public void Sync(ProtoWeaponOverrides syncFrom)
         {
@@ -495,6 +494,7 @@ namespace CoreSystems
             LeadGroup = syncFrom.LeadGroup;
             Armed = syncFrom.Armed;
             ArmedTimer = syncFrom.ArmedTimer;
+            BurstCount = syncFrom.BurstCount;
         }
     }
 }

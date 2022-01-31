@@ -331,25 +331,28 @@ namespace CoreSystems.Support
             if (AmmoItem.Content != null && !session.AmmoItems.ContainsKey(AmmoItem.ItemId))
                 session.AmmoItems[AmmoItem.ItemId] = AmmoItem;
 
-            var guidedAmmo = false;
-            var antiSmart = false;
-            var targetOverride = false;
+            var fragGuidedAmmo = false;
+            var fragAntiSmart = false;
+            var fragTargetOverride = false;
             for (int i = 0; i < wDef.Ammos.Length; i++)
             {
                 var ammoType = wDef.Ammos[i];
-                var hasGuidance = ammoType.Trajectory.Guidance != None;
-                if (hasGuidance)
-                    guidedAmmo = true;
-
-                if (ammoType.Ewar.Type == EwarType.AntiSmart)
-                    antiSmart = true;
-
-                if (hasGuidance && ammoType.Trajectory.Smarts.OverideTarget)
-                    targetOverride = true;
 
                 if (ammoType.AmmoRound.Equals(ammo.AmmoDef.Fragment.AmmoRound))
+                {
                     FragmentId = i;
+                    var hasGuidance = ammoType.Trajectory.Guidance != None;
+                    if (hasGuidance)
+                        fragGuidedAmmo = true;
+
+                    if (ammoType.Ewar.Type == EwarType.AntiSmart)
+                        fragAntiSmart = true;
+
+                    if (hasGuidance && ammoType.Trajectory.Smarts.OverideTarget)
+                        fragTargetOverride = true;
+                }
             }
+
             HasFragment = FragmentId > -1;
 
             LoadModifiers(session, ammo, out AmmoModsFound);
@@ -363,6 +366,11 @@ namespace CoreSystems.Support
             IsDrone = ammo.AmmoDef.Trajectory.Guidance == DroneAdvanced;
             IsSmart = ammo.AmmoDef.Trajectory.Guidance == Smart;
             IsTurretSelectable = !ammo.IsShrapnel && ammo.AmmoDef.HardPointUsable;
+
+
+            OverrideTarget = ammo.AmmoDef.Trajectory.Smarts.OverideTarget;
+            RequiresTarget = ammo.AmmoDef.Trajectory.Guidance != None && !OverrideTarget || system.TrackTargets;
+
 
             AmmoParticleShrinks = ammo.AmmoDef.AmmoGraphics.Particles.Ammo.ShrinkByDistance;
             HitParticleShrinks = ammo.AmmoDef.AmmoGraphics.Particles.Hit.ShrinkByDistance;
@@ -392,7 +400,7 @@ namespace CoreSystems.Support
             MaxChaseTime = ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime > 0 ? ammo.AmmoDef.Trajectory.Smarts.MaxChaseTime : int.MaxValue;
             MaxObjectsHit = ammo.AmmoDef.ObjectsHit.MaxObjectsHit > 0 ? ammo.AmmoDef.ObjectsHit.MaxObjectsHit : int.MaxValue;
             ArmOnlyOnHit = ammo.AmmoDef.AreaOfDamage.EndOfLife.ArmOnlyOnHit;
-            OverrideTarget = ammo.AmmoDef.Trajectory.Smarts.OverideTarget;
+
             MaxTargets = ammo.AmmoDef.Trajectory.Smarts.MaxTargets;
             TargetLossDegree = ammo.AmmoDef.Trajectory.TargetLossDegree > 0 ? (float)Math.Cos(MathHelper.ToRadians(ammo.AmmoDef.Trajectory.TargetLossDegree)) : 0;
             CheckFutureIntersection = ammo.AmmoDef.Trajectory.Smarts.CheckFutureIntersection;
@@ -427,7 +435,7 @@ namespace CoreSystems.Support
 
             ComputeShieldBypass(shieldBypassRaw, out ShieldDamageBypassMod);
 
-            ComputeAmmoPattern(ammo, system, wDef, guidedAmmo, antiSmart, targetOverride, out AntiSmartDetected, out TargetOverrideDetected, out RequiresTarget, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
+            ComputeAmmoPattern(ammo, system, wDef, fragGuidedAmmo, fragAntiSmart, fragTargetOverride, out AntiSmartDetected, out TargetOverrideDetected, out AmmoPattern, out WeaponPatternCount, out FragPatternCount, out GuidedAmmoDetected, out WeaponPattern, out FragmentPattern);
 
             DamageScales(ammo.AmmoDef, out DamageScaling, out FallOffScaling, out ArmorScaling, out CustomDamageScales, out CustomBlockDefinitionBasesToScales, out SelfDamage, out VoxelDamage, out HealthHitModifier, out VoxelHitModifier);
             CollisionShape(ammo.AmmoDef, out CollisionIsLine, out CollisionSize, out TracerLength);
@@ -588,7 +596,7 @@ namespace CoreSystems.Support
             directAimCone = MathHelper.ToRadians(Math.Max(ammo.AmmoDef.Fragment.TimedSpawns.DirectAimCone,1));
         }
 
-        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponSystem system, WeaponDefinition wDef, bool guidedAmmo, bool antiSmart, bool targetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out bool requiresTarget, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool guidedDetected, out bool weaponPattern, out bool fragmentPattern)
+        private void ComputeAmmoPattern(WeaponSystem.AmmoType ammo, WeaponSystem system, WeaponDefinition wDef, bool fragGuidedAmmo, bool fragAntiSmart, bool fragTargetOverride, out bool hasAntiSmart, out bool hasTargetOverride, out AmmoDef[] ammoPattern, out int weaponPatternCount, out int fragmentPatternCount, out bool hasGuidedAmmo, out bool weaponPattern, out bool fragmentPattern)
         {
             var pattern = ammo.AmmoDef.Pattern;
             var indexPos = 0;
@@ -616,14 +624,19 @@ namespace CoreSystems.Support
                 ammoPattern[indexPos++] = ammo.AmmoDef;
 
             var validPatterns = 0;
-            var fragTargetOverride = false;
+            var patternTargetOverride = false;
+            var patternGuidedAmmo = false;
+            var patternAntiSmart = false;
+
             if (enabled)
             {
                 for (int j = 0; j < ammo.AmmoDef.Pattern.Patterns.Length; j++)
                 {
                     var aPattern = ammo.AmmoDef.Pattern.Patterns[j];
-                    if (!string.IsNullOrEmpty(aPattern))
-                        ++validPatterns;
+                    if (string.IsNullOrEmpty(aPattern))
+                        continue;
+
+                    ++validPatterns;
 
                     for (int i = 0; i < wDef.Ammos.Length; i++)
                     {
@@ -633,13 +646,13 @@ namespace CoreSystems.Support
                             
                             ammoPattern[indexPos++] = ammoDef;
                             var hasGuidance = ammoDef.Trajectory.Guidance != None;
-                            if (!guidedAmmo && hasGuidance)
-                                guidedAmmo = true;
+                            if (!patternGuidedAmmo && hasGuidance)
+                                patternGuidedAmmo = true;
 
-                            if (!antiSmart && ammoDef.Ewar.Type == EwarType.AntiSmart)
-                                antiSmart = true;
+                            if (!patternAntiSmart && ammoDef.Ewar.Type == EwarType.AntiSmart)
+                                patternAntiSmart = true;
                             if (hasGuidance && ammoDef.Trajectory.Smarts.OverideTarget)
-                                fragTargetOverride = true;
+                                patternTargetOverride = true;
                         }
                     }
                 }
@@ -650,11 +663,9 @@ namespace CoreSystems.Support
                 fragmentPattern = false;
             }
 
-            guidedDetected = guidedAmmo;
-            hasAntiSmart = antiSmart;
-            hasTargetOverride = targetOverride || fragTargetOverride;
-
-            requiresTarget = guidedAmmo && !targetOverride || system.TrackTargets;
+            hasGuidedAmmo = fragGuidedAmmo || patternGuidedAmmo || ammo.AmmoDef.Trajectory.Guidance != None;
+            hasAntiSmart = fragAntiSmart || patternAntiSmart || ammo.AmmoDef.Ewar.Type == EwarType.AntiSmart;
+            hasTargetOverride = fragTargetOverride || patternTargetOverride || OverrideTarget;
         }
 
         private void Fields(AmmoDef ammoDef, out int pulseInterval, out int pulseChance, out bool pulse, out int growTime)

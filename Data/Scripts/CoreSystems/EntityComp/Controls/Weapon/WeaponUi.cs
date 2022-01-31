@@ -516,6 +516,27 @@ namespace CoreSystems
             }
         }
 
+        internal static float GetBurstCount(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+            return comp.Data.Repo.Values.Set.Overrides.BurstCount;
+        }
+
+        internal static void RequestSetBurstCount(IMyTerminalBlock block, float newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var roundedInt = (int)Math.Round(newValue);
+            var values = comp.Data.Repo.Values;
+
+            if (roundedInt != values.Set.Overrides.BurstCount && comp.RequestShootBurstId == values.State.ShootBurstStateId)
+            {
+                Weapon.WeaponComponent.RequestSetValue(comp, "BurstCount", roundedInt, comp.Session.PlayerId);
+            }
+        }
+
         internal static float GetArmedTimeRemaining(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -622,6 +643,19 @@ namespace CoreSystems
         internal static float GetMaxCameraChannel(IMyTerminalBlock block)
         {
             return 24;
+        }
+
+        internal static float GetMinBurstCount(IMyTerminalBlock block)
+        {
+            return 0;
+        }
+
+        internal static float GetMaxBurstCount(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+
+            return comp.MaxAmmoCount;
         }
 
         internal static float GetMinCriticalTime(IMyTerminalBlock block)

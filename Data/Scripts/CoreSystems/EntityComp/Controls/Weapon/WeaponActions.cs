@@ -46,12 +46,12 @@ namespace CoreSystems.Control
             comp.RequestShootUpdate(TriggerOff, comp.Session.MpServer ? comp.Session.PlayerId : -1);
         }
 
-        internal static void TerminalActionShootOnce(IMyTerminalBlock blk)
+        internal static void TerminalActionShootBurst(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            comp.RequestShootUpdate(TriggerOnce, comp.Session.MpServer ? comp.Session.PlayerId : -1);
+            comp.RequestShootBurst(comp.Session.MpServer ? comp.Session.PlayerId : -1);
         }
 
         internal static void TerminalActionControlMode(IMyTerminalBlock blk)

@@ -69,7 +69,10 @@ namespace CoreSystems.Platform
                 #endregion
 
                 #region Projectile Creation
-                var rnd = Comp.Data.Repo.Values.Targets[PartId].WeaponRandom;
+
+                var wValues = Comp.Data.Repo.Values;
+
+                var rnd = wValues.Targets[PartId].WeaponRandom;
                 var pattern = ActiveAmmoDef.AmmoDef.Pattern;
 
                 FireCounter++;
@@ -78,7 +81,6 @@ namespace CoreSystems.Platform
                 for (int i = 0; i < System.Values.HardPoint.Loading.BarrelsPerShot; i++) {
 
                     #region Update ProtoWeaponAmmo state
-                    var skipMuzzle = s.IsClient && ProtoWeaponAmmo.CurrentAmmo == 0 && ClientMakeUpShots == 0 && PartState.Action == TriggerActions.TriggerOnce;
                     if (aConst.Reloadable) {
 
                         if (ProtoWeaponAmmo.CurrentAmmo == 0) {
@@ -86,15 +88,16 @@ namespace CoreSystems.Platform
                             if (ClientMakeUpShots == 0) {
                                 if (s.MpActive && s.IsServer)
                                     s.SendWeaponReload(this);
-                                if (!skipMuzzle) break;
+                                break;
                             }
                         }
 
                         if (ProtoWeaponAmmo.CurrentAmmo > 0) {
 
                             --ProtoWeaponAmmo.CurrentAmmo;
-                            if (PartState.Action == TriggerActions.TriggerOnce)
-                                DequeueShot();
+
+                            if (BurstCount > 0)
+                                Comp.UpdateBurst(this);
 
                             if (ProtoWeaponAmmo.CurrentAmmo == 0) {
                                 ClientLastShotId = Reload.StartId;
@@ -102,6 +105,9 @@ namespace CoreSystems.Platform
                         }
                         else if (ClientMakeUpShots > 0) {
                             --ClientMakeUpShots;
+
+                                                        if (BurstCount > 0)
+                                Comp.UpdateBurst(this);
                         }
 
                         if (System.HasEjector && aConst.HasEjectEffect)  {
@@ -113,7 +119,7 @@ namespace CoreSystems.Platform
                     #endregion
 
                     #region Next muzzle
-                    var current = !skipMuzzle ? NextMuzzle : LastMuzzle;
+                    var current = NextMuzzle;
                     var muzzle = Muzzles[current];
                     if (muzzle.LastUpdateTick != tick) {
                         var dummy = Dummies[current];
@@ -375,28 +381,6 @@ namespace CoreSystems.Platform
             EventTriggerStateChanged(EventTriggers.PreFire, true, _muzzlesToFire);
 
             PreFired = true;
-        }
-
-        private void DequeueShot()
-        {
-            PartState.Action = TriggerActions.TriggerOff;
-            if (System.Session.IsServer)
-            {
-                if (PartState.Action == TriggerActions.TriggerOnce && ShotQueueEmpty())
-                    Comp.Data.Repo.Values.State.TerminalActionSetter(Comp, TriggerActions.TriggerOff);
-            }
-        }
-
-        private bool ShotQueueEmpty()
-        {
-            var hasShot = false;
-            for (int i = 0; i < Comp.Collection.Count; i++) {
-                var w = Comp.Collection[i];
-
-                if (w.PartState.Action != TriggerActions.TriggerOnce)
-                    hasShot = true;
-            }
-            return !hasShot;
         }
 
         private void SpawnEjection()
