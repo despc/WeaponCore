@@ -99,7 +99,11 @@ namespace CoreSystems.Platform
                 {
                     WeaponsFired = 0;
                     if (Session.IsServer)
+                    {
                         state.ShootBurstStateId = RequestShootBurstId;
+                        if (Session.MpActive)
+                            Session.SendState(this);
+                    }
                 }
 
                 Log.Line($"wburst: {w.BurstCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootBurstStateId} vs {RequestShootBurstId}");
@@ -111,14 +115,19 @@ namespace CoreSystems.Platform
                 var state = Data.Repo.Values.State;
                 var set = Data.Repo.Values.Set;
 
+                Log.Line($"request1: {IsDisabled} - {RequestShootBurstId} != {state.ShootBurstStateId} - {set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController} - {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
                 if (IsDisabled || RequestShootBurstId != state.ShootBurstStateId || set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return;
 
+                Log.Line($"request2");
                 if (IsBlock && Session.HandlesInput)
                     Session.TerminalMon.HandleInputUpdate(this);
 
                 RequestShootBurstId = state.ShootBurstStateId + 1;
 
                 state.PlayerId = playerId;
+
+                if (Session.MpActive)
+                    Session.SendSetCompIntRequest(this, state.ShootBurstStateId, PacketType.BurstShot);
             }
 
             internal bool ReadyToShoot()

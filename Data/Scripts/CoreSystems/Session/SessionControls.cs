@@ -213,7 +213,7 @@ namespace CoreSystems
                         }
                         comp.RequestShootBurst(comp.Session.MpServer ? comp.Session.PlayerId : -1);
                     };
-                    
+                    /*
                     var oldWriter = a.Writer;
                     a.Writer = (blk, sb) => {
 
@@ -228,6 +228,7 @@ namespace CoreSystems
                     };
                     a.Name.Clear();
                     a.Name.Append(BurstStr);
+                    */
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot")) {

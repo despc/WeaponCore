@@ -52,8 +52,7 @@ namespace CoreSystems
         TerminalMonitor,
         ClientNotify,
         ServerData,
-        QueueShot,
-        PlayerState,
+        BurstShot,
         EwaredBlocks,
         ClientReady,
         ProjectileSyncs,
@@ -84,7 +83,7 @@ namespace CoreSystems
     [ProtoInclude(25, typeof(ClientNotifyPacket))]
     [ProtoInclude(26, typeof(ServerPacket))]
     [ProtoInclude(27, typeof(WeaponReloadPacket))]
-    // empty 28
+    [ProtoInclude(28, typeof(IntUpdatePacket))]
     [ProtoInclude(29, typeof(WeaponAmmoPacket))]
     [ProtoInclude(30, typeof(UpgradeCompPacket))]
     [ProtoInclude(31, typeof(UpgradeStatePacket))]
@@ -405,6 +404,19 @@ namespace CoreSystems
     public class FloatUpdatePacket : Packet
     {
         [ProtoMember(1)] internal float Data;
+
+        public override void CleanUp()
+        {
+            base.CleanUp();
+            Data = 0;
+        }
+    }
+
+
+    [ProtoContract]
+    public class IntUpdatePacket : Packet
+    {
+        [ProtoMember(1)] internal int Data;
 
         public override void CleanUp()
         {

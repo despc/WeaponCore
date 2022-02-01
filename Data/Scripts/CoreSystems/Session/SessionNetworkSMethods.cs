@@ -450,5 +450,40 @@ namespace CoreSystems
 
             return true;
         }
+
+        private bool ServerBurstSyncs(PacketObj data)
+        {
+            var packet = data.Packet;
+            var dPacket = (IntUpdatePacket)packet;
+            var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
+            var comp = ent?.Components.Get<Weapon.WeaponComponent>();
+            if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
+
+            long playerId;
+            if (comp.RequestShootBurstId == dPacket.Data && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            {
+                comp.RequestShootBurst(playerId);
+
+                if (comp.RequestShootBurstId == dPacket.Data)
+                {
+                    Log.Line($"failed to burst on server");
+                }
+            }
+            else if (comp.RequestShootBurstId != dPacket.Data)
+            {
+                Log.Line($"server bursting request mismatch");
+            }
+            else if (!SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            {
+                Log.Line($"server bursting playerId not found");
+            }
+            else
+            {
+                Log.Line($"server burst other failure");
+            }
+
+            data.Report.PacketValid = true;
+            return true;
+        }
     }
 }

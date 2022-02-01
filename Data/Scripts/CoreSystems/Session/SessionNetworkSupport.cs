@@ -1085,6 +1085,35 @@ namespace CoreSystems
             else Log.Line("SendSetCompBoolRequest should never be called on Non-HandlesInput");
         }
 
+        internal void SendSetCompIntRequest(Weapon.WeaponComponent comp, int newInt, PacketType type)
+        {
+            if (IsClient)
+            {
+                PacketsToServer.Add(new IntUpdatePacket
+                {
+                    EntityId = comp.CoreEntity.EntityId,
+                    SenderId = MultiplayerId,
+                    PType = type,
+                    Data = newInt,
+                });
+            }
+            else if (MpServer)
+            {
+                PacketsToClient.Add(new PacketInfo
+                {
+                    Entity = comp.CoreEntity,
+                    Packet = new IntUpdatePacket
+                    {
+                        EntityId = comp.CoreEntity.EntityId,
+                        SenderId = MultiplayerId,
+                        PType = type,
+                        Data = newInt,
+                    }
+                });
+            }
+            else Log.Line("SendSetFloatRequest should never be called on Non-HandlesInput");
+        }
+
         internal void SendTrackReticleUpdate(Weapon.WeaponComponent comp, bool track)
         {
             if (IsClient)
