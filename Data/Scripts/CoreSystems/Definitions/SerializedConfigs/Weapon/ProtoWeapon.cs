@@ -383,14 +383,14 @@ namespace CoreSystems
 
                 var target = w.Target;
 
-                var newProjectile = EntityId == -1;
+                var isProjectile = EntityId == -1;
                 var noTarget = EntityId == 0;
-                var fakeTarget = EntityId == -2;
+                var isFakeTarget = EntityId == -2;
 
                 if (!w.ActiveAmmoDef.AmmoDef.Const.Reloadable && !noTarget)
                     w.ProjectileCounter = 0;
 
-                if (newProjectile)
+                if (isProjectile)
                 {
                     target.ProjectileEndTick = 0;
                     target.SoftProjetileReset = false;
@@ -400,18 +400,21 @@ namespace CoreSystems
                 {
                     target.SoftProjetileReset = true;
                     target.ProjectileEndTick = w.System.Session.Tick + 62;
+                    target.TargetState = Target.TargetStates.WasProjectile;
                 }
                 else
                 {
                     target.ProjectileEndTick = 0;
                     target.SoftProjetileReset = false;
 
-                    if (target.TargetState == Target.TargetStates.IsProjectile)
-                        target.TargetState = Target.TargetStates.WasProjectile;
+                    if (noTarget)
+                        target.TargetState = Target.TargetStates.None;
+                    else if (isFakeTarget)
+                        target.TargetState = Target.TargetStates.IsFake;
+                    else
+                        target.TargetState = Target.TargetStates.IsEntity;
                 }
 
-                if (fakeTarget)
-                    target.TargetState = Target.TargetStates.IsFake;
 
                 target.TargetPos = TargetPos;
                 target.ClientDirty = true;

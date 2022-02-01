@@ -453,23 +453,26 @@ namespace CoreSystems
 
         private bool ServerBurstSyncs(PacketObj data)
         {
+
             var packet = data.Packet;
             var dPacket = (IntUpdatePacket)packet;
             var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
-            var comp = ent?.Components.Get<Weapon.WeaponComponent>();
+            var comp = ent?.Components.Get<CoreComponent>();
+
             if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
+            var wComp = comp as Weapon.WeaponComponent;
 
             long playerId;
-            if (comp.RequestShootBurstId == dPacket.Data && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            if (wComp != null && wComp.RequestShootBurstId == dPacket.Data && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
-                comp.RequestShootBurst(playerId);
+                wComp.RequestShootBurst(playerId);
 
-                if (comp.RequestShootBurstId == dPacket.Data)
+                if (wComp.RequestShootBurstId == dPacket.Data)
                 {
                     Log.Line($"failed to burst on server");
                 }
             }
-            else if (comp.RequestShootBurstId != dPacket.Data)
+            else if (wComp != null && wComp.RequestShootBurstId != dPacket.Data)
             {
                 Log.Line($"server bursting request mismatch");
             }
