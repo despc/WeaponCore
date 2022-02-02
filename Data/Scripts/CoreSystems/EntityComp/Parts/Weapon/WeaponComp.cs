@@ -45,11 +45,12 @@ namespace CoreSystems.Platform
             internal uint RequestShootBurstId;
             internal int MaxAmmoCount;
 
-            internal enum ShootModes
+            public enum ShootModes
             {
+                Once,
                 Burst,
-                Hold,
-                ShootOnce,
+                Toggle,
+                Mouse,
             }
 
             internal enum ShootCodes
@@ -125,6 +126,7 @@ namespace CoreSystems.Platform
 
                         if (Session.MpActive)
                         {
+                            Log.Line($"state:{state.ShootBurstStateId} - Request:{RequestShootBurstId}");
                             Session.SendState(this);
                         }
                     }
@@ -134,7 +136,7 @@ namespace CoreSystems.Platform
             }
 
 
-            internal void RequestShootBurst(long playerId, ShootModes mode)
+            internal void RequestShootBurst(long playerId)
             {
                 var state = Data.Repo.Values.State;
                 var set = Data.Repo.Values.Set;
@@ -159,7 +161,7 @@ namespace CoreSystems.Platform
 
                     var code = Session.IsServer ? playerId ==  0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
                     ulong packagedMessage;
-                    Session.EncodeShootState(state.ShootBurstStateId, (uint)mode, 0, (uint)code, out packagedMessage);
+                    Session.EncodeShootState(state.ShootBurstStateId, (uint)set.Overrides.ShootMode, 0, (uint)code, out packagedMessage);
 
                     if (playerId > 0) 
                         Session.SendBurstRequest(this, packagedMessage, PacketType.BurstShot, RewriteBurstToServerResponse, playerId);
@@ -620,9 +622,6 @@ namespace CoreSystems.Platform
                         o.Grids = enabled;
                         clearTargets = true;
                         break;
-                    case "ArmorShowArea":
-                        o.ArmorShowArea = enabled;
-                        break;
                     case "Biologicals":
                         o.Biologicals = enabled;
                         clearTargets = true;
@@ -644,6 +643,15 @@ namespace CoreSystems.Platform
                         break;
                     case "BurstCount":
                         o.BurstCount = v;
+                        break;
+                    case "BurstDelay":
+                        o.BurstDelay = v;
+                        break;
+                    case "SequenceId":
+                        o.SequenceId = v;
+                        break;
+                    case "ShootMode":
+                        o.ShootMode = (ShootModes)v;
                         break;
                     case "LeadGroup":
                         o.LeadGroup = v;

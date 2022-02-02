@@ -246,7 +246,7 @@ namespace CoreSystems.Support
                     string shots;
                     if (w.ActiveAmmoDef.AmmoDef.Const.EnergyAmmo || w.ActiveAmmoDef.AmmoDef.Const.IsHybrid)
                     {
-                        var chargeTime = w.AssignedPower > 0 ? (int)((w.MaxCharge * w.Comp.Data.Repo.Values.Set.DpsModifier - w.ProtoWeaponAmmo.CurrentCharge) / w.AssignedPower * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS) : 0;
+                        var chargeTime = w.AssignedPower > 0 ? (int)((w.MaxCharge - w.ProtoWeaponAmmo.CurrentCharge) / w.AssignedPower * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS) : 0;
 
                         shots = "\nCharging: " + w.Charging +" ("+ chargeTime+")";
 
@@ -282,7 +282,7 @@ namespace CoreSystems.Support
                 {
                     foreach (var weapon in collection)
                     {
-                        var chargeTime = weapon.AssignedPower > 0 ? (int)((weapon.MaxCharge * weapon.Comp.Data.Repo.Values.Set.DpsModifier - weapon.ProtoWeaponAmmo.CurrentCharge) / weapon.AssignedPower * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS) : 0;
+                        var chargeTime = weapon.AssignedPower > 0 ? (int)((weapon.MaxCharge - weapon.ProtoWeaponAmmo.CurrentCharge) / weapon.AssignedPower * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS) : 0;
                         stringBuilder.Append($"\n\nWeapon: {weapon.System.PartName} - Enabled: {IsWorking}");
                         stringBuilder.Append($"\nTargetState: {weapon.Target.CurrentState} - Manual: {weapon.BaseComp.UserControlled || weapon.Target.TargetState == Target.TargetStates.IsFake}");
                         stringBuilder.Append($"\nEvent: {weapon.LastEvent} - ProtoWeaponAmmo :{!weapon.NoMagsToLoad}");

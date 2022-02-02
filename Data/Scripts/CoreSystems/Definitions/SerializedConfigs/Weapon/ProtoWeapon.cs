@@ -7,7 +7,7 @@ using Sandbox.ModAPI;
 using VRageMath;
 using static CoreSystems.Support.WeaponDefinition.TargetingDef;
 using static CoreSystems.Support.CoreComponent;
-
+using static CoreSystems.Platform.Weapon.WeaponComponent;
 namespace CoreSystems
 {
     [ProtoContract]
@@ -20,7 +20,6 @@ namespace CoreSystems
         {
             Values.State.TrackingReticle = false;
             Values.State.ShootBurstStateId = 0;
-            Values.Set.DpsModifier = 1;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
@@ -245,7 +244,7 @@ namespace CoreSystems
     {
         [ProtoMember(1), DefaultValue(true)] public bool ReportTarget = true;
         [ProtoMember(2), DefaultValue(1)] public int Overload = 1;
-        [ProtoMember(3), DefaultValue(1)] public float DpsModifier = 1;
+        //[ProtoMember(3), DefaultValue(1)] public float DpsModifier = 1;
         [ProtoMember(4), DefaultValue(1)] public float RofModifier = 1;
         [ProtoMember(5), DefaultValue(100)] public float Range = 100;
         [ProtoMember(6)] public ProtoWeaponOverrides Overrides;
@@ -265,13 +264,11 @@ namespace CoreSystems
             Overrides.Sync(sync.Overrides);
 
             var rofChange = Math.Abs(RofModifier - sync.RofModifier) > 0.0001f;
-            var dpsChange = Math.Abs(DpsModifier - sync.DpsModifier) > 0.0001f;
 
-            if (Overload != sync.Overload || rofChange || dpsChange)
+            if (Overload != sync.Overload || rofChange)
             {
                 Overload = sync.Overload;
                 RofModifier = sync.RofModifier;
-                DpsModifier = sync.DpsModifier;
                 if (rofChange) Weapon.WeaponComponent.SetRof(comp);
             }
         }
@@ -463,15 +460,20 @@ namespace CoreSystems
         [ProtoMember(12), DefaultValue(16384)] public int MaxSize = 16384;
         [ProtoMember(13), DefaultValue(MoveModes.Any)] public MoveModes MoveMode = MoveModes.Any;
         [ProtoMember(14), DefaultValue(true)] public bool Grids = true;
-        [ProtoMember(15), DefaultValue(true)] public bool ArmorShowArea;
+        //[ProtoMember(15), DefaultValue(true)] public bool ArmorShowArea;
         [ProtoMember(16)] public bool Repel;
         [ProtoMember(17)] public long CameraChannel;
         [ProtoMember(18)] public bool Debug;
-        [ProtoMember(19)] public long LeadGroup;
+        //[ProtoMember(19)] public long LeadGroup;
         [ProtoMember(20)] public bool Armed;
-        [ProtoMember(21)] public long ArmedTimer;
+        //[ProtoMember(26)] public long ArmedTimer;
         [ProtoMember(22)] public bool Override;
         [ProtoMember(23)] public int BurstCount;
+        [ProtoMember(24)] public int BurstDelay;
+        [ProtoMember(25)] public int SequenceId;
+        [ProtoMember(26)] public int ArmedTimer;
+        [ProtoMember(27)] public int LeadGroup;
+        [ProtoMember(28), DefaultValue(ShootModes.Once)] public ShootModes ShootMode = ShootModes.Once;
 
         public void Sync(ProtoWeaponOverrides syncFrom)
         {
@@ -487,7 +489,6 @@ namespace CoreSystems
             SubSystem = syncFrom.SubSystem;
             Meteors = syncFrom.Meteors;
             Grids = syncFrom.Grids;
-            ArmorShowArea = syncFrom.ArmorShowArea;
             Biologicals = syncFrom.Biologicals;
             Projectiles = syncFrom.Projectiles;
             Repel = syncFrom.Repel;
@@ -498,6 +499,9 @@ namespace CoreSystems
             Armed = syncFrom.Armed;
             ArmedTimer = syncFrom.ArmedTimer;
             BurstCount = syncFrom.BurstCount;
+            BurstDelay = syncFrom.BurstDelay;
+            SequenceId = syncFrom.SequenceId;
+            ShootMode = syncFrom.ShootMode;
         }
     }
 }

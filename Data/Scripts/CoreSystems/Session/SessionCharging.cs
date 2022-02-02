@@ -116,7 +116,7 @@ namespace CoreSystems
             if (!w.ActiveAmmoDef.AmmoDef.Const.Reloadable && w.IsShooting)
                 return false;
 
-            var allCharged = w.ProtoWeaponAmmo.CurrentCharge >= w.MaxCharge * comp.Data.Repo.Values.Set.DpsModifier;
+            var allCharged = w.ProtoWeaponAmmo.CurrentCharge >= w.MaxCharge;
             var clientAllDone = IsClient && w.Reload.EndId > w.ClientEndId;
             var complete = allCharged || clientAllDone || w.ExitCharger;
             var weaponFailure = !ai.HasPower || !comp.IsWorking;

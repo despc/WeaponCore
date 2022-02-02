@@ -489,10 +489,11 @@ namespace CoreSystems
             {
                 if (wComp.RequestShootBurstId == stateId)
                 {
-                    wComp.RequestShootBurst(0, mode);
+                    wComp.RequestShootBurst(0);
                 }
                 else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
                 {
+                    //Log.Line($"requesting client received burst responsse: stateId:{stateId}({wComp.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.WaitingBurstResponse}");
                     wComp.WaitingBurstResponse = false;
                 }
                 else

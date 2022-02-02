@@ -75,11 +75,6 @@ namespace CoreSystems
                         BlockUi.RequestSetRange(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
                         break;
                     }
-                case PacketType.RequestSetDps:
-                    {
-                        BlockUi.RequestSetDps(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
-                        break;
-                    }
                 case PacketType.RequestSetReportTarget:
                     {
                         BlockUi.RequestSetReportTarget(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
@@ -472,7 +467,7 @@ namespace CoreSystems
             if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
 
-                wComp.RequestShootBurst(playerId, mode);
+                wComp.RequestShootBurst(playerId);
 
                 if (wComp.RequestShootBurstId == stateId)
                 {

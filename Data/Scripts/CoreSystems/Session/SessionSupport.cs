@@ -149,7 +149,6 @@ namespace CoreSystems
             shootState = (Weapon.WeaponComponent.ShootModes)((id << 16) >> 48);
             y = (uint)((id << 32) >> 48);
             code = (Weapon.WeaponComponent.ShootCodes)((id << 48) >> 48);
-
         }
 
         internal static void EncodeShootState(uint stateId, uint shootState, uint y, uint code, out ulong id)
@@ -1026,7 +1025,7 @@ namespace CoreSystems
             comp.DefaultReloads = (int)defaultReloads;
 
             if (trigger == TriggerOnce) {
-                comp.RequestShootBurst(identity, Weapon.WeaponComponent.ShootModes.Burst);
+                comp.RequestShootBurst(identity);
                 trigger = TriggerOff;
             }
 

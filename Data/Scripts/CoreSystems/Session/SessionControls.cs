@@ -211,7 +211,7 @@ namespace CoreSystems
                                 oldAction(blk);
                             return;
                         }
-                        comp.RequestShootBurst(comp.Session.PlayerId , Weapon.WeaponComponent.ShootModes.Burst);
+                        comp.RequestShootBurst(comp.Session.PlayerId);
                     };
                     /*
                     var oldWriter = a.Writer;
