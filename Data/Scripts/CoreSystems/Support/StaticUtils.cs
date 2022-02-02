@@ -14,6 +14,24 @@ namespace CoreSystems.Support
 {
     internal static class SUtils
     {
+        public static void GetFourInt16FromLong(long id, out int w, out int x, out int y, out int z)
+        {
+
+            w = (int)(id >> 48);
+
+            x = (int)((id << 16) >> 48);
+            y = (int)((id << 32) >> 48);
+            z = (int)((id << 48) >> 48);
+
+        }
+
+        public static void FourInt16ToLong(int w, int x, int y, int z, out long id)
+        {
+
+            id = ((long)(w << 16 | x) << 32) | (uint)(y << 16 | z);
+
+        }
+
         public static double Clamp01(double value)
         {
             if (value < 0.0)

@@ -26,8 +26,6 @@ namespace CoreSystems.Support
                         { "TerminalSwitchOff", "Off" },
                         { "TerminalReportTargetTitle", "Enable Report Target" },
                         { "TerminalReportTargetTooltip", "Report if weapon has target on HUD" },
-                        { "TerminalWeaponDamageTitle", "Change Damage Per Shot" },
-                        { "TerminalWeaponDamageTooltip", "Change the damage per shot" },
                         { "TerminalWeaponROFTitle", "Change Rate of Fire" },
                         { "TerminalWeaponROFTooltip", "Change rate of fire" },
                         { "TerminalOverloadTitle", "Overload Damage" },
@@ -74,6 +72,18 @@ namespace CoreSystems.Support
                         { "TerminalCameraChannelTooltip", "Assign this weapon to a camera channel" },
                         { "TerminalBurstShotsTitle", "Burst Shot Count" },
                         { "TerminalBurstShotsTooltip", "The number of shots to burst at a time" },
+
+                        { "TerminalBurstDelayTitle", "Burst Shot Delay" },
+                        { "TerminalBurstDelayTooltip", "The number game ticks (60 per second) to delay between shots" },
+
+
+                        { "TerminalSequenceIdTitle", "Weapon Sequence id" },
+                        { "TerminalSequenceIdTooltip", "Assign this weapon a sequence id per block group, used for sequence firing" },
+
+                        { "TerminalShootModeTitle", "Shoot Mode" },
+                        { "TerminalShootModeTooltip", "Set the weapon's mode, fire once, burst fire, mouse click, key toggle mode" },
+
+
                         { "TerminalTargetGroupTitle", "Target Lead Group" },
                         { "TerminalTargetGroupTooltip", "Assign this weapon to target lead group" },
                         { "TerminalDecoyPickSubSystemTitle", "Pick SubSystem" },
@@ -165,8 +175,6 @@ namespace CoreSystems.Support
                         { "TerminalSwitchOff", "Выкл" },
                         { "TerminalReportTargetTitle", "Включить Наведение" },
                         { "TerminalReportTargetTooltip", "Активировать наводку турелей" },
-                        { "TerminalWeaponDamageTitle", "Изменить наносимый урон за выстрел" },
-                        { "TerminalWeaponDamageTooltip", "Изменить наносимый уронурон за выстрел" },
                         { "TerminalWeaponROFTitle", "Изменить скорострельность" },
                         { "TerminalWeaponROFTooltip", "Изменить скорострельность" },
                         { "TerminalOverloadTitle", "Получаемый урон от перегрузки" },
@@ -301,8 +309,6 @@ namespace CoreSystems.Support
                         { "TerminalSwitchOff", "关闭" },
                         { "TerminalReportTargetTitle", "启用制导" },
                         { "TerminalReportTargetTooltip", "启用制导" },
-                        { "TerminalWeaponDamageTitle", "改变每发的伤害" },
-                        { "TerminalWeaponDamageTooltip", "改变每发的伤害" },
                         { "TerminalWeaponROFTitle", "改变射速" },
                         { "TerminalWeaponROFTooltip", "改变射速" },
                         { "TerminalOverloadTitle", "过载伤害" },

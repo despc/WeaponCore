@@ -29,26 +29,6 @@ namespace CoreSystems
             }
         }
 
-        internal static void RequestSetDps(IMyTerminalBlock block, float newValue)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
-
-            if (!MyUtils.IsEqual(newValue, comp.Data.Repo.Values.Set.DpsModifier))
-            {
-
-                if (comp.Session.IsServer)
-                {
-                    comp.Data.Repo.Values.Set.DpsModifier = newValue;
-                    Weapon.WeaponComponent.SetDps(comp, true);
-                    if (comp.Session.MpActive)
-                        comp.Session.SendComp(comp);
-                }
-                else
-                    comp.Session.SendSetCompFloatRequest(comp, newValue, PacketType.RequestSetDps);
-            }
-        }
-
 
         internal static void RequestSetRange(IMyTerminalBlock block, float newValue)
         {
@@ -108,13 +88,6 @@ namespace CoreSystems
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
             return comp.Data.Repo.Values.Set.ReportTarget;
-        }
-
-        internal static float GetDps(IMyTerminalBlock block)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
-            return comp.Data.Repo.Values.Set.DpsModifier;
         }
 
         internal static float GetRof(IMyTerminalBlock block)
@@ -384,12 +357,44 @@ namespace CoreSystems
             }
         }
 
+
         internal static void ListAmmos(List<MyTerminalControlComboBoxItem> ammoList)
         {
             foreach (var ammo in AmmoList) ammoList.Add(ammo);
         }
 
         private static readonly List<MyTerminalControlComboBoxItem> AmmoList = new List<MyTerminalControlComboBoxItem>();
+
+        internal static long GetShootModes(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+            return (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
+        }
+
+        internal static void RequestShootModes(IMyTerminalBlock block, long newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", (int)newValue, comp.Session.PlayerId);
+        }
+
+        internal static void ListShootModes(List<MyTerminalControlComboBoxItem> shootModeList)
+        {
+            foreach (var sub in ShootModeList) shootModeList.Add(sub);
+        }
+
+        private static readonly List<MyTerminalControlComboBoxItem> ShootModeList = new List<MyTerminalControlComboBoxItem>
+        {
+            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)0}") },
+            new MyTerminalControlComboBoxItem { Key = 1, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)1}") },
+            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)2}") },
+            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)3}") },
+        };
+
+
+
 
         internal static long GetSubSystem(IMyTerminalBlock block)
         {
@@ -537,6 +542,48 @@ namespace CoreSystems
             }
         }
 
+        internal static float GetBurstDelay(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+            return comp.Data.Repo.Values.Set.Overrides.BurstDelay;
+        }
+
+        internal static void RequestSetBurstDelay(IMyTerminalBlock block, float newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var roundedInt = (int)Math.Round(newValue);
+            var values = comp.Data.Repo.Values;
+
+            if (roundedInt != values.Set.Overrides.BurstDelay && comp.RequestShootBurstId == values.State.ShootBurstStateId)
+            {
+                Weapon.WeaponComponent.RequestSetValue(comp, "BurstDelay", roundedInt, comp.Session.PlayerId);
+            }
+        }
+
+        internal static float GetSequenceId(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+            return comp.Data.Repo.Values.Set.Overrides.SequenceId;
+        }
+
+        internal static void RequestSetSequenceId(IMyTerminalBlock block, float newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var roundedInt = (int)Math.Round(newValue);
+            var values = comp.Data.Repo.Values;
+
+            if (roundedInt != values.Set.Overrides.SequenceId)
+            {
+                Weapon.WeaponComponent.RequestSetValue(comp, "SequenceId", roundedInt, comp.Session.PlayerId);
+            }
+        }
+
         internal static float GetArmedTimeRemaining(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -656,6 +703,32 @@ namespace CoreSystems
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
 
             return comp.MaxAmmoCount;
+        }
+
+        internal static float GetMinBurstDelay(IMyTerminalBlock block)
+        {
+            return 0;
+        }
+
+        internal static float GetMaxBurstDelay(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+
+            return 300;
+        }
+
+        internal static float GetMinSequenceId(IMyTerminalBlock block)
+        {
+            return 0;
+        }
+
+        internal static float GetMaxSequenceId(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+
+            return 100;
         }
 
         internal static float GetMinCriticalTime(IMyTerminalBlock block)

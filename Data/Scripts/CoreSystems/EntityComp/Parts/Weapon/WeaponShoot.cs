@@ -106,7 +106,7 @@ namespace CoreSystems.Platform
                         else if (ClientMakeUpShots > 0) {
                             --ClientMakeUpShots;
 
-                                                        if (BurstCount > 0)
+                            if (BurstCount > 0)
                                 Comp.UpdateBurst(this);
                         }
 

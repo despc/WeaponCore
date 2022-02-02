@@ -41,8 +41,25 @@ namespace CoreSystems.Platform
             internal bool ShootSubmerged;
             internal bool HasTracking;
             internal bool HasRequireTarget;
-            internal int RequestShootBurstId;
+            internal bool WaitingBurstResponse;
+            internal uint RequestShootBurstId;
             internal int MaxAmmoCount;
+
+            public enum ShootModes
+            {
+                Once,
+                Burst,
+                Toggle,
+                Mouse,
+            }
+
+            internal enum ShootCodes
+            {
+                ServerResponse,
+                ClientRequest,
+                ServerRequest,
+                ServerRelay,
+            }
 
             internal WeaponComponent(Session session, MyEntity coreEntity, MyDefinitionId id)
             {
@@ -100,9 +117,18 @@ namespace CoreSystems.Platform
                     WeaponsFired = 0;
                     if (Session.IsServer)
                     {
-                        state.ShootBurstStateId = RequestShootBurstId;
+                        if (RequestShootBurstId != 65535)
+                            state.ShootBurstStateId = RequestShootBurstId;
+                        else {
+                            state.ShootBurstStateId = 0;
+                            RequestShootBurstId = 0;
+                        }
+
                         if (Session.MpActive)
+                        {
+                            Log.Line($"state:{state.ShootBurstStateId} - Request:{RequestShootBurstId}");
                             Session.SendState(this);
+                        }
                     }
                 }
 
@@ -116,7 +142,7 @@ namespace CoreSystems.Platform
                 var set = Data.Repo.Values.Set;
 
                 //Log.Line($"request1: {IsDisabled} - {RequestShootBurstId} != {state.ShootBurstStateId} - {set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController} - {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
-                if (IsDisabled || RequestShootBurstId != state.ShootBurstStateId || set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return;
+                if (IsDisabled || WaitingBurstResponse || RequestShootBurstId != state.ShootBurstStateId || set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return;
 
                 //Log.Line($"request2");
                 if (IsBlock && Session.HandlesInput)
@@ -126,8 +152,42 @@ namespace CoreSystems.Platform
 
                 state.PlayerId = playerId;
 
-                if (Session.MpActive)
-                    Session.SendSetCompIntRequest(this, state.ShootBurstStateId, PacketType.BurstShot);
+                var sendRequest = !Session.IsClient || playerId == Session.PlayerId;
+
+
+                if (Session.MpActive && sendRequest)
+                {
+                    WaitingBurstResponse = Session.IsClient;
+
+                    var code = Session.IsServer ? playerId ==  0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
+                    ulong packagedMessage;
+                    Session.EncodeShootState(state.ShootBurstStateId, (uint)set.Overrides.ShootMode, 0, (uint)code, out packagedMessage);
+
+                    if (playerId > 0) 
+                        Session.SendBurstRequest(this, packagedMessage, PacketType.BurstShot, RewriteBurstToServerResponse, playerId);
+                    else
+                        Session.SendBurstRequest(this, packagedMessage, PacketType.BurstShot, null, playerId);
+                }
+            }
+
+            private static object RewriteBurstToServerResponse(object o)
+            {
+                var ulongPacket = (ULongUpdatePacket) o;
+
+                uint stateId;
+                ShootModes mode;
+                ShootCodes code;
+                uint y;
+
+                Session.DecodeShootState(ulongPacket.Data, out stateId, out mode, out y, out code);
+
+                code = ShootCodes.ServerResponse;
+                ulong packagedMessage;
+                Session.EncodeShootState(stateId, (uint)mode, 0, (uint)code, out packagedMessage);
+
+                ulongPacket.Data = packagedMessage;
+
+                return ulongPacket;
             }
 
             internal bool ReadyToShoot()
@@ -562,9 +622,6 @@ namespace CoreSystems.Platform
                         o.Grids = enabled;
                         clearTargets = true;
                         break;
-                    case "ArmorShowArea":
-                        o.ArmorShowArea = enabled;
-                        break;
                     case "Biologicals":
                         o.Biologicals = enabled;
                         clearTargets = true;
@@ -586,6 +643,15 @@ namespace CoreSystems.Platform
                         break;
                     case "BurstCount":
                         o.BurstCount = v;
+                        break;
+                    case "BurstDelay":
+                        o.BurstDelay = v;
+                        break;
+                    case "SequenceId":
+                        o.SequenceId = v;
+                        break;
+                    case "ShootMode":
+                        o.ShootMode = (ShootModes)v;
                         break;
                     case "LeadGroup":
                         o.LeadGroup = v;

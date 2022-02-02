@@ -141,7 +141,21 @@ namespace CoreSystems
             
             LosDebugList.Add(debug);
         }
-        
+
+        internal static void DecodeShootState(ulong id, out uint stateId, out Weapon.WeaponComponent.ShootModes shootState, out uint y, out Weapon.WeaponComponent.ShootCodes code)
+        {
+            stateId = (uint)(id >> 48);
+
+            shootState = (Weapon.WeaponComponent.ShootModes)((id << 16) >> 48);
+            y = (uint)((id << 32) >> 48);
+            code = (Weapon.WeaponComponent.ShootCodes)((id << 48) >> 48);
+        }
+
+        internal static void EncodeShootState(uint stateId, uint shootState, uint y, uint code, out ulong id)
+        {
+            id = ((ulong)(stateId << 16 | shootState) << 32) | (y << 16 | code);
+        }
+
         internal void LosDebuging()
         {
             for (var i = LosDebugList.Count - 1; i >= 0; i--)
@@ -1011,7 +1025,7 @@ namespace CoreSystems
             comp.DefaultReloads = (int)defaultReloads;
 
             if (trigger == TriggerOnce) {
-                comp.RequestShootBurst(0);
+                comp.RequestShootBurst(identity);
                 trigger = TriggerOff;
             }
 

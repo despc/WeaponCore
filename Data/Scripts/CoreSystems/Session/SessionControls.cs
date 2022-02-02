@@ -211,7 +211,7 @@ namespace CoreSystems
                                 oldAction(blk);
                             return;
                         }
-                        comp.RequestShootBurst(comp.Session.MpServer ? comp.Session.PlayerId : -1);
+                        comp.RequestShootBurst(comp.Session.PlayerId);
                     };
                     /*
                     var oldWriter = a.Writer;

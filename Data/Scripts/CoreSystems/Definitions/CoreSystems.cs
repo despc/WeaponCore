@@ -291,9 +291,8 @@ namespace CoreSystems.Support
                     ++ammoSelections;
 
                     var targetAmmoSize = aConst.MagsToLoad * aConst.MagazineSize;
-                    var beam = aConst.IsBeamWeapon;
                     var fireFull = aConst.MustCharge && aConst.Reloadable || AlwaysFireFull;
-                    var ammoLoadSize = MathHelper.Clamp(targetAmmoSize, 1, fireFull ? 1 : beam ? 60 : targetAmmoSize);
+                    var ammoLoadSize = MathHelper.Clamp(targetAmmoSize, 1, fireFull ? 1 : targetAmmoSize);
 
                     if (ammoLoadSize > MaxAmmoCount)
                         MaxAmmoCount = ammoLoadSize;
