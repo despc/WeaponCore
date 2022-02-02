@@ -410,7 +410,7 @@ namespace CoreSystems.Projectiles
                             {
 
                                 if (iShield != null && grid != null && grid.IsSameConstructAs(iShield.CubeGrid))
-                                    hitEntity.DamageMulti = 4;
+                                    hitEntity.DamageMulti = 16;
 
                                 hitEntity.EventType = Grid;
                             }

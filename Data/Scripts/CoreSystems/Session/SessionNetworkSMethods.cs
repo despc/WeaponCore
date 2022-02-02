@@ -455,24 +455,31 @@ namespace CoreSystems
         {
 
             var packet = data.Packet;
-            var dPacket = (IntUpdatePacket)packet;
+            var dPacket = (ULongUpdatePacket)packet;
             var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
             var comp = ent?.Components.Get<CoreComponent>();
 
             if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
             var wComp = comp as Weapon.WeaponComponent;
 
-            long playerId;
-            if (wComp != null && wComp.RequestShootBurstId == dPacket.Data && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
-            {
-                wComp.RequestShootBurst(playerId);
+            uint stateId;
+            uint y;
+            Weapon.WeaponComponent.ShootModes mode;
+            Weapon.WeaponComponent.ShootCodes code;
+            DecodeShootState(dPacket.Data, out stateId, out mode, out y, out code);
 
-                if (wComp.RequestShootBurstId == dPacket.Data)
+            long playerId;
+            if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            {
+
+                wComp.RequestShootBurst(playerId, mode);
+
+                if (wComp.RequestShootBurstId == stateId)
                 {
                     Log.Line($"failed to burst on server");
                 }
             }
-            else if (wComp != null && wComp.RequestShootBurstId != dPacket.Data)
+            else if (wComp != null && wComp.RequestShootBurstId != stateId)
             {
                 Log.Line($"server bursting request mismatch");
             }

@@ -93,6 +93,7 @@ namespace CoreSystems
     [ProtoInclude(35, typeof(ClientReadyPacket))]
     [ProtoInclude(36, typeof(PaintedTargetPacket))]
     [ProtoInclude(37, typeof(ProjectileSyncPacket))]
+    [ProtoInclude(38, typeof(ULongUpdatePacket))]
 
     public class Packet
     {
@@ -424,6 +425,20 @@ namespace CoreSystems
             Data = 0;
         }
     }
+
+
+    [ProtoContract]
+    public class ULongUpdatePacket : Packet
+    {
+        [ProtoMember(1)] internal ulong Data;
+
+        public override void CleanUp()
+        {
+            base.CleanUp();
+            Data = 0;
+        }
+    }
+
 
     [ProtoContract]
     public class ClientNotifyPacket : Packet

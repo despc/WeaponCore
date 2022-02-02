@@ -302,7 +302,7 @@ namespace CoreSystems
         [ProtoMember(6)] public TriggerActions TerminalAction;
         [ProtoMember(7)] public bool CountingDown;
         [ProtoMember(8)] public bool CriticalReaction;
-        [ProtoMember(9)] public int ShootBurstStateId;
+        [ProtoMember(9)] public uint ShootBurstStateId;
 
         public bool Sync(Weapon.WeaponComponent comp, ProtoWeaponState sync, Caller caller)
         {

@@ -51,7 +51,7 @@ namespace CoreSystems.Control
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            comp.RequestShootBurst(comp.Session.MpServer ? comp.Session.PlayerId : -1);
+            comp.RequestShootBurst(comp.Session.PlayerId, Weapon.WeaponComponent.ShootModes.Burst);
         }
 
         internal static void TerminalActionControlMode(IMyTerminalBlock blk)

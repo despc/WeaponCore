@@ -472,34 +472,33 @@ namespace CoreSystems
         private bool ClientBurstSyncs(PacketObj data)
         {
             var packet = data.Packet;
-            var dPacket = (IntUpdatePacket)packet;
+            var dPacket = (ULongUpdatePacket)packet;
             var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
             var comp = ent?.Components.Get<CoreComponent>();
 
             if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
 
-            long playerId;
-            var wComp = comp as Weapon.WeaponComponent;
-            if (wComp != null && wComp.RequestShootBurstId == dPacket.Data && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
-            {
-                wComp.RequestShootBurst(playerId);
+            uint stateId;
+            Weapon.WeaponComponent.ShootModes mode;
+            uint y;
+            Weapon.WeaponComponent.ShootCodes code;
+            DecodeShootState(dPacket.Data, out stateId, out mode, out y, out code);
 
-                if (wComp.RequestShootBurstId == dPacket.Data)
+            var wComp = comp as Weapon.WeaponComponent;
+            if (wComp != null)
+            {
+                if (wComp.RequestShootBurstId == stateId)
                 {
-                    Log.Line($"failed to burst on client");
+                    wComp.RequestShootBurst(0, mode);
                 }
-            }
-            else if (wComp != null && wComp.RequestShootBurstId != dPacket.Data)
-            {
-                Log.Line($"client bursting request mismatch");
-            }
-            else if (!SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
-            {
-                Log.Line($"client bursting playerId not found");
-            }
-            else
-            {
-                Log.Line($"client burst other failure");
+                else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
+                {
+                    wComp.WaitingBurstResponse = false;
+                }
+                else
+                {
+                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.WaitingBurstResponse}");
+                }
             }
 
             data.Report.PacketValid = true;

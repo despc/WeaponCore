@@ -676,7 +676,7 @@ namespace CoreSystems.Api
             var comp = weaponBlock.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp?.Platform != null && comp.Platform.State == Ready && comp.Platform.Weapons.Count > weaponId)
             {
-                comp.RequestShootBurst(0);
+                comp.RequestShootBurst(0, Weapon.WeaponComponent.ShootModes.ShootOnce);
             }
         }
 

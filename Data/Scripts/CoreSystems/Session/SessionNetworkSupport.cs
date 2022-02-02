@@ -1,4 +1,5 @@
-﻿using CoreSystems.Platform;
+﻿using System;
+using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
@@ -67,7 +68,9 @@ namespace CoreSystems
         {
             internal MyEntity Entity;
             internal Packet Packet;
+            internal Func<object, object> Function;
             internal bool SingleClient;
+            internal long SpecialPlayerId;
         }
 
         internal class ErrorPacket
@@ -1085,7 +1088,7 @@ namespace CoreSystems
             else Log.Line("SendSetCompBoolRequest should never be called on Non-HandlesInput");
         }
 
-        internal void SendSetCompIntRequest(Weapon.WeaponComponent comp, int newInt, PacketType type)
+        internal void SendSetCompIntRequest(CoreComponent comp, int newInt, PacketType type)
         {
             if (IsClient)
             {
@@ -1108,6 +1111,67 @@ namespace CoreSystems
                         SenderId = MultiplayerId,
                         PType = type,
                         Data = newInt,
+                    }
+                });
+            }
+            else Log.Line("SendSetFloatRequest should never be called on Non-HandlesInput");
+        }
+
+        internal void SendSetCompLongRequest(CoreComponent comp, ulong newLong, PacketType type)
+        {
+            if (IsClient)
+            {
+                PacketsToServer.Add(new ULongUpdatePacket
+                {
+                    EntityId = comp.CoreEntity.EntityId,
+                    SenderId = MultiplayerId,
+                    PType = type,
+                    Data = newLong,
+                });
+            }
+            else if (MpServer)
+            {
+                PacketsToClient.Add(new PacketInfo
+                {
+                    Entity = comp.CoreEntity,
+                    Packet = new ULongUpdatePacket
+                    {
+                        EntityId = comp.CoreEntity.EntityId,
+                        SenderId = MultiplayerId,
+                        PType = type,
+                        Data = newLong,
+                    }
+                });
+            }
+            else Log.Line("SendSetFloatRequest should never be called on Non-HandlesInput");
+        }
+
+        internal void SendBurstRequest(CoreComponent comp, ulong newLong, PacketType type, Func<object, object> function, long requestingPlayerId)
+        {
+            if (IsClient)
+            {
+                PacketsToServer.Add(new ULongUpdatePacket
+                {
+                    EntityId = comp.CoreEntity.EntityId,
+                    SenderId = MultiplayerId,
+                    PType = type,
+                    Data = newLong,
+                });
+            }
+            else if (MpServer)
+            {
+                PacketsToClient.Add(new PacketInfo
+                {
+                    Entity = comp.CoreEntity,
+                    Function = function,
+                    SpecialPlayerId = requestingPlayerId,
+
+                    Packet = new ULongUpdatePacket
+                    {
+                        EntityId = comp.CoreEntity.EntityId,
+                        SenderId = MultiplayerId,
+                        PType = type,
+                        Data = newLong,
                     }
                 });
             }

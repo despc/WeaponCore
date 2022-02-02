@@ -244,7 +244,9 @@ namespace CoreSystems.Support
             var constraintMatrix = new MatrixD { Forward = forward, Left = left, Up = up, };
 
             // ugly as sin inlined compute GetRotationAngles + AngleBetween, returning the desired az/el doubles;
-            var transposeMatrix = MatrixD.Transpose(constraintMatrix);
+            MatrixD transposeMatrix;
+            MatrixD.Transpose(ref constraintMatrix, out transposeMatrix);
+
             Vector3D localTargetVector;
             Vector3D.TransformNormal(ref targetDir, ref transposeMatrix, out localTargetVector);
 

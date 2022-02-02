@@ -387,18 +387,31 @@ namespace CoreSystems
             for (int i = 0; i < PacketsToClient.Count; i++)
             {
                 var packetInfo = PacketsToClient[i];
-                var bytes = MyAPIGateway.Utilities.SerializeToBinary(packetInfo.Packet);
+
+                var sPlayerId = packetInfo.SpecialPlayerId;
+                var hasRewritePlayer = sPlayerId > 0 && packetInfo.Function != null;
+                var hasSkipPlayer = !hasRewritePlayer && sPlayerId > 0;
+                var packet = packetInfo.Packet;
+                var bytes = MyAPIGateway.Utilities.SerializeToBinary(packet);
                 if (packetInfo.SingleClient)
-                    MyModAPIHelper.MyMultiplayer.Static.SendMessageTo(ClientPacketId, bytes, packetInfo.Packet.SenderId, true);
+                    MyModAPIHelper.MyMultiplayer.Static.SendMessageTo(ClientPacketId, bytes, packet.SenderId, true);
                 else
                 {
                     long entityId = packetInfo.Entity?.GetTopMostParent().EntityId ?? -1;
-
                     foreach (var p in Players.Values)
                     {
-                        var notSender = p.Player.SteamUserId != packetInfo.Packet.SenderId;
+                        var notSender = p.Player.SteamUserId != packet.SenderId;
+                        
+                        var specialPlayer = sPlayerId == p.PlayerId;
+                        var skipPlayer = hasSkipPlayer && specialPlayer;
+
+
+                        if (specialPlayer && hasRewritePlayer)
+                            bytes = MyAPIGateway.Utilities.SerializeToBinary((Packet)packetInfo.Function(packet));
+
+
                         var sendPacket = notSender && packetInfo.Entity == null;
-                        if (!sendPacket && notSender)
+                        if (!sendPacket && !skipPlayer && notSender)
                         {
                             if (PlayerEntityIdInRange.ContainsKey(p.Player.SteamUserId))
                             {
