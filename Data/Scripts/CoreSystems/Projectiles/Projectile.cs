@@ -460,16 +460,18 @@ namespace CoreSystems.Projectiles
             var tracking = aConst.DeltaVelocityPerTick <= 0 || (DroneStat==DroneStatus.Dock || Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr);
             var newVel = new Vector3D();
             var parentPos = Vector3D.Zero;
+            var parentCube = Info.Target.CoreCube;
             var parentEnt = Info.Target.CoreEntity.GetTopMostParent();
             MyEntity friendEnt = null;//Info.Ai.Construct.Focus && Info.Overrides.Set.AssistFriend
             MyEntity topEnt = null;
-            var hasTarget = (targetEnt != null || !targetEnt.MarkedForClose);
-            var hasParent = (parentEnt != null || !parentEnt.MarkedForClose);
+            var hasTarget = targetEnt != null || !targetEnt.MarkedForClose;
+            var hasParent = parentCube != null || !parentCube.MarkedForClose; //(Info.Weapon.Comp.MarkedForClose || Info.Weapon.Comp.Version != savedVersionComp)
             //var hasFriend = (friendEnt != null || !friendEnt.MarkedForClose);
             var closestObstacle = Info.Target.ClosestObstacle;
             Info.Target.ClosestObstacle = null;
-            
             var hasObstacle = closestObstacle != parentEnt && closestObstacle != null;
+
+            if (!hasParent) DsDebugDraw.DrawSphere(new BoundingSphereD(Position, 10), Color.Green);
             try
             {
                 //Logic to handle loss of target and reassigment to friendly target
@@ -506,16 +508,16 @@ namespace CoreSystems.Projectiles
                     orbitSphere.Radius += fragProx;
                     orbitSphereFar.Radius += AccelInMetersPerSec + MaxSpeed; //first whack at dynamic setting   
                     orbitSphereClose.Radius += MaxSpeed * 0.3f; //Magic number, needs logical work?
-                        if (hasObstacle && orbitSphereClose.Contains(closestObstacle.PositionComp.GetPosition()) != ContainmentType.Contains)
-                        {
-                            orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
-                            orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;
-                            DroneStat = DroneStatus.Escape;
-                            break;
-                        }
+                    if (hasObstacle && orbitSphereClose.Contains(closestObstacle.PositionComp.GetPosition()) != ContainmentType.Contains)
+                    {
+                        orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
+                        orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;
+                        DroneStat = DroneStatus.Escape;
+                        break;
+                    }
 
 
-                        if (DroneStat != DroneStatus.Transit && orbitSphereFar.Contains(Position) == ContainmentType.Disjoint)
+                    if (DroneStat != DroneStatus.Transit && orbitSphereFar.Contains(Position) == ContainmentType.Disjoint)
                     {
                         DroneStat = DroneStatus.Transit;
                             break;
@@ -557,7 +559,7 @@ namespace CoreSystems.Projectiles
                             DroneStat = DroneStatus.Orbit;
                     }
 
-                    if (hasKamikaze && DroneStat != DroneStatus.Kamikaze && maxLife > 0 )
+                    if ((hasKamikaze || !hasParent) && DroneStat != DroneStatus.Kamikaze && maxLife > 0 )//Parenthesis for everyone!
                     {
                         var kamiFlightTime = orbitSphere.Radius / MaxSpeed * 60; //time needed for final dive into target
                         if (maxLife - Info.Age <= kamiFlightTime || (Info.Frags >= aConst.MaxFrags)) DroneStat = DroneStatus.Kamikaze;
@@ -624,7 +626,7 @@ namespace CoreSystems.Projectiles
                     orbitSphere.Radius += MaxSpeed;
                     orbitSphereFar.Radius += MaxSpeed*2;   
                     orbitSphereClose.Radius = targetSphere.Radius;
-                        if (hasObstacle)
+                        if (hasObstacle && DroneStat!=DroneStatus.Dock)
                         {
                             orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
                             orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;

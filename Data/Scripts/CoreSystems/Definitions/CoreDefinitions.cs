@@ -435,6 +435,8 @@ namespace CoreSystems.Support
                 [ProtoMember(18)] internal bool SpinFree;
                 [ProtoMember(19)] internal bool StayCharged;
                 [ProtoMember(20)] internal int MagsToLoad;
+                [ProtoMember(21)] internal int MaxActiveProjectiles;
+                [ProtoMember(22)] internal int MaxReloads;
             }
 
 
