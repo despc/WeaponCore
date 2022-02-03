@@ -157,7 +157,7 @@ namespace CoreSystems.Support
         #region Run
         internal void Init(ProInfo info, bool smartsOn, double firstStepSize, double maxSpeed, ref Vector3D originDir)
         {
-            System = info.System;
+            System = info.Weapon.System;
             AmmoDef = info.AmmoDef;
             IsFragment = info.IsFragment;
             SmartOn = smartsOn;
@@ -172,7 +172,6 @@ namespace CoreSystems.Support
             MaxTracerLength = info.TracerLength;
             MuzzleId = info.MuzzleId;
             UniqueMuzzleId = info.UniqueMuzzleId;
-            PartId = info.PartId;
             MaxSpeed = maxSpeed;
             MaxStepSize = MaxSpeed * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
             ShootVelStep = info.ShooterVel * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;

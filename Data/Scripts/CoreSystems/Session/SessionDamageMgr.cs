@@ -113,7 +113,7 @@ namespace CoreSystems
             var damageScale = 1 * directDmgGlobal;
             var distTraveled = info.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? info.DistanceTraveled : info.DistanceTraveled;
             var fallOff = info.AmmoDef.Const.FallOffScaling && distTraveled > info.AmmoDef.Const.FallOffDistance;
-            if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.WeaponCache.Hits;
+            if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.Weapon.WeaponCache.Hits;
             var damageType = info.AmmoDef.DamageScales.Shields.Type;
             var heal = damageType == ShieldDef.ShieldType.Heal;
             var energy = info.AmmoDef.Const.EnergyShieldDmg;
@@ -121,7 +121,7 @@ namespace CoreSystems
             var areaDamage = info.AmmoDef.AreaOfDamage.ByBlockHit.Enable;
             var scaledBaseDamage = info.BaseDamagePool * damageScale;
             var scaledDamage = (scaledBaseDamage) * info.AmmoDef.Const.ShieldModifier * shieldDmgGlobal* info.ShieldResistMod* info.ShieldBypassMod;
-            var logDamage = info.System.WConst.DebugMode;
+            var logDamage = info.Weapon.System.WConst.DebugMode;
 
             var areafalloff = info.AmmoDef.AreaOfDamage.ByBlockHit.Falloff;
             var aoeMaxAbsorb = info.AmmoDef.Const.AoeMaxAbsorb;
@@ -331,7 +331,7 @@ namespace CoreSystems
             var hits = 1;
             if (t.AmmoDef.Const.VirtualBeams)
             {
-                hits = t.WeaponCache.Hits;
+                hits = t.Weapon.WeaponCache.Hits;
             }
             var partialShield = t.ShieldInLine && !t.ShieldBypassed && SApi.MatchEntToShieldFast(grid, true) != null;
             var objectsHit = t.ObjectsHit;
@@ -354,7 +354,7 @@ namespace CoreSystems
             var detActive = false;
             var earlyExit = false;
             var destroyed = 0;
-            var showHits = t.System.WConst.DebugMode;
+            var showHits = t.Weapon.System.WConst.DebugMode;
 
             //Main loop (finally)
 
@@ -812,7 +812,7 @@ namespace CoreSystems
 
             var character = hitEnt.Entity as IMyCharacter;
             float damageScale = 1;
-            if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.WeaponCache.Hits;
+            if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.Weapon.WeaponCache.Hits;
             if (character != null && info.AmmoDef.DamageScales.Characters >= 0)
                 damageScale *= info.AmmoDef.DamageScales.Characters;
 
@@ -860,7 +860,7 @@ namespace CoreSystems
             if (integrityCheck && objHp > attacker.AmmoDef.DamageScales.MaxIntegrity) return;
 
             var damageScale = (float)attacker.AmmoDef.Const.HealthHitModifier;
-            if (attacker.AmmoDef.Const.VirtualBeams) damageScale *= attacker.WeaponCache.Hits;
+            if (attacker.AmmoDef.Const.VirtualBeams) damageScale *= attacker.Weapon.WeaponCache.Hits;
             var scaledDamage = 1 * damageScale;
 
             var distTraveled = attacker.AmmoDef.Const.IsBeamWeapon ? hitEnt.HitDist ?? attacker.DistanceTraveled : attacker.DistanceTraveled;
@@ -912,7 +912,7 @@ namespace CoreSystems
                         if (integrityCheck && objHp > attacker.AmmoDef.DamageScales.MaxIntegrity) continue;
 
                         var damageScale = (float)attacker.AmmoDef.Const.HealthHitModifier;
-                        if (attacker.AmmoDef.Const.VirtualBeams) damageScale *= attacker.WeaponCache.Hits;
+                        if (attacker.AmmoDef.Const.VirtualBeams) damageScale *= attacker.Weapon.WeaponCache.Hits;
                         var scaledDamage = 1 * damageScale;
 
                         if (scaledDamage >= objHp)
@@ -953,7 +953,7 @@ namespace CoreSystems
 
                 info.ObjectsHit++;
                 float damageScale = 1 * directDmgGlobal;
-                if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.WeaponCache.Hits;
+                if (info.AmmoDef.Const.VirtualBeams) damageScale *= info.Weapon.WeaponCache.Hits;
 
                 var scaledDamage = info.BaseDamagePool * damageScale;
 

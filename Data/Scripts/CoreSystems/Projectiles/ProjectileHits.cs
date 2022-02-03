@@ -513,7 +513,7 @@ namespace CoreSystems.Projectiles
                     if (p.Beam.Length > 85)
                     {
                         IHitInfo hit;
-                        if (p.Info.System.Session.Physics.CastRay(p.Beam.From, p.Beam.To, out hit, CollisionLayers.VoxelCollisionLayer, false) && hit != null)
+                        if (p.Info.Ai.Session.Physics.CastRay(p.Beam.From, p.Beam.To, out hit, CollisionLayers.VoxelCollisionLayer, false) && hit != null)
                             voxelHit = hit.Position;
                     }
                     else
@@ -521,14 +521,14 @@ namespace CoreSystems.Projectiles
 
                         using (voxel.Pin())
                         {
-                            if (!voxel.GetIntersectionWithLine(ref p.Beam, out voxelHit, true, IntersectionFlags.DIRECT_TRIANGLES) && VoxelIntersect.PointInsideVoxel(voxel, p.Info.System.Session.TmpStorage, p.Beam.From))
+                            if (!voxel.GetIntersectionWithLine(ref p.Beam, out voxelHit, true, IntersectionFlags.DIRECT_TRIANGLES) && VoxelIntersect.PointInsideVoxel(voxel, p.Info.Ai.Session.TmpStorage, p.Beam.From))
                                 voxelHit = p.Beam.From;
                         }
                     }
 
                     if (voxelHit.HasValue && p.Info.IsFragment && p.Info.Age == 0)
                     {
-                        if (!VoxelIntersect.PointInsideVoxel(voxel, p.Info.System.Session.TmpStorage, voxelHit.Value + (p.Beam.Direction * 1.25f)))
+                        if (!VoxelIntersect.PointInsideVoxel(voxel, p.Info.Ai.Session.TmpStorage, voxelHit.Value + (p.Beam.Direction * 1.25f)))
                             voxelHit = null;
                     }
                 }
@@ -541,10 +541,10 @@ namespace CoreSystems.Projectiles
                         if (p.Info.AmmoDef.Const.IsBeamWeapon && p.Info.AmmoDef.Const.RealShotsPerMin < 10)
                         {
                             IHitInfo hit;
-                            if (p.Info.System.Session.Physics.CastRay(p.Beam.From, p.Beam.To, out hit, CollisionLayers.VoxelCollisionLayer, false) && hit != null)
+                            if (p.Info.Ai.Session.Physics.CastRay(p.Beam.From, p.Beam.To, out hit, CollisionLayers.VoxelCollisionLayer, false) && hit != null)
                                 voxelHit = hit.Position;
                         }
-                        else if (!voxel.GetIntersectionWithLine(ref p.Beam, out voxelHit, true, IntersectionFlags.DIRECT_TRIANGLES) && VoxelIntersect.PointInsideVoxel(voxel, p.Info.System.Session.TmpStorage, p.Beam.From))
+                        else if (!voxel.GetIntersectionWithLine(ref p.Beam, out voxelHit, true, IntersectionFlags.DIRECT_TRIANGLES) && VoxelIntersect.PointInsideVoxel(voxel, p.Info.Ai.Session.TmpStorage, p.Beam.From))
                             voxelHit = p.Beam.From;
                     }
                 }
@@ -607,13 +607,13 @@ namespace CoreSystems.Projectiles
                     if (aConst.VirtualBeams)
                     {
 
-                        info.WeaponCache.VirtualHit = true;
-                        info.WeaponCache.HitEntity.Entity = info.Hit.Entity;
-                        info.WeaponCache.HitEntity.HitPos = info.Hit.SurfaceHit;
-                        info.WeaponCache.Hits = p.VrPros.Count;
-                        info.WeaponCache.HitDistance = Vector3D.Distance(p.LastPosition, info.Hit.SurfaceHit);
+                        info.Weapon.WeaponCache.VirtualHit = true;
+                        info.Weapon.WeaponCache.HitEntity.Entity = info.Hit.Entity;
+                        info.Weapon.WeaponCache.HitEntity.HitPos = info.Hit.SurfaceHit;
+                        info.Weapon.WeaponCache.Hits = p.VrPros.Count;
+                        info.Weapon.WeaponCache.HitDistance = Vector3D.Distance(p.LastPosition, info.Hit.SurfaceHit);
 
-                        if (info.Hit.Entity is MyCubeGrid) info.WeaponCache.HitBlock = info.Hit.Block;
+                        if (info.Hit.Entity is MyCubeGrid) info.Weapon.WeaponCache.HitBlock = info.Hit.Block;
                     }
 
                     lock (Session.Hits)
@@ -629,7 +629,7 @@ namespace CoreSystems.Projectiles
 
                             var intersectOrigin = isBeam ? new Vector3D(p.Beam.From + (info.Direction * distToTarget)) : p.LastPosition;
 
-                            Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.System.WeaponIdHash, aConst.AmmoIdxPos, (float)(isBeam ? info.MaxTrajectory : distToTarget));
+                            Session.SendFixedGunHitEvent(info.Target.CoreEntity, info.Hit.Entity, intersectOrigin, vel, info.OriginUp, info.MuzzleId, info.Weapon.System.WeaponIdHash, aConst.AmmoIdxPos, (float)(isBeam ? info.MaxTrajectory : distToTarget));
                             info.AimedShot = false; //to prevent hits on another grid from triggering again
                         }
                         Session.Hits.Add(p);
@@ -671,7 +671,7 @@ namespace CoreSystems.Projectiles
             if (count > 1)
             {
                 try { info.HitList.Sort((x, y) => GetEntityCompareDist(x, y, info)); } // Unable to sort because the IComparer.Compare() method returns inconsistent results
-                catch (Exception ex) { Log.Line($"p.Info.HitList.Sort failed: {ex} - weapon:{info.System.PartName} - ammo:{info.AmmoDef.AmmoRound} - hitCount:{info.HitList.Count}", null, true); } 
+                catch (Exception ex) { Log.Line($"p.Info.HitList.Sort failed: {ex} - weapon:{info.Weapon.System.PartName} - ammo:{info.AmmoDef.AmmoRound} - hitCount:{info.HitList.Count}", null, true); } 
             }
             else GetEntityCompareDist(info.HitList[0], null, info);
             var pulseTrigger = false;
@@ -831,7 +831,7 @@ namespace CoreSystems.Projectiles
                                 continue;
 
                             if (!ewarActive)
-                                GetAndSortBlocksInSphere(hitEnt.Info.AmmoDef, hitEnt.Info.System, grid, hitEnt.PruneSphere, false, hitEnt.Blocks);
+                                GetAndSortBlocksInSphere(hitEnt.Info.AmmoDef, hitEnt.Info.Weapon.System, grid, hitEnt.PruneSphere, false, hitEnt.Blocks);
 
                             if (hitEnt.Blocks.Count > 0 || ewarActive)
                             {

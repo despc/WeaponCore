@@ -151,7 +151,7 @@ namespace CoreSystems.Projectiles
         #region Start
         internal void Start()
         {
-            var session = Info.System.Session;
+            var session = Info.Ai.Session;
             var ammoDef = Info.AmmoDef;
             var aConst = ammoDef.Const;
 
@@ -194,7 +194,7 @@ namespace CoreSystems.Projectiles
             DroneMsn = DroneMission.Attack;
             var trajectory = ammoDef.Trajectory;
             var guidance = trajectory.Guidance;
-            CachedId = Info.MuzzleId == -1 ? Info.WeaponCache.VirutalId : Info.MuzzleId;
+            CachedId = Info.MuzzleId == -1 ? Info.Weapon.WeaponCache.VirutalId : Info.MuzzleId;
             if (aConst.DynamicGuidance && session.AntiSmartActive) DynTrees.RegisterProjectile(this);
 
             Info.MyPlanet = Info.Ai.MyPlanet;
@@ -294,7 +294,7 @@ namespace CoreSystems.Projectiles
             }
             else DistanceToTravelSqr = MaxTrajectorySqr;
 
-            PickTarget = (aConst.OverrideTarget || Info.ModOverride && !LockedTarget) && Info.Target.TargetState != Target.TargetStates.IsFake;
+            PickTarget = (aConst.OverrideTarget || Info.Weapon.Comp.ModOverride && !LockedTarget) && Info.Target.TargetState != Target.TargetStates.IsFake;
             if (PickTarget || LockedTarget && !Info.IsFragment) NewTargets++;
 
             var staticIsInRange = Info.Ai.ClosestStaticSqr * 0.5 < MaxTrajectorySqr;
@@ -377,7 +377,7 @@ namespace CoreSystems.Projectiles
 
         internal void DestroyProjectile()
         {
-            Info.Hit = new Hit { Block = null, Entity = null, SurfaceHit = Position, LastHit = Position, HitVelocity = Info.InPlanetGravity ? Velocity * 0.33f : Velocity, HitTick = Info.System.Session.Tick };
+            Info.Hit = new Hit { Block = null, Entity = null, SurfaceHit = Position, LastHit = Position, HitVelocity = Info.InPlanetGravity ? Velocity * 0.33f : Velocity, HitTick = Info.Ai.Session.Tick };
             if (EnableAv || Info.AmmoDef.Const.VirtualBeams)
             {
                 Info.AvShot.ForceHitParticle = true;
@@ -392,7 +392,7 @@ namespace CoreSystems.Projectiles
         internal void ProjectileClose()
         {
             var aConst = Info.AmmoDef.Const;
-            var session = Info.System.Session;
+            var session = Info.Ai.Session;
             if ((aConst.FragOnEnd && aConst.FragIgnoreArming || Info.Age >= aConst.MinArmingTime && (aConst.FragOnEnd || aConst.FragOnArmed && Info.ObjectsHit > 0)) && Info.SpawnDepth < aConst.FragMaxChildren)
                 SpawnShrapnel(false);
 
@@ -925,7 +925,7 @@ namespace CoreSystems.Projectiles
             if (fake && Info.DummyTargets != null)
             {
                 var fakeTarget = Info.DummyTargets.PaintedTarget.EntityId != 0 ? Info.DummyTargets.PaintedTarget : Info.DummyTargets.ManualTarget;
-                fakeTargetInfo = fakeTarget.LastInfoTick != Info.System.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
+                fakeTargetInfo = fakeTarget.LastInfoTick != Info.Ai.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
                 targetPos = fakeTargetInfo.WorldPosition;
                 HadTarget = HadTargetState.Fake;
             }
@@ -993,7 +993,7 @@ namespace CoreSystems.Projectiles
         private void SmartTargetLoss(Vector3D targetPos)
         {
 
-            if (WasTracking && (Info.System.Session.Tick20 || Vector3.Dot(Info.Direction, Position - targetPos) > 0) || !WasTracking)
+            if (WasTracking && (Info.Ai.Session.Tick20 || Vector3.Dot(Info.Direction, Position - targetPos) > 0) || !WasTracking)
             {
                 var targetDir = -Info.Direction;
                 var refDir = Vector3D.Normalize(Position - targetPos);
@@ -1050,7 +1050,7 @@ namespace CoreSystems.Projectiles
                     if (fake && Info.DummyTargets != null)
                     {
                         var fakeTarget = Info.DummyTargets.PaintedTarget.EntityId != 0 ? Info.DummyTargets.PaintedTarget : Info.DummyTargets.ManualTarget;
-                        fakeTargetInfo = fakeTarget.LastInfoTick != Info.System.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
+                        fakeTargetInfo = fakeTarget.LastInfoTick != Info.Ai.Session.Tick ? fakeTarget.GetFakeTargetInfo(Info.Ai) : fakeTarget.FakeInfo;
                         targetPos = fakeTargetInfo.WorldPosition;
                         HadTarget = HadTargetState.Fake;
                     }
@@ -1096,7 +1096,7 @@ namespace CoreSystems.Projectiles
                     if (aConst.TargetLossDegree > 0 && Vector3D.DistanceSquared(Info.Origin, Position) >= aConst.SmartsDelayDistSqr)
                     {
 
-                        if (WasTracking && (Info.System.Session.Tick20 || Vector3.Dot(Info.Direction, Position - targetPos) > 0) || !WasTracking)
+                        if (WasTracking && (Info.Ai.Session.Tick20 || Vector3.Dot(Info.Direction, Position - targetPos) > 0) || !WasTracking)
                         {
                             var targetDir = -Info.Direction;
                             var refDir = Vector3D.Normalize(Position - targetPos);
@@ -1219,7 +1219,7 @@ namespace CoreSystems.Projectiles
                     if (!giveUp && !Info.LockOnFireState || Info.LockOnFireState && giveUp || !Info.AmmoDef.Trajectory.Smarts.NoTargetExpire || badEntity)
                     {
                         if (Info.Target.TargetState == Target.TargetStates.IsEntity)
-                            Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
+                            Info.Target.Reset(Info.Ai.Session.Tick, Target.States.ProjectileClosed);
                     }
 
                     return false;
@@ -1231,7 +1231,7 @@ namespace CoreSystems.Projectiles
                 {
                     if (Info.Target.TargetState == Target.TargetStates.IsProjectile) {
                         Info.Target.Projectile.Seekers.Remove(this);
-                        Info.Target.Reset(Info.System.Session.Tick, Target.States.ProjectileClosed);
+                        Info.Target.Reset(Info.Ai.Session.Tick, Target.States.ProjectileClosed);
                     }
                     return false;
                 }
@@ -1548,7 +1548,7 @@ namespace CoreSystems.Projectiles
                 case AntiSmart:
                     var eWarSphere = new BoundingSphereD(Position, Info.AmmoDef.Const.EwarRadius);
 
-                    DynTrees.GetAllProjectilesInSphere(Info.System.Session, ref eWarSphere, EwaredProjectiles, false);
+                    DynTrees.GetAllProjectilesInSphere(Info.Ai.Session, ref eWarSphere, EwaredProjectiles, false);
                     for (int j = 0; j < EwaredProjectiles.Count; j++)
                     {
                         var netted = EwaredProjectiles[j];
@@ -1665,7 +1665,7 @@ namespace CoreSystems.Projectiles
             var spawn = false;
             for (int i = 0; i < patternIndex; i++)
             {
-                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i] > 0 ? Info.PatternShuffle[i] - 1 : aConst.FragPatternCount-1] : Info.System.AmmoTypes[aConst.FragmentId].AmmoDef;
+                var fragAmmoDef = aConst.FragmentPattern ? aConst.AmmoPattern[Info.PatternShuffle[i] > 0 ? Info.PatternShuffle[i] - 1 : aConst.FragPatternCount-1] : Info.Weapon.System.AmmoTypes[aConst.FragmentId].AmmoDef;
                 Vector3D pointDir;
                 if (!fireOnTarget)
                 {
@@ -1697,7 +1697,7 @@ namespace CoreSystems.Projectiles
                 }
 
 
-                var projectiles = Info.System.Session.Projectiles;
+                var projectiles = Info.Ai.Session.Projectiles;
                 var shrapnel = projectiles.ShrapnelPool.Get();
                 shrapnel.Init(this, projectiles.FragmentPool, fragAmmoDef, ref newOrigin, ref pointDir);
                 projectiles.ShrapnelToSpawn.Add(shrapnel);
@@ -1726,16 +1726,16 @@ namespace CoreSystems.Projectiles
         internal void SyncProjectile(ProtoWeaponProSync.ProSyncState state)
         {
             var target = Info.Target;
-            var session = Info.System.Session;
+            var session = Info.Ai.Session;
             var proSync = session.ProtoWeaponProSyncPool.Count > 0 ? session.ProtoWeaponProSyncPool.Pop() : new ProtoWeaponProSync();
-            proSync.UniquePartId = Info.UniquePartId;
+            proSync.UniquePartId = Info.Weapon.UniqueId;
             proSync.State = state;
             proSync.Position = Position;
             proSync.Velocity = Velocity;
             proSync.ProId = Info.SyncId;
             proSync.TargetId = target.TargetId;
             proSync.Type = target.TargetState == Target.TargetStates.IsEntity ? ProtoWeaponProSync.TargetTypes.Entity : target.TargetState == Target.TargetStates.IsProjectile ? ProtoWeaponProSync.TargetTypes.Projectile : target.TargetState == Target.TargetStates.IsFake ? ProtoWeaponProSync.TargetTypes.Fake : ProtoWeaponProSync.TargetTypes.None;
-            var weaponSync = session.WeaponProSyncs[Info.UniquePartId];
+            var weaponSync = session.WeaponProSyncs[Info.Weapon.UniqueId];
 
             weaponSync[Info.SyncId] = proSync;
         }

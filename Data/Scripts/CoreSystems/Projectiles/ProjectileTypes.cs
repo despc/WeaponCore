@@ -21,12 +21,10 @@ namespace CoreSystems.Support
         internal readonly List<HitEntity> HitList = new List<HitEntity>(4);
 
         internal AvShot AvShot;
-        internal WeaponSystem System;
+        internal Weapon Weapon;
         internal Ai Ai;
         internal MyEntity PrimeEntity;
         internal MyEntity TriggerEntity;
-        internal ProtoWeaponOverrides Overrides;
-        internal WeaponFrameCache WeaponCache;
         internal AmmoDef AmmoDef;
         internal MyPlanet MyPlanet;
         internal MyEntity MyShield;
@@ -40,10 +38,7 @@ namespace CoreSystems.Support
         internal Hit Hit;
         internal XorShiftRandomStruct Random;
         internal FakeTargets DummyTargets;
-        internal List<Action<long, int, ulong, long, Vector3D, bool>> Monitors;
         internal int TriggerGrowthSteps;
-        internal int PartId;
-        internal int UniquePartId;
         internal int MuzzleId;
         internal int ObjectsHit;
         internal int Age;
@@ -51,6 +46,7 @@ namespace CoreSystems.Support
         internal int SpawnDepth;
         internal int Frags;
         internal int LastFragTime;
+        internal int CompSceneVersion;
         internal ulong UniqueMuzzleId;
         internal ulong Id;
         internal long SyncId;
@@ -69,7 +65,6 @@ namespace CoreSystems.Support
         internal bool EwarAreaPulse;
         internal bool EwarActive;
         internal bool LockOnFireState;
-        internal bool ModOverride;
         internal bool AimedShot;
         internal bool DoDamage;
         internal bool InPlanetGravity;
@@ -84,7 +79,7 @@ namespace CoreSystems.Support
 
         internal void InitVirtual(Weapon weapon, AmmoDef ammodef, MyEntity primeEntity, MyEntity triggerEntity, Weapon.Muzzle muzzle, double maxTrajectory, float shotFade)
         {
-            System = weapon.System;
+            Weapon = weapon;
             Ai = weapon.BaseComp.Ai;
             MyPlanet = weapon.BaseComp.Ai.MyPlanet;
             MyShield = weapon.BaseComp.Ai.MyShield;
@@ -98,7 +93,6 @@ namespace CoreSystems.Support
             Target.CoreCube = weapon.Target.CoreCube;
             Target.CoreParent = weapon.Target.CoreParent;
             Target.CoreIsCube = weapon.Target.CoreIsCube;
-            PartId = weapon.PartId;
             MuzzleId = muzzle.MuzzleId;
             UniqueMuzzleId = muzzle.UniqueId;
             Direction = muzzle.DeviatedDir;
@@ -109,21 +103,20 @@ namespace CoreSystems.Support
 
         internal void Clean()
         {
-            if (Monitors?.Count > 0) {
-                for (int i = 0; i < Monitors.Count; i++)
-                    Monitors[i].Invoke(Target.CoreEntity.EntityId, PartId,Id, Target.TargetId, Hit.LastHit, false);
+            if (Weapon.Monitors?.Count > 0) {
+                for (int i = 0; i < Weapon.Monitors.Count; i++)
+                    Weapon.Monitors[i].Invoke(Target.CoreEntity.EntityId, Weapon.PartId,Id, Target.TargetId, Hit.LastHit, false);
 
-                System.Session.MonitoredProjectiles.Remove(Id);
+                Weapon.System.Session.MonitoredProjectiles.Remove(Id);
             }
-            Monitors = null;
 
-            Target.Reset(System.Session.Tick, Target.States.ProjectileClosed);
+            Target.Reset(Weapon.System.Session.Tick, Target.States.ProjectileClosed);
             HitList.Clear();
             if (IsFragment)
             {
-                if (VoxelCache != null && System.Session != null)
+                if (VoxelCache != null && Weapon.System.Session != null)
                 {
-                    System.Session.UniqueMuzzleId = VoxelCache;
+                    Weapon.System.Session.UniqueMuzzleId = VoxelCache;
                 }
                 else Log.Line("HasFragment voxelcache return failure");
             }
@@ -136,7 +129,7 @@ namespace CoreSystems.Support
 
             if (TriggerEntity != null)
             {
-                System.Session.TriggerEntityPool.Return(TriggerEntity);
+                Weapon.System.Session.TriggerEntityPool.Return(TriggerEntity);
                 TriggerEntity = null;
             }
 
@@ -150,13 +143,12 @@ namespace CoreSystems.Support
             }
 
             AvShot = null;
-            System = null;
             Ai = null;
             MyPlanet = null;
             MyShield = null;
             AmmoDef = null;
-            WeaponCache = null;
             VoxelCache = null;
+            Weapon = null;
             IsFragment = false;
             EwarAreaPulse = false;
             EwarActive = false;
@@ -170,8 +162,6 @@ namespace CoreSystems.Support
             SmartReady = false;
             TriggerGrowthSteps = 0;
             SpawnDepth = 0;
-            PartId = 0;
-            UniquePartId = 0;
             Frags = 0;
             MuzzleId = 0;
             Age = 0;
@@ -301,7 +291,7 @@ namespace CoreSystems.Support
             double dist;
             Vector3D.DistanceSquared(ref _endPos, ref lineTest.To, out dist);
 
-            _maxDelay = i.MuzzleId == -1 ? i.System.Muzzles.Length : 1;
+            _maxDelay = i.MuzzleId == -1 ? i.Weapon.System.Muzzles.Length : 1;
 
             var thisTick = (uint)(MyAPIGateway.Session.ElapsedPlayTime.TotalMilliseconds * Session.TickTimeDiv);
             _start = thisTick - LastTick > _maxDelay || dist > 5;
@@ -432,7 +422,7 @@ namespace CoreSystems.Support
             for (int i = 0; i < p.Info.AmmoDef.Fragment.Fragments; i++)
             {
                 var frag = fragPool.Get();
-                frag.System = info.System;
+                frag.Weapon = info.Weapon;
                 frag.Ai = info.Ai;
                 frag.AmmoDef = ammoDef;
                 
@@ -441,8 +431,6 @@ namespace CoreSystems.Support
                 frag.TargetEntity = target.TargetEntity;
                 frag.TargetProjectile = target.Projectile;
 
-                frag.Overrides = info.Overrides;
-                frag.WeaponId = info.PartId;
                 frag.MuzzleId = info.MuzzleId;
                 frag.CoreEntity = target.CoreEntity;
                 frag.CoreParent = target.CoreParent;
@@ -475,11 +463,11 @@ namespace CoreSystems.Support
                 if (frag.AmmoDef.Const.PrimeModel && frag.AmmoDef.Const.PrimeEntityPool.Count > 0)
                     frag.PrimeEntity = frag.AmmoDef.Const.PrimeEntityPool.Get();
 
-                if (frag.AmmoDef.Const.TriggerModel && info.System.Session.TriggerEntityPool.Count > 0)
-                    frag.TriggerEntity = info.System.Session.TriggerEntityPool.Get();
+                if (frag.AmmoDef.Const.TriggerModel && info.Ai.Session.TriggerEntityPool.Count > 0)
+                    frag.TriggerEntity = info.Ai.Session.TriggerEntityPool.Get();
 
                 if (frag.AmmoDef.Const.PrimeModel && frag.PrimeEntity == null || frag.AmmoDef.Const.TriggerModel && frag.TriggerEntity == null)
-                    info.System.Session.FragmentsNeedingEntities.Add(frag);
+                    info.Ai.Session.FragmentsNeedingEntities.Add(frag);
 
                 Sharpnel.Add(frag);
             }
@@ -492,10 +480,10 @@ namespace CoreSystems.Support
             for (int i = 0; i < spawned; i++)
             {
                 var frag = Sharpnel[i];
-                session = frag.System.Session;
+                session = frag.Ai.Session;
                 var p = session.Projectiles.ProjectilePool.Count > 0 ? session.Projectiles.ProjectilePool.Pop() : new Projectile();
                 var info = p.Info;
-                info.System = frag.System;
+                info.Weapon = frag.Weapon;
                 info.Ai = frag.Ai;
                 info.Id = session.Projectiles.CurrentProjectileId++;
 
@@ -515,9 +503,7 @@ namespace CoreSystems.Support
 
                 target.TargetState = frag.TargetState;
 
-                info.Overrides = frag.Overrides;
                 info.IsFragment = true;
-                info.PartId = frag.WeaponId;
                 info.MuzzleId = frag.MuzzleId;
                 info.UniqueMuzzleId = session.UniqueMuzzleId.Id;
                 info.Origin = frag.Origin;
@@ -551,7 +537,7 @@ namespace CoreSystems.Support
 
     internal class Fragment
     {
-        public WeaponSystem System;
+        public Weapon Weapon;
         public Ai Ai;
         public AmmoDef AmmoDef;
         public MyEntity PrimeEntity;
@@ -561,13 +547,11 @@ namespace CoreSystems.Support
         public MyEntity CoreParent;
         public MyCubeBlock CoreCube;
         public Projectile TargetProjectile;
-        public ProtoWeaponOverrides Overrides;
         public Vector3D Origin;
         public Vector3D OriginUp;
         public Vector3D Direction;
         public Vector3D Velocity;
         public Vector3D PredictedTargetPos;
-        public int WeaponId;
         public int MuzzleId;
         public int Depth;
         public XorShiftRandomStruct Random;

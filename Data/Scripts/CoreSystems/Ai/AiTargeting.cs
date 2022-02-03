@@ -192,13 +192,16 @@ namespace CoreSystems.Support
         internal static bool ReacquireTarget(Projectile p)
         {
             var info = p.Info;
-            var s = info.System;
+            if (info.CompSceneVersion != info.Weapon.Comp.SceneVersion)
+                return false;
+
+            var s = info.Weapon.System;
             var target = info.Target;
             p.ChaseAge = info.Age;
             var ai = info.Ai;
             var aConst = info.AmmoDef.Const;
             var weaponPos = p.Position;
-            var overRides = info.Overrides;
+            var overRides = info.Weapon.Comp.Data.Repo.Values.Set.Overrides;
             var attackNeutrals = overRides.Neutrals;
             var attackFriends = overRides.Friendly;
             var attackNoOwner = overRides.Unowned;
@@ -234,7 +237,7 @@ namespace CoreSystems.Support
             var numOfTargets = ai.SortedTargets.Count;
             var hasOffset = offset > 0;
             var adjTargetCount = forceFoci && hasOffset ? offset : numOfTargets + offset;
-            var deck = GetDeck(ref target.TargetDeck, ref target.TargetPrevDeckLen, 0, numOfTargets, p.Info.System.Values.Targeting.TopTargets, ref p.Info.Random);
+            var deck = GetDeck(ref target.TargetDeck, ref target.TargetPrevDeckLen, 0, numOfTargets, p.Info.Weapon.System.Values.Targeting.TopTargets, ref p.Info.Random);
 
             for (int i = 0; i < adjTargetCount; i++)
             {
@@ -299,7 +302,7 @@ namespace CoreSystems.Support
         internal static bool ReAcquireProjectile(Projectile p)
         {
             var info = p.Info;
-            var s = info.System;
+            var s = info.Weapon.System;
             var target = info.Target;
             p.ChaseAge = info.Age;
             var ai = info.Ai;

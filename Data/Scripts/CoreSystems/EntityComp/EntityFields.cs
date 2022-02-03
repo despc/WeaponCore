@@ -72,6 +72,7 @@ namespace CoreSystems.Support
         internal float MaxIntegrity;
         internal float CurrentInventoryVolume;
         internal int PowerGroupId;
+        internal int SceneVersion;
         internal long CustomIdentity;
         internal bool DetectOtherSignals;
         internal bool IsAsleep;

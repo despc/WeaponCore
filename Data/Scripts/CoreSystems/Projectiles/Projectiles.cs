@@ -332,7 +332,7 @@ namespace CoreSystems.Projectiles
                     else if (info.ClosestDistSqrToTarget > 0 && info.ClosestDistSqrToTarget < distSqrToTarget)
                     {
                         info.ClosestDistSqrToTarget = 0;
-                        info.WeaponCache.MissDistance = (info.PrevTargetPos - p.LastPosition).Length();
+                        info.Weapon.WeaponCache.MissDistance = (info.PrevTargetPos - p.LastPosition).Length();
                     }
                 }
 
@@ -365,7 +365,7 @@ namespace CoreSystems.Projectiles
                     {
                         MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref p.PruneSphere, p.MyEntityList, p.PruneQuery);
 
-                        if (info.System.TrackProjectile)
+                        if (info.Weapon.System.TrackProjectile)
                             foreach (var lp in ai.LiveProjectile)
                                 if (p.PruneSphere.Contains(lp.Position) != ContainmentType.Disjoint && lp != info.Target.Projectile)
                                     ProjectileHit(p, lp, aConst.CollisionIsLine, ref p.Beam);
@@ -486,9 +486,9 @@ namespace CoreSystems.Projectiles
                             if (!hit)
                                 beamEnd = vs.Origin + (vp.Direction * info.MaxTrajectory);
                             else
-                                beamEnd = vs.Origin + (vp.Direction * info.WeaponCache.HitDistance);
+                                beamEnd = vs.Origin + (vp.Direction * info.Weapon.WeaponCache.HitDistance);
 
-                            var line = new LineD(vs.Origin, beamEnd, !hit ? info.MaxTrajectory : info.WeaponCache.HitDistance);
+                            var line = new LineD(vs.Origin, beamEnd, !hit ? info.MaxTrajectory : info.Weapon.WeaponCache.HitDistance);
                             if (p.Intersecting && hitPos.HasValue)
                                 Session.Projectiles.DeferedAvDraw.Add(new DeferedAv { AvShot = vs, StepSize = info.DistanceTraveled - info.PrevDistanceTraveled, VisualLength = line.Length, TracerFront = line.To, ShortStepSize = line.Length, Hit = true, TriggerGrowthSteps = info.TriggerGrowthSteps, Direction = line.Direction });
                             else

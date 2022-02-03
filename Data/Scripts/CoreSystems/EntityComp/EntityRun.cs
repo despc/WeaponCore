@@ -14,6 +14,7 @@ namespace CoreSystems.Support
         {
             try
             {
+                ++SceneVersion;
                 base.OnAddedToContainer();
                 if (Container.Entity.InScene) {
 
@@ -31,6 +32,7 @@ namespace CoreSystems.Support
         {
             try
             {
+                ++SceneVersion;
                 base.OnAddedToScene();
 
                 if (Platform.State == CorePlatform.PlatformState.Inited || Platform.State == CorePlatform.PlatformState.Ready)
@@ -238,6 +240,7 @@ namespace CoreSystems.Support
         {
             try
             {
+                ++SceneVersion;
                 base.OnRemovedFromScene();
                 RemoveComp();
             }

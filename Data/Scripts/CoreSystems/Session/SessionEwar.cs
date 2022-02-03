@@ -43,12 +43,12 @@ namespace CoreSystems
             if (hitEnt.Entity.Physics == null || !hitEnt.Entity.Physics.Enabled || hitEnt.Entity.Physics.IsStatic || !hitEnt.HitPos.HasValue)
                 return;
 
-            if (info.System.Session.IsServer)
+            if (info.Ai.Session.IsServer)
             {
                 var massMulti = 1f;
 
                 Ai.TargetInfo tInfo;
-                if (info.Ai.Targets.TryGetValue(hitEnt.Entity, out tInfo) && tInfo.TargetAi?.ShieldBlock != null && info.System.Session.SApi.IsFortified(tInfo.TargetAi.ShieldBlock))
+                if (info.Ai.Targets.TryGetValue(hitEnt.Entity, out tInfo) && tInfo.TargetAi?.ShieldBlock != null && info.Ai.Session.SApi.IsFortified(tInfo.TargetAi.ShieldBlock))
                     massMulti = 5f;
 
                 var forceDef = info.AmmoDef.Ewar.Force;
@@ -135,11 +135,11 @@ namespace CoreSystems
             var grid = hitEnt.Entity as MyCubeGrid;
             if (grid?.Physics == null || grid.MarkedForClose) return;
             var attackerId = info.Target.CoreEntity.EntityId;
-            GetAndSortBlocksInSphere(info.AmmoDef, hitEnt.Info.System, grid, hitEnt.PruneSphere, !hitEnt.DamageOverTime, hitEnt.Blocks);
+            GetAndSortBlocksInSphere(info.AmmoDef, hitEnt.Info.Weapon.System, grid, hitEnt.PruneSphere, !hitEnt.DamageOverTime, hitEnt.Blocks);
 
             var depletable = info.AmmoDef.Ewar.Depletable;
             var healthPool = depletable && info.BaseHealthPool > 0 ? info.BaseHealthPool : double.MaxValue;
-            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Const.EwarStrength, ref healthPool, attackerId, info.System.WeaponIdHash, hitEnt.Blocks);
+            ComputeEffects(grid, info.AmmoDef, info.AmmoDef.Const.EwarStrength, ref healthPool, attackerId, info.Weapon.System.WeaponIdHash, hitEnt.Blocks);
             if (depletable)
                 info.BaseHealthPool -= (float)healthPool;
 
@@ -179,7 +179,7 @@ namespace CoreSystems
 
                     effects = GridEffectsPool.Get();
                     var gridEffect = GridEffectPool.Get();
-                    gridEffect.System = info.System;
+                    gridEffect.System = info.Weapon.System;
                     gridEffect.Damage = (float)info.AmmoDef.Const.EwarStrength;
                     gridEffect.Ai = info.Ai;
                     gridEffect.AmmoDef = info.AmmoDef;

@@ -33,12 +33,12 @@ namespace CoreSystems.Projectiles
                 var target = info.Target;
 
                 info.Id = Session.Projectiles.CurrentProjectileId++;
-                info.System = w.System;
+                info.Weapon = w;
+                info.CompSceneVersion = w.Comp.SceneVersion;
                 info.Ai = comp.Ai;
                 info.AimedShot = aimed;
                 info.AmmoDef = a;
                 info.DoDamage = Session.IsServer && (!aConst.ClientPredictedAmmo || t == Kind.Client || repo.Values.State.PlayerId < 0); // shrapnel do not run this loop, but do inherit DoDamage from parent.
-                info.Overrides = repo.Values.Set.Overrides;
 
                 target.CoreCube = comp.Cube;
                 target.CoreEntity = comp.CoreEntity;
@@ -56,21 +56,17 @@ namespace CoreSystems.Projectiles
                 if (comp.FakeMode)
                     Session.PlayerDummyTargets.TryGetValue(repo.Values.State.PlayerId, out info.DummyTargets);
 
-                info.PartId = w.PartId;
                 info.BaseDamagePool = aConst.BaseDamage;
-                info.WeaponCache = w.WeaponCache;
 
                 info.Random = new XorShiftRandomStruct((ulong)(w.TargetData.WeaponRandom.CurrentSeed + (w.Reload.EndId + w.ProjectileCounter++)));
                 info.LockOnFireState = (w.LockOnFireState || !aConst.OverrideTarget && wTarget.TargetState == Target.TargetStates.IsEntity);
-                info.ModOverride = comp.ModOverride;
                 info.ShooterVel = ai.GridVel;
 
                 info.OriginUp = t != Kind.Client ? muzzle.UpDirection : gen.OriginUp;
                 info.MaxTrajectory = t != Kind.Client ? aConst.MaxTrajectoryGrows && w.FireCounter < a.Trajectory.MaxTrajectoryTime ? aConst.TrajectoryStep * w.FireCounter : aConst.MaxTrajectory : gen.MaxTrajectory;
                 info.MuzzleId = t != Kind.Virtual ? muzzle.MuzzleId : -1;
                 info.UniqueMuzzleId = muzzle.UniqueId;
-                info.UniquePartId = w.UniqueId;
-                info.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : info.WeaponCache.VirutalId;
+                info.Weapon.WeaponCache.VirutalId = t != Kind.Virtual ? -1 : info.Weapon.WeaponCache.VirutalId;
                 info.Origin = t != Kind.Client ? t != Kind.Virtual ? muzzle.Position : w.MyPivotPos : gen.Origin;
                 info.Direction = t != Kind.Client ? t != Kind.Virtual ? gen.Direction : w.MyPivotFwd : gen.Direction;
                 
@@ -109,19 +105,19 @@ namespace CoreSystems.Projectiles
                 }
                 else
                 {
-                    info.WeaponCache.VirtualHit = false;
-                    info.WeaponCache.Hits = 0;
-                    info.WeaponCache.HitEntity.Entity = null;
+                    info.Weapon.WeaponCache.VirtualHit = false;
+                    info.Weapon.WeaponCache.Hits = 0;
+                    info.Weapon.WeaponCache.HitEntity.Entity = null;
                     for (int j = 0; j < virts.Count; j++)
                     {
                         var v = virts[j];
                         p.VrPros.Add(v.Info);
-                        if (!a.Const.RotateRealBeam) info.WeaponCache.VirutalId = 0;
+                        if (!a.Const.RotateRealBeam) info.Weapon.WeaponCache.VirutalId = 0;
                         else if (v.Rotate)
                         {
                             info.Origin = v.Muzzle.Position;
                             info.Direction = v.Muzzle.Direction;
-                            info.WeaponCache.VirutalId = v.VirtualId;
+                            info.Weapon.WeaponCache.VirutalId = v.VirtualId;
                         }
                     }
                     virts.Clear();
@@ -131,12 +127,11 @@ namespace CoreSystems.Projectiles
                 Session.Projectiles.ActiveProjetiles.Add(p);
                 p.Start();
 
-                info.Monitors = w.Monitors;
-                if (info.Monitors?.Count > 0)
+                if (info.Weapon.Monitors?.Count > 0)
                 {
                     Session.MonitoredProjectiles[p.Info.Id] = p;
-                    for (int j = 0; j < info.Monitors.Count; j++)
-                        p.Info.Monitors[j].Invoke(comp.Cube.EntityId, w.PartId, info.Id, target.TargetId, p.Position, true);
+                    for (int j = 0; j < info.Weapon.Monitors.Count; j++)
+                        p.Info.Weapon.Monitors[j].Invoke(comp.Cube.EntityId, w.PartId, info.Id, target.TargetId, p.Position, true);
                 }
 
                 if (Session.MpActive && aConst.ProjectileSync) {
