@@ -20,6 +20,7 @@ namespace CoreSystems.Control
             AddWeaponBurstCountSliderRange<T>(session, "Burst Count", Localization.GetText("TerminalBurstShotsTitle"), Localization.GetText("TerminalBurstShotsTooltip"), BlockUi.GetBurstCount, BlockUi.RequestSetBurstCount, CanBurst, BlockUi.GetMinBurstCount, BlockUi.GetMaxBurstCount, true);
             AddWeaponBurstDelaySliderRange<T>(session, "Burst Delay", Localization.GetText("TerminalBurstDelayTitle"), Localization.GetText("TerminalBurstDelayTooltip"), BlockUi.GetBurstDelay, BlockUi.RequestSetBurstDelay, CanBurst, BlockUi.GetMinBurstDelay, BlockUi.GetMaxBurstDelay, true);
             AddWeaponSequenceIdSliderRange<T>(session, "Sequence Id", Localization.GetText("TerminalSequenceIdTitle"), Localization.GetText("TerminalSequenceIdTooltip"), BlockUi.GetSequenceId, BlockUi.RequestSetSequenceId, Istrue, BlockUi.GetMinSequenceId, BlockUi.GetMaxSequenceId, true);
+            AddWeaponGroupIdIdSliderRange<T>(session, "Weapon Group Id", Localization.GetText("TerminalWeaponGroupIdTitle"), Localization.GetText("TerminalWeaponGroupIdTooltip"), BlockUi.GetWeaponGroupId, BlockUi.RequestSetWeaponGroupId, Istrue, BlockUi.GetMinWeaponGroupId, BlockUi.GetMaxWeaponGroupId, true);
 
 
             AddSliderRof<T>(session, "Weapon ROF", Localization.GetText("TerminalWeaponROFTitle"), Localization.GetText("TerminalWeaponROFTooltip"), BlockUi.GetRof, BlockUi.RequestSetRof, UiRofSlider);
@@ -357,6 +358,15 @@ namespace CoreSystems.Control
             builder.Append(message);
         }
 
+        internal static void SliderWeaponGroupIdWriterRange(IMyTerminalBlock block, StringBuilder builder)
+        {
+
+            var value = (long)Math.Round(BlockUi.GetWeaponGroupId(block), 0);
+            var message = value > 0 ? value.ToString() : "Disabled";
+
+            builder.Append(message);
+        }
+
         internal static void SliderCriticalTimerWriterRange(IMyTerminalBlock block, StringBuilder builder)
         {
 
@@ -489,6 +499,28 @@ namespace CoreSystems.Control
 
             return c;
         }
+
+        internal static IMyTerminalControlSlider AddWeaponGroupIdIdSliderRange<T>(Session session, string name, string title, string tooltip, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Func<IMyTerminalBlock, bool> visibleGetter, Func<IMyTerminalBlock, float> minGetter = null, Func<IMyTerminalBlock, float> maxGetter = null, bool group = false) where T : IMyTerminalBlock
+        {
+            var c = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, T>(name);
+
+            c.Title = MyStringId.GetOrCompute(title);
+            c.Tooltip = MyStringId.GetOrCompute(tooltip);
+            c.Enabled = Istrue;
+            c.Visible = visibleGetter;
+            c.Getter = getter;
+            c.Setter = setter;
+            c.Writer = SliderWeaponGroupIdWriterRange;
+
+            if (minGetter != null)
+                c.SetLimits(minGetter, maxGetter);
+
+            MyAPIGateway.TerminalControls.AddControl<T>(c);
+            session.CustomControls.Add(c);
+
+            return c;
+        }
+
 
         internal static IMyTerminalControlSlider AddWeaponCrticalTimeSliderRange<T>(Session session, string name, string title, string tooltip, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Func<IMyTerminalBlock, bool> enableGetter, Func<IMyTerminalBlock, bool> visibleGetter, Func<IMyTerminalBlock, float> minGetter = null, Func<IMyTerminalBlock, float> maxGetter = null, bool group = false) where T : IMyTerminalBlock
         {

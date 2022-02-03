@@ -23,9 +23,9 @@ namespace CoreSystems.Control
 
         public static void CreateShootBurst(Session session)
         {
-            var action = MyAPIGateway.TerminalControls.CreateAction<T>("ActionBurst");
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("ActionFire");
             action.Icon = @"Textures\GUI\Icons\Actions\SwitchOn.dds";
-            action.Name = new StringBuilder(Localization.GetText("ActionBurst"));
+            action.Name = new StringBuilder(Localization.GetText("ActionFire"));
             action.Action = CustomActions.TerminalActionShootBurst;
             action.Writer = TerminalHelpers.EmptyStringBuilder;
             action.Enabled = TerminalHelpers.ShootBurstWeapon;

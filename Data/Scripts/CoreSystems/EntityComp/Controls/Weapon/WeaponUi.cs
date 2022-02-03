@@ -536,7 +536,7 @@ namespace CoreSystems
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstCount && comp.RequestShootBurstId == values.State.ShootBurstStateId)
+            if (roundedInt != values.Set.Overrides.BurstCount && comp.RequestShootBurstId == values.State.ShootSyncStateId)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstCount", roundedInt, comp.Session.PlayerId);
             }
@@ -557,7 +557,7 @@ namespace CoreSystems
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstDelay && comp.RequestShootBurstId == values.State.ShootBurstStateId)
+            if (roundedInt != values.Set.Overrides.BurstDelay && comp.RequestShootBurstId == values.State.ShootSyncStateId)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstDelay", roundedInt, comp.Session.PlayerId);
             }
@@ -581,6 +581,27 @@ namespace CoreSystems
             if (roundedInt != values.Set.Overrides.SequenceId)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "SequenceId", roundedInt, comp.Session.PlayerId);
+            }
+        }
+
+        internal static float GetWeaponGroupId(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+            return comp.Data.Repo.Values.Set.Overrides.WeaponGroupId;
+        }
+
+        internal static void RequestSetWeaponGroupId(IMyTerminalBlock block, float newValue)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var roundedInt = (int)Math.Round(newValue);
+            var values = comp.Data.Repo.Values;
+
+            if (roundedInt != values.Set.Overrides.WeaponGroupId)
+            {
+                Weapon.WeaponComponent.RequestSetValue(comp, "WeaponGroupId", roundedInt, comp.Session.PlayerId);
             }
         }
 
@@ -724,6 +745,19 @@ namespace CoreSystems
         }
 
         internal static float GetMaxSequenceId(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
+
+            return 100;
+        }
+
+        internal static float GetMinWeaponGroupId(IMyTerminalBlock block)
+        {
+            return 0;
+        }
+
+        internal static float GetMaxWeaponGroupId(IMyTerminalBlock block)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;

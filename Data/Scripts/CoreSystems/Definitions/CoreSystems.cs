@@ -123,6 +123,8 @@ namespace CoreSystems.Support
         public readonly string ShortName;
         public readonly string[] Muzzles;
 
+        public readonly int MaxActiveProjectiles;
+        public readonly int MaxReloads;
         public readonly int DelayToFire;
         public readonly int CeaseFireDelay;
         public readonly int MinAzimuth;
@@ -241,6 +243,10 @@ namespace CoreSystems.Support
             AlwaysFireFull = values.HardPoint.Loading.FireFull;
             Prediction = Values.HardPoint.AimLeadingPrediction;
             LockOnFocus = Values.HardPoint.Ai.LockOnFocus && !Values.HardPoint.Ai.TrackTargets;
+
+            MaxReloads = Values.HardPoint.Loading.MaxReloads > 0 ? Values.HardPoint.Loading.MaxReloads : int.MaxValue;
+            MaxActiveProjectiles = Values.HardPoint.Loading.MaxActiveProjectiles;
+
             SuppressFire = Values.HardPoint.Ai.SuppressFire;
             PartType = Values.HardPoint.HardWare.Type;
             HasEjector = !string.IsNullOrEmpty(Values.Assignments.Ejector);

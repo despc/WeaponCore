@@ -143,7 +143,7 @@ namespace CoreSystems
                     }
                     if (pComp.Status != Started)
                         pComp.HealthCheck();
-                    var burstShots = (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootBurstStateId);
+                    var burstShots = (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootSyncStateId);
                     if (pComp.Platform.State != CorePlatform.PlatformState.Ready || pComp.IsDisabled || pComp.IsAsleep || pComp.CoreEntity.MarkedForClose || pComp.LazyUpdate && !ai.DbUpdated && Tick > pComp.NextLazyUpdateStart)
                         continue;
 
@@ -260,7 +260,7 @@ namespace CoreSystems
 
                     var compManualMode = wValues.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
-                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootBurstStateId;
+                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (Tick60) {
                         var add = wComp.TotalEffect - wComp.PreviousTotalEffect;
@@ -423,7 +423,7 @@ namespace CoreSystems
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
                         var controlledShot = (manualShot || autoShot);
 
-                        var anyShot = controlledShot && !burstShots || w.BurstCount > 0;
+                        var anyShot = controlledShot && !burstShots || w.BurstCount > 0 && w.BurstDelay == 0 || w.BurstDelay != 0 && w.BurstDelay-- == 0;
 
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
                         var shootRequest = (anyShot || w.FinishShots || delayedFire);

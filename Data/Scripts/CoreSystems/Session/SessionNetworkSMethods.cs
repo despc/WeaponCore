@@ -446,7 +446,7 @@ namespace CoreSystems
             return true;
         }
 
-        private bool ServerBurstSyncs(PacketObj data)
+        private bool ServerShootSyncs(PacketObj data)
         {
 
             var packet = data.Packet;
@@ -464,10 +464,14 @@ namespace CoreSystems
             DecodeShootState(dPacket.Data, out stateId, out mode, out y, out code);
 
             long playerId;
-            if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            if (wComp != null && code == Weapon.WeaponComponent.ShootCodes.ToggleOff)
             {
-
-                wComp.RequestShootBurst(playerId);
+                Log.Line($"server has received ToggleOff");
+                wComp.ShootToggled = false;
+            }
+            else if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            {
+                wComp.RequestShootSync(playerId);
 
                 if (wComp.RequestShootBurstId == stateId)
                 {
@@ -481,10 +485,6 @@ namespace CoreSystems
             else if (!SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
                 Log.Line($"server bursting playerId not found");
-            }
-            else
-            {
-                Log.Line($"server burst other failure");
             }
 
             data.Report.PacketValid = true;

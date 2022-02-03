@@ -469,7 +469,7 @@ namespace CoreSystems
             return true;
         }
 
-        private bool ClientBurstSyncs(PacketObj data)
+        private bool ClientShootSyncs(PacketObj data)
         {
             var packet = data.Packet;
             var dPacket = (ULongUpdatePacket)packet;
@@ -487,13 +487,17 @@ namespace CoreSystems
             var wComp = comp as Weapon.WeaponComponent;
             if (wComp != null)
             {
-                if (wComp.RequestShootBurstId == stateId)
+                if (code == Weapon.WeaponComponent.ShootCodes.ToggleOff)
                 {
-                    wComp.RequestShootBurst(0);
+                    Log.Line($"client received ToggleOff");
+                    wComp.ShootToggled = false;
+                }
+                else if (wComp.RequestShootBurstId == stateId)
+                {
+                    wComp.RequestShootSync(0);
                 }
                 else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
                 {
-                    //Log.Line($"requesting client received burst responsse: stateId:{stateId}({wComp.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.WaitingBurstResponse}");
                     wComp.WaitingBurstResponse = false;
                 }
                 else

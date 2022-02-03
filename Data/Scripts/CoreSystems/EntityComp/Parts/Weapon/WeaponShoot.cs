@@ -97,7 +97,7 @@ namespace CoreSystems.Platform
                             --ProtoWeaponAmmo.CurrentAmmo;
 
                             if (BurstCount > 0)
-                                Comp.UpdateBurst(this);
+                                Comp.UpdateShootSync(this);
 
                             if (ProtoWeaponAmmo.CurrentAmmo == 0) {
                                 ClientLastShotId = Reload.StartId;
@@ -107,7 +107,7 @@ namespace CoreSystems.Platform
                             --ClientMakeUpShots;
 
                             if (BurstCount > 0)
-                                Comp.UpdateBurst(this);
+                                Comp.UpdateShootSync(this);
                         }
 
                         if (System.HasEjector && aConst.HasEjectEffect)  {

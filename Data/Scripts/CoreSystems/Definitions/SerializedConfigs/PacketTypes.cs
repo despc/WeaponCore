@@ -52,7 +52,7 @@ namespace CoreSystems
         TerminalMonitor,
         ClientNotify,
         ServerData,
-        BurstShot,
+        ShootSync,
         EwaredBlocks,
         ClientReady,
         ProjectileSyncs,

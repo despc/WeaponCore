@@ -464,8 +464,8 @@ namespace CoreSystems.Projectiles
             var parentEnt = Info.Target.CoreEntity.GetTopMostParent();
             MyEntity friendEnt = null;//Info.Ai.Construct.Focus && Info.Overrides.Set.AssistFriend
             MyEntity topEnt = null;
-            var hasTarget = targetEnt != null || !targetEnt.MarkedForClose;
-            var hasParent = parentCube != null || !parentCube.MarkedForClose; //(Info.Weapon.Comp.MarkedForClose || Info.Weapon.Comp.Version != savedVersionComp)
+            var hasTarget = targetEnt != null && !targetEnt.MarkedForClose;
+            var hasParent = Info.CompSceneVersion == Info.Weapon.Comp.SceneVersion; 
             //var hasFriend = (friendEnt != null || !friendEnt.MarkedForClose);
             var closestObstacle = Info.Target.ClosestObstacle;
             Info.Target.ClosestObstacle = null;
@@ -490,8 +490,9 @@ namespace CoreSystems.Projectiles
                 {
                     if (hasParent)
                         topEnt = parentEnt.GetTopMostParent();
-                   // else if (hasFriend)
-                   //     topEnt = friendEnt.GetTopMostParent();
+
+                    // else if (hasFriend)
+                    //     topEnt = friendEnt.GetTopMostParent();
                 }
 
                 //General use vars
@@ -703,6 +704,7 @@ namespace CoreSystems.Projectiles
             catch (Exception ex) { Log.Line($"Exception in RunDrones :(  : {ex}", null, true); }
             UpdateSmartVelocity(newVel, tracking);
         }
+
         private void OffsetSmartVelocity(ref Vector3D commandedAccel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;

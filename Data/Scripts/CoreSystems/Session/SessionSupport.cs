@@ -1025,7 +1025,7 @@ namespace CoreSystems
             comp.DefaultReloads = (int)defaultReloads;
 
             if (trigger == TriggerOnce) {
-                comp.RequestShootBurst(identity);
+                comp.RequestShootSync(identity);
                 trigger = TriggerOff;
             }
 

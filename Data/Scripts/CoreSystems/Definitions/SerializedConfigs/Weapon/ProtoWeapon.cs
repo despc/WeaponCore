@@ -19,7 +19,7 @@ namespace CoreSystems
         public void ResetToFreshLoadState(Weapon.WeaponComponent comp)
         {
             Values.State.TrackingReticle = false;
-            Values.State.ShootBurstStateId = 0;
+            Values.State.ShootSyncStateId = 0;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
@@ -299,7 +299,7 @@ namespace CoreSystems
         [ProtoMember(6)] public TriggerActions TerminalAction;
         [ProtoMember(7)] public bool CountingDown;
         [ProtoMember(8)] public bool CriticalReaction;
-        [ProtoMember(9)] public uint ShootBurstStateId;
+        [ProtoMember(9)] public uint ShootSyncStateId;
 
         public bool Sync(Weapon.WeaponComponent comp, ProtoWeaponState sync, Caller caller)
         {
@@ -312,7 +312,7 @@ namespace CoreSystems
                 TerminalAction = sync.TerminalAction;
                 CountingDown = sync.CountingDown;
                 CriticalReaction = sync.CriticalReaction;
-                ShootBurstStateId = sync.ShootBurstStateId;
+                ShootSyncStateId = sync.ShootSyncStateId;
 
                 for (int i = 0; i < sync.Weapons.Length; i++)
                     comp.Platform.Weapons[i].PartState.Sync(sync.Weapons[i]);
@@ -462,7 +462,7 @@ namespace CoreSystems
         [ProtoMember(14), DefaultValue(true)] public bool Grids = true;
         //[ProtoMember(15), DefaultValue(true)] public bool ArmorShowArea;
         [ProtoMember(16)] public bool Repel;
-        [ProtoMember(17)] public long CameraChannel;
+        //[ProtoMember(17)] public long CameraChannel;
         [ProtoMember(18)] public bool Debug;
         //[ProtoMember(19)] public long LeadGroup;
         [ProtoMember(20)] public bool Armed;
@@ -474,6 +474,9 @@ namespace CoreSystems
         [ProtoMember(26)] public int ArmedTimer;
         [ProtoMember(27)] public int LeadGroup;
         [ProtoMember(28), DefaultValue(ShootModes.Once)] public ShootModes ShootMode = ShootModes.Once;
+        [ProtoMember(29)] public int CameraChannel;
+        [ProtoMember(30)] public int WeaponGroupId;
+
 
         public void Sync(ProtoWeaponOverrides syncFrom)
         {
@@ -502,6 +505,7 @@ namespace CoreSystems
             BurstDelay = syncFrom.BurstDelay;
             SequenceId = syncFrom.SequenceId;
             ShootMode = syncFrom.ShootMode;
+            WeaponGroupId = syncFrom.WeaponGroupId;
         }
     }
 }

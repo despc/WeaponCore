@@ -214,7 +214,7 @@ namespace CoreSystems.Platform
                 }
             }
 
-            var invalidStates = ProtoWeaponAmmo.CurrentAmmo != 0 || Loading || calledFromReload || Reload.WaitForClient;
+            var invalidStates = ProtoWeaponAmmo.CurrentAmmo != 0 || Loading || calledFromReload || Reload.WaitForClient || Reload.StartId >= System.MaxReloads;
             return !invalidStates && ServerReload();
         }
 
@@ -368,6 +368,7 @@ namespace CoreSystems.Platform
                 Loading = false;
                 ReloadEndTick = uint.MaxValue;
                 ProjectileCounter = 0;
+                BurstDelay = 0;
             }
         }
 
@@ -383,7 +384,7 @@ namespace CoreSystems.Platform
         {
             if (ReloadEndTick == uint.MaxValue)
                 return;
-
+            BurstDelay = 0;
             EventTriggerStateChanged(EventTriggers.Reloading, false);
             LastLoadedTick = Comp.Session.Tick;
             Loading = false;

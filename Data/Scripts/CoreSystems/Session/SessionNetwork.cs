@@ -80,9 +80,9 @@ namespace CoreSystems
                 var invalidType = false;
                 switch (packetObj.Packet.PType) {
 
-                    case PacketType.BurstShot:
+                    case PacketType.ShootSync:
                     {
-                        ClientBurstSyncs(packetObj);
+                        ClientShootSyncs(packetObj);
                         break;
                     }
                     case PacketType.ProjectileSyncs:
@@ -266,9 +266,9 @@ namespace CoreSystems
 
             switch (packetObj.Packet.PType) {
 
-                case PacketType.BurstShot:
+                case PacketType.ShootSync:
                 {
-                    ServerBurstSyncs(packetObj);
+                    ServerShootSyncs(packetObj);
                     break;
                 }
                 case PacketType.ClientMouseEvent: {

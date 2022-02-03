@@ -181,7 +181,7 @@ namespace CoreSystems
             }
         }
 
-        private const string BurstStr = "Fire Burst";
+        private const string BurstStr = "Fire";
         internal static void AlterActions<T>(Session session)
         {
             List<IMyTerminalAction> actions;
@@ -211,7 +211,10 @@ namespace CoreSystems
                                 oldAction(blk);
                             return;
                         }
-                        comp.RequestShootBurst(comp.Session.PlayerId);
+
+                        a.Name.Clear();
+                        a.Name.Append(BurstStr);
+                        comp.RequestShootSync(comp.Session.PlayerId);
                     };
                     /*
                     var oldWriter = a.Writer;
@@ -226,9 +229,8 @@ namespace CoreSystems
                         sb.Append("Burst");
 
                     };
-                    a.Name.Clear();
-                    a.Name.Append(BurstStr);
                     */
+
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot")) {

@@ -51,7 +51,7 @@ namespace CoreSystems.Control
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            comp.RequestShootBurst(comp.Session.PlayerId);
+            comp.RequestShootSync(comp.Session.PlayerId);
         }
 
         internal static void TerminalActionControlMode(IMyTerminalBlock blk)
@@ -310,7 +310,7 @@ namespace CoreSystems.Control
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
                 return;
 
-            var value = Convert.ToInt32(comp.Data.Repo.Values.Set.Overrides.CameraChannel);
+            var value = comp.Data.Repo.Values.Set.Overrides.CameraChannel;
             var nextValue = MathHelper.Clamp(value + 1, 0, 24);
 
             Weapon.WeaponComponent.RequestSetValue(comp, "CameraChannel", nextValue, comp.Session.PlayerId);
@@ -322,7 +322,7 @@ namespace CoreSystems.Control
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
                 return;
 
-            var value = Convert.ToInt32(comp.Data.Repo.Values.Set.Overrides.CameraChannel);
+            var value = comp.Data.Repo.Values.Set.Overrides.CameraChannel;
             var nextValue = MathHelper.Clamp(value - 1, 0, 24);
 
             Weapon.WeaponComponent.RequestSetValue(comp, "CameraChannel", nextValue, comp.Session.PlayerId);

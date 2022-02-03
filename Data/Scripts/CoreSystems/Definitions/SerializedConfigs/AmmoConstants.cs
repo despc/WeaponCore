@@ -134,8 +134,6 @@ namespace CoreSystems.Support
         public readonly int MaxFrags;
         public readonly int FragGroupSize;
         public readonly int FragGroupDelay;
-        public readonly int MaxActiveProjectiles;
-        public readonly int MaxReloads;
 
         public readonly bool CheckFutureIntersection;
         public readonly bool OverrideTarget;
