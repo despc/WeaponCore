@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CoreSystems.Support;
+using Sandbox.Definitions;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
@@ -346,6 +347,15 @@ namespace CoreSystems
                     return;
 
                 AllDefinitions = Static.GetAllDefinitions();
+
+                foreach (var t in AllDefinitions)
+                {
+                    var test = t as MyCubeBlockDefinition;
+                    if (test != null)
+                    {
+                        test.DetonateChance = 0;
+                    }
+                }
                 SoundDefinitions = Static.GetSoundDefinitions();
                 MyEntities.OnEntityCreate += OnEntityCreate;
 
