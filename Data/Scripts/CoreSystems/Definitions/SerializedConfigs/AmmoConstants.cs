@@ -33,6 +33,7 @@ namespace CoreSystems.Support
         }
 
         private const string Arc = "Arc";
+        private const string BackSlash = "\\";
         private const string BaseDmgStr = "BaseDamage";
         private const string AreaDmgStr = "AreaEffectDamage";
         private const string AreaRadStr = "AreaEffectRadius";
@@ -720,7 +721,8 @@ namespace CoreSystems.Support
             if (ammoDef.Ewar.Type > 0 && IsField) triggerModel = true;
             else triggerModel = false;
             primeModel = ammoDef.AmmoGraphics.ModelName != string.Empty;
-            primeModelPath = primeModel ? wDef.ModPath + ammoDef.AmmoGraphics.ModelName : string.Empty;
+            var vanillaModel = !ammoDef.AmmoGraphics.ModelName.StartsWith(BackSlash);
+            primeModelPath = primeModel ? vanillaModel ? ammoDef.AmmoGraphics.ModelName : wDef.ModPath + ammoDef.AmmoGraphics.ModelName : string.Empty;
             return primeModel ? new MyConcurrentPool<MyEntity>(256, PrimeEntityClear, 10000, PrimeEntityActivator) : null;
         }
 
