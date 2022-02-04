@@ -20,7 +20,6 @@ namespace CoreSystems
 {
     public class GridMap
     {
-        public readonly MyShipController FakeController = new MyShipController();
         public ConcurrentCachingList<MyCubeBlock> MyCubeBocks;
         public MyGridTargeting Targeting;
         public volatile bool Trash;
@@ -33,7 +32,6 @@ namespace CoreSystems
         internal void Clean()
         {
             Targeting = null;
-            FakeController.SlimBlock = null;
             MyCubeBocks.ClearImmediate();
             LastSortTick = 0;
             MostBlocks = 0;
@@ -351,15 +349,8 @@ namespace CoreSystems
                             if (fat.IsWorking)
                                 ++working;
 
-                            if (++functional == 1)
-                            {
-                                var oldCube = (gridMap.FakeController.SlimBlock as IMySlimBlock)?.FatBlock as MyCubeBlock;
-                                if (oldCube == null || oldCube.MarkedForClose || oldCube.CubeGrid != grid)
-                                {
-                                    gridMap.FakeController.SlimBlock = fat.SlimBlock;
-                                    GridDistributors[grid] = gridMap;
-                                }
-                            }
+                            ++functional;
+
                             var cockpit = fat as MyCockpit;
                             var decoy = fat as IMyDecoy;
                             var bomb = fat as IMyWarhead;
@@ -414,9 +405,6 @@ namespace CoreSystems
                     foreach (var type in newTypeMap)
                         type.Value.ApplyAdditions();
 
-                    GridMap oldMap;
-                    if (terminals == 0 && !gridMap.Trash && GridDistributors.TryRemove(grid, out oldMap))
-                        oldMap.FakeController.SlimBlock = null;
 
                     gridMap.MyCubeBocks.ApplyAdditions();
                     gridMap.SuspectedDrone = warHead > 0 || powerProducers > 0 && thrusters > 0 && gyros > 0;

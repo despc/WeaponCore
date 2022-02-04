@@ -86,8 +86,8 @@ namespace CoreSystems.Support
         internal readonly Session Session;
         internal MyEntity TopEntity;
         internal MyCubeGrid GridEntity;
+        internal IMyCubeGrid ImyGridEntity;
         internal MyCubeBlock PowerBlock;
-        internal MyResourceDistributorComponent PowerDistributor;
         internal MyCubeGrid.MyCubeGridHitInfo GridHitInfo = new MyCubeGrid.MyCubeGridHitInfo();
         internal uint CreatedTick;
         internal Vector3 GridVel;
@@ -205,6 +205,7 @@ namespace CoreSystems.Support
             {
                 TopEntity = topEntity;
                 GridEntity = topEntity as MyCubeGrid;
+                ImyGridEntity = topEntity as IMyCubeGrid;
                 AiType = GridEntity != null ? AiTypes.Grid : type == CoreComponent.CompTypeSpecific.Rifle ? AiTypes.Player : AiTypes.Phantom;
                 IsGrid = AiType == AiTypes.Grid;
                 DeadSphereRadius = GridEntity?.GridSizeHalf + 0.1 ?? 1.35;

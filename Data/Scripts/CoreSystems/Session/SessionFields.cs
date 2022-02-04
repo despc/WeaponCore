@@ -133,7 +133,6 @@ namespace CoreSystems
         internal readonly ConcurrentDictionary<MyCubeBlock, long> CameraChannelMappings = new ConcurrentDictionary<MyCubeBlock, long>();
         internal readonly ConcurrentDictionary<long, WaterData> WaterMap = new ConcurrentDictionary<long, WaterData>();
         internal readonly ConcurrentDictionary<long, MyPlanet> PlanetMap = new ConcurrentDictionary<long, MyPlanet>();
-        internal readonly ConcurrentDictionary<MyCubeGrid, GridMap> GridDistributors = new ConcurrentDictionary<MyCubeGrid, GridMap>();
         internal readonly ConcurrentDictionary<MyCubeGrid, GridMap> DirtyPowerGrids = new ConcurrentDictionary<MyCubeGrid, GridMap>();
         internal readonly ConcurrentDictionary<MyCubeGrid, HashSet<long>> PlayerGrids = new ConcurrentDictionary<MyCubeGrid, HashSet<long>>();
         internal readonly ConcurrentDictionary<string, MyObjectBuilder_Checkpoint.ModItem> ModInfo = new ConcurrentDictionary<string, MyObjectBuilder_Checkpoint.ModItem>();

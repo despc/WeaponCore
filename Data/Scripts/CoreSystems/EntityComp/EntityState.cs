@@ -34,10 +34,7 @@ namespace CoreSystems.Support
         {
             IsWorking = !IsBlock || Cube.IsWorking;
 
-            if (!IsWorking)
-                Ai.PowerDistributor?.MarkForUpdate();
-
-            else if (IsBlock && FunctionalBlock.Enabled) {
+            if (IsBlock && FunctionalBlock.Enabled) {
                 FunctionalBlock.Enabled = false;
                 FunctionalBlock.Enabled = true;
                 LastOnOffState = true;

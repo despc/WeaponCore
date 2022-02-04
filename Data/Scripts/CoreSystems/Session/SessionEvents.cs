@@ -477,50 +477,72 @@ namespace CoreSystems
 
         private void BuildPlayerMap(IMyPlayer player, long id)
         {
-            Players[id] = new PlayerMap { Player = player, PlayerId = id, TargetFocus = null, TargetLock = null};
+            MyTargetFocusComponent targetFocus = null;
+            MyTargetLockingComponent targetLock = null;
+            if (!(player.Character != null && player.Character.Components.TryGet(out targetFocus) && player.Character.Components.TryGet(out targetLock)))
+                Log.Line($"failed to get player: {player.Character == null}, focus:{targetFocus == null} or lock:{targetLock == null}");
+
+            Players[id] = new PlayerMap { Player = player, PlayerId = id, TargetFocus = targetFocus, TargetLock = targetLock };
         }
 
-        private void OnPlayerController(IMyControllableEntity exit, IMyControllableEntity enter)
+        private void OnPlayerController(IMyControllableEntity exitController, IMyControllableEntity enterController)
         {
             try
             {
-                //Log.Line($"[player] exit:{exit is MyCockpit} - enter:{enter is MyCockpit} - exitId:{exit?.ControllerInfo?.ControllingIdentityId} - enterId:{enter?.ControllerInfo?.ControllingIdentityId}");
-
-                var ent1 = exit as MyEntity;
-                var ent2 = enter as MyEntity;
+                var exit = exitController as MyEntity;
+                var enter = enterController as MyEntity;
                 HashSet<long> players;
 
-                if (ent1 != null)
+                Ai ai;
+                if (exit != null && enterController?.ControllerInfo != null)
                 {
-                    var cube = ent1 as MyCubeBlock;
-                    if (cube != null && PlayerGrids.TryGetValue(cube.CubeGrid, out players) && enter?.ControllerInfo != null)
-                    {
-                        players.Remove(enter.ControllerInfo.ControllingIdentityId);
+                    var cube = exit as MyCubeBlock;
 
-                        if (players.Count == 0)
+                    if (cube != null)
+                    {
+
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            PlayerGridPool.Return(players);
+                            ai.Construct.UpdatePlayerLockState(enterController.ControllerInfo.ControllingIdentityId, true);
                         }
-                    }
-                }
-                if (ent2 != null)
-                {
-                    var cube = ent2 as MyCubeBlock;
 
-                    if (cube != null && enter?.ControllerInfo != null)
-                    {
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
-                            players.Add(enter.ControllerInfo.ControllingIdentityId);
+                            players.Remove(enterController.ControllerInfo.ControllingIdentityId);
+
+                            if (players.Count == 0)
+                            {
+                                PlayerGridPool.Return(players);
+                            }
+                        }
+                    }
+
+
+                }
+                if (enter != null && enterController.ControllerInfo != null)
+                {
+                    var cube = enter as MyCubeBlock;
+
+                    if (cube != null)
+                    {
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
+                        {
+                            ai.Construct.UpdatePlayerLockState(enterController.ControllerInfo.ControllingIdentityId, false);
+                        }
+
+                        if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
+                        {
+                            players.Add(enterController.ControllerInfo.ControllingIdentityId);
                         }
                         else
                         {
                             players = PlayerGridPool.Get();
-                            players.Add(enter.ControllerInfo.ControllingIdentityId);
+                            players.Add(enterController.ControllerInfo.ControllingIdentityId);
                             PlayerGrids[cube.CubeGrid] = players;
                         }
 
                     }
+
 
                 }
             }

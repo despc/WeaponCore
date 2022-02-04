@@ -277,9 +277,6 @@ namespace CoreSystems.Support
             {
                 if (RootAi.AiType == AiTypes.Grid) {
 
-                    if (RootAi.Session.DedicatedServer || RootAi.Session.IsHost)
-                        RootAi.Construct.UpdatePlayerLockState(playerId, !updateAdd);
-
                     foreach (var sub in RootAi.SubGrids) {
 
                         Ai ai;
@@ -293,6 +290,18 @@ namespace CoreSystems.Support
 
             internal void UpdatePlayerLockState(long playerId, bool setDefault)
             {
+                PlayerMap playerMap;
+                if (!RootAi.Session.Players.TryGetValue(playerId, out playerMap))
+                    Log.Line($"failed to get PlayerMap");
+                else if (playerMap.Player.Character != null && playerMap.Player.Character.Components.TryGet(out playerMap.TargetFocus) && playerMap.Player.Character.Components.TryGet(out playerMap.TargetLock))
+                {
+                    playerMap.TargetFocusDef.AngularToleranceFromCrosshair = 25;
+                    //playerMap.TargetFocusDef.FocusSearchMaxDistance = !setDefault ? RootAi.Construct.MaxLockRange : 2000;
+                    playerMap.TargetFocusDef.FocusSearchMaxDistance = 0; //temp
+                    playerMap.TargetFocus.Init(playerMap.TargetFocusDef);
+                }
+                else
+                    Log.Line($"failed to get and set player focus and lock");
             }
 
             public static void UpdateActiveControlDictionary(Ai ai, MyEntity entity, long playerId, bool updateAdd)

@@ -935,11 +935,11 @@ namespace CoreSystems
 
     public class PlayerMap
     {
-        public readonly MyDefinitionBase TargetFocusDef = new MyDefinitionBase();
+        public readonly MyTargetFocusComponentDefinition TargetFocusDef = new MyTargetFocusComponentDefinition();
         public IMyPlayer Player;
         public long PlayerId;
-        public MyEntity TargetFocus;
-        public MyEntity TargetLock;
+        public MyTargetFocusComponent TargetFocus;
+        public MyTargetLockingComponent TargetLock;
     }
 
     public class WaterData

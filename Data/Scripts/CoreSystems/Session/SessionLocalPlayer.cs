@@ -47,8 +47,6 @@ namespace CoreSystems
 
                 if (oldControlId != controlledEntity.EntityId)
                 {
-                    TrackingAi.Construct.UpdatePlayerLockState(PlayerId, false);
-
                     SendActiveControlUpdate(TrackingAi, controlledEntity, true);
                     TargetLeadUpdate();
                 }
@@ -64,8 +62,6 @@ namespace CoreSystems
                     MyCubeBlock oldBlock;
                     if (TrackingAi.Data.Repo.ControllingPlayers.TryGetValue(PlayerId, out oldControlId) && MyEntities.TryGetEntityById(oldControlId, out oldBlock, true))
                     {
-                        TrackingAi.Construct.UpdatePlayerLockState(PlayerId, true);
-
                         if (IsServer) TrackingAi.Construct.UpdateConstructsPlayers(controlledEntity, PlayerId, false);
 
                         SendActiveControlUpdate(TrackingAi, oldBlock, false);

@@ -894,15 +894,14 @@ namespace CoreSystems
         internal bool GridHasPower(MyCubeGrid grid, GridMap map = null)
         {
             bool state = false;
-            if (map != null || GridDistributors.TryGetValue(grid, out map))
+            if (map != null || GridToInfoMap.TryGetValue(grid, out map))
             {
-                var slim = map.FakeController.SlimBlock as IMySlimBlock;
-                var cube = slim?.FatBlock as MyCubeBlock;
+                var dist = (MyResourceDistributorComponent)((IMyCubeGrid)grid).ResourceDistributor;
 
-                if (cube != null && cube.CubeGrid == grid)
+
+                if (dist != null)
                 {
-                    var dist = map.FakeController.GridResourceDistributor;
-                    state = dist?.ResourceState != MyResourceStateEnum.NoPower;
+                    state = dist.ResourceState != MyResourceStateEnum.NoPower;
                 }
 
                 map.PowerCheckTick = Tick;

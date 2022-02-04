@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using CoreSystems.Platform;
 using CoreSystems.Projectiles;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using VRage;
+using VRage.Game.ModAPI;
 using VRageMath;
 using static CoreSystems.WeaponRandomGenerator;
 
@@ -225,22 +227,18 @@ namespace CoreSystems.Support
         {
             try
             {
-                GridMap map;
                 bool powered = false;
-                if (Session.GridDistributors.TryGetValue(GridEntity, out map))
+                var powerDist = (MyResourceDistributorComponent)ImyGridEntity.ResourceDistributor;
+                if (powerDist != null && powerDist.SourcesEnabled != MyMultipleEnabledEnum.NoObjects && powerDist.ResourceState != MyResourceStateEnum.NoPower)
                 {
-                    PowerDistributor = map.FakeController?.GridResourceDistributor;
-                    if (PowerDistributor != null && PowerDistributor.SourcesEnabled != MyMultipleEnabledEnum.NoObjects && PowerDistributor.ResourceState != MyResourceStateEnum.NoPower)
+                    GridMaxPower = powerDist.MaxAvailableResourceByType(GId, GridEntity);
+                    GridCurrentPower = powerDist.TotalRequiredInputByType(GId, GridEntity);
+                    if (Session.ShieldApiLoaded && ShieldBlock != null)
                     {
-                        GridMaxPower = PowerDistributor.MaxAvailableResourceByType(GId, GridEntity);
-                        GridCurrentPower = PowerDistributor.TotalRequiredInputByType(GId, GridEntity);
-                        if (Session.ShieldApiLoaded && ShieldBlock != null)
-                        {
-                            var shieldPower = Session.SApi.GetPowerUsed(ShieldBlock);
-                            GridCurrentPower -= shieldPower;
-                        }
-                        powered = true;
+                        var shieldPower = Session.SApi.GetPowerUsed(ShieldBlock);
+                        GridCurrentPower -= shieldPower;
                     }
+                    powered = true;
                 }
 
                 if (!powered)
@@ -306,7 +304,7 @@ namespace CoreSystems.Support
                 if (HadPower)
                     WeaponShootOff();
             }
-            catch (Exception ex) { Log.Line($"Exception in UpdateGridPower: {ex} - SessionNull{Session == null} - FakeShipControllerNull{FakeShipController == null} - PowerDistributorNull{PowerDistributor == null} - MyGridNull{TopEntity == null}", null, true); }
+            catch (Exception ex) { Log.Line($"Exception in UpdateGridPower: {ex} - SessionNull{Session == null} - FakeShipControllerNull{FakeShipController == null}  - MyGridNull{TopEntity == null}", null, true); }
         }
 
         private void ForceCloseAiInventories()
@@ -436,10 +434,8 @@ namespace CoreSystems.Support
             MyPlanet = null;
             TerminalSystem = null;
             LastTerminal = null;
-            PowerDistributor = null;
             PowerBlock = null;
             TopEntity = null;
-            PowerDistributor = null;
             Closed = true;
             CanShoot = true;
             Version++;

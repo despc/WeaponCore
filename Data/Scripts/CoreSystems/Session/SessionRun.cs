@@ -348,14 +348,6 @@ namespace CoreSystems
 
                 AllDefinitions = Static.GetAllDefinitions();
 
-                foreach (var t in AllDefinitions)
-                {
-                    var test = t as MyCubeBlockDefinition;
-                    if (test != null)
-                    {
-                        test.DetonateChance = 0;
-                    }
-                }
                 SoundDefinitions = Static.GetSoundDefinitions();
                 MyEntities.OnEntityCreate += OnEntityCreate;
 
