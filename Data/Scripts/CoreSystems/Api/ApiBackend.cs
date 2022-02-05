@@ -142,7 +142,7 @@ namespace CoreSystems.Api
                 ["GetWeaponScope"] = new Func<IMyTerminalBlock, int, MyTuple<Vector3D, Vector3D>>(PbGetWeaponScope),
                 ["IsInRange"] = new Func<IMyTerminalBlock, MyTuple<bool, bool>>(PbIsInRange),
             };
-            var pb = MyAPIGateway.TerminalControls.CreateProperty<Dictionary<string, Delegate>, Sandbox.ModAPI.IMyTerminalBlock>("WcPbAPI");
+            var pb = MyAPIGateway.TerminalControls.CreateProperty<IReadOnlyDictionary<string, Delegate>, Sandbox.ModAPI.IMyTerminalBlock>("WcPbAPI");
             pb.Getter = b => PbApiMethods;
             MyAPIGateway.TerminalControls.AddControl<IMyProgrammableBlock>(pb);
             _session.PbApiInited = true;

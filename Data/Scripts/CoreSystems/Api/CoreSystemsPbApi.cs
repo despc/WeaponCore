@@ -56,7 +56,7 @@ namespace CoreSystems.Api
 
         public bool Activate(Sandbox.ModAPI.Ingame.IMyTerminalBlock pbBlock)
         {
-            var dict = pbBlock.GetProperty("WcPbAPI")?.As<Dictionary<string, Delegate>>().GetValue(pbBlock);
+            var dict = pbBlock.GetProperty("WcPbAPI")?.As<IReadOnlyDictionary<string, Delegate>>().GetValue(pbBlock);
             if (dict == null) throw new Exception("WcPbAPI failed to activate");
             return ApiAssign(dict);
         }
