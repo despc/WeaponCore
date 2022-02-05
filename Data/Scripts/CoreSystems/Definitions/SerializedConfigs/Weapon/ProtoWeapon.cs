@@ -473,7 +473,7 @@ namespace CoreSystems
         [ProtoMember(25)] public int SequenceId;
         [ProtoMember(26)] public int ArmedTimer;
         [ProtoMember(27)] public int LeadGroup;
-        [ProtoMember(28), DefaultValue(ShootModes.Once)] public ShootModes ShootMode = ShootModes.Once;
+        [ProtoMember(28), DefaultValue(ShootModes.Normal)] public ShootModes ShootMode = ShootModes.Normal;
         [ProtoMember(29)] public int CameraChannel;
         [ProtoMember(30)] public int WeaponGroupId;
 

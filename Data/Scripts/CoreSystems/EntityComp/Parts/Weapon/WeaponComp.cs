@@ -28,6 +28,8 @@ namespace CoreSystems.Platform
             internal int WeaponsFired;
             internal int MaxAmmoCount;
 
+            internal uint CompletedCycles;
+            internal uint LastCycle;
             internal uint RequestShootBurstId;
             internal uint LastRayCastTick;
             internal float EffectiveDps;
@@ -46,9 +48,13 @@ namespace CoreSystems.Platform
             internal bool HasRequireTarget;
             internal bool WaitingBurstResponse;
             internal bool ShootToggled;
+            internal bool RequestClientShootDelay;
+            internal bool FreezeClientShoot;
+
 
             public enum ShootModes
             {
+                Normal,
                 Once,
                 Burst,
                 Toggle,
@@ -61,7 +67,8 @@ namespace CoreSystems.Platform
                 ClientRequest,
                 ServerRequest,
                 ServerRelay,
-                ToggleOff,
+                ToggleServerOff,
+                ToggleClientOff,
             }
 
             internal WeaponComponent(Session session, MyEntity coreEntity, MyDefinitionId id)
@@ -116,15 +123,15 @@ namespace CoreSystems.Platform
             {
                 var state = Data.Repo.Values.State;
                 
-                w.BurstDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
+                w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
 
-                if (--w.BurstCount == 0 && ++WeaponsFired >= TotalWeapons)
+                if (--w.ShootCount == 0 && ++WeaponsFired >= TotalWeapons)
                 {
-                    if (!ShootToggled)
+                    if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles == LastCycle))
                     {
-                        WeaponsFired = 0;
                         if (Session.IsServer)
                         {
+                            //Log.Line($"[server end burst] cycles:{CompletedCycles} - ShootToggled:{ShootToggled} - RequestClientShootDelay:{RequestClientShootDelay} - CompletedCycles:{CompletedCycles}({LastCycle})");
                             if (RequestShootBurstId != 65535)
                                 state.ShootSyncStateId = RequestShootBurstId;
                             else
@@ -138,24 +145,41 @@ namespace CoreSystems.Platform
                                 Session.SendState(this);
                             }
                         }
+                        //else
+                        //    Log.Line($"[client end burst] cycles:{CompletedCycles}({LastCycle}) - RequestClientShootDelay: {RequestClientShootDelay} - FreezeClientShoot:{FreezeClientShoot} - ShootToggled:{ShootToggled}");
+
+                        WeaponsFired = 0;
+                        CompletedCycles = 0;
+                        LastCycle = 0;
+                        ShootToggled = false;
                     }
                     else
                     {
                         ReadyToShoot(true);
-                    }
 
+                        if (RequestClientShootDelay)
+                        {
+                            //Log.Line($"RequestClientShootDelay at cycle: {CompletedCycles} - LastCycle:{LastCycle}");
+                            RequestClientShootDelay = false;
+                            FreezeClientShoot = LastCycle == 0;
+                        }
+                    }
                 }
 
                 //Log.Line($"wburst: {w.BurstCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootSyncStateId} vs {RequestShootBurstId}");
             }
 
 
-            internal void RequestShootSync(long playerId)
+            internal void RequestShootSync(long playerId) // this shoot method mixes client initiation with server delayed server confirmation in order to maintain sync while avoiding authoritative delays in the common case. 
             {
-                var sendRequest = !Session.IsClient || playerId == Session.PlayerId;
+                var set = Data.Repo.Values.Set;
+
+                if (set.Overrides.ShootMode == ShootModes.Normal) // quick terminate this method unless shootMode !=  normal
+                    return;
+
+                var sendRequest = !Session.IsClient || playerId == Session.PlayerId; // this method is used both by initiators and by receives. 
 
                 var state = Data.Repo.Values.State;
-                var set = Data.Repo.Values.Set;
                 var wasToggled = ShootToggled;
 
                 if (sendRequest) {
@@ -164,34 +188,35 @@ namespace CoreSystems.Platform
                     else
                         ShootToggled = false;
 
-                    if (Session.MpActive & wasToggled && !ShootToggled) {
+                    if (Session.MpActive & wasToggled && !ShootToggled) { // only run on initiators when this call is toggling off 
 
+                        RequestClientShootDelay =  Session.IsClient; //if the initiators is a client pause future cycles until the server returns which cycle state to terminate on.
+                        //Log.Line($"RequestClientShootDelay:{RequestClientShootDelay}");
                         ulong packagedMessage;
-                        Session.EncodeShootState(state.ShootSyncStateId, 0, 0, (uint)ShootCodes.ToggleOff, out packagedMessage);
+                        Session.EncodeShootState(state.ShootSyncStateId, 0, (uint)(LastCycle + 1), (uint)ShootCodes.ToggleServerOff, out packagedMessage);
                         Session.SendBurstRequest(this, packagedMessage, PacketType.ShootSync, RewriteShootSyncToServerResponse, playerId);
                     }
                 }
 
-                //Log.Line($"request1: {IsDisabled} - {RequestShootBurstId} != {state.ShootSyncStateId} - {set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController} - {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
-                if (IsDisabled || wasToggled || WaitingBurstResponse || RequestShootBurstId != state.ShootSyncStateId || set.Overrides.Control == ProtoWeaponOverrides.ControlModes.Auto && TurretController || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return;
+                //Log.Line($"request1: {IsDisabled} - Wait:{WaitingBurstResponse} - {RequestShootBurstId} != {state.ShootSyncStateId} -  {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
+                if (IsDisabled || wasToggled || RequestClientShootDelay || WaitingBurstResponse || RequestShootBurstId != state.ShootSyncStateId || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return; // check if already active and all weapons are in a clean ready state.
 
-                //Log.Line($"request2");
                 if (IsBlock && Session.HandlesInput)
                     Session.TerminalMon.HandleInputUpdate(this);
 
-                RequestShootBurstId = state.ShootSyncStateId + 1;
+                RequestShootBurstId = state.ShootSyncStateId + 1; 
 
                 state.PlayerId = playerId;
 
                 if (Session.MpActive && sendRequest)
                 {
-                    WaitingBurstResponse = Session.IsClient;
+                    WaitingBurstResponse = Session.IsClient; // this will be set false on the client once the server responds to this packet
 
                     var code = Session.IsServer ? playerId ==  0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
                     ulong packagedMessage;
                     Session.EncodeShootState(state.ShootSyncStateId, (uint)set.Overrides.ShootMode, 0, (uint)code, out packagedMessage);
 
-                    if (playerId > 0) 
+                    if (playerId > 0) // if this is the server responding to a request, rewrite the packet sent to the origin client with a special response code.
                         Session.SendBurstRequest(this, packagedMessage, PacketType.ShootSync, RewriteShootSyncToServerResponse, playerId);
                     else
                         Session.SendBurstRequest(this, packagedMessage, PacketType.ShootSync, null, playerId);
@@ -238,7 +263,7 @@ namespace CoreSystems.Platform
 
                         weaponsReady += 1;
 
-                        w.BurstCount = MathHelper.Clamp(burstTarget, 1,  w.ProtoWeaponAmmo.CurrentAmmo + w.ClientMakeUpShots);
+                        w.ShootCount = MathHelper.Clamp(burstTarget, 1,  w.ProtoWeaponAmmo.CurrentAmmo + w.ClientMakeUpShots);
 
                     }
                     else
@@ -251,13 +276,30 @@ namespace CoreSystems.Platform
                     for (int i = 0; i < totalWeapons; i++)
                     {
                         var w = Collection[i];
-                        w.BurstCount = 0;
-                        w.BurstDelay = 0;
+                        w.ShootCount = 0;
+                        w.ShootDelay = 0;
                     }
 
                 return ready;
             }
 
+            internal void ServerToggleResponse()
+            {
+                LastCycle = CompletedCycles + 1;
+                var values = Data.Repo.Values;
+
+                ulong packagedMessage;
+                Session.EncodeShootState(values.State.ShootSyncStateId, (uint) values.Set.Overrides.ShootMode, LastCycle, (uint)ShootCodes.ToggleClientOff, out packagedMessage);
+                Session.SendBurstRequest(this, packagedMessage, PacketType.ShootSync, null, 0);
+            }
+
+            internal void ClientToggleResponse(uint interval)
+            {
+                //Log.Line($"client received ToggleOff: CompletedCycles:{CompletedCycles} - lastCycle:{interval} - freeze: {FreezeClientShoot}({RequestClientShootDelay})");
+                LastCycle = interval;
+                FreezeClientShoot = false;
+                RequestClientShootDelay = false;
+            }
 
             internal void WeaponInit()
             {
@@ -542,7 +584,7 @@ namespace CoreSystems.Platform
                 var otherRangeSqr = Ai.DetectionInfo.OtherRangeSqr;
                 var threatRangeSqr = Ai.DetectionInfo.PriorityRangeSqr;
                 var targetInrange = DetectOtherSignals ? otherRangeSqr <= MaxDetectDistanceSqr && otherRangeSqr >= MinDetectDistanceSqr || threatRangeSqr <= MaxDetectDistanceSqr && threatRangeSqr >= MinDetectDistanceSqr : threatRangeSqr <= MaxDetectDistanceSqr && threatRangeSqr >= MinDetectDistanceSqr;
-                if (Ai.Session.Settings.Enforcement.ServerSleepSupport && !targetInrange && PartTracking == 0 && Ai.Construct.RootAi.Data.Repo.ControllingPlayers.Count <= 0 && Session.TerminalMon.Comp != this && Data.Repo.Values.State.TerminalAction == TriggerActions.TriggerOff)
+                if (Ai.Session.Settings.Enforcement.ServerSleepSupport && !targetInrange && PartTracking == 0 && Ai.Construct.RootAi.Construct.ControllingPlayers.Count <= 0 && Session.TerminalMon.Comp != this && Data.Repo.Values.State.TerminalAction == TriggerActions.TriggerOff)
                 {
 
                     IsAsleep = true;

@@ -9,7 +9,6 @@ namespace CoreSystems
         [ProtoMember(1)] public uint Revision;
         [ProtoMember(2)] public int Version = Session.VersionControl;
         [ProtoMember(3)] public long ActiveTerminal;
-        [ProtoMember(4)] public readonly Dictionary<long, long> ControllingPlayers = new Dictionary<long, long>();
 
         public bool Sync(AiDataValues sync)
         {
@@ -17,9 +16,6 @@ namespace CoreSystems
             {
                 Revision = sync.Revision;
                 ActiveTerminal = sync.ActiveTerminal;
-                ControllingPlayers.Clear();
-                foreach (var s in sync.ControllingPlayers)
-                    ControllingPlayers[s.Key] = s.Value;
 
                 return true;
             }

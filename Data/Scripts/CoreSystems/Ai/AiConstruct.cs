@@ -135,6 +135,7 @@ namespace CoreSystems.Support
             internal readonly Dictionary<MyStringHash, int> Counter = new Dictionary<MyStringHash, int>(MyStringHash.Comparer);
             internal readonly Focus Focus = new Focus();
             internal readonly ConstructData Data = new ConstructData();
+            internal readonly HashSet<long> ControllingPlayers = new HashSet<long>();
             internal readonly HashSet<MyEntity> PreviousTargets = new HashSet<MyEntity>();
             internal readonly RunningAverage DamageAverage = new RunningAverage(10);
             internal float OptimalDps;
@@ -169,6 +170,8 @@ namespace CoreSystems.Support
             {
                 if (ai.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
                     CheckEmptyWeapons();
+
+                var oldRootAi = RootAi;
 
                 OptimalDps = 0;
                 BlockCount = 0;
@@ -223,6 +226,12 @@ namespace CoreSystems.Support
 
                     RootAi.Construct.MaxLockRange = maxLockRange;
                     UpdatePartCounters(ai);
+
+
+                    if (oldRootAi != null && oldRootAi != RootAi && oldRootAi.Construct.ControllingPlayers.Count > 0)
+                        foreach (var p in oldRootAi.Construct.ControllingPlayers)
+                            RootAi.Construct.ControllingPlayers.Add(p);
+
                     return;
                 }
                 if (ai.TopEntity != null && ai.AiType != AiTypes.Grid)
@@ -230,6 +239,11 @@ namespace CoreSystems.Support
                     RootAi = ai;
                     LargestAi = ai;
                     ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
+
+                    if (oldRootAi != null && oldRootAi != RootAi && oldRootAi.Construct.ControllingPlayers.Count > 0)
+                        foreach (var p in oldRootAi.Construct.ControllingPlayers)
+                            RootAi.Construct.ControllingPlayers.Add(p);
+
                     return;
                 }
                 Log.Line($"ConstructRefresh Failed main Ai no GridMap: {caller} - Marked: {ai.TopEntity?.MarkedForClose}");
@@ -273,7 +287,7 @@ namespace CoreSystems.Support
                 }
             }
 
-            internal void UpdateConstructsPlayers(MyEntity entity, long playerId, bool updateAdd)
+            internal void NetRefreshAi()
             {
                 if (RootAi.AiType == AiTypes.Grid) {
 
@@ -281,14 +295,23 @@ namespace CoreSystems.Support
 
                         Ai ai;
                         if (RootAi.Session.EntityAIs.TryGetValue(sub, out ai))
-                            UpdateActiveControlDictionary(ai, entity, playerId, updateAdd);
+                        {
+                            ai.AiSleep = false;
+
+                            if (ai.Session.MpActive)
+                                ai.Session.SendAiData(ai);
+                        }
                     }
                 }
-                else
-                    UpdateActiveControlDictionary(RootAi, entity, playerId, updateAdd);
+                else {
+                    RootAi.AiSleep = false;
+
+                    if (RootAi.Session.MpActive)
+                        RootAi.Session.SendAiData(RootAi);
+                }
             }
 
-            internal void UpdatePlayerLockState(long playerId, bool setDefault)
+            internal void UpdatePlayerLockState(long playerId)
             {
                 PlayerMap playerMap;
                 if (!RootAi.Session.Players.TryGetValue(playerId, out playerMap))
@@ -302,26 +325,6 @@ namespace CoreSystems.Support
                 }
                 else
                     Log.Line($"failed to get and set player focus and lock");
-            }
-
-            public static void UpdateActiveControlDictionary(Ai ai, MyEntity entity, long playerId, bool updateAdd)
-            {
-                if (updateAdd) //update/add
-                {
-                    ai.Data.Repo.ControllingPlayers[playerId] = entity.EntityId;
-                    ai.AiSleep = false;
-                }
-                else //remove
-                {
-                    if (ai.Data.Repo.ControllingPlayers.Remove(playerId) && ai.Data.Repo.ControllingPlayers.Count == 0)
-                    {
-                        if (ai.Session.MpActive)
-                            ai.Session.SendConstruct(ai);
-                    }
-                    ai.AiSleep = false;
-                }
-                if (ai.Session.MpActive)
-                    ai.Session.SendAiData(ai);
             }
 
             internal static void UpdatePartCounters(Ai cAi)
@@ -429,6 +432,7 @@ namespace CoreSystems.Support
                 Counter.Clear();
                 RefreshedAis.Clear();
                 PreviousTargets.Clear();
+                ControllingPlayers.Clear();
             }
         }
     }

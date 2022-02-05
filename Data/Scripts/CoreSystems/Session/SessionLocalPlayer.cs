@@ -33,7 +33,7 @@ namespace CoreSystems
                 ActiveCockPit = cockPit;
             else ActiveCockPit = null;
 
-            long oldControlId;
+            PlayerController oldControlId;
             var controlledEntity = ActiveCockPit ?? ActiveControlBlock ?? PlayerHandWeapon?.Owner;
             var topEntity = ActiveControlBlock != null ? controlledEntity?.GetTopMostParent() : controlledEntity;
 
@@ -43,9 +43,9 @@ namespace CoreSystems
                 if (camera == null || !GroupedCamera(camera))
                     ActiveCameraBlock = null;
                 InGridAiBlock = true;
-                TrackingAi.Data.Repo.ControllingPlayers.TryGetValue(PlayerId, out oldControlId);
+                TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId);
 
-                if (oldControlId != controlledEntity.EntityId)
+                if (oldControlId.EntityId != controlledEntity.EntityId)
                 {
                     SendActiveControlUpdate(TrackingAi, controlledEntity, true);
                     TargetLeadUpdate();
@@ -59,12 +59,11 @@ namespace CoreSystems
                 {
                     TrackingAi.Construct.Focus.ClientIsFocused(TrackingAi);
 
-                    MyCubeBlock oldBlock;
-                    if (TrackingAi.Data.Repo.ControllingPlayers.TryGetValue(PlayerId, out oldControlId) && MyEntities.TryGetEntityById(oldControlId, out oldBlock, true))
+                    if (TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId))
                     {
-                        if (IsServer) TrackingAi.Construct.UpdateConstructsPlayers(controlledEntity, PlayerId, false);
+                        if (IsServer) TrackingAi.Construct.NetRefreshAi();
 
-                        SendActiveControlUpdate(TrackingAi, oldBlock, false);
+                        SendActiveControlUpdate(TrackingAi, oldControlId.ControllBlock, false);
                         foreach (var list in LeadGroups) list.Clear();
                         LeadGroupActive = false;
                     }

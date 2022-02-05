@@ -368,7 +368,7 @@ namespace CoreSystems.Platform
                 Loading = false;
                 ReloadEndTick = uint.MaxValue;
                 ProjectileCounter = 0;
-                BurstDelay = 0;
+                ShootDelay = 0;
             }
         }
 
@@ -384,7 +384,7 @@ namespace CoreSystems.Platform
         {
             if (ReloadEndTick == uint.MaxValue)
                 return;
-            BurstDelay = 0;
+            ShootDelay = 0;
             EventTriggerStateChanged(EventTriggers.Reloading, false);
             LastLoadedTick = Comp.Session.Tick;
             Loading = false;

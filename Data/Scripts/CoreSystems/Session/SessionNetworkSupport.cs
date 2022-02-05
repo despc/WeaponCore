@@ -848,7 +848,7 @@ namespace CoreSystems
             }
             else if (HandlesInput)
             {
-                ai.Construct.UpdateConstructsPlayers(entity, PlayerId, active);
+                ai.Construct.NetRefreshAi();
             }
             else Log.Line("SendActiveControlUpdate should never be called on Dedicated");
         }

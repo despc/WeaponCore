@@ -480,7 +480,7 @@ namespace CoreSystems
             MyTargetFocusComponent targetFocus = null;
             MyTargetLockingComponent targetLock = null;
             if (!(player.Character != null && player.Character.Components.TryGet(out targetFocus) && player.Character.Components.TryGet(out targetLock)))
-                Log.Line($"failed to get player: {player.Character == null}, focus:{targetFocus == null} or lock:{targetLock == null}");
+                Log.Line($"failed to get player: {player.Character == null}, focus:{targetFocus == null} or lock:{targetLock == null} - PlayerId:{PlayerId} - PlayerCount:{Players.Count}");
 
             Players[id] = new PlayerMap { Player = player, PlayerId = id, TargetFocus = targetFocus, TargetLock = targetLock };
         }
@@ -503,7 +503,14 @@ namespace CoreSystems
 
                         if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            ai.Construct.UpdatePlayerLockState(enterController.ControllerInfo.ControllingIdentityId, true);
+                            var playerId = enterController.ControllerInfo.ControllingIdentityId;
+                            ai.Construct.UpdatePlayerLockState(playerId);
+                            PlayerController control;
+                            if (ai.PlayerControl.TryGetValue(playerId, out control))
+                            {
+                                ai.PlayerControl.Remove(playerId);
+                                control.RootAi.Construct.ControllingPlayers.Remove(playerId);
+                            }
                         }
 
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
@@ -525,19 +532,22 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
+                        var playerId = enterController.ControllerInfo.ControllingIdentityId;
                         if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            ai.Construct.UpdatePlayerLockState(enterController.ControllerInfo.ControllingIdentityId, false);
+                            ai.Construct.UpdatePlayerLockState(playerId);
+                            ai.Construct.RootAi.Construct.ControllingPlayers.Add(playerId);
+                            ai.PlayerControl[playerId] = new PlayerController {Ai = ai, ControllBlock = cube, Id = playerId, RootAi = ai.Construct.RootAi, EntityId = cube.EntityId};
                         }
 
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
-                            players.Add(enterController.ControllerInfo.ControllingIdentityId);
+                            players.Add(playerId);
                         }
                         else
                         {
                             players = PlayerGridPool.Get();
-                            players.Add(enterController.ControllerInfo.ControllingIdentityId);
+                            players.Add(playerId);
                             PlayerGrids[cube.CubeGrid] = players;
                         }
 

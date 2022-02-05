@@ -36,17 +36,8 @@ namespace CoreSystems.Platform
                     ElevationPart.Entity.PositionComp.SetLocalMatrix(ref localMatrix);
                 }
             }
-            else {
-                if (ElevationTick == Comp.Session.Tick)
-                {
-                    Comp.VanillaTurretBase.Elevation = (float)Elevation;
-                }
-
-                if (AzimuthTick == Comp.Session.Tick)
-                {
-                    Comp.VanillaTurretBase.Azimuth = (float)Azimuth;
-                }
-            }
+            else if (ElevationTick == Comp.Session.Tick || AzimuthTick == Comp.Session.Tick)
+                Comp.VanillaTurretBase.SetManualAzimuthAndElevation((float)Azimuth, (float)Elevation);
         }
 
         public void ScheduleWeaponHome(bool sendNow = false)

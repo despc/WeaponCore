@@ -374,7 +374,7 @@ namespace CoreSystems.Support
             if (Session.IsClient)
                 Session.SendUpdateRequest(TopEntity.EntityId, PacketType.ClientAiRemove);
 
-            Data.Repo.ControllingPlayers.Clear();
+            //Data.Repo.ControllingPlayers.Clear();
             Data.Repo.ActiveTerminal = 0;
             Charger.Clean();
 
@@ -400,6 +400,7 @@ namespace CoreSystems.Support
             UpgradeIdx.Clear();
             PhantomIdx.Clear();
             CompBase.Clear();
+            PlayerControl.Clear();
 
             LiveProjectile.Clear();
             DeadProjectiles.Clear();

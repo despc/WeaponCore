@@ -297,6 +297,7 @@ namespace CoreSystems.Projectiles
         }
 
         private int _beamCount;
+        private int _maxThread;
         private void CheckHits()
         {
             _beamCount = 0;

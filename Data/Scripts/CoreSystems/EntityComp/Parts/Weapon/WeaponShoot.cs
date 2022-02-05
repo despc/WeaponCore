@@ -96,7 +96,7 @@ namespace CoreSystems.Platform
 
                             --ProtoWeaponAmmo.CurrentAmmo;
 
-                            if (BurstCount > 0)
+                            if (ShootCount > 0)
                                 Comp.UpdateShootSync(this);
 
                             if (ProtoWeaponAmmo.CurrentAmmo == 0) {
@@ -106,7 +106,7 @@ namespace CoreSystems.Platform
                         else if (ClientMakeUpShots > 0) {
                             --ClientMakeUpShots;
 
-                            if (BurstCount > 0)
+                            if (ShootCount > 0)
                                 Comp.UpdateShootSync(this);
                         }
 

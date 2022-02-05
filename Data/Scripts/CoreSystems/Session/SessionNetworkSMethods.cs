@@ -48,7 +48,7 @@ namespace CoreSystems
             long playerId = 0;
             if (EntityToMasterAi.TryGetValue(topEntity, out ai) && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
-                ai.Construct.UpdateConstructsPlayers(entity, playerId, dPacket.Data);
+                ai.Construct.NetRefreshAi();
                 data.Report.PacketValid = true;
             }
             else Log.Line($"ServerActiveControlUpdate: ai:{ai != null} - targetingAi:{EntityAIs.ContainsKey(topEntity)} - masterAi:{EntityToMasterAi.ContainsKey(topEntity)} - playerId:{playerId}({packet.SenderId}) - marked:{entity.MarkedForClose}({topEntity.MarkedForClose}) - active:{dPacket.Data} - inGridMap:{GridToInfoMap.ContainsKey(topEntity)} - controlName:{entity.DebugName}");
@@ -458,16 +458,16 @@ namespace CoreSystems
             var wComp = comp as Weapon.WeaponComponent;
 
             uint stateId;
-            uint y;
+            uint interval;
             Weapon.WeaponComponent.ShootModes mode;
             Weapon.WeaponComponent.ShootCodes code;
-            DecodeShootState(dPacket.Data, out stateId, out mode, out y, out code);
+            DecodeShootState(dPacket.Data, out stateId, out mode, out interval, out code);
 
             long playerId;
-            if (wComp != null && code == Weapon.WeaponComponent.ShootCodes.ToggleOff)
+            if (wComp != null && code == Weapon.WeaponComponent.ShootCodes.ToggleServerOff)
             {
-                Log.Line($"server has received ToggleOff");
-                wComp.ShootToggled = false;
+                //Log.Line($"server has received ToggleOff: currentCycle:{wComp.CompletedCycles} - {wComp.CompletedCycles + 1}");
+                wComp.ServerToggleResponse();
             }
             else if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {

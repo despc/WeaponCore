@@ -1,7 +1,6 @@
 ﻿using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.Game.Entities;
-using static CoreSystems.Settings.CoreSettings.ServerSettings;
 using static CoreSystems.Support.Ai;
 namespace CoreSystems
 {
@@ -480,17 +479,16 @@ namespace CoreSystems
 
             uint stateId;
             Weapon.WeaponComponent.ShootModes mode;
-            uint y;
+            uint interval;
             Weapon.WeaponComponent.ShootCodes code;
-            DecodeShootState(dPacket.Data, out stateId, out mode, out y, out code);
+            DecodeShootState(dPacket.Data, out stateId, out mode, out interval, out code);
 
             var wComp = comp as Weapon.WeaponComponent;
             if (wComp != null)
             {
-                if (code == Weapon.WeaponComponent.ShootCodes.ToggleOff)
+                if (code == Weapon.WeaponComponent.ShootCodes.ToggleClientOff)
                 {
-                    Log.Line($"client received ToggleOff");
-                    wComp.ShootToggled = false;
+                    wComp.ClientToggleResponse(interval);
                 }
                 else if (wComp.RequestShootBurstId == stateId)
                 {
@@ -498,6 +496,7 @@ namespace CoreSystems
                 }
                 else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
                 {
+                    //Log.Line($"client received server response: interval:{interval}");
                     wComp.WaitingBurstResponse = false;
                 }
                 else

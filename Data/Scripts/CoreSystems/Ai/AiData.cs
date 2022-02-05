@@ -19,10 +19,12 @@ namespace CoreSystems
 
             StorageInit();
             Load();
+            /*
             if (Ai.Session.IsServer)
             {
                 Repo.ControllingPlayers.Clear();
             }
+            */
         }
 
         public void Clean()

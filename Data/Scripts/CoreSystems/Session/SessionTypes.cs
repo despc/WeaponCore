@@ -323,7 +323,7 @@ namespace CoreSystems
                     {"AiSleep", () => GetAi()?.AiSleep.ToString() ?? string.Empty },
                     {"AiIsPowered", () => GetAi()?.HasPower.ToString() ?? string.Empty },
                     {"AiInit", () => GetAi()?.AiInit.ToString() ?? string.Empty },
-                    {"ControllingPlayers", () => GetAi()?.Data.Repo.ControllingPlayers.Count.ToString() ?? string.Empty },
+                    {"ControllingPlayers", () => GetAi()?.PlayerControl.Count.ToString() ?? string.Empty },
                     {"Inventories", () => GetAi()?.InventoryMonitor.Count.ToString() ?? string.Empty },
                     {"SortedTargets", () => GetAi()?.SortedTargets.Count.ToString() ?? string.Empty },
                     {"Obstructions", () => GetAi()?.Obstructions.Count.ToString() ?? string.Empty },
@@ -657,7 +657,6 @@ namespace CoreSystems
                 if (!ServerTerminalMaps.TryGetValue(comp, out aTermId))
                 {
                     ServerTerminalMaps[comp] = comp.CoreEntity.EntityId;
-                    //if (!Session.LocalVersion) Log.Line($"ServerUpdate added Id");
                 }
                 else
                 {
@@ -666,7 +665,6 @@ namespace CoreSystems
                     if (entity != null && entity.GetTopMostParent()?.EntityId != comp.Ai.TopEntity.EntityId)
                     {
                         ServerTerminalMaps[comp] = 0;
-                        //if (!Session.LocalVersion) Log.Line($"ServerUpdate reset Id");
                     }
                 }
 
