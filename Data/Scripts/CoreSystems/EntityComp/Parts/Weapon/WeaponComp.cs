@@ -119,62 +119,16 @@ namespace CoreSystems.Platform
                 return gun != null ? Rifle.Owner : CoreEntity;
             }
 
-            internal void UpdateShootSync(Weapon w)
-            {
-                var state = Data.Repo.Values.State;
-                
-                w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
-
-                if (--w.ShootCount == 0 && ++WeaponsFired >= TotalWeapons)
-                {
-                    if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles == LastCycle))
-                    {
-                        if (Session.IsServer)
-                        {
-                            //Log.Line($"[server end burst] cycles:{CompletedCycles} - ShootToggled:{ShootToggled} - RequestClientShootDelay:{RequestClientShootDelay} - CompletedCycles:{CompletedCycles}({LastCycle})");
-                            if (RequestShootBurstId != 65535)
-                                state.ShootSyncStateId = RequestShootBurstId;
-                            else
-                            {
-                                state.ShootSyncStateId = 0;
-                                RequestShootBurstId = 0;
-                            }
-
-                            if (Session.MpActive)
-                            {
-                                Session.SendState(this);
-                            }
-                        }
-                        //else
-                        //    Log.Line($"[client end burst] cycles:{CompletedCycles}({LastCycle}) - RequestClientShootDelay: {RequestClientShootDelay} - FreezeClientShoot:{FreezeClientShoot} - ShootToggled:{ShootToggled}");
-
-                        WeaponsFired = 0;
-                        CompletedCycles = 0;
-                        LastCycle = 0;
-                        ShootToggled = false;
-                    }
-                    else
-                    {
-                        ReadyToShoot(true);
-
-                        if (RequestClientShootDelay)
-                        {
-                            //Log.Line($"RequestClientShootDelay at cycle: {CompletedCycles} - LastCycle:{LastCycle}");
-                            RequestClientShootDelay = false;
-                            FreezeClientShoot = LastCycle == 0;
-                        }
-                    }
-                }
-
-                //Log.Line($"wburst: {w.BurstCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootSyncStateId} vs {RequestShootBurstId}");
-            }
-
 
             internal void RequestShootSync(long playerId) // this shoot method mixes client initiation with server delayed server confirmation in order to maintain sync while avoiding authoritative delays in the common case. 
             {
                 var set = Data.Repo.Values.Set;
+                var sMode = set.Overrides.ShootMode;
+                var mouseMode = sMode == ShootModes.Mouse;
+                var validMouseState =  (!Session.HandlesInput || !ShootToggled && Session.UiInput.MouseButtonLeftNewPressed || ShootToggled && Session.UiInput.MouseButtonLeftReleased);
+                var toggleMode = set.Overrides.ShootMode == ShootModes.Toggle || mouseMode && validMouseState;
 
-                if (set.Overrides.ShootMode == ShootModes.Normal) // quick terminate this method unless shootMode !=  normal
+                if (sMode == ShootModes.Normal || mouseMode && !validMouseState) // quick terminate if shoot mode state invalid
                     return;
 
                 var sendRequest = !Session.IsClient || playerId == Session.PlayerId; // this method is used both by initiators and by receives. 
@@ -183,7 +137,7 @@ namespace CoreSystems.Platform
                 var wasToggled = ShootToggled;
 
                 if (sendRequest) {
-                    if (set.Overrides.ShootMode == ShootModes.Toggle)
+                    if (toggleMode)
                         ShootToggled = !ShootToggled;
                     else
                         ShootToggled = false;
@@ -300,6 +254,57 @@ namespace CoreSystems.Platform
                 FreezeClientShoot = false;
                 RequestClientShootDelay = false;
             }
+
+            internal void UpdateShootSync(Weapon w)
+            {
+                var state = Data.Repo.Values.State;
+
+                w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
+
+                if (--w.ShootCount == 0 && ++WeaponsFired >= TotalWeapons)
+                {
+                    if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles == LastCycle))
+                    {
+                        if (Session.IsServer)
+                        {
+                            //Log.Line($"[server end burst] cycles:{CompletedCycles} - ShootToggled:{ShootToggled} - RequestClientShootDelay:{RequestClientShootDelay} - CompletedCycles:{CompletedCycles}({LastCycle})");
+                            if (RequestShootBurstId != 65535)
+                                state.ShootSyncStateId = RequestShootBurstId;
+                            else
+                            {
+                                state.ShootSyncStateId = 0;
+                                RequestShootBurstId = 0;
+                            }
+
+                            if (Session.MpActive)
+                            {
+                                Session.SendState(this);
+                            }
+                        }
+                        //else
+                        //    Log.Line($"[client end burst] cycles:{CompletedCycles}({LastCycle}) - RequestClientShootDelay: {RequestClientShootDelay} - FreezeClientShoot:{FreezeClientShoot} - ShootToggled:{ShootToggled}");
+
+                        WeaponsFired = 0;
+                        CompletedCycles = 0;
+                        LastCycle = 0;
+                        ShootToggled = false;
+                    }
+                    else
+                    {
+                        ReadyToShoot(true);
+
+                        if (RequestClientShootDelay)
+                        {
+                            //Log.Line($"RequestClientShootDelay at cycle: {CompletedCycles} - LastCycle:{LastCycle}");
+                            RequestClientShootDelay = false;
+                            FreezeClientShoot = LastCycle == 0;
+                        }
+                    }
+                }
+
+                //Log.Line($"wburst: {w.BurstCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootSyncStateId} vs {RequestShootBurstId}");
+            }
+
 
             internal void WeaponInit()
             {

@@ -1309,15 +1309,15 @@ namespace CoreSystems.Support
                     if (parentAmmo.Fragment.Fragments > 0) fragFrags = parentAmmo.Fragment.Fragments;
                     if (parentAmmo.Fragment.TimedSpawns.Enable)
                     {
-                        Log.Line($"Experimental DPS Calc| Ammo: {parentAmmo.Fragment.AmmoRound}");
+                        //Log.Line($"Experimental DPS Calc| Ammo: {parentAmmo.Fragment.AmmoRound}");
                         //Log.Line($"Found Special Ammo= {parentFragments}");
                         var b = parentAmmo.Fragment.TimedSpawns;
 
                         float cycleTime = (b.Interval * ((b.GroupSize > 0 ? b.GroupSize : 1) - (b.GroupDelay > 0 ? 1 : 0))) + b.GroupDelay;
-                        Log.Line($"cycleTime: {cycleTime}");
+                        //Log.Line($"cycleTime: {cycleTime}");
                         tempDmg *= (1.0f / ((cycleTime / 60))) * (b.GroupSize > 0 ? b.GroupSize : 1);
 
-                        Log.Line($"Ammo/Drone Dps: Base:{tempDmg.X} Expl:{tempDmg.Y} at {(1.0f / ((cycleTime / 60))) * b.GroupSize * parentFragments} shots/s");
+                        //Log.Line($"Ammo/Drone Dps: Base:{tempDmg.X} Expl:{tempDmg.Y} at {(1.0f / ((cycleTime / 60))) * b.GroupSize * parentFragments} shots/s");
                         //Log.Line($"Block Dps: {tempDmg* shotsPerSec} at {(1.0f / ((cycleTime / 60))) * b.GroupSize * parentFragments* shotsPerSec} shots/s");
                         //fragFrags = b.GroupSize;
                         fragFrags = (1.0f / ((cycleTime / 60))) * b.GroupSize;
