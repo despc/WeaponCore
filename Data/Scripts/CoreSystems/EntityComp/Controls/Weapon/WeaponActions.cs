@@ -90,6 +90,19 @@ namespace CoreSystems.Control
             Weapon.WeaponComponent.RequestSetValue(comp, "SubSystems", value, comp.Session.PlayerId);
         }
 
+        internal static void TerminActionCycleShootMode(IMyTerminalBlock blk)
+        {
+            var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+                return;
+
+            var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
+            var endValue = comp.HasDisabledBurst ? 2 : 3;
+            var value = numValue + 1 <= endValue ? numValue + 1 : 0;
+
+            Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", value, comp.Session.PlayerId);
+        }
+
         internal static void TerminalActionToggleNeutrals(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -518,6 +531,14 @@ namespace CoreSystems.Control
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
             sb.Append(comp.Data.Repo.Values.Set.Overrides.SubSystem);
+        }
+
+        internal static void ShootModeWriter(IMyTerminalBlock blk, StringBuilder sb)
+        {
+            var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            sb.Append(comp.Data.Repo.Values.Set.Overrides.ShootMode);
         }
 
         internal static void DecoyWriter(IMyTerminalBlock blk, StringBuilder sb)

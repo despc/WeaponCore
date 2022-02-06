@@ -127,7 +127,7 @@ namespace CoreSystems
         internal static void CreateCustomActionSet<T>(Session session) where T : IMyTerminalBlock
         {
             CreateCustomActions<T>.CreateCycleAmmo(session);
-            CreateCustomActions<T>.CreateShootClick(session);
+            CreateCustomActions<T>.CreateShootMode(session);
             CreateCustomActions<T>.CreateNeutrals(session);
             CreateCustomActions<T>.CreateFriendly(session);
             CreateCustomActions<T>.CreateUnowned(session);
@@ -218,21 +218,6 @@ namespace CoreSystems
                     };
                     a.Name.Clear();
                     a.Name.Append(BurstStr);
-                    /*
-                    var oldWriter = a.Writer;
-                    a.Writer = (blk, sb) => {
-
-                        var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
-                        if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
-                        {
-                            oldWriter(blk, sb);
-                            return;
-                        }
-                        sb.Append("Burst");
-
-                    };
-                    */
-
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot")) {

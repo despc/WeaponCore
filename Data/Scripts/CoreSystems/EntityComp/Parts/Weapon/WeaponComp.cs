@@ -57,9 +57,9 @@ namespace CoreSystems.Platform
             public enum ShootModes
             {
                 Default,
-                BurstFire,
                 KeyToggle,
                 MouseControl,
+                BurstFire,
             }
 
             internal enum ShootCodes
@@ -106,7 +106,7 @@ namespace CoreSystems.Platform
                 Init(session, coreEntity, cube != null, Data, topEntity, id);
                 Structure = (WeaponStructure)Platform.Structure;
                 Collection = TypeSpecific != CompTypeSpecific.Phantom ? Platform.Weapons : Platform.Phantoms;
-                TotalWeapons = Collection.Count;
+                TotalWeapons = Structure.HashToId.Count;
             }
 
             internal MyEntity GetTopEntity()
@@ -126,24 +126,36 @@ namespace CoreSystems.Platform
                 var set = Data.Repo.Values.Set;
                 var sMode = set.Overrides.ShootMode;
                 var mouseMode = sMode == ShootModes.MouseControl;
-                var validMouseState =  (!Session.HandlesInput || !ShootToggled && Session.UiInput.MouseButtonLeftNewPressed || ShootToggled && Session.UiInput.MouseButtonLeftReleased);
+                var newMousePress = !ShootToggled && Session.UiInput.MouseButtonLeftNewPressed;
+                var newMouseRelease = ShootToggled && Session.UiInput.MouseButtonLeftReleased;
+                var validMouseState =  !Session.HandlesInput || newMousePress || newMouseRelease;
                 var toggleMode = set.Overrides.ShootMode == ShootModes.KeyToggle || mouseMode && validMouseState;
+
+                Log.Line($"1: newMousePress:{newMousePress} - newMouseRelease:{newMouseRelease}");
 
                 if ((sMode == ShootModes.Default  || mouseMode && !validMouseState) && LastShootMode == sMode) // quick terminate if shoot mode state invalid
                     return;
 
+                var modeChange = LastShootMode != sMode;
                 LastShootMode = sMode;
 
                 var sendRequest = !Session.IsClient || playerId == Session.PlayerId; // this method is used both by initiators and by receives. 
 
                 var state = Data.Repo.Values.State;
                 var wasToggled = ShootToggled;
+                var weaponsToFire = WeaponsFired < TotalWeapons;
 
+                Log.Line($"2: sendRequest:{sendRequest} - wasToggled:{wasToggled} - modeChange:{modeChange} - weaponsToFire:{weaponsToFire}({WeaponsFired} < {TotalWeapons}) - newMousePress:{newMousePress} - newMouseRelease:{newMouseRelease} ");
                 if (sendRequest) {
                     if (toggleMode)
                         ShootToggled = !ShootToggled;
                     else
                         ShootToggled = false;
+
+                    var cancelToggle = wasToggled && !ShootToggled && modeChange && weaponsToFire;
+
+                    if (cancelToggle)
+                        Log.Line($"need to try to cancel weapon fire");
 
                     if (Session.MpActive & wasToggled && !ShootToggled) { // only run on initiators when this call is toggling off 
 
@@ -155,9 +167,9 @@ namespace CoreSystems.Platform
                     }
                 }
 
-                //Log.Line($"request1: {IsDisabled} - Wait:{WaitingBurstResponse} - {RequestShootBurstId} != {state.ShootSyncStateId} -  {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
+                Log.Line($"request1: {IsDisabled} - ShootToggled:{ShootToggled} - Wait:{WaitingBurstResponse} - {RequestShootBurstId} != {state.ShootSyncStateId} -  {set.Overrides.BurstCount <= 0} - {IsBlock && !Cube.IsWorking}");
                 if (IsDisabled || wasToggled || RequestClientShootDelay || WaitingBurstResponse || RequestShootBurstId != state.ShootSyncStateId || set.Overrides.BurstCount <= 0 || IsBlock && !Cube.IsWorking || !ReadyToShoot()) return; // check if already active and all weapons are in a clean ready state.
-
+                Log.Line($"success - totalWeapons:{TotalWeapons}");
                 if (IsBlock && Session.HandlesInput)
                     Session.TerminalMon.HandleInputUpdate(this);
 
@@ -257,17 +269,15 @@ namespace CoreSystems.Platform
                 return ulongPacket;
             }
 
-
             internal void UpdateShootSync(Weapon w)
             {
                 var state = Data.Repo.Values.State;
-
 
                 if (--w.ShootCount == 0 && ++WeaponsFired >= TotalWeapons)
                 {
                     w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
 
-                    if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles == LastCycle))
+                    if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles >= LastCycle))
                     {
                         if (Session.IsServer)
                         {
@@ -288,10 +298,10 @@ namespace CoreSystems.Platform
                         //else
                         //    Log.Line($"[client end burst] cycles:{CompletedCycles}({LastCycle}) - RequestClientShootDelay: {RequestClientShootDelay} - FreezeClientShoot:{FreezeClientShoot} - ShootToggled:{ShootToggled}");
 
-                        WeaponsFired = 0;
                         CompletedCycles = 0;
                         LastCycle = 0;
                         ShootToggled = false;
+                        WeaponsFired = 0;
                     }
                     else
                     {
@@ -304,9 +314,10 @@ namespace CoreSystems.Platform
                             FreezeClientShoot = LastCycle == 0;
                         }
                     }
+                 
                 }
 
-                //Log.Line($"wburst: {w.BurstCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootSyncStateId} vs {RequestShootBurstId}");
+                Log.Line($"ShootCount: {w.ShootCount} - WeaponsFired:{WeaponsFired} >= {TotalWeapons} - {state.ShootSyncStateId} vs {RequestShootBurstId} - CompletedCycles:{CompletedCycles} - lastCycle:{LastCycle} - ShootToggled:{ShootToggled}");
             }
 
 
@@ -483,8 +494,6 @@ namespace CoreSystems.Platform
                 {
                     var w = comp.Collection[i];
 
-                    //if (w.ActiveAmmoDef.AmmoDef.Const.MustCharge) continue;
-
                     w.UpdateRof();
                 }
 
@@ -498,7 +507,6 @@ namespace CoreSystems.Platform
                 for (int i = 0; i < comp.Collection.Count; i++)
                 {
                     var w = comp.Collection[i];
-                    //if (!change && (w.ActiveAmmoDef.AmmoDef.Const.MustCharge)) continue;
                     comp.Session.FutureEvents.Schedule(w.SetWeaponDps, null, 1);
                 }
             }
@@ -508,8 +516,6 @@ namespace CoreSystems.Platform
                 var cycleShootClick = Data.Repo.Values.State.TerminalAction == TriggerActions.TriggerClick && action == TriggerActions.TriggerClick;
                 var cycleShootOn = Data.Repo.Values.State.TerminalAction == TriggerActions.TriggerOn && action == TriggerActions.TriggerOn;
                 var cycleSomething = cycleShootOn || cycleShootClick;
-
-                WeaponsFired = 0;
 
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
 
@@ -582,11 +588,6 @@ namespace CoreSystems.Platform
                 IsAsleep = false;
                 IsDisabled = Ai.TouchingWater && !ShootSubmerged && Ai.WaterVolume.Contains(CoreEntity.PositionComp.WorldAABB.Center) != ContainmentType.Disjoint;
                 
-                if (IsDisabled) {
-                    RequestShootBurstId = Data.Repo.Values.State.ShootSyncStateId;
-                    WeaponsFired = 0;
-                }
-
                 if (!Ai.Session.IsServer)
                     return;
 
@@ -617,17 +618,13 @@ namespace CoreSystems.Platform
                     Data.Repo.Values.Set.Overrides.ShootMode = ShootModes.Default;
 
                 Data.Repo.Values.State.TrackingReticle = false;
-
-                RequestShootBurstId = Data.Repo.Values.State.ShootSyncStateId;
-                WeaponsFired = 0;
-
+                
                 var tAction = Data.Repo.Values.State.TerminalAction;
                 if (tAction == TriggerActions.TriggerClick)
                     Data.Repo.Values.State.TerminalActionSetter(this, TriggerActions.TriggerOff);
                 if (Session.MpActive)
                     Session.SendComp(this);
             }
-
 
             internal static void RequestCountDown(WeaponComponent comp, bool value)
             {
@@ -770,8 +767,8 @@ namespace CoreSystems.Platform
                 var o = comp.Data.Repo.Values.Set.Overrides;
                 var userControl = o.Control != ProtoWeaponOverrides.ControlModes.Auto;
                 
-                comp.RequestShootBurstId = comp.Data.Repo.Values.State.ShootSyncStateId;
-                comp.WeaponsFired = 0;
+                //comp.RequestShootBurstId = comp.Data.Repo.Values.State.ShootSyncStateId;
+                //comp.WeaponsFired = 0;
 
                 if (userControl)
                 {
@@ -783,6 +780,10 @@ namespace CoreSystems.Platform
                 else if (resetState)
                 {
                     comp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
+                }
+                else if (o.ShootMode != ShootModes.Default)
+                {
+                    comp.Data.Repo.Values.State.PlayerId = playerId;
                 }
 
                 if (resetTarget)

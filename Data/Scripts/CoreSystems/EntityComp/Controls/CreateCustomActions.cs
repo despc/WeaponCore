@@ -8,6 +8,7 @@ namespace CoreSystems.Control
 {
     public static class CreateCustomActions<T>
     {
+        /*
         internal static void CreateShootClick(Session session)
         {
             var action = MyAPIGateway.TerminalControls.CreateAction<T>("WC_Shoot_Click");
@@ -20,6 +21,21 @@ namespace CoreSystems.Control
             MyAPIGateway.TerminalControls.AddAction<T>(action);
             session.CustomActions.Add(action);
         }
+        */
+        internal static void CreateShootMode(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("WCShootMode");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionWCShootMode"));
+            action.Action = CustomActions.TerminActionCycleShootMode;
+            action.Writer = CustomActions.ShootModeWriter;
+            action.Enabled = TerminalHelpers.Istrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
 
         public static void CreateShootBurst(Session session)
         {
