@@ -139,7 +139,7 @@ namespace CoreSystems.Support
 
                 var partHash = (tDef.Key + partNameIdHash + elevationNameHash + muzzletNameHash + azimuthNameHash).GetHashCode();
                 HashToId.Add(partHash, partId);
-                var coreSystem = new WeaponSystem(Session, partNameIdHash, muzzletNameHash, azimuthNameHash, elevationNameHash, spinNameHash, weaponDef, typeName, weaponAmmo, partHash, partId);
+                var coreSystem = new WeaponSystem(Session, this, partNameIdHash, muzzletNameHash, azimuthNameHash, elevationNameHash, spinNameHash, weaponDef, typeName, weaponAmmo, partHash, partId);
 
                 if (coreSystem.MaxLockRange > MaxLockRange)
                     MaxLockRange = coreSystem.MaxLockRange;

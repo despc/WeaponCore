@@ -709,6 +709,7 @@ namespace CoreSystems.Platform
 
             w.Comp.HasDelayToFire = w.Comp.HasDelayToFire || w.System.DelayToFire > 0;
             w.Comp.ShootSubmerged = w.Comp.ShootSubmerged || w.System.Values.HardPoint.CanShootSubmerged;
+            w.Comp.HasDisabledBurst = w.Comp.Structure.MultiParts || w.System.MaxAmmoCount <= 1;
             w.BaseComp.HasServerOverrides = w.BaseComp.HasServerOverrides || w.System.WConst.HasServerOverrides;
 
             if (w.System.MaxAmmoCount > w.Comp.MaxAmmoCount)

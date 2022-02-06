@@ -227,6 +227,8 @@ namespace CoreSystems
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
                     var sModeOn = sMode != Weapon.WeaponComponent.ShootModes.Normal;
+                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
+
                     if (HandlesInput) {
 
                         if (wComp.TypeSpecific == CoreComponent.CompTypeSpecific.Rifle && wValues.State.Control != ControlMode.Ui)
@@ -235,6 +237,7 @@ namespace CoreSystems
                         var wasTrack = wValues.State.TrackingReticle;
 
                         var isControllingPlayer = wValues.State.PlayerId == PlayerId;
+
                         var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && rootAi.Construct.ControllingPlayers.Contains(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
                         if (isControllingPlayer)
                         {
@@ -243,6 +246,11 @@ namespace CoreSystems
                                 wComp.Session.SendTrackReticleUpdate(wComp, track);
                             else if (IsServer)
                                 wValues.State.TrackingReticle = track;
+
+                            if (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased)
+                            {
+                                wComp.RequestShootSync(PlayerId);
+                            }
                         }
                     }
 
@@ -262,7 +270,6 @@ namespace CoreSystems
 
                     var compManualMode = wValues.State.Control == ControlMode.Camera || wComp.ManualMode;
                     var canManualShoot = !ai.SuppressMouseShoot && !wComp.InputState.InMenu;
-                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (Tick60) {
                         var add = wComp.TotalEffect - wComp.PreviousTotalEffect;
@@ -416,7 +423,6 @@ namespace CoreSystems
                         ///
                         ///
                         w.AiShooting = w.TargetLock && !wComp.UserControlled && !w.System.SuppressFire;
-
                         var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         var canShoot = !w.PartState.Overheated && !reloading && !w.System.DesignatorWeapon;
                         var paintedTarget = wComp.PainterMode && w.Target.TargetState == TargetStates.IsFake && w.Target.IsAligned;

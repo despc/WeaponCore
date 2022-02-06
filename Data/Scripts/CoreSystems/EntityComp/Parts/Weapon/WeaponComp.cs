@@ -42,6 +42,7 @@ namespace CoreSystems.Platform
             internal float DetDps;
             internal bool HasEnergyWeapon;
             internal bool HasGuidance;
+            internal bool HasDisabledBurst;
             internal bool HasRofSlider;
             internal bool ShootSubmerged;
             internal bool HasTracking;
@@ -55,7 +56,6 @@ namespace CoreSystems.Platform
             public enum ShootModes
             {
                 Normal,
-                Once,
                 Burst,
                 Toggle,
                 Mouse,
@@ -177,26 +177,6 @@ namespace CoreSystems.Platform
                 }
             }
 
-            private static object RewriteShootSyncToServerResponse(object o)
-            {
-                var ulongPacket = (ULongUpdatePacket) o;
-
-                uint stateId;
-                ShootModes mode;
-                ShootCodes code;
-                uint y;
-
-                Session.DecodeShootState(ulongPacket.Data, out stateId, out mode, out y, out code);
-
-                code = ShootCodes.ServerResponse;
-                ulong packagedMessage;
-                Session.EncodeShootState(stateId, (uint)mode, 0, (uint)code, out packagedMessage);
-
-                ulongPacket.Data = packagedMessage;
-
-                return ulongPacket;
-            }
-
             internal bool ReadyToShoot(bool skipReady = false)
             {
                 var weaponsReady = 0;
@@ -218,7 +198,6 @@ namespace CoreSystems.Platform
                         weaponsReady += 1;
 
                         w.ShootCount = MathHelper.Clamp(burstTarget, 1,  w.ProtoWeaponAmmo.CurrentAmmo + w.ClientMakeUpShots);
-
                     }
                     else
                         weaponsReady += 1;
@@ -255,14 +234,36 @@ namespace CoreSystems.Platform
                 RequestClientShootDelay = false;
             }
 
+            private static object RewriteShootSyncToServerResponse(object o)
+            {
+                var ulongPacket = (ULongUpdatePacket)o;
+
+                uint stateId;
+                ShootModes mode;
+                ShootCodes code;
+                uint y;
+
+                Session.DecodeShootState(ulongPacket.Data, out stateId, out mode, out y, out code);
+
+                code = ShootCodes.ServerResponse;
+                ulong packagedMessage;
+                Session.EncodeShootState(stateId, (uint)mode, 0, (uint)code, out packagedMessage);
+
+                ulongPacket.Data = packagedMessage;
+
+                return ulongPacket;
+            }
+
+
             internal void UpdateShootSync(Weapon w)
             {
                 var state = Data.Repo.Values.State;
 
-                w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
 
                 if (--w.ShootCount == 0 && ++WeaponsFired >= TotalWeapons)
                 {
+                    w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
+
                     if (!RequestClientShootDelay && (!ShootToggled && LastCycle == 0 || ++CompletedCycles == LastCycle))
                     {
                         if (Session.IsServer)

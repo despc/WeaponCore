@@ -21,11 +21,15 @@ namespace CoreSystems
             Values.State.TrackingReticle = false;
             Values.State.ShootSyncStateId = 0;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
+            Values.Set.Overrides.ShootMode = ShootModes.Normal;
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
 
             if (comp.DefaultTrigger != TriggerActions.TriggerOff)
                 Values.State.TerminalAction = comp.DefaultTrigger;
+
+            if (Values.Set.Overrides.BurstCount <= 0)
+                Values.Set.Overrides.BurstCount = 1;
 
             for (int i = 0; i < Ammos.Length; i++)
             {
@@ -468,7 +472,7 @@ namespace CoreSystems
         [ProtoMember(20)] public bool Armed;
         //[ProtoMember(26)] public long ArmedTimer;
         [ProtoMember(22)] public bool Override;
-        [ProtoMember(23)] public int BurstCount;
+        [ProtoMember(23), DefaultValue(1)] public int BurstCount = 1;
         [ProtoMember(24)] public int BurstDelay;
         [ProtoMember(25)] public int SequenceId;
         [ProtoMember(26)] public int ArmedTimer;

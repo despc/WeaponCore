@@ -96,6 +96,7 @@ namespace CoreSystems.Platform
 
                             --ProtoWeaponAmmo.CurrentAmmo;
 
+
                             if (ShootCount > 0)
                                 Comp.UpdateShootSync(this);
 
@@ -115,6 +116,8 @@ namespace CoreSystems.Platform
                                 SpawnEjection();
                         }
                     }
+                    else if (ShootCount > 0)
+                            Comp.UpdateShootSync(this);
 
                     #endregion
 

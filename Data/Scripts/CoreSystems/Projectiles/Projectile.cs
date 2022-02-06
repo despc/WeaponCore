@@ -152,6 +152,12 @@ namespace CoreSystems.Projectiles
         internal void Start()
         {
             var session = Info.Ai.Session;
+
+            if (Info.Ai == null || Info.Weapon == null || Info.AmmoDef == null)
+            {
+                Log.Line($"Ai: {Info.Ai != null} - Weapon:{Info.Weapon != null} - AmmoDef:{Info.AmmoDef != null}");
+            }
+
             var ammoDef = Info.AmmoDef;
             var aConst = ammoDef.Const;
 
@@ -194,6 +200,9 @@ namespace CoreSystems.Projectiles
             DroneMsn = DroneMission.Attack;
             var trajectory = ammoDef.Trajectory;
             var guidance = trajectory.Guidance;
+
+
+
             CachedId = Info.MuzzleId == -1 ? Info.Weapon.WeaponCache.VirutalId : Info.MuzzleId;
             if (aConst.DynamicGuidance && session.AntiSmartActive) DynTrees.RegisterProjectile(this);
 
@@ -219,6 +228,14 @@ namespace CoreSystems.Projectiles
                     OriginTargetPos = PredictedTargetPos;
                     break;
                 case Target.TargetStates.IsProjectile:
+                    if (Info.Target.Projectile == null)
+                    {
+                        HadTarget = HadTargetState.None;
+                        Info.Target.TargetState = Target.TargetStates.None;
+                        OriginTargetPos = Vector3D.Zero;
+                        Log.Line($"ProjectileStart had invalid Projectile target state");
+                        break;
+                    }
                     HadTarget = HadTargetState.Projectile;
                     OriginTargetPos = Info.Target.Projectile.Position;
                     Info.Target.Projectile.Seekers.Add(this);
@@ -228,6 +245,14 @@ namespace CoreSystems.Projectiles
                     HadTarget = HadTargetState.Fake;
                     break;
                 case Target.TargetStates.IsEntity:
+                    if (Info.Target.TargetEntity == null)
+                    {
+                        HadTarget = HadTargetState.None;
+                        Info.Target.TargetState = Target.TargetStates.None;
+                        OriginTargetPos = Vector3D.Zero;
+                        Log.Line($"ProjectileStart had invalid entity target state");
+                        break;
+                    }
                     OriginTargetPos = Info.Target.TargetEntity.PositionComp.WorldAABB.Center;
                     HadTarget = HadTargetState.Entity;
                     break;

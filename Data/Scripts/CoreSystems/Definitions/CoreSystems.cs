@@ -211,7 +211,7 @@ namespace CoreSystems.Support
             Fixed //not used yet
         }
 
-        public WeaponSystem(Session session, MyStringHash partNameIdHash, MyStringHash muzzlePartName, MyStringHash azimuthPartName, MyStringHash elevationPartName, MyStringHash spinPartName, WeaponDefinition values, string partName, AmmoType[] weaponAmmoTypes, int weaponIdHash, int weaponId)
+        public WeaponSystem(Session session, WeaponStructure structure, MyStringHash partNameIdHash, MyStringHash muzzlePartName, MyStringHash azimuthPartName, MyStringHash elevationPartName, MyStringHash spinPartName, WeaponDefinition values, string partName, AmmoType[] weaponAmmoTypes, int weaponIdHash, int weaponId)
         {
             Session = session;
 
@@ -297,9 +297,8 @@ namespace CoreSystems.Support
                     ++ammoSelections;
 
                     var targetAmmoSize = aConst.MagsToLoad * aConst.MagazineSize;
-                    var fireFull = aConst.MustCharge && aConst.Reloadable || AlwaysFireFull;
+                    var fireFull = aConst.MustCharge && aConst.Reloadable || AlwaysFireFull || structure.MultiParts;
                     var ammoLoadSize = MathHelper.Clamp(targetAmmoSize, 1, fireFull ? 1 : targetAmmoSize);
-
                     if (ammoLoadSize > MaxAmmoCount)
                         MaxAmmoCount = ammoLoadSize;
                 }

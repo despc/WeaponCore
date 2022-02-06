@@ -715,7 +715,7 @@ namespace CoreSystems
 
         internal static float GetMinBurstCount(IMyTerminalBlock block)
         {
-            return 0;
+            return 1;
         }
 
         internal static float GetMaxBurstCount(IMyTerminalBlock block)
