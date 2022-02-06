@@ -55,10 +55,10 @@ namespace CoreSystems.Platform
 
             public enum ShootModes
             {
-                Normal,
-                Burst,
-                Toggle,
-                Mouse,
+                Default,
+                BurstFire,
+                KeyToggle,
+                MouseControl,
             }
 
             internal enum ShootCodes
@@ -124,11 +124,11 @@ namespace CoreSystems.Platform
             {
                 var set = Data.Repo.Values.Set;
                 var sMode = set.Overrides.ShootMode;
-                var mouseMode = sMode == ShootModes.Mouse;
+                var mouseMode = sMode == ShootModes.MouseControl;
                 var validMouseState =  (!Session.HandlesInput || !ShootToggled && Session.UiInput.MouseButtonLeftNewPressed || ShootToggled && Session.UiInput.MouseButtonLeftReleased);
-                var toggleMode = set.Overrides.ShootMode == ShootModes.Toggle || mouseMode && validMouseState;
+                var toggleMode = set.Overrides.ShootMode == ShootModes.KeyToggle || mouseMode && validMouseState;
 
-                if (sMode == ShootModes.Normal || mouseMode && !validMouseState) // quick terminate if shoot mode state invalid
+                if (sMode == ShootModes.Default || mouseMode && !validMouseState) // quick terminate if shoot mode state invalid
                     return;
 
                 var sendRequest = !Session.IsClient || playerId == Session.PlayerId; // this method is used both by initiators and by receives. 
@@ -610,6 +610,9 @@ namespace CoreSystems.Platform
                 Data.Repo.Values.State.PlayerId = -1;
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
+                if (Data.Repo.Values.Set.Overrides.ShootMode == ShootModes.MouseControl)
+                    Data.Repo.Values.Set.Overrides.ShootMode = ShootModes.Default;
+
                 Data.Repo.Values.State.TrackingReticle = false;
 
                 RequestShootBurstId = Data.Repo.Values.State.ShootSyncStateId;

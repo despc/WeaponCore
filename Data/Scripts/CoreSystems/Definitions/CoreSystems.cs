@@ -299,8 +299,12 @@ namespace CoreSystems.Support
                     var targetAmmoSize = aConst.MagsToLoad * aConst.MagazineSize;
                     var fireFull = aConst.MustCharge && aConst.Reloadable || AlwaysFireFull || structure.MultiParts;
                     var ammoLoadSize = MathHelper.Clamp(targetAmmoSize, 1, fireFull ? 1 : targetAmmoSize);
+
                     if (ammoLoadSize > MaxAmmoCount)
                         MaxAmmoCount = ammoLoadSize;
+
+                    Log.Line($"{ammo.AmmoDef.AmmoRound}({structure.SubtypeId}) - size:{aConst.MagsToLoad * aConst.MagazineSize}({ammoLoadSize})[{MaxAmmoCount}] - MustCharge:{aConst.MustCharge} - Reloadable:{aConst.Reloadable} - IsHybrid:{aConst.IsHybrid}");
+
                 }
 
                 if (aConst.ChargSize > ApproximatePeakPower)

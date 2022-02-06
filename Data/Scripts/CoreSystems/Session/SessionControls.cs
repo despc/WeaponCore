@@ -216,6 +216,8 @@ namespace CoreSystems
                         a.Name.Append(BurstStr);
                         comp.RequestShootSync(comp.Session.PlayerId);
                     };
+                    a.Name.Clear();
+                    a.Name.Append(BurstStr);
                     /*
                     var oldWriter = a.Writer;
                     a.Writer = (blk, sb) => {

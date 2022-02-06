@@ -73,7 +73,7 @@ namespace CoreSystems.Support
                         { "TerminalBurstShotsTitle", "Burst Shot Count" },
                         { "TerminalBurstShotsTooltip", "The number of shots to burst at a time" },
 
-                        { "TerminalBurstDelayTitle", "Burst Shot Delay" },
+                        { "TerminalBurstDelayTitle", "Shot Delay" },
                         { "TerminalBurstDelayTooltip", "The number game ticks (60 per second) to delay between shots" },
 
 

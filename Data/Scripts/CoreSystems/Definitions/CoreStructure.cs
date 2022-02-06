@@ -20,6 +20,7 @@ namespace CoreSystems.Support
         internal int ConstructPartCap;
         internal int PrimaryPart;
         internal string ModPath;
+        internal string SubtypeId;
         internal ulong ModId;
         internal Session Session;
         internal StructureTypes StructureType;
@@ -52,6 +53,7 @@ namespace CoreSystems.Support
         internal WeaponStructure(Session session, KeyValuePair<string, Dictionary<string, MyTuple<string, string, string, string>>> tDef, List<WeaponDefinition> wDefList, string modPath)
         {
             Session = session;
+            SubtypeId = tDef.Key;
             var map = tDef.Value;
             var numOfParts = wDefList.Count;
             MultiParts = numOfParts > 1;

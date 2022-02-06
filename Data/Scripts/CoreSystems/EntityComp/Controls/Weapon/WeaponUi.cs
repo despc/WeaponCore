@@ -385,6 +385,11 @@ namespace CoreSystems
             foreach (var sub in ShootModeList) shootModeList.Add(sub);
         }
 
+        internal static void ListShootModesNoBurst(List<MyTerminalControlComboBoxItem> shootModeList)
+        {
+            foreach (var sub in ShootModeListNoBurst) shootModeList.Add(sub);
+        }
+
         private static readonly List<MyTerminalControlComboBoxItem> ShootModeList = new List<MyTerminalControlComboBoxItem>
         {
             new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)0}") },
@@ -393,6 +398,13 @@ namespace CoreSystems
             new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)3}") },
         };
 
+        private static readonly List<MyTerminalControlComboBoxItem> ShootModeListNoBurst = new List<MyTerminalControlComboBoxItem>
+        {
+            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)0}") },
+            //new MyTerminalControlComboBoxItem { Key = 1, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)1}") },
+            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)2}") },
+            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)3}") },
+        };
 
 
 
