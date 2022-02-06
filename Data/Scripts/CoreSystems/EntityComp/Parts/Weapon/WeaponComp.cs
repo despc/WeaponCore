@@ -18,6 +18,7 @@ namespace CoreSystems.Platform
             internal readonly IMyHandheldGunObject<MyGunBase> GunBase;
             internal readonly IMyLargeTurretBase VanillaTurretBase;
             internal TriggerActions DefaultTrigger;
+            internal ShootModes LastShootMode;
             internal readonly WeaponCompData Data;
             internal readonly WeaponStructure Structure;
             internal readonly List<Weapon> Collection;
@@ -128,8 +129,10 @@ namespace CoreSystems.Platform
                 var validMouseState =  (!Session.HandlesInput || !ShootToggled && Session.UiInput.MouseButtonLeftNewPressed || ShootToggled && Session.UiInput.MouseButtonLeftReleased);
                 var toggleMode = set.Overrides.ShootMode == ShootModes.KeyToggle || mouseMode && validMouseState;
 
-                if (sMode == ShootModes.Default || mouseMode && !validMouseState) // quick terminate if shoot mode state invalid
+                if ((sMode == ShootModes.Default  || mouseMode && !validMouseState) && LastShootMode == sMode) // quick terminate if shoot mode state invalid
                     return;
+
+                LastShootMode = sMode;
 
                 var sendRequest = !Session.IsClient || playerId == Session.PlayerId; // this method is used both by initiators and by receives. 
 
