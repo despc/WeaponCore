@@ -181,7 +181,8 @@ namespace CoreSystems
             }
         }
 
-        private const string BurstStr = "Fire";
+        private const string ShootModeStr = "Shoot";
+
         internal static void AlterActions<T>(Session session)
         {
             List<IMyTerminalAction> actions;
@@ -213,11 +214,11 @@ namespace CoreSystems
                         }
 
                         a.Name.Clear();
-                        a.Name.Append(BurstStr);
+                        a.Name.Append(ShootModeStr);
                         comp.RequestShootSync(comp.Session.PlayerId);
                     };
                     a.Name.Clear();
-                    a.Name.Append(BurstStr);
+                    a.Name.Append(ShootModeStr);
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot")) {

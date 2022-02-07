@@ -466,13 +466,14 @@ namespace CoreSystems
             long playerId;
             if (wComp != null && code == Weapon.WeaponComponent.ShootCodes.ToggleServerOff)
             {
-                //Log.Line($"server has received ToggleOff: currentCycle:{wComp.CompletedCycles} - {wComp.CompletedCycles + 1}");
+                Log.Line($"server has received ToggleOff: currentCycle:{wComp.CompletedCycles}");
                 wComp.ServerToggleResponse();
             }
             else if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
                 wComp.RequestShootSync(playerId);
 
+                Log.Line($"server shoot state match");
                 if (wComp.RequestShootBurstId == stateId)
                 {
                     Log.Line($"failed to burst on server");

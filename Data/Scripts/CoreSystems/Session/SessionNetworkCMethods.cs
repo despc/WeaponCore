@@ -488,15 +488,17 @@ namespace CoreSystems
             {
                 if (code == Weapon.WeaponComponent.ShootCodes.ToggleClientOff)
                 {
+                    Log.Line($"client toggleClientOff");
                     wComp.ClientToggleResponse(interval);
                 }
                 else if (wComp.RequestShootBurstId == stateId)
                 {
+                    Log.Line($"client shoot state match");
                     wComp.RequestShootSync(0);
                 }
                 else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
                 {
-                    //Log.Line($"client received server response: interval:{interval}");
+                    Log.Line($"client received server response: interval:{interval}");
                     wComp.WaitingBurstResponse = false;
                 }
                 else
