@@ -226,8 +226,8 @@ namespace CoreSystems
 
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
-                    var sModeOn = sMode != Weapon.WeaponComponent.ShootModes.Default;
-                    var burstShots = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
+                    var shootModeDefault = sMode != Weapon.WeaponComponent.ShootModes.Default;
+                    var shotModeActive = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (HandlesInput) {
 
@@ -429,9 +429,9 @@ namespace CoreSystems
                         
                         var autoShot = paintedTarget || w.PartState.Action == TriggerOn || w.AiShooting && w.PartState.Action == TriggerOff;
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
-                        var controlledShot = (manualShot || autoShot);
+                        var normalShot = (manualShot || autoShot);
 
-                        var anyShot = controlledShot && !burstShots && !sModeOn || (w.ShootCount > 0 && w.ShootDelay == 0 || w.ShootDelay != 0 && w.ShootDelay-- == 0) && !wComp.FreezeClientShoot;
+                        var anyShot = (normalShot && !shotModeActive && !shootModeDefault) || ((w.ShootCount > 0 && w.ShootDelay == 0 || w.ShootDelay != 0 && w.ShootDelay-- == 0) && !wComp.FreezeClientShoot);
 
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
                         var shootRequest = (anyShot || w.FinishShots || delayedFire);

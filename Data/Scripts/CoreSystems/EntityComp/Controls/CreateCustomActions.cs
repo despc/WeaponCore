@@ -37,7 +37,7 @@ namespace CoreSystems.Control
         }
 
 
-        public static void CreateShootBurst(Session session)
+        public static void CreateShootTrigger(Session session)
         {
             var action = MyAPIGateway.TerminalControls.CreateAction<T>("ActionFire");
             action.Icon = @"Textures\GUI\Icons\Actions\SwitchOn.dds";
@@ -45,7 +45,7 @@ namespace CoreSystems.Control
             action.Action = CustomActions.TerminalActionShootBurst;
             action.Writer = TerminalHelpers.EmptyStringBuilder;
             action.Enabled = TerminalHelpers.ShootBurstWeapon;
-            action.ValidForGroups = false;
+            action.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);
             session.CustomActions.Add(action);

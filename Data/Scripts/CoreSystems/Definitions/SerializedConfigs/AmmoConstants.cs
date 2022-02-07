@@ -55,6 +55,8 @@ namespace CoreSystems.Support
         private const string ShieldBypassStr = "ShieldBypass";
         private const string MassStr = "Mass";
         private const string HealthHitModStr = "HealthHitModifier";
+        private const string ByBlockHitMaxAbsorbStr = "ByBlockHitMaxAbsorb";
+        private const string EndOfLifeMaxAbsorbStr = "EndOfLifeMaxAbsorb";
 
         private readonly Dictionary<string, BaseProcessor> _modifierMap = new Dictionary<string, BaseProcessor>()
         {
@@ -79,6 +81,8 @@ namespace CoreSystems.Support
             {ShieldBypassStr, new FloatProcessor() },
             {MassStr, new FloatProcessor() },
             {HealthHitModStr, new DoubleProcessor() },
+            {ByBlockHitMaxAbsorbStr, new FloatProcessor() },
+            {EndOfLifeMaxAbsorbStr, new FloatProcessor() },
         };
 
         public readonly MyConcurrentPool<MyEntity> PrimeEntityPool;
@@ -701,6 +705,16 @@ namespace CoreSystems.Support
             else
                 endOfLifeRadius = (float)ammoDef.AreaOfDamage.EndOfLife.Radius;
 
+            if (AmmoModsFound && _modifierMap[ByBlockHitMaxAbsorbStr].HasData())
+                aoeMaxAbsorb = _modifierMap[ByBlockHitMaxAbsorbStr].GetAsFloat;
+            else
+                aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : 0;
+
+            if (AmmoModsFound && _modifierMap[EndOfLifeMaxAbsorbStr].HasData())
+                detMaxAbsorb = _modifierMap[EndOfLifeMaxAbsorbStr].GetAsFloat;
+            else
+                detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0 ? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : 0;
+
             ewarEffectStrength = ammoDef.Ewar.Strength;
             ewarEffectSize = ammoDef.Ewar.Radius;
             largestHitSize = Math.Max(byBlockHitRadius, Math.Max(endOfLifeRadius, ewarEffectSize));
@@ -711,8 +725,10 @@ namespace CoreSystems.Support
             minArmingTime = ammoDef.AreaOfDamage.EndOfLife.MinArmingTime;
             byBlockHitDepth = ammoDef.AreaOfDamage.ByBlockHit.Depth <= 0 ? (float)ammoDef.AreaOfDamage.ByBlockHit.Radius: ammoDef.AreaOfDamage.ByBlockHit.Depth;
             endOfLifeDepth = ammoDef.AreaOfDamage.EndOfLife.Depth <= 0 ? (float)ammoDef.AreaOfDamage.EndOfLife.Radius: ammoDef.AreaOfDamage.EndOfLife.Depth;
-            aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : 0;
-            detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : 0;
+
+            //aoeMaxAbsorb = ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb > 0? ammoDef.AreaOfDamage.ByBlockHit.MaxAbsorb : 0;
+            //detMaxAbsorb = ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb > 0? ammoDef.AreaOfDamage.EndOfLife.MaxAbsorb : 0;
+
             endOfLifeAoe = ammoDef.AreaOfDamage.EndOfLife.Enable;
         }
 

@@ -108,11 +108,10 @@ namespace CoreSystems
 
         internal static void CreateDefaultActions<T>(Session session) where T : IMyTerminalBlock
         {
+            CreateCustomActionSet<T>(session);
             CreateCustomActions<T>.CreateShoot(session);
             CreateCustomActions<T>.CreateShootOn(session);
             CreateCustomActions<T>.CreateShootOff(session);
-            CreateCustomActions<T>.CreateShootBurst(session);
-            CreateCustomActionSet<T>(session);
         }
 
         internal static void CreateCustomDecoyActions<T>(Session session) where T : IMyTerminalBlock
@@ -126,8 +125,9 @@ namespace CoreSystems
         }
         internal static void CreateCustomActionSet<T>(Session session) where T : IMyTerminalBlock
         {
-            CreateCustomActions<T>.CreateCycleAmmo(session);
             CreateCustomActions<T>.CreateShootMode(session);
+            CreateCustomActions<T>.CreateShootTrigger(session);
+            CreateCustomActions<T>.CreateCycleAmmo(session);
             CreateCustomActions<T>.CreateNeutrals(session);
             CreateCustomActions<T>.CreateFriendly(session);
             CreateCustomActions<T>.CreateUnowned(session);

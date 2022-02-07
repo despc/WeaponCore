@@ -302,9 +302,6 @@ namespace CoreSystems.Support
 
                     if (ammoLoadSize > MaxAmmoCount)
                         MaxAmmoCount = ammoLoadSize;
-
-                    Log.Line($"{ammo.AmmoDef.AmmoRound}({structure.SubtypeId}) - size:{aConst.MagsToLoad * aConst.MagazineSize}({ammoLoadSize})[{MaxAmmoCount}] - MustCharge:{aConst.MustCharge} - Reloadable:{aConst.Reloadable} - IsHybrid:{aConst.IsHybrid}");
-
                 }
 
                 if (aConst.ChargSize > ApproximatePeakPower)

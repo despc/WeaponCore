@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using VRage;
 using VRage.Collections;
 using VRage.Library.Threading;
 using VRageMath;
@@ -64,6 +65,11 @@ namespace CoreSystems.Support
             var tempX = _y; _x ^= _x << 23; var tempY = _x ^ _y ^ (_x >> 17) ^ (_y >> 26); var newSeed = tempY + _y; _x = tempX; _y = tempY;
 
             _x = newSeed << 3; _y = newSeed >> 3;
+        }
+
+        public MyTuple<ulong, ulong> GetSeedVaues()
+        {
+            return new MyTuple<ulong, ulong>(_x, _y);
         }
 
         /// <summary>
