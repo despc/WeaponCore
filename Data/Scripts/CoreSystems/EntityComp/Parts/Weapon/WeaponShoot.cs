@@ -98,7 +98,7 @@ namespace CoreSystems.Platform
 
 
                             if (ShootCount > 0)
-                                Comp.UpdateShootSync(this);
+                                Comp.ShootManager.UpdateShootSync(this);
 
                             if (ProtoWeaponAmmo.CurrentAmmo == 0) {
                                 ClientLastShotId = Reload.StartId;
@@ -108,7 +108,7 @@ namespace CoreSystems.Platform
                             --ClientMakeUpShots;
 
                             if (ShootCount > 0)
-                                Comp.UpdateShootSync(this);
+                                Comp.ShootManager.UpdateShootSync(this);
                         }
 
                         if (System.HasEjector && aConst.HasEjectEffect)  {
@@ -117,7 +117,7 @@ namespace CoreSystems.Platform
                         }
                     }
                     else if (ShootCount > 0)
-                            Comp.UpdateShootSync(this);
+                            Comp.ShootManager.UpdateShootSync(this);
 
                     #endregion
 

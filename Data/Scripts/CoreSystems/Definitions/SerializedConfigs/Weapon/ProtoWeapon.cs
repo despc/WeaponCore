@@ -21,7 +21,7 @@ namespace CoreSystems
             Values.State.TrackingReticle = false;
             Values.State.ShootSyncStateId = 0;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
-            Values.Set.Overrides.ShootMode = ShootModes.Default;
+            Values.Set.Overrides.ShootMode = Weapon.ShootManager.ShootModes.Default;
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
 
@@ -477,7 +477,7 @@ namespace CoreSystems
         [ProtoMember(25)] public int SequenceId;
         [ProtoMember(26)] public int ArmedTimer;
         [ProtoMember(27)] public int LeadGroup;
-        [ProtoMember(28), DefaultValue(ShootModes.Default)] public ShootModes ShootMode = ShootModes.Default;
+        [ProtoMember(28), DefaultValue(Weapon.ShootManager.ShootModes.Default)] public Weapon.ShootManager.ShootModes ShootMode = Weapon.ShootManager.ShootModes.Default;
         [ProtoMember(29)] public int CameraChannel;
         [ProtoMember(30)] public int WeaponGroupId;
 

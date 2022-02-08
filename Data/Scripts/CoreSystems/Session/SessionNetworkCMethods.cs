@@ -478,31 +478,31 @@ namespace CoreSystems
             if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
 
             uint stateId;
-            Weapon.WeaponComponent.ShootModes mode;
+            Weapon.ShootManager.ShootModes mode;
             uint interval;
-            Weapon.WeaponComponent.ShootCodes code;
+            Weapon.ShootManager.ShootCodes code;
             DecodeShootState(dPacket.Data, out stateId, out mode, out interval, out code);
 
             var wComp = comp as Weapon.WeaponComponent;
             if (wComp != null)
             {
-                if (code == Weapon.WeaponComponent.ShootCodes.ToggleClientOff)
+                if (code == Weapon.ShootManager.ShootCodes.ToggleClientOff)
                 {
-                    wComp.ClientToggleResponse(interval);
+                    wComp.ShootManager.ClientToggleResponse(interval);
                 }
-                else if (wComp.RequestShootBurstId == stateId)
+                else if (wComp.ShootManager.RequestShootBurstId == stateId)
                 {
                     //Log.Line($"client shoot state match");
-                    wComp.RequestShootSync(0);
+                    wComp.ShootManager.RequestShootSync(0);
                 }
-                else if (code == Weapon.WeaponComponent.ShootCodes.ServerResponse)
+                else if (code == Weapon.ShootManager.ShootCodes.ServerResponse)
                 {
                     Log.Line($"client received server response: interval:{interval}");
-                    wComp.WaitingBurstResponse = false;
+                    wComp.ShootManager.WaitingBurstResponse = false;
                 }
                 else
                 {
-                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.WaitingBurstResponse}");
+                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.ShootManager.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.ShootManager.WaitingBurstResponse}");
                 }
             }
 

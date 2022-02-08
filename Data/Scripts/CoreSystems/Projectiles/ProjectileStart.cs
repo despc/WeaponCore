@@ -50,13 +50,7 @@ namespace CoreSystems.Projectiles
                 target.TargetState = wTarget.TargetState;
 
                 if (t == Kind.Client)
-                {
                     target.TargetState = target.TargetEntity != null ? Target.TargetStates.IsEntity : Target.TargetStates.None;
-                    if (target.TargetState == Target.TargetStates.None)
-                    {
-                        Log.Line($"client predicted did not pass in an entity");
-                    }
-                }
 
                 info.DummyTargets = null;
                 if (comp.FakeMode)

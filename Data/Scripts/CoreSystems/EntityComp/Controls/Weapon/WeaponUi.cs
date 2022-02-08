@@ -392,18 +392,18 @@ namespace CoreSystems
 
         private static readonly List<MyTerminalControlComboBoxItem> ShootModeList = new List<MyTerminalControlComboBoxItem>
         {
-            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)0}") },
-            new MyTerminalControlComboBoxItem { Key = 1, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)1}") },
-            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)2}") },
-            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)3}") },
+            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)0}") },
+            new MyTerminalControlComboBoxItem { Key = 1, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)1}") },
+            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)2}") },
+            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)3}") },
         };
 
         private static readonly List<MyTerminalControlComboBoxItem> ShootModeListNoBurst = new List<MyTerminalControlComboBoxItem>
         {
-            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)0}") },
+            new MyTerminalControlComboBoxItem { Key = 0, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)0}") },
             //new MyTerminalControlComboBoxItem { Key = 1, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)1}") },
-            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)2}") },
-            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.WeaponComponent.ShootModes)3}") },
+            new MyTerminalControlComboBoxItem { Key = 2, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)2}") },
+            new MyTerminalControlComboBoxItem { Key = 3, Value = MyStringId.GetOrCompute($"{(Weapon.ShootManager.ShootModes)3}") },
         };
 
 
@@ -548,7 +548,7 @@ namespace CoreSystems
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstCount && comp.RequestShootBurstId == values.State.ShootSyncStateId)
+            if (roundedInt != values.Set.Overrides.BurstCount && comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstCount", roundedInt, comp.Session.PlayerId);
             }
@@ -569,7 +569,7 @@ namespace CoreSystems
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstDelay && comp.RequestShootBurstId == values.State.ShootSyncStateId)
+            if (roundedInt != values.Set.Overrides.BurstDelay && comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstDelay", roundedInt, comp.Session.PlayerId);
             }
