@@ -478,7 +478,7 @@ namespace CoreSystems.Projectiles
         #endregion
 
         #region Smart / Drones
-        internal void RunDrone(MyEntity targetEnt)
+        internal void RunDrone()
         {
             var aConst = Info.AmmoDef.Const;
             var fragProx = Info.AmmoDef.Const.FragProximity;
@@ -488,40 +488,101 @@ namespace CoreSystems.Projectiles
             var parentCube = Info.Target.CoreCube;
             var parentEnt = Info.Target.CoreEntity.GetTopMostParent();
             MyEntity friendEnt = null;//Info.Ai.Construct.Focus && Info.Overrides.Set.AssistFriend
-            MyEntity topEnt = null;
-            var hasTarget = targetEnt != null && !targetEnt.MarkedForClose;
-            var hasParent = Info.CompSceneVersion == Info.Weapon.Comp.SceneVersion; 
+            MyEntity targetEnt = null;
+            var target = Info.Target;
+            var hasTarget = false;
+            var orbitCtr = Vector3D.Zero;
+            var orbitRad = 0d;
+            var hasParent = parentEnt != null && Info.CompSceneVersion == Info.Weapon.Comp.SceneVersion; 
             //var hasFriend = (friendEnt != null || !friendEnt.MarkedForClose);
             var closestObstacle = Info.Target.ClosestObstacle;
             Info.Target.ClosestObstacle = null;
             var hasObstacle = closestObstacle != parentEnt && closestObstacle != null;
-
-            if (!hasParent) DsDebugDraw.DrawSphere(new BoundingSphereD(Position, 10), Color.Green);
             try
             {
-                //Logic to handle loss of target and reassigment to friendly target
-                //if (hasObstacle) Log.Line($"ClosestObstacle{closestObstacle} Beam length {Math.Truncate(Beam.Length)}  CheckBeam Length {Math.Truncate(CheckBeam.Length)} Dist to obstacle {Vector3D.Distance(closestObstacle.PositionComp.GetPosition(),Position)}  entSphere Radius: {closestObstacle.PositionComp.WorldVolume.Radius})");
+                switch (HadTarget)
+                {
+                case HadTargetState.Entity:
+                    if (target.TargetEntity != null && !target.TargetEntity.MarkedForClose)
+                    {
+                        var tempTopEnt = target.TargetEntity.GetTopMostParent();
+                        orbitCtr = tempTopEnt.PositionComp.WorldAABB.Center;
+                        orbitRad = tempTopEnt.PositionComp.WorldVolume.Radius;
+                        if(orbitRad == 0)
+                            {
+                                NewTarget(); //Just in case??
+                                break;
+                            }
+                        targetEnt = target.TargetEntity;
+                        hasTarget = true;
+                    }
+                    else
+                        NewTarget();
+                    break;
+                case HadTargetState.Projectile:
+                    if (target.TargetState == Target.TargetStates.IsProjectile || NewTarget())
+                    {
+                        orbitCtr = target.Projectile.Position;
+                        orbitRad = target.Projectile.Info.AmmoDef.Const.CollisionSize / 2;
+                        hasTarget = true;
+                    }
+                    else
+                    {
+                        // either give up and die or try again next tick/timer
+                    }   
+                    break;
+                case HadTargetState.Fake:
+                    if (Info.DummyTargets != null)
+                    {
+                        var fakeTarget = Info.DummyTargets.PaintedTarget.EntityId != 0 ? Info.DummyTargets.PaintedTarget : Info.DummyTargets.ManualTarget;
+                        if (fakeTarget == Info.DummyTargets.PaintedTarget)
+                        {
+                            MyEntities.TryGetEntityById(fakeTarget.EntityId, out targetEnt);
+                            orbitRad = targetEnt.PositionComp.WorldVolume.Radius;
+                            if (orbitRad <= 0)
+                            {
+                                NewTarget();
+                                break;
+                            }
+                        }
+                        else
+                            orbitRad = fragProx/2;
+                        orbitCtr = fakeTarget.FakeInfo.WorldPosition;
+                        hasTarget = true;
+                    }
+                    else
+                        NewTarget();
+                    break;
+                }
+                //TODO: if "out of targets"
 
+                //Logic to handle loss of target and reassigment to friendly target
                 if (hasTarget && DroneMsn==DroneMission.Attack)
                 {
-                    topEnt = targetEnt.GetTopMostParent();                 
+                    //This still needed?
                 }
-                else if (!hasTarget && hasParent)
+                else if (!hasTarget && hasParent && DroneMsn == DroneMission.Attack)
                 {
-                    topEnt = parentEnt.GetTopMostParent();
+                    if (!NewTarget())
+                    {
                     DroneMsn = DroneMission.Defend;//Try to return to parent in defensive state
+                    DroneStat = DroneStatus.Transit;
+                    }
                 }
-                else if (DroneMsn==DroneMission.Rtb)
+                else if (DroneMsn==DroneMission.Rtb || DroneMsn==DroneMission.Defend)
                 {
                     if (hasParent)
-                        topEnt = parentEnt.GetTopMostParent();
+                    {
+                        orbitCtr = parentEnt.PositionComp.WorldAABB.Center;
+                        orbitRad = parentEnt.PositionComp.WorldVolume.Radius;
+                    }
 
                     // else if (hasFriend)
                     //     topEnt = friendEnt.GetTopMostParent();
                 }
 
                 //General use vars
-                var targetSphere = topEnt.PositionComp.WorldVolume;
+                var targetSphere = new BoundingSphereD(orbitCtr, orbitRad);
                 var orbitSphere = targetSphere; //desired orbit dist
                 var orbitSphereFar = orbitSphere; //Indicates start of approach
                 var orbitSphereClose = targetSphere; //"Too close" or collision imminent
@@ -532,9 +593,9 @@ namespace CoreSystems.Projectiles
                 {
                     case DroneMission.Attack:
                     orbitSphere.Radius += fragProx;
-                    orbitSphereFar.Radius += AccelInMetersPerSec + MaxSpeed; //first whack at dynamic setting   
-                    orbitSphereClose.Radius += MaxSpeed * 0.3f; //Magic number, needs logical work?
-                    if (hasObstacle && orbitSphereClose.Contains(closestObstacle.PositionComp.GetPosition()) != ContainmentType.Contains)
+                    orbitSphereFar.Radius +=fragProx+AccelInMetersPerSec + MaxSpeed; //first whack at dynamic setting   
+                    orbitSphereClose.Radius += MaxSpeed * 0.3f+Info.AmmoDef.Shape.Diameter; //Magic number, needs logical work?
+                    if (hasObstacle && orbitSphereClose.Contains(closestObstacle.PositionComp.GetPosition()) != ContainmentType.Contains && DroneStat!=DroneStatus.Kamikaze)
                     {
                         orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
                         orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;
@@ -568,7 +629,7 @@ namespace CoreSystems.Projectiles
 
                                     if (fragGroupDelay == 0 && timeSinceLastFrag >= fragInterval)
                                         DroneStat = DroneStatus.Strafe;//TODO- incorporate group delays
-                                    else if (fragGroupDelay > 0 && (timeSinceLastFrag >= fragGroupDelay || timeSinceLastFrag<= fragInterval))
+                                    else if (fragGroupDelay > 0 && (timeSinceLastFrag >= fragGroupDelay || timeSinceLastFrag <= fragInterval))
                                         DroneStat = DroneStatus.Strafe;
                                     else DroneStat = DroneStatus.Orbit;
                                 }
@@ -587,7 +648,7 @@ namespace CoreSystems.Projectiles
 
                     if ((hasKamikaze || !hasParent) && DroneStat != DroneStatus.Kamikaze && maxLife > 0 )//Parenthesis for everyone!
                     {
-                        var kamiFlightTime = orbitSphere.Radius / MaxSpeed * 60; //time needed for final dive into target
+                        var kamiFlightTime = orbitSphere.Radius / MaxSpeed * 60*1.05; //time needed for final dive into target
                         if (maxLife - Info.Age <= kamiFlightTime || (Info.Frags >= aConst.MaxFrags)) DroneStat = DroneStatus.Kamikaze;
                     }
                     else if (!hasKamikaze && targetEnt != parentEnt)
@@ -609,11 +670,21 @@ namespace CoreSystems.Projectiles
                     }
                     break;
                 case DroneMission.Defend:
-                    orbitSphere.Radius += fragProx;
-                    orbitSphereFar.Radius += AccelInMetersPerSec + MaxSpeed;  
-                    orbitSphereClose.Radius = 0;
+                    orbitSphere.Radius += fragProx/2;
+                    orbitSphereFar.Radius += AccelInMetersPerSec + MaxSpeed;
+                    orbitSphereClose.Radius += MaxSpeed * 0.3f + Info.AmmoDef.Shape.Diameter;
                     //Reserved for future use, w/ target of a friendly grid or point in space
-                    if (DroneStat != DroneStatus.Return)
+                    if (hasObstacle)
+                    {
+                        orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
+                        orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;
+                        DroneStat = DroneStatus.Escape;
+                        break;
+                    }
+                    else if (DroneStat == DroneStatus.Escape) DroneStat = DroneStatus.Transit;
+
+
+                    if (DroneStat != DroneStatus.Transit)
                     {
                         if (orbitSphere.Contains(Position) != ContainmentType.Disjoint)
                         {
@@ -685,23 +756,22 @@ namespace CoreSystems.Projectiles
                      break;
                 }
 
-               
-
 
                 //debug line draw stuff
                 /*
-                var debugLine = new LineD(Position, orbitSphere.Center);
-                if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
-                if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
-                if (DroneStat == DroneStatus.Kamikaze) DsDebugDraw.DrawLine(debugLine, Color.White, 0.5f);
-                if (DroneStat == DroneStatus.Return) DsDebugDraw.DrawLine(debugLine, Color.Yellow, 0.5f);
-                if (DroneStat == DroneStatus.Dock) DsDebugDraw.DrawLine(debugLine, Color.Purple, 0.5f);
-                if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Pink, 0.5f);
-                if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
-                if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
-                */     
-
-
+                if (orbitSphere.Center != Vector3D.Zero)
+                {
+                    var debugLine = new LineD(Position, orbitSphere.Center);
+                    if (DroneStat == DroneStatus.Transit) DsDebugDraw.DrawLine(debugLine, Color.Blue, 0.5f);
+                    if (DroneStat == DroneStatus.Approach) DsDebugDraw.DrawLine(debugLine, Color.Cyan, 0.5f);
+                    if (DroneStat == DroneStatus.Kamikaze) DsDebugDraw.DrawLine(debugLine, Color.White, 0.5f);
+                    if (DroneStat == DroneStatus.Return) DsDebugDraw.DrawLine(debugLine, Color.Yellow, 0.5f);
+                    if (DroneStat == DroneStatus.Dock) DsDebugDraw.DrawLine(debugLine, Color.Purple, 0.5f);
+                    if (DroneStat == DroneStatus.Strafe) DsDebugDraw.DrawLine(debugLine, Color.Pink, 0.5f);
+                    if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
+                    if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
+                }
+                */
 
                 if (tracking)
                 {
@@ -718,12 +788,13 @@ namespace CoreSystems.Projectiles
                     var needsTarget = (PickTarget && timeSlot || seekNewTarget || gaveUpChase && validTarget || isZombie || seekFirstTarget);
 
                     if (needsTarget && NewTarget() || validTarget)
+                    {
                         TrackSmartTarget(fake);
+                    }
                     else if (!SmartRoam())
                         return;
 
-                    ComputeSmartVelocity(topEnt, ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, ref targetSphere, ref parentPos, out newVel);
-
+                    ComputeSmartVelocity(ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, ref targetSphere, ref parentPos, out newVel);
                 }
             }
             catch (Exception ex) { Log.Line($"Exception in RunDrones :(  : {ex}", null, true); }
@@ -751,7 +822,7 @@ namespace CoreSystems.Projectiles
             commandedAccel = Vector3D.Normalize(commandedAccel) * AccelInMetersPerSec;
         }
 
-        private void ComputeSmartVelocity(MyEntity topEnt, ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, ref BoundingSphereD targetSphere, ref Vector3D parentPos, out Vector3D newVel)
+        private void ComputeSmartVelocity(ref BoundingSphereD orbitSphere, ref BoundingSphereD orbitSphereClose, ref BoundingSphereD orbitSphereFar, ref BoundingSphereD targetSphere, ref Vector3D parentPos, out Vector3D newVel)
         {
             var smarts = Info.AmmoDef.Trajectory.Smarts;
             var droneNavTarget = new Vector3D();
@@ -882,7 +953,7 @@ namespace CoreSystems.Projectiles
                 commandedAccel = Math.Sqrt(Math.Max(0, AccelInMetersPerSec * AccelInMetersPerSec - normalMissileAcceleration.LengthSquared())) * missileToTarget + normalMissileAcceleration;
             }
 
-            if (smarts.OffsetTime > 0 && DroneStat != DroneStatus.Strafe && DroneStat!=DroneStatus.Return && DroneStat != DroneStatus.Dock) // suppress offsets when strafing or docking
+            if (smarts.OffsetTime > 0 && DroneStat != DroneStatus.Strafe && DroneStat!=DroneStatus.Return && DroneStat != DroneStatus.Dock && DroneStat !=DroneStatus.Kamikaze) // suppress offsets when strafing or docking
                 OffsetSmartVelocity(ref commandedAccel);
 
             newVel = Velocity + (commandedAccel * StepConst);
