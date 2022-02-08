@@ -676,7 +676,7 @@ namespace CoreSystems.Api
             var comp = weaponBlock.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp?.Platform != null && comp.Platform.State == Ready && comp.Platform.Weapons.Count > weaponId)
             {
-                comp.RequestShootSync(0);
+                comp.ShootManager.RequestShootSync(comp.Session.PlayerId);
             }
         }
 

@@ -143,7 +143,7 @@ namespace CoreSystems
                     }
                     if (pComp.Status != Started)
                         pComp.HealthCheck();
-                    var burstShots = (pComp.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootSyncStateId);
+                    var burstShots = (pComp.ShootManager.RequestShootBurstId != pComp.Data.Repo.Values.State.ShootSyncStateId);
                     if (pComp.Platform.State != CorePlatform.PlatformState.Ready || pComp.IsDisabled || pComp.IsAsleep || pComp.CoreEntity.MarkedForClose || pComp.LazyUpdate && !ai.DbUpdated && Tick > pComp.NextLazyUpdateStart)
                         continue;
 
@@ -226,8 +226,8 @@ namespace CoreSystems
 
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
-                    var shootModeDefault = sMode != Weapon.WeaponComponent.ShootModes.Default;
-                    var shotModeActive = wComp.RequestShootBurstId != wValues.State.ShootSyncStateId;
+                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.Default;
+                    var shotModeActive = wComp.ShootManager.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (HandlesInput) {
 
@@ -247,9 +247,9 @@ namespace CoreSystems
                             else if (IsServer)
                                 wValues.State.TrackingReticle = track;
 
-                            if (sMode == Weapon.WeaponComponent.ShootModes.MouseControl && (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased))
+                            if (sMode == Weapon.ShootManager.ShootModes.MouseControl && (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased))
                             {
-                                wComp.RequestShootSync(PlayerId);
+                                wComp.ShootManager.RequestShootSync(PlayerId);
                             }
                         }
                     }
@@ -431,7 +431,7 @@ namespace CoreSystems
                         var manualShot = (compManualMode || w.PartState.Action == TriggerClick) && canManualShoot && wComp.InputState.MouseButtonLeft;
                         var normalShot = (manualShot || autoShot);
 
-                        var anyShot = (normalShot && !shotModeActive && !shootModeDefault) || ((w.ShootCount > 0 && w.ShootDelay == 0 || w.ShootDelay != 0 && w.ShootDelay-- == 0) && !wComp.FreezeClientShoot);
+                        var anyShot = (normalShot && !shotModeActive && !shootModeDefault) || ((w.ShootCount > 0 && w.ShootDelay == 0 || w.ShootDelay != 0 && w.ShootDelay-- == 0) && !wComp.ShootManager.FreezeClientShoot);
 
                         var delayedFire = w.System.DelayCeaseFire && !w.Target.IsAligned && Tick - w.CeaseFireDelayTick <= w.System.CeaseFireDelay;
                         var shootRequest = (anyShot || w.FinishShots || delayedFire);

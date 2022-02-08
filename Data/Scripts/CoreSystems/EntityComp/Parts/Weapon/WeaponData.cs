@@ -128,7 +128,7 @@ namespace CoreSystems.Platform
                 }
 
                 if (Comp.Session.IsClient)
-                    Comp.RequestShootBurstId = Repo.Values.State.ShootSyncStateId;
+                    Comp.ShootManager.RequestShootBurstId = Repo.Values.State.ShootSyncStateId;
                 
                 ProtoRepoBase = Repo;
 

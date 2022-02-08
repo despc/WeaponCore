@@ -459,25 +459,25 @@ namespace CoreSystems
 
             uint stateId;
             uint interval;
-            Weapon.WeaponComponent.ShootModes mode;
-            Weapon.WeaponComponent.ShootCodes code;
+            Weapon.ShootManager.ShootModes mode;
+            Weapon.ShootManager.ShootCodes code;
             DecodeShootState(dPacket.Data, out stateId, out mode, out interval, out code);
 
             long playerId;
-            if (wComp != null && code == Weapon.WeaponComponent.ShootCodes.ToggleServerOff)
+            if (wComp != null && code == Weapon.ShootManager.ShootCodes.ToggleServerOff)
             {
-                wComp.ServerToggleResponse(interval);
+                wComp.ShootManager.ServerToggleResponse(interval);
             }
-            else if (wComp != null && wComp.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
+            else if (wComp != null && wComp.ShootManager.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
-                wComp.RequestShootSync(playerId);
+                wComp.ShootManager.RequestShootSync(playerId);
 
-                if (wComp.RequestShootBurstId == stateId)
+                if (wComp.ShootManager.RequestShootBurstId == stateId)
                 {
                     Log.Line($"failed to burst on server");
                 }
             }
-            else if (wComp != null && wComp.RequestShootBurstId != stateId)
+            else if (wComp != null && wComp.ShootManager.RequestShootBurstId != stateId)
             {
                 Log.Line($"server bursting request mismatch");
             }

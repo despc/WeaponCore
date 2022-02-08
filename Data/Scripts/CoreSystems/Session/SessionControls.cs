@@ -215,7 +215,7 @@ namespace CoreSystems
 
                         a.Name.Clear();
                         a.Name.Append(ShootModeStr);
-                        comp.RequestShootSync(comp.Session.PlayerId);
+                        comp.ShootManager.RequestShootSync(comp.Session.PlayerId);
                     };
                     a.Name.Clear();
                     a.Name.Append(ShootModeStr);
