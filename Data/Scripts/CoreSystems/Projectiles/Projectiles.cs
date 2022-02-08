@@ -192,13 +192,13 @@ namespace CoreSystems.Projectiles
                         }
 
                         if (aConst.AmmoSkipAccel && aConst.IsDrone)
-                            p.RunDrone(targetEnt);
+                            p.RunDrone();
                     }
 
                     if (!aConst.AmmoSkipAccel && !info.EwarAreaPulse) {
 
                         if (p.IsSmart) p.RunSmart();
-                        else if (aConst.IsDrone) p.RunDrone(targetEnt);
+                        else if (aConst.IsDrone) p.RunDrone();
                         else {
                             var accel = true;
                             Vector3D newVel;
@@ -231,7 +231,7 @@ namespace CoreSystems.Projectiles
                     else if (p.IsSmart)
                         p.RunSmart();
                     else if (aConst.IsDrone) 
-                        p.RunDrone(targetEnt);
+                        p.RunDrone();
 
                     if (p.State == ProjectileState.OneAndDone) {
 
