@@ -497,12 +497,12 @@ namespace CoreSystems
                 }
                 else if (code == Weapon.ShootManager.ShootCodes.ServerResponse)
                 {
-                    Log.Line($"client received server response: interval:{interval}");
-                    wComp.ShootManager.WaitingBurstResponse = false;
+                    //Log.Line($"client received server response: interval:{interval} - QueuedToggle:{wComp.ShootManager.QueuedToggle}");
+                    wComp.ShootManager.WaitingShootResponse = false;
                 }
                 else
                 {
-                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.ShootManager.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.ShootManager.WaitingBurstResponse}");
+                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.ShootManager.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.ShootManager.WaitingShootResponse}");
                 }
             }
 

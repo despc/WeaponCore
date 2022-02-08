@@ -247,7 +247,7 @@ namespace CoreSystems
                             else if (IsServer)
                                 wValues.State.TrackingReticle = track;
 
-                            if (sMode == Weapon.ShootManager.ShootModes.MouseControl && (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased))
+                            if (sMode == Weapon.ShootManager.ShootModes.MouseControl && (!wComp.ShootManager.ShootToggled && UiInput.MouseButtonLeftNewPressed || wComp.ShootManager.ShootToggled && UiInput.MouseButtonLeftReleased))
                             {
                                 wComp.ShootManager.RequestShootSync(PlayerId);
                             }

@@ -470,6 +470,7 @@ namespace CoreSystems
             }
             else if (wComp != null && wComp.ShootManager.RequestShootBurstId == stateId && SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
+                //Log.Line($"client requesting shoot: client:{interval} - server:{wComp.ShootManager.CompletedCycles}");
                 wComp.ShootManager.RequestShootSync(playerId);
 
                 if (wComp.ShootManager.RequestShootBurstId == stateId)
