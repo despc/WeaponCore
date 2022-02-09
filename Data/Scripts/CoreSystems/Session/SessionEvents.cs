@@ -499,6 +499,8 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
+                        PlayerControllerTick = Tick + 1;
+                        PlayerGridControlQueue.Add(cube.CubeGrid);
                         Ai ai;
                         if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
@@ -522,6 +524,8 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
+                        PlayerControllerTick = Tick + 1;
+                        PlayerGridControlQueue.Add(cube.CubeGrid);
                         Ai ai;
                         if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
@@ -531,12 +535,12 @@ namespace CoreSystems
                         var playerId = enterController.ControllerInfo.ControllingIdentityId;
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
-                            players.Add(playerId, new PlayerController {  ControllBlock = cube, Id = playerId, EntityId = cube.EntityId });
+                            players.Add(playerId, new PlayerController {  ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick});
                         }
                         else
                         {
                             players = PlayerGridPool.Get();
-                            players.Add(playerId, new PlayerController { ControllBlock = cube, Id = playerId,  EntityId = cube.EntityId });
+                            players.Add(playerId, new PlayerController { ControllBlock = cube, Id = playerId,  EntityId = cube.EntityId, ChangeTick = Tick });
                             PlayerGrids[cube.CubeGrid] = players;
                         }
                     }

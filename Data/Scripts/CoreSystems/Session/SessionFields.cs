@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security.Policy;
 using CoreSystems.Api;
 using CoreSystems.Platform;
 using CoreSystems.Projectiles;
@@ -202,6 +203,7 @@ namespace CoreSystems
         internal readonly HashSet<MyDefinitionId> CoreSystemsRifleDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<MyDefinitionId> CoreSystemsPhantomDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<ArmorDefinition> CoreSystemsArmorDefs = new HashSet<ArmorDefinition>();
+        internal readonly HashSet<MyCubeGrid> PlayerGridControlQueue = new HashSet<MyCubeGrid>();
 
         internal readonly HashSet<MyStringHash> PerformanceWarning = new HashSet<MyStringHash>();
 
@@ -320,6 +322,7 @@ namespace CoreSystems
         internal uint Tick;
         internal uint ClientDestroyBlockTick;
         internal uint ReInitTick;
+        internal uint PlayerControllerTick;
         internal int WeaponIdCounter;
         internal int PlayerEventId;
         internal int TargetRequests;

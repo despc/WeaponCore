@@ -58,6 +58,11 @@ namespace CoreSystems
                 var rootAi = construct.RootAi;
                 var rootConstruct = rootAi.Construct;
 
+                if (ai.AiType == Ai.AiTypes.Grid && PlayerControllerTick + 1 == Tick && PlayerGridControlQueue.Contains(ai.GridEntity))
+                {
+                    Ai.Constructs.UpdatePlayerStates(rootAi);
+                }
+
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
                     ai.BlockChangeArea.Min *= ai.GridEntity.GridSize;
@@ -490,6 +495,9 @@ namespace CoreSystems
 
             if (DbTask.IsComplete && DbsToUpdate.Count > 0 && !DbUpdating)
                 UpdateDbsInQueue();
+
+            if (PlayerControllerTick + 1 == Tick)
+                PlayerGridControlQueue.Clear();
         }
 
         private void AimAi()

@@ -33,7 +33,7 @@ namespace CoreSystems
                 ActiveCockPit = cockPit;
             else ActiveCockPit = null;
 
-            PlayerController oldControlId;
+            PlayerControllerEntity oldControlId;
             var controlledEntity = ActiveCockPit ?? ActiveControlBlock ?? PlayerHandWeapon?.Owner;
             var topEntity = ActiveControlBlock != null ? controlledEntity?.GetTopMostParent() : controlledEntity;
 
@@ -43,7 +43,8 @@ namespace CoreSystems
                 if (camera == null || !GroupedCamera(camera))
                     ActiveCameraBlock = null;
                 InGridAiBlock = true;
-                TrackingAi.Construct.ControllingPlayers.TryGetValue(PlayerId, out oldControlId);
+
+                TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId);
 
                 if (oldControlId.EntityId != controlledEntity.EntityId)
                 {
@@ -52,6 +53,8 @@ namespace CoreSystems
                 }
                 else if (LeadGroupsDirty || !MyUtils.IsEqual(LastOptimalDps, TrackingAi.Construct.OptimalDps))
                     TargetLeadUpdate();
+
+                TrackingAi.PlayerControl[PlayerId] = new PlayerControllerEntity { ChangeTick = Tick, ControllEntity = controlledEntity, EntityId = controlledEntity.EntityId, Id = PlayerId };
             }
             else
             {
@@ -59,13 +62,13 @@ namespace CoreSystems
                 {
                     TrackingAi.Construct.Focus.ClientIsFocused(TrackingAi);
 
-                    if (TrackingAi.Construct.ControllingPlayers.TryGetValue(PlayerId, out oldControlId))
+                    if (TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId))
                     {
                         if (IsServer) TrackingAi.Construct.NetRefreshAi();
-
-                        SendActiveControlUpdate(TrackingAi, oldControlId.ControllBlock, false);
+                        SendActiveControlUpdate(TrackingAi, oldControlId.ControllEntity, false);
                         foreach (var list in LeadGroups) list.Clear();
                         LeadGroupActive = false;
+                        TrackingAi.PlayerControl.Remove(PlayerId);
                     }
                 }
 
