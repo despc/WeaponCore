@@ -499,6 +499,11 @@ namespace CoreSystems
                 {
                     //Log.Line($"client received server response: interval:{interval} - QueuedToggle:{wComp.ShootManager.QueuedToggle}");
                     wComp.ShootManager.WaitingShootResponse = false;
+                    if (wComp.ShootManager.QueuedToggle != Weapon.ShootManager.DelayedToggle.None && wComp.ShootManager.QueuedToggle == Weapon.ShootManager.DelayedToggle.Off)
+                    {
+                        wComp.ShootManager.ProcessInput(PlayerId, true);
+                        Log.Line($"forcing QueuedToggle off");
+                    }
                 }
                 else
                 {

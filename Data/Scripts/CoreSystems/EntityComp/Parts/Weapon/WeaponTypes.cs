@@ -316,7 +316,7 @@ namespace CoreSystems.Platform
 
             #region InputManager
 
-            private bool ProcessInput(long playerId, bool skipUpdateInputState = false)
+            internal bool ProcessInput(long playerId, bool skipUpdateInputState = false)
             {
                 if (!skipUpdateInputState && UpdatedExistingInputState())
                     return false;
