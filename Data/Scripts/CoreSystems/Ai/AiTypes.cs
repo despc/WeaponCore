@@ -551,13 +551,11 @@ namespace CoreSystems.Support
             internal MyCubeBlock ShieldBlock;
         }
 
-        internal struct PlayerController
+        public struct PlayerController
         {
             internal long Id;
             internal long EntityId;
             internal MyCubeBlock ControllBlock;
-            internal Ai Ai;
-            internal Ai RootAi;
         }
     }
 }

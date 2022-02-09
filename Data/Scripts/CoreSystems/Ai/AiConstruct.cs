@@ -135,7 +135,8 @@ namespace CoreSystems.Support
             internal readonly Dictionary<MyStringHash, int> Counter = new Dictionary<MyStringHash, int>(MyStringHash.Comparer);
             internal readonly Focus Focus = new Focus();
             internal readonly ConstructData Data = new ConstructData();
-            internal readonly HashSet<long> ControllingPlayers = new HashSet<long>();
+            internal readonly Dictionary<long, PlayerController> ControllingPlayers = new Dictionary<long, PlayerController>();
+
             internal readonly HashSet<MyEntity> PreviousTargets = new HashSet<MyEntity>();
             internal readonly RunningAverage DamageAverage = new RunningAverage(10);
             internal float OptimalDps;
@@ -170,8 +171,6 @@ namespace CoreSystems.Support
             {
                 if (ai.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
                     CheckEmptyWeapons();
-
-                var oldRootAi = RootAi;
 
                 OptimalDps = 0;
                 BlockCount = 0;
@@ -225,12 +224,8 @@ namespace CoreSystems.Support
                     }
 
                     RootAi.Construct.MaxLockRange = maxLockRange;
-                    UpdatePartCounters(ai);
-
-
-                    if (oldRootAi != null && oldRootAi != RootAi && oldRootAi.Construct.ControllingPlayers.Count > 0)
-                        foreach (var p in oldRootAi.Construct.ControllingPlayers)
-                            RootAi.Construct.ControllingPlayers.Add(p);
+                    BuildAiListAndCounters(ai);
+                    UpdatePlayerStates(RootAi);
 
                     return;
                 }
@@ -239,10 +234,7 @@ namespace CoreSystems.Support
                     RootAi = ai;
                     LargestAi = ai;
                     ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
-
-                    if (oldRootAi != null && oldRootAi != RootAi && oldRootAi.Construct.ControllingPlayers.Count > 0)
-                        foreach (var p in oldRootAi.Construct.ControllingPlayers)
-                            RootAi.Construct.ControllingPlayers.Add(p);
+                    UpdatePlayerStates(RootAi);
 
                     return;
                 }
@@ -311,10 +303,10 @@ namespace CoreSystems.Support
                 }
             }
 
-            internal void UpdatePlayerLockState(long playerId)
+            internal static void UpdatePlayerLockState(Ai rootAi, long playerId)
             {
                 PlayerMap playerMap;
-                if (!RootAi.Session.Players.TryGetValue(playerId, out playerMap))
+                if (!rootAi.Session.Players.TryGetValue(playerId, out playerMap))
                     Log.Line($"failed to get PlayerMap");
                 else if (playerMap.Player.Character != null && playerMap.Player.Character.Components.TryGet(out playerMap.TargetFocus) && playerMap.Player.Character.Components.TryGet(out playerMap.TargetLock))
                 {
@@ -327,7 +319,26 @@ namespace CoreSystems.Support
                     Log.Line($"failed to get and set player focus and lock");
             }
 
-            internal static void UpdatePartCounters(Ai cAi)
+            internal static void UpdatePlayerStates(Ai rootAi)
+            {
+                var rootConstruct = rootAi.Construct;
+                foreach (var sub in rootAi.SubGrids)
+                {
+                    Dictionary<long, PlayerController> playerMap;
+                    if (rootAi.Session.PlayerGrids.TryGetValue(sub, out playerMap))
+                    {
+                        rootConstruct.ControllingPlayers.Clear();
+
+                        foreach (var m in playerMap)
+                        {
+                            rootConstruct.ControllingPlayers.Add(m.Key, m.Value);
+                            UpdatePlayerLockState(rootAi, m.Key);
+                        }
+                    }
+                }
+            }
+
+            internal static void BuildAiListAndCounters(Ai cAi)
             {
                 cAi.Construct.RefreshedAis.Clear();
                 cAi.Construct.RefreshedAis.Add(cAi);
@@ -354,6 +365,7 @@ namespace CoreSystems.Support
                     }
                 }
             }
+
 
             internal void AddWeaponCount(MyStringHash weaponHash, int incrementBy = 1)
             {

@@ -323,7 +323,7 @@ namespace CoreSystems
                     {"AiSleep", () => GetAi()?.AiSleep.ToString() ?? string.Empty },
                     {"AiIsPowered", () => GetAi()?.HasPower.ToString() ?? string.Empty },
                     {"AiInit", () => GetAi()?.AiInit.ToString() ?? string.Empty },
-                    {"ControllingPlayers", () => GetAi()?.PlayerControl.Count.ToString() ?? string.Empty },
+                    {"ControllingPlayers", () => GetAi()?.Construct.ControllingPlayers.Count.ToString() ?? string.Empty },
                     {"Inventories", () => GetAi()?.InventoryMonitor.Count.ToString() ?? string.Empty },
                     {"SortedTargets", () => GetAi()?.SortedTargets.Count.ToString() ?? string.Empty },
                     {"Obstructions", () => GetAi()?.Obstructions.Count.ToString() ?? string.Empty },

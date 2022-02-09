@@ -43,7 +43,7 @@ namespace CoreSystems
                 if (camera == null || !GroupedCamera(camera))
                     ActiveCameraBlock = null;
                 InGridAiBlock = true;
-                TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId);
+                TrackingAi.Construct.ControllingPlayers.TryGetValue(PlayerId, out oldControlId);
 
                 if (oldControlId.EntityId != controlledEntity.EntityId)
                 {
@@ -59,7 +59,7 @@ namespace CoreSystems
                 {
                     TrackingAi.Construct.Focus.ClientIsFocused(TrackingAi);
 
-                    if (TrackingAi.PlayerControl.TryGetValue(PlayerId, out oldControlId))
+                    if (TrackingAi.Construct.ControllingPlayers.TryGetValue(PlayerId, out oldControlId))
                     {
                         if (IsServer) TrackingAi.Construct.NetRefreshAi();
 

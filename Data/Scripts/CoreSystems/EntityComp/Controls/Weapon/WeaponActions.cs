@@ -97,8 +97,7 @@ namespace CoreSystems.Control
                 return;
 
             var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
-            var endValue = comp.HasDisabledBurst ? 2 : 3;
-            var value = numValue + 1 <= endValue ? numValue + 1 : 0;
+            var value = numValue + 1 <= 3 ? numValue + 1 : 0;
 
             Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", value, comp.Session.PlayerId);
         }

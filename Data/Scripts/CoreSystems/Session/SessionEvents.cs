@@ -491,32 +491,22 @@ namespace CoreSystems
             {
                 var exit = exitController as MyEntity;
                 var enter = enterController as MyEntity;
-                HashSet<long> players;
+                Dictionary<long, PlayerController> players;
 
-                Ai ai;
                 if (exit != null && enterController?.ControllerInfo != null)
                 {
                     var cube = exit as MyCubeBlock;
 
                     if (cube != null)
                     {
-
-                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
+                        Ai ai;
+                        if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            var playerId = enterController.ControllerInfo.ControllingIdentityId;
-                            ai.Construct.UpdatePlayerLockState(playerId);
-                            PlayerController control;
-                            if (ai.PlayerControl.TryGetValue(playerId, out control))
-                            {
-                                ai.PlayerControl.Remove(playerId);
-                                control.RootAi.Construct.ControllingPlayers.Remove(playerId);
-                            }
+                            Constructs.UpdatePlayerStates(ai);
                         }
-
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
                             players.Remove(enterController.ControllerInfo.ControllingIdentityId);
-
                             if (players.Count == 0)
                             {
                                 PlayerGridPool.Return(players);
@@ -532,28 +522,24 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
-                        var playerId = enterController.ControllerInfo.ControllingIdentityId;
-                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
+                        Ai ai;
+                        if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            ai.Construct.UpdatePlayerLockState(playerId);
-                            ai.Construct.RootAi.Construct.ControllingPlayers.Add(playerId);
-                            ai.PlayerControl[playerId] = new PlayerController {Ai = ai, ControllBlock = cube, Id = playerId, RootAi = ai.Construct.RootAi, EntityId = cube.EntityId};
+                            Constructs.UpdatePlayerStates(ai);
                         }
 
+                        var playerId = enterController.ControllerInfo.ControllingIdentityId;
                         if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
                         {
-                            players.Add(playerId);
+                            players.Add(playerId, new PlayerController {  ControllBlock = cube, Id = playerId, EntityId = cube.EntityId });
                         }
                         else
                         {
                             players = PlayerGridPool.Get();
-                            players.Add(playerId);
+                            players.Add(playerId, new PlayerController { ControllBlock = cube, Id = playerId,  EntityId = cube.EntityId });
                             PlayerGrids[cube.CubeGrid] = players;
                         }
-
                     }
-
-
                 }
             }
             catch (Exception ex) { Log.Line($"Exception in OnPlayerController: {ex}"); }

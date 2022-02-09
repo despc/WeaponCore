@@ -7,6 +7,7 @@ using CoreSystems.Support;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
+using SpaceEngineers.Game.ModAPI;
 using static CoreSystems.Support.CoreComponent.TriggerActions;
 using static CoreSystems.Support.WeaponDefinition.AnimationDef.PartAnimationSetDef;
 namespace CoreSystems
@@ -85,6 +86,13 @@ namespace CoreSystems
                 {
                     return;
                 }
+
+                if (typeof(T) == typeof(IMyTurretControlBlock))
+                {
+                    // call method containing all controls and actions for this type here
+                    return;
+                }
+
                 AlterActions<T>(session);
                 AlterControls<T>(session);
 

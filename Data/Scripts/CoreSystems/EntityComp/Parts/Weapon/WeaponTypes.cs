@@ -162,10 +162,10 @@ namespace CoreSystems.Platform
 
             public enum ShootModes
             {
-                Default,
+                Inactive,
                 MouseControl,
                 KeyToggle,
-                BurstFire,
+                KeyFire,
             }
 
             internal enum ShootCodes
@@ -190,7 +190,7 @@ namespace CoreSystems.Platform
                 var state = values.State;
                 var set = values.Set;
 
-                if ((set.Overrides.ShootMode == ShootModes.Default && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
+                if ((set.Overrides.ShootMode == ShootModes.Inactive && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
                     return;
 
                 //Log.Line($"success - totalWeapons:{TotalWeapons}");
@@ -283,7 +283,7 @@ namespace CoreSystems.Platform
                 for (int i = 0; i < Comp.TotalWeapons; i++)
                 {
                     var w = Comp.Collection[i];
-                    Log.Line($"[clear] ammo: {w.ProtoWeaponAmmo.CurrentAmmo} - CompletedCycles:{CompletedCycles} - WeaponsFired:{WeaponsFired}");
+                    if (Comp.Session.MpActive) Log.Line($"[clear] ammo: {w.ProtoWeaponAmmo.CurrentAmmo} - CompletedCycles:{CompletedCycles} - WeaponsFired:{WeaponsFired}");
 
                     w.ShootCount = 0;
                     w.ShootDelay = 0;

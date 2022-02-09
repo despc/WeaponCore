@@ -57,6 +57,7 @@ namespace CoreSystems
                 var focus = construct.Focus;
                 var rootAi = construct.RootAi;
                 var rootConstruct = rootAi.Construct;
+
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
                     ai.BlockChangeArea.Min *= ai.GridEntity.GridSize;
@@ -218,7 +219,7 @@ namespace CoreSystems
                     var wValues = wComp.Data.Repo.Values;
 
                     var focusTargets = wValues.Set.Overrides.FocusTargets;
-                    if (IsServer && wValues.State.PlayerId > 0 && !ai.PlayerControl.ContainsKey(wValues.State.PlayerId))
+                    if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
 
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)
@@ -226,7 +227,7 @@ namespace CoreSystems
 
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
-                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.Default;
+                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.Inactive;
                     var shotModeActive = wComp.ShootManager.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (HandlesInput) {
@@ -238,7 +239,7 @@ namespace CoreSystems
 
                         var isControllingPlayer = wValues.State.PlayerId == PlayerId;
 
-                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && rootAi.Construct.ControllingPlayers.Contains(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
+                        var track = (isControllingPlayer && (cMode != ProtoWeaponOverrides.ControlModes.Auto) && TargetUi.DrawReticle && !InMenu && rootConstruct.ControllingPlayers.ContainsKey(PlayerId) && (!UiInput.CameraBlockView || UiInput.CameraChannelId > 0 && UiInput.CameraChannelId == wComp.Data.Repo.Values.Set.Overrides.CameraChannel));
                         if (isControllingPlayer)
                         {
                             TargetUi.LastTrackTick = Tick;

@@ -400,7 +400,6 @@ namespace CoreSystems.Support
             UpgradeIdx.Clear();
             PhantomIdx.Clear();
             CompBase.Clear();
-            PlayerControl.Clear();
 
             LiveProjectile.Clear();
             DeadProjectiles.Clear();

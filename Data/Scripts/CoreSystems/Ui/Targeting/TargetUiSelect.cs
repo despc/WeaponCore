@@ -246,7 +246,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 {
                     var tInfo = subTargets[j];
                     if (tInfo.Target.MarkedForClose || tInfo.Target is IMyCharacter) continue;
-                    HashSet<long> playerSet;
+                    Dictionary<long, Ai.PlayerController> playerSet;
                     var controlType = tInfo.Drone ? TargetControl.Drone : tInfo.IsGrid && _session.PlayerGrids.TryGetValue((MyCubeGrid)tInfo.Target, out playerSet) ? TargetControl.Player : tInfo.IsGrid && !_session.GridHasPower((MyCubeGrid)tInfo.Target) ? TargetControl.Trash : TargetControl.Other;
                     _masterTargets[tInfo.Target] = new MyTuple<float, TargetControl>(tInfo.OffenseRating, controlType);
                     _toPruneMasterDict[tInfo.Target] = tInfo;

@@ -54,7 +54,7 @@ namespace CoreSystems.Support
                         if (Ai.PartCounting.TryGetValue(SubTypeId, out wCount))
                         {
                             wCount.Current--;
-                            Constructs.UpdatePartCounters(Ai);
+                            Constructs.BuildAiListAndCounters(Ai);
                             if (wCount.Current == 0)
                             {
                                 Ai.PartCounting.Remove(SubTypeId);

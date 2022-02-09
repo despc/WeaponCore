@@ -392,7 +392,7 @@ namespace CoreSystems.Platform
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
                 if (Data.Repo.Values.Set.Overrides.ShootMode == ShootManager.ShootModes.MouseControl)
-                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.Default;
+                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.Inactive;
 
                 Data.Repo.Values.State.TrackingReticle = false;
                 
@@ -558,7 +558,7 @@ namespace CoreSystems.Platform
                 {
                     comp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 }
-                else if (o.ShootMode != ShootManager.ShootModes.Default)
+                else if (o.ShootMode != ShootManager.ShootModes.Inactive)
                 {
                     comp.Data.Repo.Values.State.PlayerId = playerId;
                 }
