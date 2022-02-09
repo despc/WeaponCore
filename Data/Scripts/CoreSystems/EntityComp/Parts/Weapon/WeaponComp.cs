@@ -4,6 +4,7 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using SpaceEngineers.Game.Entities.Blocks;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;

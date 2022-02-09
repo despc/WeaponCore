@@ -36,6 +36,19 @@ namespace CoreSystems.Control
             session.CustomActions.Add(action);
         }
 
+        internal static void CreateMouseToggle(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("WCMouseToggle");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionWCMouseToggle"));
+            action.Action = CustomActions.TerminActionCycleMouseControl;
+            action.Writer = CustomActions.MouseToggleWriter;
+            action.Enabled = TerminalHelpers.Istrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
 
         public static void CreateShootTrigger(Session session)
         {

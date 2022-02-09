@@ -100,6 +100,7 @@ namespace CoreSystems.Support
                         { "ActionStateOn", "On" },
                         { "ActionStateOff", "Off" },
                         { "ActionWCShootMode", "Cycle Shoot Mode" },
+                        { "ActionWCMouseToggle", "Toggle Mouse Mode" },
                         { "ActionFire", "Fire" },
                         { "ActionShoot", "Shoot On/Off" },
                         { "ActionShoot_Off", "Shoot Off" },

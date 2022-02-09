@@ -134,6 +134,7 @@ namespace CoreSystems
         internal static void CreateCustomActionSet<T>(Session session) where T : IMyTerminalBlock
         {
             CreateCustomActions<T>.CreateShootMode(session);
+            CreateCustomActions<T>.CreateMouseToggle(session);
             CreateCustomActions<T>.CreateShootTrigger(session);
             CreateCustomActions<T>.CreateCycleAmmo(session);
             CreateCustomActions<T>.CreateNeutrals(session);

@@ -51,7 +51,9 @@ namespace CoreSystems.Control
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            comp.ShootManager.RequestShootSync(comp.Session.PlayerId);
+            var mode = comp.Data.Repo.Values.Set.Overrides.ShootMode;
+            if (mode == Weapon.ShootManager.ShootModes.KeyToggle || mode == Weapon.ShootManager.ShootModes.KeyFire)
+                comp.ShootManager.RequestShootSync(comp.Session.PlayerId);
         }
 
         internal static void TerminalActionControlMode(IMyTerminalBlock blk)
@@ -78,6 +80,7 @@ namespace CoreSystems.Control
             Weapon.WeaponComponent.RequestSetValue(comp, "MovementModes", value, comp.Session.PlayerId);
         }
 
+
         internal static void TerminActionCycleSubSystem(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
@@ -98,6 +101,19 @@ namespace CoreSystems.Control
 
             var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
             var value = numValue + 1 <= 3 ? numValue + 1 : 0;
+
+            Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", value, comp.Session.PlayerId);
+        }
+
+
+        internal static void TerminActionCycleMouseControl(IMyTerminalBlock blk)
+        {
+            var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+                return;
+
+            var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
+            var value = numValue == 1 ? 0 : 1;
 
             Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", value, comp.Session.PlayerId);
         }
@@ -538,6 +554,16 @@ namespace CoreSystems.Control
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
             sb.Append(comp.Data.Repo.Values.Set.Overrides.ShootMode);
+        }
+
+        internal static void MouseToggleWriter(IMyTerminalBlock blk, StringBuilder sb)
+        {
+            var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var message = (comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.Inactive || comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.MouseControl) ? comp.Data.Repo.Values.Set.Overrides.ShootMode.ToString() : "Other"; 
+
+            sb.Append(message);
         }
 
         internal static void DecoyWriter(IMyTerminalBlock blk, StringBuilder sb)
