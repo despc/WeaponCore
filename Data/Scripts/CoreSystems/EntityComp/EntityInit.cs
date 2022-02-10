@@ -40,6 +40,8 @@ namespace CoreSystems.Support
                 Ai.SubGridInitTick = Session.Tick;
                 using (Ai.DbLock.AcquireExclusiveUsing()) 
                 {
+                    var bigOwners = Ai.GridEntity.BigOwners;
+                    Ai.AiOwner = bigOwners.Count > 0 ? bigOwners[0] : 0;
                     Ai.SubGridChanges(false, true);
                 }
             }

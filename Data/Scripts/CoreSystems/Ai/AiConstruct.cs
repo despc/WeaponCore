@@ -207,6 +207,7 @@ namespace CoreSystems.Support
 
                     RootAi.Construct.MaxLockRange = maxLockRange;
                     BuildAiListAndCounters(ai);
+                    UpdatePlayerStates(RootAi);
 
                     return;
                 }
@@ -321,6 +322,27 @@ namespace CoreSystems.Support
                 }
             }
 
+            internal static bool MatchPlayerId(Ai ai, long playerId)
+            {
+                foreach (var sub in ai.SubGridCache)
+                {
+                    GridMap gridMap;
+                    if (ai.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    {
+                        foreach (var c in gridMap.PlayerControllers)
+                        {
+                            if (c.Key == playerId)
+                            {
+                                Log.Line($"wasRoot: {sub == ai.Construct.RootAi.TopEntity} - {sub.EntityId}");
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                return false;
+            }
+
             internal static void BuildAiListAndCounters(Ai cAi)
             {
                 cAi.Construct.RefreshedAis.Clear();
@@ -349,6 +371,20 @@ namespace CoreSystems.Support
                 }
             }
 
+            internal int PlayerCount()
+            {
+                int playerCount = 0;
+                foreach (var sub in RootAi.SubGridCache)
+                {
+                    GridMap gridMap;
+                    if (RootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    {
+                        playerCount += gridMap.PlayerControllers.Count;
+                    }
+                }
+
+                return playerCount;
+            }
 
             internal void AddWeaponCount(MyStringHash weaponHash, int incrementBy = 1)
             {

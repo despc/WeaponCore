@@ -955,12 +955,12 @@ namespace CoreSystems
         {
             var grid = (MyCubeGrid) myCubeGrid;
             LastChangeTick = Session.Tick;
-
             GridMap gridMap;
             if (Session.GridToInfoMap.TryGetValue(grid, out gridMap))
             {
                 gridMap.GroupMap = this;
                 Construct.TryAdd(grid, null);
+                Session.GridGroupUpdates.Add(this);
             }
             else 
                 Log.Line($"OnGridAdded could not find map");
@@ -977,6 +977,7 @@ namespace CoreSystems
             {
                 gridMap.GroupMap = this;
                 Construct.Remove(grid);
+                Session.GridGroupUpdates.Add(this);
             }
             else
                 Log.Line($"OnGridAdded could not find map");
@@ -993,6 +994,17 @@ namespace CoreSystems
                 {
                     Ais.Add(ai);
                 }
+            }
+
+            for (int i = 0; i < Ais.Count; i++)
+            {
+                var ai = Ais[i];
+                ai.Construct.Refresh(ai, Ai.Constructs.RefreshCaller.SubGridChange);
+            }
+
+            for (int i = 0; i < Ais.Count; i++)
+            {
+                Ai.Constructs.UpdatePlayerStates(Ais[i]);
             }
         }
 

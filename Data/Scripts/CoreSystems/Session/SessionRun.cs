@@ -161,6 +161,9 @@ namespace CoreSystems
                     if (AimingAi.Count > 0) 
                         AimAi();
 
+                    if (GridGroupUpdates.Count > 0)
+                        GroupUpdates();
+
                     AiLoop();
                     DsUtil.Complete("ai", true);
 

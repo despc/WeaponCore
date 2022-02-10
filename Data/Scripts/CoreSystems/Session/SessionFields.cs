@@ -185,6 +185,7 @@ namespace CoreSystems
         internal readonly HashSet<Type> ControlTypeActivated = new HashSet<Type>();
         internal readonly HashSet<IMyPlayer> PlayerControllerMonitor = new HashSet<IMyPlayer>();
         internal readonly HashSet<MyDefinitionId> BadModBlock = new HashSet<MyDefinitionId>();
+        internal readonly HashSet<GridGroupMap> GridGroupUpdates = new HashSet<GridGroupMap>();
         internal readonly List<Weapon> InvPullClean = new List<Weapon>();
         internal readonly List<Weapon> InvRemoveClean = new List<Weapon>();
         internal readonly List<CoreComponent> CompsDelayedInit = new List<CoreComponent>();

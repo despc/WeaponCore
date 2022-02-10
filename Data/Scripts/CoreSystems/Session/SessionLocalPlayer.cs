@@ -148,12 +148,14 @@ namespace CoreSystems
                         if (ai.CompBase.TryGetValue(ControlledEntity, out comp) && comp.Type == CoreComponent.CompType.Weapon)
                         {
                             GunnerBlackList = true;
+                            /*
                             if (IsServer)
                             {
                                 var wComp = ((Weapon.WeaponComponent)comp);
                                 wComp.Data.Repo.Values.State.PlayerId = PlayerId;
                                 wComp.Data.Repo.Values.State.Control = ControlMode.Camera;
                             }
+                            */
                             ActiveControlBlock = (MyCubeBlock)ControlledEntity;
                             var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
                             MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringLeft, PlayerId);
@@ -161,9 +163,10 @@ namespace CoreSystems
                             MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringRight, PlayerId);
                             var controlStringMenu = MyAPIGateway.Input.GetControl(UiInput.MouseButtonMenu).GetGameControlEnum().String;
                             MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringMenu, PlayerId);
-
+                            /*
                             if (HandlesInput && MpActive)
                                 SendPlayerControlRequest(comp, PlayerId, ControlMode.Camera);
+                            */
                         }
                     }
                 }
@@ -185,8 +188,10 @@ namespace CoreSystems
                             CoreComponent comp;
                             if (ai.CompBase.TryGetValue(oldCube, out comp) && comp.Type == CoreComponent.CompType.Weapon)
                             {
+                                /*
                                 if (IsServer)
                                 {
+                                    Log.Line($"disable: {oldCube.DebugName}");
                                     var wComp = ((Weapon.WeaponComponent)comp);
                                     wComp.Data.Repo.Values.State.PlayerId = -1;
                                     wComp.Data.Repo.Values.State.Control = ControlMode.None;
@@ -195,7 +200,7 @@ namespace CoreSystems
 
                                 if (HandlesInput && MpActive)
                                     SendPlayerControlRequest(comp, -1, ControlMode.None);
-
+                                */
                                 ActiveControlBlock = null;
                             }
                         }

@@ -55,12 +55,11 @@ namespace CoreSystems
 
                 var construct = ai.Construct;
                 var focus = construct.Focus;
+
+                //if (ai.AiType == Ai.AiTypes.Grid && construct.SubGridUpdateTick == 0 || construct.SubGridUpdateTick <= ai.GridMap.GroupMap.LastChangeTick)
+                //    ai.SubGridChanges();
+
                 var rootAi = construct.RootAi;
-                var rootConstruct = rootAi.Construct;
-
-                if (ai.AiType == Ai.AiTypes.Grid && construct.SubGridUpdateTick == 0 || construct.SubGridUpdateTick <= ai.GridMap.GroupMap.LastChangeTick)
-                    ai.SubGridChanges();
-
                 if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.LastControllerTick == Tick)
                     Ai.Constructs.UpdatePlayerStates(rootAi);
 
@@ -70,6 +69,7 @@ namespace CoreSystems
                     ai.BlockChangeArea.Max *= ai.GridEntity.GridSize;
                 }
 
+                var rootConstruct = rootAi.Construct;
 
                 if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick && rootConstruct.TotalEffect > rootConstruct.PreviousTotalEffect)
                     rootConstruct.UpdateEffect(Tick);
@@ -586,6 +586,14 @@ namespace CoreSystems
                 w.Shoot();
             }
             ShootingWeapons.Clear();
+        }
+
+        private void GroupUpdates()
+        {
+            foreach (var ggu in GridGroupUpdates)
+                ggu.UpdateAis();
+
+            GridGroupUpdates.Clear();
         }
     }
 }

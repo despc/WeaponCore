@@ -550,9 +550,19 @@ namespace CoreSystems
                     if (cube != null)
                     {
                         Ai ai;
-                        if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            Constructs.UpdatePlayerStates(ai);
+                            Constructs.UpdatePlayerStates(ai.Construct.RootAi);
+
+                            CoreComponent comp;
+                            if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
+                            {
+                                var wComp = (Weapon.WeaponComponent) comp;
+                                wComp.Data.Repo.Values.State.PlayerId = -1;
+                                wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
+                                if (MpActive)
+                                    SendComp(wComp);
+                            }
                         }
 
                         if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
@@ -572,9 +582,20 @@ namespace CoreSystems
                     if (cube != null)
                     {
                         Ai ai;
-                        if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                         {
-                            Constructs.UpdatePlayerStates(ai);
+                            Constructs.UpdatePlayerStates(ai.Construct.RootAi);
+
+                            CoreComponent comp;
+                            if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
+                            {
+                                var wComp = (Weapon.WeaponComponent)comp;
+                                wComp.Data.Repo.Values.State.PlayerId = PlayerId;
+                                wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
+
+                                if (MpActive)
+                                    SendComp(wComp);
+                            }
                         }
 
                         var playerId = enterController.ControllerInfo.ControllingIdentityId;
