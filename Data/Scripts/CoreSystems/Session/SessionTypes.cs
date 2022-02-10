@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -319,7 +320,7 @@ namespace CoreSystems
                 {
                     {"Version", () => GetAi()?.Version.ToString() ?? string.Empty },
                     {"RootAiId", () => GetAi()?.Construct.RootAi?.TopEntity.EntityId.ToString() ?? string.Empty },
-                    {"SubGrids", () => GetAi()?.SubGrids.Count.ToString() ?? string.Empty },
+                    {"SubGrids", () => GetAi()?.SubGridCache.Count.ToString() ?? string.Empty },
                     {"AiSleep", () => GetAi()?.AiSleep.ToString() ?? string.Empty },
                     {"AiIsPowered", () => GetAi()?.HasPower.ToString() ?? string.Empty },
                     {"AiInit", () => GetAi()?.AiInit.ToString() ?? string.Empty },
@@ -938,6 +939,71 @@ namespace CoreSystems
         public long PlayerId;
         public MyTargetFocusComponent TargetFocus;
         public MyTargetLockingComponent TargetLock;
+    }
+
+    public class GridGroupMap
+    {
+        public readonly ConcurrentDictionary<MyCubeGrid, Ai> Construct = new ConcurrentDictionary<MyCubeGrid, Ai>();
+        public readonly List<Ai> Ais = new List<Ai>();
+        public volatile bool Dirty;
+        public Session Session;
+        public GridLinkTypeEnum Type;
+        public IMyGridGroupData GroupData;
+        public uint LastChangeTick;
+
+        public void OnGridAdded(IMyGridGroupData newGroup, IMyCubeGrid myCubeGrid, IMyGridGroupData oldGroup)
+        {
+            var grid = (MyCubeGrid) myCubeGrid;
+            LastChangeTick = Session.Tick;
+
+            GridMap gridMap;
+            if (Session.GridToInfoMap.TryGetValue(grid, out gridMap))
+            {
+                gridMap.GroupMap = this;
+                Construct.TryAdd(grid, null);
+            }
+            else 
+                Log.Line($"OnGridAdded could not find map");
+
+        }
+
+        public void OnGridRemoved(IMyGridGroupData oldGroup, IMyCubeGrid myCubeGrid, IMyGridGroupData newGroup)
+        {
+            var grid = (MyCubeGrid)myCubeGrid;
+            LastChangeTick = Session.Tick;
+
+            GridMap gridMap;
+            if (Session.GridToInfoMap.TryGetValue((MyEntity)myCubeGrid, out gridMap))
+            {
+                gridMap.GroupMap = this;
+                Construct.Remove(grid);
+            }
+            else
+                Log.Line($"OnGridAdded could not find map");
+
+        }
+
+        public void UpdateAis()
+        {
+            Ais.Clear();
+            foreach (var g in Construct)
+            {
+                Ai ai;
+                if (Session.EntityAIs.TryGetValue(g.Key, out ai))
+                {
+                    Ais.Add(ai);
+                }
+            }
+        }
+
+        public void Clean()
+        {
+            LastChangeTick = 0;
+            Session = null;
+            Dirty = true;
+            Construct.Clear();
+            Ais.Clear();
+        }
     }
 
     public class WaterData

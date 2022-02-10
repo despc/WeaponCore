@@ -40,15 +40,6 @@ namespace CoreSystems.Support
                 Ai.SubGridInitTick = Session.Tick;
                 using (Ai.DbLock.AcquireExclusiveUsing()) 
                 {
-                    Ai.PrevSubGrids.Clear();
-                    Ai.SubGrids.Clear();
-
-                    MyAPIGateway.GridGroups.GetGroup(Cube.CubeGrid, GridLinkTypeEnum.Mechanical, Ai.PrevSubGrids);
-                    
-                    foreach (var grid in Ai.PrevSubGrids)
-                        Ai.SubGrids.Add((MyCubeGrid)grid);
-
-                    Ai.SubGridDetect();
                     Ai.SubGridChanges(false, true);
                 }
             }

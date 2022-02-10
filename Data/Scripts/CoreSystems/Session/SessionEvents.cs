@@ -32,7 +32,15 @@ namespace CoreSystems
                     PlanetMap.TryAdd(planet.EntityId, planet);
 
                 var grid = entity as MyCubeGrid;
-                if (grid != null) grid.AddedToScene += AddGridToMap;
+                if (grid != null)
+                {
+                    var gridMap = GridMapPool.Get();
+                    gridMap.Trash = true;
+                    GridToInfoMap.TryAdd(grid, gridMap);
+                    grid.AddedToScene += AddGridToMap;
+                    grid.OnClose += RemoveGridFromMap;
+                }
+
                 if (!PbApiInited && entity is IMyProgrammableBlock) PbActivate = true;
                 var placer = entity as IMyBlockPlacerBase;
                 if (placer != null && Placer == null) Placer = placer;
@@ -118,6 +126,44 @@ namespace CoreSystems
             catch (Exception ex) { Log.Line($"Exception in OnEntityCreate: {ex}", null, true); }
         }
 
+
+        private void GridGroupsOnOnGridGroupCreated(IMyGridGroupData groupData)
+        {
+            if (groupData.LinkType != GridLinkTypeEnum.Mechanical)
+                return;
+
+            var map = GridGroupMapPool.Get();
+            map.Session = this;
+            map.Dirty = false;
+            map.Type = groupData.LinkType;
+            map.GroupData = groupData;
+            //groupData.OnReleased += map.OnReleased;
+            groupData.OnGridAdded += map.OnGridAdded;
+            groupData.OnGridRemoved += map.OnGridRemoved;
+            GridGroupMap[groupData] = map;
+        }
+
+        private void GridGroupsOnOnGridGroupDestroyed(IMyGridGroupData groupData)
+        {
+            if (groupData.LinkType != GridLinkTypeEnum.Mechanical)
+                return;
+
+            GridGroupMap map;
+            if (GridGroupMap.TryGetValue(groupData, out map))
+            {
+                map.GroupData = null;
+                map.Dirty = true;
+
+                //groupData.OnReleased -= map.OnReleased;
+                groupData.OnGridAdded -= map.OnGridAdded;
+                groupData.OnGridRemoved -= map.OnGridRemoved;
+                GridGroupMap.Remove(groupData);
+
+                GridGroupMapPool.Return(map);
+            }
+            else 
+                Log.Line($"GridGroupsOnOnGridGroupDestroyed could not find map");
+        }
 
         private void DecoyAddedToScene(MyEntity myEntity)
         {
@@ -222,36 +268,34 @@ namespace CoreSystems
 
                 if (grid != null)
                 {
-                    var allFat = ConcurrentListPool.Get();
-
-                    var gridFat = grid.GetFatBlocks();
-                    for (int i = 0; i < gridFat.Count; i++)
+                    GridMap gridMap;
+                    if (GridToInfoMap.TryGetValue(grid, out gridMap))
                     {
-                        var term = gridFat[i] as IMyTerminalBlock;
-                        if (term != null)
-                            allFat.Add(gridFat[i]);
+                        var allFat = ConcurrentListPool.Get();
+
+                        var gridFat = grid.GetFatBlocks();
+                        for (int i = 0; i < gridFat.Count; i++)
+                        {
+                            var term = gridFat[i] as IMyTerminalBlock;
+                            if (term != null)
+                                allFat.Add(gridFat[i]);
+                        }
+                        allFat.ApplyAdditions();
+                        if (grid.Components.TryGet(out gridMap.Targeting))
+                            gridMap.Targeting.AllowScanning = false;
+
+                        gridMap.MyCubeBocks = allFat;
+
+                        grid.OnFatBlockAdded += ToGridMap;
+                        grid.OnFatBlockRemoved += FromGridMap;
+                        using (_dityGridLock.Acquire())
+                        {
+                            DirtyGridInfos.Add(grid);
+                            DirtyGrid = true;
+                        }
                     }
-                    allFat.ApplyAdditions();
-
-                    var gridMap = GridMapPool.Get();
-
-                    if (grid.Components.TryGet(out gridMap.Targeting))
-                        gridMap.Targeting.AllowScanning = false;
-
-                    gridMap.Trash = true;
-
-                    gridMap.MyCubeBocks = allFat;
-                    GridToInfoMap.TryAdd(grid, gridMap);
-                    grid.OnFatBlockAdded += ToGridMap;
-                    grid.OnFatBlockRemoved += FromGridMap;
-                    grid.OnClose += RemoveGridFromMap;
-                    using (_dityGridLock.Acquire())
-                    {
-                        DirtyGridInfos.Add(grid);
-                        DirtyGrid = true;
-                    }
+                    else Log.Line($"AddGridToMap could not find gridmap");
                 }
-                else Log.Line($"GridAddedToScene entity was not a grid");
 
             }
             catch (Exception ex) { Log.Line($"Exception in GridAddedToScene: {ex}", null, true); }
@@ -349,6 +393,13 @@ namespace CoreSystems
                 }
             }
         }
+        public void OnCloseAll()
+        {
+            //Log.Line($"test1");
+            MyAPIGateway.GridGroups.OnGridGroupDestroyed -= GridGroupsOnOnGridGroupDestroyed;
+            MyAPIGateway.GridGroups.OnGridGroupCreated -= GridGroupsOnOnGridGroupCreated;
+        }
+
 
         private void MenuOpened(object obj)
         {
@@ -489,43 +540,37 @@ namespace CoreSystems
         {
             try
             {
-                var exit = exitController as MyEntity;
-                var enter = enterController as MyEntity;
-                Dictionary<long, PlayerController> players;
+                GridMap gridMap;
 
+                var exit = exitController as MyEntity;
                 if (exit != null && enterController?.ControllerInfo != null)
                 {
                     var cube = exit as MyCubeBlock;
 
                     if (cube != null)
                     {
-                        PlayerControllerTick = Tick + 1;
-                        PlayerGridControlQueue.Add(cube.CubeGrid);
                         Ai ai;
                         if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
                             Constructs.UpdatePlayerStates(ai);
                         }
-                        if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
+
+                        if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
                         {
-                            players.Remove(enterController.ControllerInfo.ControllingIdentityId);
-                            if (players.Count == 0)
-                            {
-                                PlayerGridPool.Return(players);
-                            }
+                            gridMap.LastControllerTick = Tick + 1;
+                            gridMap.PlayerControllers.Remove(enterController.ControllerInfo.ControllingIdentityId);
                         }
+
                     }
-
-
                 }
+
+                var enter = enterController as MyEntity;
                 if (enter != null && enterController.ControllerInfo != null)
                 {
                     var cube = enter as MyCubeBlock;
 
                     if (cube != null)
                     {
-                        PlayerControllerTick = Tick + 1;
-                        PlayerGridControlQueue.Add(cube.CubeGrid);
                         Ai ai;
                         if (EntityToMasterAi.TryGetValue(cube.CubeGrid, out ai))
                         {
@@ -533,15 +578,11 @@ namespace CoreSystems
                         }
 
                         var playerId = enterController.ControllerInfo.ControllingIdentityId;
-                        if (PlayerGrids.TryGetValue(cube.CubeGrid, out players))
+
+                        if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
                         {
-                            players.Add(playerId, new PlayerController {  ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick});
-                        }
-                        else
-                        {
-                            players = PlayerGridPool.Get();
-                            players.Add(playerId, new PlayerController { ControllBlock = cube, Id = playerId,  EntityId = cube.EntityId, ChangeTick = Tick });
-                            PlayerGrids[cube.CubeGrid] = players;
+                            gridMap.LastControllerTick = Tick + 1;
+                            gridMap.PlayerControllers[playerId] = new PlayerController { ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick };
                         }
                     }
                 }

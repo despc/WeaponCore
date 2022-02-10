@@ -58,10 +58,11 @@ namespace CoreSystems
                 var rootAi = construct.RootAi;
                 var rootConstruct = rootAi.Construct;
 
-                if (ai.AiType == Ai.AiTypes.Grid && PlayerControllerTick + 1 == Tick && PlayerGridControlQueue.Contains(ai.GridEntity))
-                {
+                if (ai.AiType == Ai.AiTypes.Grid && construct.SubGridUpdateTick == 0 || construct.SubGridUpdateTick <= ai.GridMap.GroupMap.LastChangeTick)
+                    ai.SubGridChanges();
+
+                if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.LastControllerTick == Tick)
                     Ai.Constructs.UpdatePlayerStates(rootAi);
-                }
 
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
@@ -338,7 +339,7 @@ namespace CoreSystems
 
                         var addWeaponToHud = HandlesInput && (w.HeatPerc >= 0.01 || (w.ShowReload && (w.Loading || w.Reload.WaitForClient)) || (w.System.LockOnFocus && !w.Comp.ModOverride && construct.Data.Repo.FocusData.Locked != FocusData.LockModes.Locked) || (aConst.CanReportTargetStatus && wValues .Set.ReportTarget && !w.Target.HasTarget && wValues.Set.Overrides.Grids && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.TargetInRange(w)));
 
-                        if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGrids.Contains(ActiveControlBlock.CubeGrid)) {
+                        if (addWeaponToHud && !Session.Config.MinimalHud && ActiveControlBlock != null && ai.SubGridCache.Contains(ActiveControlBlock.CubeGrid)) {
                             HudUi.TexturesToAdd++;
                             HudUi.WeaponsToDisplay.Add(w);
                         }
@@ -495,9 +496,6 @@ namespace CoreSystems
 
             if (DbTask.IsComplete && DbsToUpdate.Count > 0 && !DbUpdating)
                 UpdateDbsInQueue();
-
-            if (PlayerControllerTick + 1 == Tick)
-                PlayerGridControlQueue.Clear();
         }
 
         private void AimAi()

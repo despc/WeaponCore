@@ -97,6 +97,8 @@ namespace CoreSystems
                 StartComps();
 
             EarlyInitControls(this);
+
+
         }
 
         internal void GenerateButtonMap()
@@ -140,6 +142,9 @@ namespace CoreSystems
             IsHost = IsServer && !DedicatedServer && MpActive;
             MpServer = IsHost || DedicatedServer;
             LocalVersion = ModContext.ModId == "CoreSystems";
+
+            MyAPIGateway.GridGroups.OnGridGroupCreated += GridGroupsOnOnGridGroupCreated;
+            MyAPIGateway.GridGroups.OnGridGroupDestroyed += GridGroupsOnOnGridGroupDestroyed;
 
             CompileWeaponStructures();
             CompileUpgradeStructures();

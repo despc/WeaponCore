@@ -1175,7 +1175,7 @@ namespace CoreSystems
 
             myGrid.Hierarchy.QuerySphere(ref querySphere, _tmpNearByBlocks);
 
-            foreach (var grid in ai.SubGrids) {
+            foreach (var grid in ai.SubGridCache) {
                 if (grid == myGrid || !EntityAIs.ContainsKey(grid))
                     continue;
                 grid.Hierarchy.QuerySphere(ref querySphere, _tmpNearByBlocks);

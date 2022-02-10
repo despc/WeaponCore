@@ -810,7 +810,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (targetAi.Construct.Data.Repo.FocusData.HasFocus)
             {
                 var fd = targetAi.Construct.Data.Repo.FocusData;
-                foreach (var sub in ai.SubGrids)
+                foreach (var sub in ai.SubGridCache)
                 {
                     if (sub.EntityId == fd.Target)
                         return TargetStatus.Awareness.FOCUSFIRE;

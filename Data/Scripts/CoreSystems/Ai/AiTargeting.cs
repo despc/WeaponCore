@@ -1073,7 +1073,7 @@ namespace CoreSystems.Support
             {
                 var dir = (targetPos - p.Position);
                 var ray = new RayD(ref p.Position, ref dir);
-                foreach (var sub in ai.SubGrids)
+                foreach (var sub in ai.SubGridCache)
                 {
                     var subDist = sub.PositionComp.WorldVolume.Intersects(ray);
                     if (subDist.HasValue)

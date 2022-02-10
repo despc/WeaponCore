@@ -20,22 +20,30 @@ namespace CoreSystems
 {
     public class GridMap
     {
+        public readonly Dictionary<long, Ai.PlayerController> PlayerControllers = new Dictionary<long, Ai.PlayerController>();
         public ConcurrentCachingList<MyCubeBlock> MyCubeBocks;
         public MyGridTargeting Targeting;
+        public GridGroupMap GroupMap;
+        public Ai Ai;
         public volatile bool Trash;
+        public uint PowerCheckTick;
+        public uint LastControllerTick;
         public uint LastSortTick;
         public int MostBlocks;
-        public uint PowerCheckTick;
         public bool SuspectedDrone;
         public bool Powered;
 
         internal void Clean()
         {
+            PlayerControllers.Clear();
             Targeting = null;
+            GroupMap = null;
+            Ai = null;
             MyCubeBocks.ClearImmediate();
             LastSortTick = 0;
             MostBlocks = 0;
             PowerCheckTick = 0;
+            LastControllerTick = 0;
             SuspectedDrone = false;
             Powered = false;
         }
@@ -94,12 +102,8 @@ namespace CoreSystems
                             continue;
                         }
 
-
                         if (ai.MyPlanetTmp != null)
                             ai.MyPlanetInfo();
-
-                        foreach (var sub in ai.PrevSubGrids) ai.SubGrids.Add((MyCubeGrid)sub);
-                        if (ai.SubGridsChanged) ai.SubGridChanges(false, true);
 
                         ai.DetectionInfo.Clean(ai);
                         ai.CleanSortedTargets();
@@ -192,7 +196,7 @@ namespace CoreSystems
                         ai.DbReady = ai.SortedTargets.Count > 0 || ai.TargetAis.Count > 0 || Tick - ai.LiveProjectileTick < 3600 || ai.LiveProjectile.Count > 0 || ai.Construct.RootAi.Construct.ControllingPlayers.Count > 0 || ai.FirstRun;
 
                         MyCubeBlock activeCube;
-                        ai.AiSleep = ai.Construct.RootAi.Construct.ControllingPlayers.Count <= 0 && (!ai.DetectionInfo.PriorityInRange && !ai.DetectionInfo.OtherInRange || !ai.DetectOtherSignals && ai.DetectionInfo.OtherInRange) && (ai.Data.Repo.ActiveTerminal <= 0 || MyEntities.TryGetEntityById(ai.Data.Repo.ActiveTerminal, out activeCube) && activeCube != null && !ai.SubGrids.Contains(activeCube.CubeGrid));
+                        ai.AiSleep = ai.Construct.RootAi.Construct.ControllingPlayers.Count <= 0 && (!ai.DetectionInfo.PriorityInRange && !ai.DetectionInfo.OtherInRange || !ai.DetectOtherSignals && ai.DetectionInfo.OtherInRange) && (ai.Data.Repo.ActiveTerminal <= 0 || MyEntities.TryGetEntityById(ai.Data.Repo.ActiveTerminal, out activeCube) && activeCube != null && !ai.SubGridCache.Contains(activeCube.CubeGrid));
 
                         ai.DbUpdated = true;
                         ai.FirstRun = false;

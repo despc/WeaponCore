@@ -27,10 +27,10 @@ namespace CoreSystems.Support
                     GridEntity.OnFatBlockAdded += FatBlockAdded;
                     GridEntity.OnFatBlockRemoved += FatBlockRemoved;
 
-                    if (SubGridsRegistered.Contains(GridEntity))
+                    if (SubGridsRegistered.ContainsKey(GridEntity))
                         Log.Line("Main Grid Already Registered");
 
-                    SubGridsRegistered.Add(GridEntity);
+                    SubGridsRegistered[GridEntity] = byte.MaxValue;
 
                 }
 
@@ -52,7 +52,7 @@ namespace CoreSystems.Support
                         if (BlockMonitoring)
                             DelayedEventRegistration();
 
-                        if (!SubGridsRegistered.Contains(GridEntity))
+                        if (!SubGridsRegistered.ContainsKey(GridEntity))
                             Log.Line("Main Grid Already UnRegistered");
                         SubGridsRegistered.Remove(GridEntity);
                     }

@@ -47,10 +47,6 @@ namespace CoreSystems.Support
             MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref ScanVolume, _possibleTargets);
             NearByEntitiesTmp = _possibleTargets.Count;
 
-            foreach (var grid in PrevSubGrids)
-                RemSubGrids.Add((MyCubeGrid)grid);
-
-            PrevSubGrids.Clear();
             for (int i = 0; i < NearByEntitiesTmp; i++)
             {
 
@@ -65,10 +61,8 @@ namespace CoreSystems.Support
                     if (grid != null)
                     {
                         if (AiType == AiTypes.Grid && GridEntity.IsSameConstructAs(grid))
-                        {
-                            PrevSubGrids.Add(grid);
                             continue;
-                        }
+
                         if (!Session.GridToInfoMap.TryGetValue(grid, out gridMap) || gridMap.Trash)
                             continue;
                     }
@@ -135,7 +129,6 @@ namespace CoreSystems.Support
                 }
             }
             FinalizeTargetDb();
-            SubGridDetect();
         }
 
         private void FinalizeTargetDb()
@@ -163,7 +156,7 @@ namespace CoreSystems.Support
                     StaticsInRangeTmp.Add(ent);
 
                 GridMap map;
-                if (grid != null && (PrevSubGrids.Contains(grid) || ValidGrids.Contains(ent) || grid.PositionComp.LocalVolume.Radius < 10 || Session.GridToInfoMap.TryGetValue(grid, out map) && map.Trash || grid.BigOwners.Count == 0) ) continue;
+                if (grid != null && (GridMap.GroupMap.Construct.ContainsKey(grid) || ValidGrids.Contains(ent) || grid.PositionComp.LocalVolume.Radius < 10 || Session.GridToInfoMap.TryGetValue(grid, out map) && map.Trash || grid.BigOwners.Count == 0) ) continue;
 
                 ObstructionsTmp.Add(ent);
             }

@@ -32,7 +32,7 @@ namespace CoreSystems.Support
                 var ray = new RayD(ref worldStart, ref dir);
                 var gridMatrix = ai.TopEntity.PositionComp.WorldMatrixRef;
 
-                foreach (var sub in ai.SubGrids)
+                foreach (var sub in ai.SubGridCache)
                 {
                     if (sub == grid) continue;
                     var subDist = sub.PositionComp.WorldVolume.Intersects(ray);

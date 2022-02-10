@@ -436,6 +436,7 @@ namespace CoreSystems.Support
             LastTerminal = null;
             PowerBlock = null;
             TopEntity = null;
+            GridMap = null;
             Closed = true;
             CanShoot = true;
             Version++;

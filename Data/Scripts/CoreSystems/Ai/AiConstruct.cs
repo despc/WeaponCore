@@ -4,7 +4,6 @@ using CoreSystems.Platform;
 using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
@@ -13,42 +12,26 @@ namespace CoreSystems.Support
 {
     public partial class Ai
     {
-        public void SubGridDetect()
-        {
-            if (PrevSubGrids.Count == 0) return;
-
-            AddSubGrids.Clear();
-            foreach (var sub in PrevSubGrids)
-            {
-                var grid = (MyCubeGrid)sub;
-                AddSubGrids.Add(grid);
-                TmpSubGrids.Add(grid);
-            }
-
-            TmpSubGrids.IntersectWith(RemSubGrids);
-            RemSubGrids.ExceptWith(AddSubGrids);
-            AddSubGrids.ExceptWith(TmpSubGrids);
-            TmpSubGrids.Clear();
-
-            SubGridsChanged = AddSubGrids.Count != 0 || RemSubGrids.Count != 0;
-        }
-
         public void SubGridChanges(bool clean = false, bool dupCheck = false)
         {
-            foreach (var grid in AddSubGrids) {
-                
-                if (grid == TopEntity) continue;
+            Construct.SubGridUpdateTick = Session.Tick;
+            SubGridCache.Clear();
+            foreach (var grid in GridMap.GroupMap.Construct.Keys) {
+
+                SubGridCache.Add(grid);
+                if (grid == TopEntity || SubGridsRegistered.ContainsKey(grid)) continue;
                 RegisterSubGrid(grid, dupCheck);
 
             }
-            AddSubGrids.Clear();
 
-            foreach (var grid in RemSubGrids) {
-                
-                if (grid == TopEntity) continue;
-                UnRegisterSubGrid(grid);
+            foreach (var sub in SubGridsRegistered.Keys) {
+
+                if (sub == TopEntity)
+                    continue;
+
+                if (!GridMap.GroupMap.Construct.ContainsKey(sub))
+                    UnRegisterSubGrid(sub);
             }
-            RemSubGrids.Clear();
 
             if (!clean)
                 UpdateRoot();
@@ -58,24 +41,27 @@ namespace CoreSystems.Support
         {
             Construct.Refresh(this, Constructs.RefreshCaller.SubGridChange);
             
-            foreach (var grid in SubGrids) {
+            foreach (var grid in SubGridCache) {
                 
                 if (Construct.RootAi != null)
                     Session.EntityToMasterAi[grid] = Construct.RootAi;
                 else Log.Line("Construct.RootAi is null");
             }
+
+            Constructs.UpdatePlayerStates(Construct.RootAi);
+
         }
 
         public void RegisterSubGrid(MyCubeGrid grid, bool dupCheck = false)
         {
-            if (dupCheck && SubGridsRegistered.Contains(grid))
+            if (dupCheck && SubGridsRegistered.ContainsKey(grid))
                 Log.Line($"sub Grid Already Registered: [Main]:{grid == TopEntity}");
 
             grid.Flags |= (EntityFlags)(1 << 31);
             grid.OnFatBlockAdded += FatBlockAdded;
             grid.OnFatBlockRemoved += FatBlockRemoved;
 
-            SubGridsRegistered.Add(grid);
+            SubGridsRegistered[grid] = byte.MaxValue;
 
             foreach (var cube in grid.GetFatBlocks()) {
 
@@ -89,11 +75,9 @@ namespace CoreSystems.Support
 
         public void UnRegisterSubGrid(MyCubeGrid grid, bool clean = false)
         {
-            if (!SubGridsRegistered.Contains(grid)) {
+            if (!SubGridsRegistered.ContainsKey(grid)) {
                 Log.Line($"sub Grid Already UnRegistered: [Main]:{grid == TopEntity}");
             }
-
-            if (!clean) SubGrids.Remove(grid);
 
             SubGridsRegistered.Remove(grid);
             grid.OnFatBlockAdded -= FatBlockAdded;
@@ -115,15 +99,12 @@ namespace CoreSystems.Support
 
         public void CleanSubGrids()
         {
-            foreach (var grid in SubGrids) {
+            foreach (var grid in SubGridCache) {
                 if (grid == TopEntity) continue;
                 UnRegisterSubGrid(grid, true);
             }
 
-            SubGrids.Clear();
-            RemSubGrids.Clear();
-            AddSubGrids.Clear();
-            TmpSubGrids.Clear();
+            SubGridCache.Clear();
             SubGridsChanged = false;
         } 
 
@@ -147,6 +128,7 @@ namespace CoreSystems.Support
             internal int DroneCount;
             internal uint LastDroneTick;
             internal uint LastEffectUpdateTick;
+            internal uint SubGridUpdateTick;
             internal bool DroneAlert;
 
             internal double TotalEffect;
@@ -179,7 +161,7 @@ namespace CoreSystems.Support
                     Ai largestAi = null;
                     int leadingBlocks = 0;
                     var maxLockRange = 0d;
-                    foreach (var grid in ai.SubGrids) {
+                    foreach (var grid in ai.SubGridCache) {
 
                         Ai thisAi;
                         if (ai.Session.EntityAIs.TryGetValue(grid, out thisAi)) {
@@ -225,7 +207,6 @@ namespace CoreSystems.Support
 
                     RootAi.Construct.MaxLockRange = maxLockRange;
                     BuildAiListAndCounters(ai);
-                    UpdatePlayerStates(RootAi);
 
                     return;
                 }
@@ -283,7 +264,7 @@ namespace CoreSystems.Support
             {
                 if (RootAi.AiType == AiTypes.Grid) {
 
-                    foreach (var sub in RootAi.SubGrids) {
+                    foreach (var sub in RootAi.SubGridCache) {
 
                         Ai ai;
                         if (RootAi.Session.EntityAIs.TryGetValue(sub, out ai))
@@ -322,14 +303,16 @@ namespace CoreSystems.Support
             internal static void UpdatePlayerStates(Ai rootAi)
             {
                 var rootConstruct = rootAi.Construct;
-                foreach (var sub in rootAi.SubGrids)
+                foreach (var sub in rootAi.SubGridCache)
                 {
-                    Dictionary<long, PlayerController> playerMap;
-                    if (rootAi.Session.PlayerGrids.TryGetValue(sub, out playerMap))
-                    {
-                        rootConstruct.ControllingPlayers.Clear();
+                    Ai subAi;
+                    if (rootAi.Session.EntityAIs.TryGetValue(sub, out subAi))
+                        subAi.Construct.ControllingPlayers.Clear();
 
-                        foreach (var m in playerMap)
+                    GridMap gridMap;
+                    if (rootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    {
+                        foreach (var m in gridMap.PlayerControllers)
                         {
                             rootConstruct.ControllingPlayers.Add(m.Key, m.Value);
                             UpdatePlayerLockState(rootAi, m.Key);
@@ -343,8 +326,8 @@ namespace CoreSystems.Support
                 cAi.Construct.RefreshedAis.Clear();
                 cAi.Construct.RefreshedAis.Add(cAi);
 
-                if (cAi.SubGrids.Count > 1) {
-                    foreach (var sub in cAi.SubGrids) {
+                if (cAi.SubGridCache.Count > 1) {
+                    foreach (var sub in cAi.SubGridCache) {
                         if (sub == null || sub == cAi.TopEntity)
                             continue;
 
@@ -382,7 +365,7 @@ namespace CoreSystems.Support
 
             internal void UpdateLeafs()
             {
-                foreach (var sub in RootAi.SubGrids)
+                foreach (var sub in RootAi.SubGridCache)
                 {
                     if (RootAi.TopEntity == sub)
                         continue;
@@ -397,7 +380,7 @@ namespace CoreSystems.Support
 
             internal void UpdateLeafFoci()
             {
-                foreach (var sub in RootAi.SubGrids)
+                foreach (var sub in RootAi.SubGridCache)
                 {
                     if (RootAi.TopEntity == sub)
                         continue;

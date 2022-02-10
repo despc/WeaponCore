@@ -94,7 +94,7 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<BetterInventoryItem> BetterInventoryItems = new MyConcurrentPool<BetterInventoryItem>(256);
         internal readonly MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>> PhysicalItemListPool = new MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>>(256, list => list.Clear());
         internal readonly MyConcurrentPool<MyConcurrentList<BetterInventoryItem>> BetterItemsListPool = new MyConcurrentPool<MyConcurrentList<BetterInventoryItem>>(256, list => list.Clear());
-        internal readonly MyConcurrentPool<Dictionary<long, PlayerController>> PlayerGridPool = new MyConcurrentPool<Dictionary<long, PlayerController>>(16);
+        internal readonly MyConcurrentPool<GridGroupMap> GridGroupMapPool = new MyConcurrentPool<GridGroupMap>(64, gridGroupMap => gridGroupMap.Clean());
 
         internal readonly Stack<Ai> AiPool = new Stack<Ai>(128);
         internal readonly Stack<MyEntity3DSoundEmitter> Emitters = new Stack<MyEntity3DSoundEmitter>(256);
@@ -136,8 +136,8 @@ namespace CoreSystems
         internal readonly ConcurrentDictionary<long, MyPlanet> PlanetMap = new ConcurrentDictionary<long, MyPlanet>();
         internal readonly ConcurrentDictionary<MyCubeGrid, GridMap> DirtyPowerGrids = new ConcurrentDictionary<MyCubeGrid, GridMap>();
         internal readonly ConcurrentDictionary<string, MyObjectBuilder_Checkpoint.ModItem> ModInfo = new ConcurrentDictionary<string, MyObjectBuilder_Checkpoint.ModItem>();
+        internal readonly Dictionary<IMyGridGroupData, GridGroupMap> GridGroupMap = new Dictionary<IMyGridGroupData, GridGroupMap>();
         internal readonly Dictionary<string, Dictionary<string, WeaponSystem.AmmoType>> AmmoMaps = new Dictionary<string, Dictionary<string, WeaponSystem.AmmoType>>();
-        internal readonly Dictionary<MyCubeGrid, Dictionary<long, PlayerController>> PlayerGrids = new Dictionary<MyCubeGrid, Dictionary<long, PlayerController>>();
         internal readonly Dictionary<string, string> ModelMaps = new Dictionary<string, string>();
         internal readonly Dictionary<string, Dictionary<long, Weapon.WeaponComponent>> PhantomDatabase = new Dictionary<string, Dictionary<long, Weapon.WeaponComponent>>();
         internal readonly Dictionary<CoreStructure, int> PowerGroups = new Dictionary<CoreStructure, int>();
@@ -203,7 +203,6 @@ namespace CoreSystems
         internal readonly HashSet<MyDefinitionId> CoreSystemsRifleDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<MyDefinitionId> CoreSystemsPhantomDefs = new HashSet<MyDefinitionId>();
         internal readonly HashSet<ArmorDefinition> CoreSystemsArmorDefs = new HashSet<ArmorDefinition>();
-        internal readonly HashSet<MyCubeGrid> PlayerGridControlQueue = new HashSet<MyCubeGrid>();
 
         internal readonly HashSet<MyStringHash> PerformanceWarning = new HashSet<MyStringHash>();
 
@@ -322,7 +321,6 @@ namespace CoreSystems
         internal uint Tick;
         internal uint ClientDestroyBlockTick;
         internal uint ReInitTick;
-        internal uint PlayerControllerTick;
         internal int WeaponIdCounter;
         internal int PlayerEventId;
         internal int TargetRequests;

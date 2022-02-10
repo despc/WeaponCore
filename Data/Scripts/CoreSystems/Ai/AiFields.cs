@@ -50,13 +50,9 @@ namespace CoreSystems.Support
         internal readonly ConcurrentDictionary<MyEntity, uint> NoTargetLos = new ConcurrentDictionary<MyEntity, uint>();
         internal readonly HashSet<MyEntity> ValidGrids = new HashSet<MyEntity>();
         internal readonly HashSet<MyBatteryBlock> Batteries = new HashSet<MyBatteryBlock>();
-        internal readonly HashSet<IMyCubeGrid> PrevSubGrids = new HashSet<IMyCubeGrid>();
-        internal readonly HashSet<MyCubeGrid> SubGrids = new HashSet<MyCubeGrid>();
-        internal readonly HashSet<MyCubeGrid> RemSubGrids = new HashSet<MyCubeGrid>();
-        internal readonly HashSet<MyCubeGrid> AddSubGrids = new HashSet<MyCubeGrid>();
-        internal readonly HashSet<MyCubeGrid> TmpSubGrids = new HashSet<MyCubeGrid>();
+        internal readonly HashSet<MyCubeGrid> SubGridCache = new HashSet<MyCubeGrid>();
         internal readonly HashSet<Projectile> LiveProjectile = new HashSet<Projectile>();
-        internal readonly HashSet<MyCubeGrid> SubGridsRegistered = new HashSet<MyCubeGrid>();
+        internal readonly ConcurrentDictionary<MyCubeGrid, byte> SubGridsRegistered = new ConcurrentDictionary<MyCubeGrid, byte>();
 
         internal readonly List<Weapon.WeaponComponent> TrackingComps = new List<Weapon.WeaponComponent>();
         internal readonly List<Weapon.WeaponComponent> WeaponComps = new List<Weapon.WeaponComponent>(32);
@@ -86,6 +82,7 @@ namespace CoreSystems.Support
         internal readonly Session Session;
         internal MyEntity TopEntity;
         internal MyCubeGrid GridEntity;
+        internal GridMap GridMap;
         internal IMyCubeGrid ImyGridEntity;
         internal MyCubeBlock PowerBlock;
         internal MyCubeGrid.MyCubeGridHitInfo GridHitInfo = new MyCubeGrid.MyCubeGridHitInfo();
@@ -147,7 +144,7 @@ namespace CoreSystems.Support
         internal uint LiveProjectileTick;
         internal uint ProjectileTicker;
         internal uint LastDetectEvent;
-        internal uint SubGridInitTick;
+        internal uint SubGridInitTick = uint.MaxValue;
         internal uint LastBlockChangeTick;
         internal int SleepingComps;
         internal int AwakeComps;
@@ -209,6 +206,9 @@ namespace CoreSystems.Support
                 AiType = GridEntity != null ? AiTypes.Grid : type == CoreComponent.CompTypeSpecific.Rifle ? AiTypes.Player : AiTypes.Phantom;
                 IsGrid = AiType == AiTypes.Grid;
                 DeadSphereRadius = GridEntity?.GridSizeHalf + 0.1 ?? 1.35;
+
+                if (IsGrid)
+                    session.GridToInfoMap.TryGetValue(topEntity, out GridMap);
 
                 topEntity.Flags |= (EntityFlags)(1 << 31);
                 Closed = false;

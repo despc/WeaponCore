@@ -9,6 +9,7 @@ using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders;
 using VRage.ObjectBuilders;
 using VRage.Utils;
@@ -350,6 +351,7 @@ namespace CoreSystems
 
                 SoundDefinitions = Static.GetSoundDefinitions();
                 MyEntities.OnEntityCreate += OnEntityCreate;
+                MyEntities.OnCloseAll += OnCloseAll;
 
                 MyAPIGateway.Gui.GuiControlCreated += MenuOpened;
                 MyAPIGateway.Gui.GuiControlRemoved += MenuClosed;
@@ -359,7 +361,6 @@ namespace CoreSystems
 
                 TriggerEntityModel = ModContext.ModPath + "\\Models\\Environment\\JumpNullField.mwm";
                 TriggerEntityPool = new MyConcurrentPool<MyEntity>(0, TriggerEntityClear, 10000, TriggerEntityActivator);
-
                 ReallyStupidKeenShit();
             }
             catch (Exception ex) { Log.Line($"Exception in LoadData: {ex}", null, true); }
@@ -397,6 +398,8 @@ namespace CoreSystems
                 MyAPIGateway.TerminalControls.CustomControlGetter -= CustomControlHandler;
 
                 MyEntities.OnEntityCreate -= OnEntityCreate;
+                
+
 
                 MyAPIGateway.Gui.GuiControlCreated -= MenuOpened;
                 MyAPIGateway.Gui.GuiControlRemoved -= MenuClosed;
