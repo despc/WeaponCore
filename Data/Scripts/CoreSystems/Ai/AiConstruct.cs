@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using CoreSystems.Platform;
 using Sandbox.Game.Entities;
 using VRage.Game;
@@ -12,15 +13,19 @@ namespace CoreSystems.Support
 {
     public partial class Ai
     {
-        public void SubGridChanges(bool clean = false, bool dupCheck = false)
+        public void SubGridChanges()
         {
-            Construct.SubGridUpdateTick = Session.Tick;
             SubGridCache.Clear();
+            if (GridMap.GroupMap == null)
+            {
+                Log.Line($"GridGroup null");
+                return;
+            }
             foreach (var grid in GridMap.GroupMap.Construct.Keys) {
 
                 SubGridCache.Add(grid);
                 if (grid == TopEntity || SubGridsRegistered.ContainsKey(grid)) continue;
-                RegisterSubGrid(grid, dupCheck);
+                RegisterSubGrid(grid);
 
             }
 
@@ -32,31 +37,10 @@ namespace CoreSystems.Support
                 if (!GridMap.GroupMap.Construct.ContainsKey(sub))
                     UnRegisterSubGrid(sub);
             }
-
-            if (!clean)
-                UpdateRoot();
         }
 
-        public void UpdateRoot()
+        public void RegisterSubGrid(MyCubeGrid grid)
         {
-            Construct.Refresh(this, Constructs.RefreshCaller.SubGridChange);
-            
-            foreach (var grid in SubGridCache) {
-                
-                if (Construct.RootAi != null)
-                    Session.EntityToMasterAi[grid] = Construct.RootAi;
-                else Log.Line("Construct.RootAi is null");
-            }
-
-            Constructs.UpdatePlayerStates(Construct.RootAi);
-
-        }
-
-        public void RegisterSubGrid(MyCubeGrid grid, bool dupCheck = false)
-        {
-            if (dupCheck && SubGridsRegistered.ContainsKey(grid))
-                Log.Line($"sub Grid Already Registered: [Main]:{grid == TopEntity}");
-
             grid.Flags |= (EntityFlags)(1 << 31);
             grid.OnFatBlockAdded += FatBlockAdded;
             grid.OnFatBlockRemoved += FatBlockRemoved;
@@ -73,12 +57,8 @@ namespace CoreSystems.Support
             }
         }
 
-        public void UnRegisterSubGrid(MyCubeGrid grid, bool clean = false)
+        public void UnRegisterSubGrid(MyCubeGrid grid)
         {
-            if (!SubGridsRegistered.ContainsKey(grid)) {
-                Log.Line($"sub Grid Already UnRegistered: [Main]:{grid == TopEntity}");
-            }
-
             SubGridsRegistered.Remove(grid);
             grid.OnFatBlockAdded -= FatBlockAdded;
             grid.OnFatBlockRemoved -= FatBlockRemoved;
@@ -101,11 +81,10 @@ namespace CoreSystems.Support
         {
             foreach (var grid in SubGridCache) {
                 if (grid == TopEntity) continue;
-                UnRegisterSubGrid(grid, true);
+                UnRegisterSubGrid(grid);
             }
 
             SubGridCache.Clear();
-            SubGridsChanged = false;
         } 
 
         public class Constructs
@@ -117,9 +96,9 @@ namespace CoreSystems.Support
             internal readonly Focus Focus = new Focus();
             internal readonly ConstructData Data = new ConstructData();
             internal readonly Dictionary<long, PlayerController> ControllingPlayers = new Dictionary<long, PlayerController>();
-
             internal readonly HashSet<MyEntity> PreviousTargets = new HashSet<MyEntity>();
             internal readonly RunningAverage DamageAverage = new RunningAverage(10);
+            internal readonly Ai Ai;
             internal float OptimalDps;
             internal int BlockCount;
             internal Ai RootAi;
@@ -128,7 +107,6 @@ namespace CoreSystems.Support
             internal int DroneCount;
             internal uint LastDroneTick;
             internal uint LastEffectUpdateTick;
-            internal uint SubGridUpdateTick;
             internal bool DroneAlert;
 
             internal double TotalEffect;
@@ -136,11 +114,7 @@ namespace CoreSystems.Support
             internal double AddEffect;
             internal double AverageEffect;
             internal double MaxLockRange;
-            internal enum RefreshCaller
-            {
-                Init,
-                SubGridChange,
-            }
+
 
             internal enum UpdateType
             {
@@ -149,78 +123,89 @@ namespace CoreSystems.Support
                 None,
             }
 
-            internal void Refresh(Ai ai, RefreshCaller caller)
+            public Constructs(Ai ai)
             {
-                if (ai.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
+                Ai = ai;
+            }
+
+            internal void Refresh()
+            {
+                
+                if (Ai.Session.IsServer && RootAi.Construct.RecentItems.Count > 0) 
                     CheckEmptyWeapons();
 
                 OptimalDps = 0;
                 BlockCount = 0;
-                if (ai.TopEntity != null && ai.Session.GridToInfoMap.ContainsKey(ai.TopEntity)) {
+                if (Ai.TopEntity != null && Ai.Session.GridToInfoMap.ContainsKey(Ai.TopEntity)) {
                     Ai leadingAi = null;
                     Ai largestAi = null;
                     int leadingBlocks = 0;
                     var maxLockRange = 0d;
-                    foreach (var grid in ai.SubGridCache) {
+                    foreach (var grid in Ai.SubGridCache) {
 
-                        Ai thisAi;
-                        if (ai.Session.EntityAIs.TryGetValue(grid, out thisAi)) {
+                        Ai subAi;
+                        if (Ai.Session.EntityAIs.TryGetValue(grid, out subAi)) {
                             
                             if (leadingAi == null)
-                                leadingAi = thisAi;
+                                leadingAi = subAi;
                             else  {
 
                                 if (leadingAi.TopEntity.EntityId > grid.EntityId)
-                                    leadingAi = thisAi;
+                                    leadingAi = subAi;
                             }
                         }
-                        if (ai.Session.GridToInfoMap.ContainsKey(grid)) {
-                            var blockCount = ai.Session.GridToInfoMap[grid].MostBlocks;
+                        if (Ai.Session.GridToInfoMap.ContainsKey(grid)) {
+                            var blockCount = Ai.Session.GridToInfoMap[grid].MostBlocks;
                             if (blockCount > leadingBlocks)
                             {
                                 leadingBlocks = blockCount;
-                                largestAi = thisAi;
+                                largestAi = subAi;
                             }
                             BlockCount += blockCount;
 
-                            if (thisAi != null)
+                            if (subAi != null)
                             {
-                                OptimalDps += thisAi.OptimalDps;
-                                if (thisAi.Construct.MaxLockRange > maxLockRange)
-                                    maxLockRange = thisAi.Construct.MaxLockRange;
+                                OptimalDps += subAi.OptimalDps;
+                                if (subAi.Construct.MaxLockRange > maxLockRange)
+                                    maxLockRange = subAi.Construct.MaxLockRange;
                             }
                         }
-                        else Log.Line($"ConstructRefresh Failed sub no GridMap, sub is caller:{grid == ai.TopEntity}");
+                        else Log.Line($"ConstructRefresh Failed sub no GridMap, sub is caller:{grid == Ai.TopEntity}");
                     }
                     RootAi = leadingAi;
                     LargestAi = largestAi;
+
                     if (RootAi == null) {
+                        Log.Line($"1 - does this ever get hit?");
+
                         //Log.Line($"[rootAi is null in Update] - caller:{caller}, forcing rootAi to caller - inGridTarget:{ai.Session.EntityAIs.ContainsKey(ai.TopEntity)} -  myGridMarked:{ai.TopEntity.MarkedForClose} - aiMarked:{ai.MarkedForClose} - inScene:{ai.TopEntity.InScene} - lastClosed:{ai.AiCloseTick} - aiSpawned:{ai.AiSpawnTick} - diff:{ai.AiSpawnTick - ai.AiCloseTick} - sinceSpawn:{ai.Session.Tick - ai.AiSpawnTick} - entId:{ai.TopEntity.EntityId}");
-                        RootAi = ai;
+                        RootAi = Ai;
+                        LargestAi = Ai;
+                        if (Ai.Construct.MaxLockRange > maxLockRange)
+                            maxLockRange = Ai.Construct.MaxLockRange;
                     }
 
-                    if (LargestAi == null) {
-                        LargestAi = ai;
-                        if (ai.Construct.MaxLockRange > maxLockRange)
-                            maxLockRange = ai.Construct.MaxLockRange;
-                    }
+                    if (RootAi != Ai)
+                        Ai.Construct.ControllingPlayers.Clear();
 
+                    RootAi.Session.EntityToMasterAi[Ai.TopEntity] = RootAi;
                     RootAi.Construct.MaxLockRange = maxLockRange;
-                    BuildAiListAndCounters(ai);
-                    UpdatePlayerStates(RootAi);
+                    BuildAiListAndCounters(Ai);
 
                     return;
                 }
-                if (ai.TopEntity != null && ai.AiType != AiTypes.Grid)
+
+                Log.Line($"2 - does this ever get hit?");
+                
+                if (Ai.TopEntity != null && Ai.AiType != AiTypes.Grid)
                 {
-                    RootAi = ai;
-                    LargestAi = ai;
-                    ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
-                    UpdatePlayerStates(RootAi);
+                    RootAi = Ai;
+                    LargestAi = Ai;
+                    Ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
 
                     return;
                 }
-                Log.Line($"ConstructRefresh Failed main Ai no GridMap: {caller} - Marked: {ai.TopEntity?.MarkedForClose}");
+
                 RootAi = null;
                 LargestAi = null;
             }
@@ -301,47 +286,27 @@ namespace CoreSystems.Support
                     Log.Line($"failed to get and set player focus and lock");
             }
 
-            internal static void UpdatePlayerStates(Ai rootAi)
+            internal void UpdatePlayerStates()
             {
-                var rootConstruct = rootAi.Construct;
-                foreach (var sub in rootAi.SubGridCache)
+                var rootConstruct = RootAi.Construct;
+                foreach (var sub in RootAi.SubGridCache)
                 {
                     Ai subAi;
-                    if (rootAi.Session.EntityAIs.TryGetValue(sub, out subAi))
+                    if (RootAi.Session.EntityAIs.TryGetValue(sub, out subAi))
                         subAi.Construct.ControllingPlayers.Clear();
 
                     GridMap gridMap;
-                    if (rootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    if (RootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
                     {
                         foreach (var m in gridMap.PlayerControllers)
                         {
                             rootConstruct.ControllingPlayers.Add(m.Key, m.Value);
-                            UpdatePlayerLockState(rootAi, m.Key);
+                            UpdatePlayerLockState(RootAi, m.Key);
                         }
                     }
                 }
             }
 
-            internal static bool MatchPlayerId(Ai ai, long playerId)
-            {
-                foreach (var sub in ai.SubGridCache)
-                {
-                    GridMap gridMap;
-                    if (ai.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
-                    {
-                        foreach (var c in gridMap.PlayerControllers)
-                        {
-                            if (c.Key == playerId)
-                            {
-                                Log.Line($"wasRoot: {sub == ai.Construct.RootAi.TopEntity} - {sub.EntityId}");
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                return false;
-            }
 
             internal static void BuildAiListAndCounters(Ai cAi)
             {
@@ -369,21 +334,6 @@ namespace CoreSystems.Support
                             checkAi.Construct.AddWeaponCount(wc.Key, wc.Value.Current);
                     }
                 }
-            }
-
-            internal int PlayerCount()
-            {
-                int playerCount = 0;
-                foreach (var sub in RootAi.SubGridCache)
-                {
-                    GridMap gridMap;
-                    if (RootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
-                    {
-                        playerCount += gridMap.PlayerControllers.Count;
-                    }
-                }
-
-                return playerCount;
             }
 
             internal void AddWeaponCount(MyStringHash weaponHash, int incrementBy = 1)
@@ -443,7 +393,92 @@ namespace CoreSystems.Support
                 foreach (var w in RootAi.Construct.OutOfAmmoWeapons)
                     w.CheckInventorySystem = true;
             }
-            
+
+            public static bool ConstructSynced(Ai ai)
+            {
+                var tempSet = new HashSet<MyCubeGrid>();
+
+                foreach (var g in ai.GridMap.GroupMap.Construct)
+                    tempSet.Add(g.Key);
+
+                var sameSet = tempSet.SetEquals(ai.SubGridCache);
+
+                if (!sameSet)
+                    Log.Line($"not same set");
+
+                var sameRoot = true;
+                foreach (var sub in ai.SubGridCache)
+                {
+                    Ai subAi;
+                    if (ai.Session.EntityAIs.TryGetValue(sub, out subAi))
+                    {
+                        if (subAi.Construct.RootAi != ai.Construct.RootAi)
+                            sameRoot = false;
+                    }
+
+                    Ai rootAi;
+                    if (ai.Session.EntityToMasterAi.TryGetValue(sub, out rootAi))
+                    {
+                        if (rootAi != ai.Construct.RootAi)
+                            sameRoot = false;
+                    }
+                }
+                if (!sameRoot)
+                    Log.Line($"not same root");
+                var sameSubs = true;
+                foreach (var sub in ai.SubGridCache)
+                {
+                    Ai subAi;
+                    if (ai.Session.EntityAIs.TryGetValue(sub, out subAi))
+                    {
+                        if (!ai.SubGridCache.SetEquals(subAi.SubGridCache) || !subAi.SubGridCache.Contains(ai.GridEntity))
+                            sameSubs = false;
+                    }
+                }
+
+                if (!sameSubs)
+                    Log.Line($"subs not same");
+
+                return sameSet && sameRoot;
+            }
+
+            public static int ConstructPlayerCount(Ai ai)
+            {
+                int playerCount = 0;
+                foreach (var sub in ai.SubGridCache)
+                {
+                    GridMap gridMap;
+                    if (ai.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    {
+                        playerCount += gridMap.PlayerControllers.Count;
+                    }
+                }
+
+                return playerCount;
+            }
+
+            public static bool MatchPlayerId(Ai ai, long playerId)
+            {
+                foreach (var sub in ai.SubGridCache)
+                {
+                    GridMap gridMap;
+                    if (ai.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
+                    {
+                        foreach (var c in gridMap.PlayerControllers)
+                        {
+                            if (c.Key == playerId)
+                            {
+                                Log.Line($"wasRoot: {sub == ai.Construct.RootAi.TopEntity} rootConstructHasPlayer:{ai.Construct.RootAi.Construct.ControllingPlayers.ContainsKey(playerId)} - {sub.EntityId}");
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+
             internal void Init(Ai ai)
             {
                 RootAi = ai;

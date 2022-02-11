@@ -95,6 +95,12 @@ namespace CoreSystems
                 if (!IsClient && !InventoryUpdate && PartToPullConsumable.Count > 0 && ITask.IsComplete)
                     StartAmmoTask();
 
+                if (GridGroupUpdates.Count > 0)
+                {
+                    GroupUpdates();
+                    Log.Line($"early");
+                }
+
                 if (!CompsToStart.IsEmpty)
                     StartComps();
 
@@ -158,11 +164,15 @@ namespace CoreSystems
                 if (GameLoaded) {
 
                     DsUtil.Start("ai");
-                    if (AimingAi.Count > 0) 
-                        AimAi();
 
                     if (GridGroupUpdates.Count > 0)
+                    {
                         GroupUpdates();
+                        Log.Line($"late");
+                    }
+
+                    if (AimingAi.Count > 0) 
+                        AimAi();
 
                     AiLoop();
                     DsUtil.Complete("ai", true);

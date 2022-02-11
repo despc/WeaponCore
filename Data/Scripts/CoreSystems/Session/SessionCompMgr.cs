@@ -77,7 +77,8 @@ namespace CoreSystems
                         continue;
                     }
 
-                    if (comp.IsBlock && !GridToInfoMap.ContainsKey(comp.TopEntity) || IsClient && Settings?.Enforcement == null)
+                    GridMap gridMap;
+                    if (comp.IsBlock && (!GridToInfoMap.TryGetValue(comp.TopEntity, out gridMap) || gridMap.GroupMap == null) || IsClient && Settings?.Enforcement == null)
                         continue;
 
                     if (ShieldApiLoaded)
@@ -182,6 +183,7 @@ namespace CoreSystems
             for (int i = CompsDelayedReInit.Count - 1; i >= 0; i--)
             {
                 var delayed = CompsDelayedReInit[i];
+                GridMap gridMap = null;
                 if (forceRemove || !delayed.InReInit || delayed.Entity == null || delayed.Platform == null || delayed.Cube.MarkedForClose || delayed.Platform.State != CorePlatform.PlatformState.Ready)
                 {
                     if (delayed.Platform != null && delayed.Platform.State != CorePlatform.PlatformState.Ready && delayed.InReInit)
@@ -190,7 +192,7 @@ namespace CoreSystems
                     delayed.InReInit = false;
                     CompsDelayedReInit.RemoveAtFast(i);
                 }
-                else if (delayed.Cube.IsFunctional && GridToInfoMap.ContainsKey(delayed.Cube.CubeGrid))
+                else if (delayed.Cube.IsFunctional && GridToInfoMap.TryGetValue(delayed.Cube.CubeGrid, out gridMap) && gridMap.GroupMap != null)
                 {
                     CompsDelayedReInit.RemoveAtFast(i);
                     

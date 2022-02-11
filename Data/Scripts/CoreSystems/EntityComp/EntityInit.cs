@@ -33,20 +33,6 @@ namespace CoreSystems.Support
             catch (Exception ex) { Log.Line($"Exception in StorageSetup: {ex} - StateNull:{BaseData.ProtoRepoBase == null} - cubeMarked:{CoreEntity.MarkedForClose} - WeaponsNull:{Platform.Weapons == null} - FirstWeaponNull:{Platform.Weapons?[0] == null}", null, true); }
         }
 
-        internal void SubGridInit()
-        {
-            if (Ai.SubGridInitTick != Session.Tick)
-            {
-                Ai.SubGridInitTick = Session.Tick;
-                using (Ai.DbLock.AcquireExclusiveUsing()) 
-                {
-                    var bigOwners = Ai.GridEntity.BigOwners;
-                    Ai.AiOwner = bigOwners.Count > 0 ? bigOwners[0] : 0;
-                    Ai.SubGridChanges(false, true);
-                }
-            }
-        }
-
         private void InventoryInit()
         {
             using (InventoryEntity.Pin())

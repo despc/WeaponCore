@@ -122,6 +122,31 @@ namespace CoreSystems
             return false;
         }
 
+        private void GunnerAcquire(MyCubeBlock cube)
+        {
+            Log.Line($"gunner acquire, blacklisting");
+            GunnerBlackList = true;
+            ActiveControlBlock = cube;
+            var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringLeft, PlayerId);
+            var controlStringRight = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Right).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringRight, PlayerId);
+            var controlStringMenu = MyAPIGateway.Input.GetControl(UiInput.MouseButtonMenu).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringMenu, PlayerId);
+        }
+
+        private void GunnerRelease(MyCubeBlock cube)
+        {
+            Log.Line($"gunner release, unblacklisting");
+            GunnerBlackList = false;
+            ActiveControlBlock = null;
+            var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringLeft, PlayerId, true);
+            var controlStringRight = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Right).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringRight, PlayerId, true);
+            var controlStringMenu = MyAPIGateway.Input.GetControl(UiInput.MouseButtonMenu).GetGameControlEnum().String;
+            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringMenu, PlayerId, true);
+        }
 
         internal void EntityControlUpdate()
         {
@@ -137,75 +162,6 @@ namespace CoreSystems
 
                 if (ControlledEntity is MyCockpit || ControlledEntity is MyRemoteControl)
                     PlayerControlNotify(ControlledEntity);
-
-                if (ControlledEntity is IMyGunBaseUser && !(lastControlledEnt is IMyGunBaseUser))
-                {
-                    var topEntity = ControlledEntity.GetTopMostParent();
-                    Ai ai;
-                    if (topEntity != null && EntityAIs.TryGetValue(topEntity, out ai))
-                    {
-                        CoreComponent comp;
-                        if (ai.CompBase.TryGetValue(ControlledEntity, out comp) && comp.Type == CoreComponent.CompType.Weapon)
-                        {
-                            GunnerBlackList = true;
-                            /*
-                            if (IsServer)
-                            {
-                                var wComp = ((Weapon.WeaponComponent)comp);
-                                wComp.Data.Repo.Values.State.PlayerId = PlayerId;
-                                wComp.Data.Repo.Values.State.Control = ControlMode.Camera;
-                            }
-                            */
-                            ActiveControlBlock = (MyCubeBlock)ControlledEntity;
-                            var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
-                            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringLeft, PlayerId);
-                            var controlStringRight = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Right).GetGameControlEnum().String;
-                            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringRight, PlayerId);
-                            var controlStringMenu = MyAPIGateway.Input.GetControl(UiInput.MouseButtonMenu).GetGameControlEnum().String;
-                            MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringMenu, PlayerId);
-                            /*
-                            if (HandlesInput && MpActive)
-                                SendPlayerControlRequest(comp, PlayerId, ControlMode.Camera);
-                            */
-                        }
-                    }
-                }
-                else if (!(ControlledEntity is IMyGunBaseUser) && lastControlledEnt is IMyGunBaseUser)
-                {
-                    if (GunnerBlackList)
-                    {
-                        GunnerBlackList = false;
-                        var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
-                        MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringLeft, PlayerId, true);
-                        var controlStringRight = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Right).GetGameControlEnum().String;
-                        MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringRight, PlayerId, true);
-                        var controlStringMenu = MyAPIGateway.Input.GetControl(UiInput.MouseButtonMenu).GetGameControlEnum().String;
-                        MyVisualScriptLogicProvider.SetPlayerInputBlacklistState(controlStringMenu, PlayerId, true);
-                        var oldCube = lastControlledEnt as MyCubeBlock;
-                        Ai ai;
-                        if (oldCube != null && EntityAIs.TryGetValue(oldCube.CubeGrid, out ai))
-                        {
-                            CoreComponent comp;
-                            if (ai.CompBase.TryGetValue(oldCube, out comp) && comp.Type == CoreComponent.CompType.Weapon)
-                            {
-                                /*
-                                if (IsServer)
-                                {
-                                    Log.Line($"disable: {oldCube.DebugName}");
-                                    var wComp = ((Weapon.WeaponComponent)comp);
-                                    wComp.Data.Repo.Values.State.PlayerId = -1;
-                                    wComp.Data.Repo.Values.State.Control = ControlMode.None;
-
-                                }
-
-                                if (HandlesInput && MpActive)
-                                    SendPlayerControlRequest(comp, -1, ControlMode.None);
-                                */
-                                ActiveControlBlock = null;
-                            }
-                        }
-                    }
-                }
             }
         }
 

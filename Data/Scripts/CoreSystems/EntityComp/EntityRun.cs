@@ -23,7 +23,7 @@ namespace CoreSystems.Support
                         PlatformInit();
                 }
                 else 
-                    Log.Line($"Tried to add comp but it was not in scene");
+                    Log.Line($"Tried to add comp but it was already scene - {Platform.State} - AiNull:{Ai == null} ");
             }
             catch (Exception ex) { Log.Line($"Exception in OnAddedToContainer: {ex}", null, true); }
         }
@@ -117,7 +117,8 @@ namespace CoreSystems.Support
                     if (IsBlock)
                     {
                         TopEntity = ((Weapon.WeaponComponent)this).GetTopEntity();
-                        if (checkMap && !Session.GridToInfoMap.ContainsKey(TopEntity)) {
+                        GridMap gridMap;
+                        if (checkMap && (!Session.GridToInfoMap.TryGetValue(TopEntity, out gridMap) || gridMap.GroupMap == null)) {
                             
                             if (!InReInit)
                                 Session.CompsDelayedReInit.Add(this);
@@ -199,8 +200,8 @@ namespace CoreSystems.Support
                             if (cubeBlock is MyBatteryBlock || cubeBlock.HasInventory)
                                 Ai.FatBlockAdded(cubeBlock);
                         }
-
-                        SubGridInit();
+                        var bigOwners = Ai.GridEntity.BigOwners;
+                        Ai.AiOwner = bigOwners.Count > 0 ? bigOwners[0] : 0;
                     }
                 }
 
@@ -213,7 +214,6 @@ namespace CoreSystems.Support
                 Ai.CompChange(true, this);
 
                 Ai.IsStatic = Ai.TopEntity.Physics?.IsStatic ?? false;
-                Ai.Construct.Refresh(Ai, Constructs.RefreshCaller.Init);
 
                 if (IsBlock)
                 {

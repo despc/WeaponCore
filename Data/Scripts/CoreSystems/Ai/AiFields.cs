@@ -21,7 +21,6 @@ namespace CoreSystems.Support
     public partial class Ai
     {
         internal volatile bool AiInit;
-        internal volatile bool SubGridsChanged;
         internal volatile bool PowerDirty = true;
         internal volatile uint AiSpawnTick;
         internal volatile uint AiCloseTick;
@@ -29,7 +28,7 @@ namespace CoreSystems.Support
         internal volatile uint LastAiDataSave;
         internal readonly AiDetectionInfo DetectionInfo = new AiDetectionInfo();
         internal readonly MyShipController FakeShipController = new MyShipController();
-        internal readonly Constructs Construct = new Constructs();
+        internal readonly Constructs Construct;
         internal readonly FastResourceLock DbLock = new FastResourceLock();
 
         internal readonly Dictionary<MyEntity, CoreComponent> CompBase = new Dictionary<MyEntity, CoreComponent>();
@@ -144,7 +143,6 @@ namespace CoreSystems.Support
         internal uint LiveProjectileTick;
         internal uint ProjectileTicker;
         internal uint LastDetectEvent;
-        internal uint SubGridInitTick = uint.MaxValue;
         internal uint LastBlockChangeTick;
         internal int SleepingComps;
         internal int AwakeComps;
@@ -194,6 +192,7 @@ namespace CoreSystems.Support
             Session = session;
             AiComp = new AiComponent(this);
             Charger = new AiCharger(this);
+            Construct = new Constructs(this);
         }
 
         internal void Init(MyEntity topEntity, Session session, CoreComponent.CompTypeSpecific type)

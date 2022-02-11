@@ -541,7 +541,6 @@ namespace CoreSystems
             try
             {
                 GridMap gridMap;
-
                 var exit = exitController as MyEntity;
                 if (exit != null && enterController?.ControllerInfo != null)
                 {
@@ -549,21 +548,6 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
-                        Ai ai;
-                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
-                        {
-                            Constructs.UpdatePlayerStates(ai.Construct.RootAi);
-
-                            CoreComponent comp;
-                            if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
-                            {
-                                var wComp = (Weapon.WeaponComponent) comp;
-                                wComp.Data.Repo.Values.State.PlayerId = -1;
-                                wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
-                                if (MpActive)
-                                    SendComp(wComp);
-                            }
-                        }
 
                         if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
                         {
@@ -571,6 +555,32 @@ namespace CoreSystems
                             gridMap.PlayerControllers.Remove(enterController.ControllerInfo.ControllingIdentityId);
                         }
 
+                        if (cube is IMyUserControllableGun)
+                            Log.Line($"exit 1");
+                        Ai ai;
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
+                        {
+                            if (cube is IMyUserControllableGun)
+                                Log.Line($"exit 2");
+
+                            ai.Construct.UpdatePlayerStates();
+
+                            CoreComponent comp;
+                            if (ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
+                            {
+                                if (IsServer)
+                                {
+                                    var wComp = (Weapon.WeaponComponent)comp;
+                                    wComp.Data.Repo.Values.State.PlayerId = -1;
+                                    wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
+
+                                    if (MpActive)
+                                        SendComp(wComp);
+                                }
+
+                                GunnerRelease(cube);
+                            }
+                        }
                     }
                 }
 
@@ -581,22 +591,6 @@ namespace CoreSystems
 
                     if (cube != null)
                     {
-                        Ai ai;
-                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
-                        {
-                            Constructs.UpdatePlayerStates(ai.Construct.RootAi);
-
-                            CoreComponent comp;
-                            if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
-                            {
-                                var wComp = (Weapon.WeaponComponent)comp;
-                                wComp.Data.Repo.Values.State.PlayerId = PlayerId;
-                                wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
-
-                                if (MpActive)
-                                    SendComp(wComp);
-                            }
-                        }
 
                         var playerId = enterController.ControllerInfo.ControllingIdentityId;
 
@@ -605,6 +599,36 @@ namespace CoreSystems
                             gridMap.LastControllerTick = Tick + 1;
                             gridMap.PlayerControllers[playerId] = new PlayerController { ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick };
                         }
+
+                        if (cube is IMyUserControllableGun) 
+                            Log.Line($"enter 1");
+
+                        Ai ai;
+                        if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
+                        {
+                            if (cube is IMyUserControllableGun)
+                                Log.Line($"enter 2");
+                            ai.Construct.UpdatePlayerStates();
+
+                            CoreComponent comp;
+                            if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
+                            {
+                                if (IsServer)
+                                {
+                                    var wComp = (Weapon.WeaponComponent)comp;
+                                    wComp.Data.Repo.Values.State.PlayerId = PlayerId;
+                                    wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
+
+
+                                    if (MpActive)
+                                        SendComp(wComp);
+                                }
+
+                                GunnerAcquire(cube);
+
+                            }
+                        }
+
                     }
                 }
             }

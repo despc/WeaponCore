@@ -84,6 +84,7 @@ namespace CoreSystems.Platform
                 return State;
             }
 
+
             //Get or init Ai
             var newAi = false;
             if (!Comp.Session.EntityAIs.TryGetValue(Comp.TopEntity, out Comp.Ai)) {
@@ -104,7 +105,11 @@ namespace CoreSystems.Platform
 
             if (newAi) {
 
-                if (Comp.IsBlock) Comp.SubGridInit();
+                if (Comp.IsBlock) {
+                    var bigOwners = Comp.Ai.GridEntity.BigOwners;
+                    Comp.Ai.AiOwner = bigOwners.Count > 0 ? bigOwners[0] : 0;
+                }
+
                 if (Comp.Ai.MarkedForClose)
                     Log.Line($"PlatFormInit and AI MarkedForClose: CubeMarked:{Comp.CoreEntity.MarkedForClose}");
             }

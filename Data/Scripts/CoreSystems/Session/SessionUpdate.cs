@@ -53,15 +53,14 @@ namespace CoreSystems
                 if (ai.AiType == Ai.AiTypes.Grid && !ai.HasPower || enforcement.ServerSleepSupport && IsServer && ai.AwakeComps == 0 && ai.WeaponsTracking == 0 && ai.SleepingComps > 0 && !ai.CheckProjectiles && ai.AiSleep && !ai.DbUpdated) 
                     continue;
 
+                if (!Ai.Constructs.ConstructSynced(ai))
+                    Log.Line($"{ai.TopEntity.EntityId} not synced");
+
                 var construct = ai.Construct;
                 var focus = construct.Focus;
 
-                //if (ai.AiType == Ai.AiTypes.Grid && construct.SubGridUpdateTick == 0 || construct.SubGridUpdateTick <= ai.GridMap.GroupMap.LastChangeTick)
-                //    ai.SubGridChanges();
-
-                var rootAi = construct.RootAi;
                 if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.LastControllerTick == Tick)
-                    Ai.Constructs.UpdatePlayerStates(rootAi);
+                    construct.UpdatePlayerStates();
 
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
@@ -69,6 +68,7 @@ namespace CoreSystems
                     ai.BlockChangeArea.Max *= ai.GridEntity.GridSize;
                 }
 
+                var rootAi = construct.RootAi;
                 var rootConstruct = rootAi.Construct;
 
                 if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick && rootConstruct.TotalEffect > rootConstruct.PreviousTotalEffect)

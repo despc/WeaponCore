@@ -987,26 +987,23 @@ namespace CoreSystems
         public void UpdateAis()
         {
             Ais.Clear();
-            foreach (var g in Construct)
-            {
+            foreach (var g in Construct) {
                 Ai ai;
                 if (Session.EntityAIs.TryGetValue(g.Key, out ai))
-                {
                     Ais.Add(ai);
-                }
             }
 
             for (int i = 0; i < Ais.Count; i++)
-            {
-                var ai = Ais[i];
-                ai.Construct.Refresh(ai, Ai.Constructs.RefreshCaller.SubGridChange);
-            }
+                Ais[i].SubGridChanges();
+
+            for (int i = 0; i < Ais.Count; i++) 
+                Ais[i].Construct.Refresh();
 
             for (int i = 0; i < Ais.Count; i++)
-            {
-                Ai.Constructs.UpdatePlayerStates(Ais[i]);
-            }
+                Ais[i].Construct.UpdatePlayerStates();
+
         }
+
 
         public void Clean()
         {
