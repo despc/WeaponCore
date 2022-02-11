@@ -225,7 +225,8 @@ namespace CoreSystems
                     var wValues = wComp.Data.Repo.Values;
 
                     var focusTargets = wValues.Set.Overrides.FocusTargets;
-                    if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
+                    //if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
+                    if (IsServer && wValues.State.PlayerId > 0 && !Ai.Constructs.MatchPlayerId(ai, wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
 
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)
@@ -545,10 +546,11 @@ namespace CoreSystems
 
                 var seekProjectile = w.ProjectilesNear || w.System.TrackProjectile && w.Comp.Data.Repo.Values.Set.Overrides.Projectiles && w.BaseComp.Ai.CheckProjectiles;
                 var checkTime = w.Target.TargetChanged || acquire || seekProjectile || w.FastTargetResetTick == Tick;
+                var ai = w.BaseComp.Ai;
 
-                if (checkTime || w.BaseComp.Ai.Construct.RootAi.Construct.TargetResetTick == Tick && w.Target.HasTarget) {
+                if (checkTime || ai.Construct.RootAi.Construct.TargetResetTick == Tick && w.Target.HasTarget) {
 
-                    if (seekProjectile || comp.Data.Repo.Values.State.TrackingReticle || (comp.DetectOtherSignals && w.BaseComp.Ai.DetectionInfo.OtherInRange || w.BaseComp.Ai.DetectionInfo.PriorityInRange) && w.BaseComp.Ai.DetectionInfo.ValidSignalExists(w))
+                    if (seekProjectile || comp.Data.Repo.Values.State.TrackingReticle || (comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && ai.DetectionInfo.ValidSignalExists(w))
                     {
                         if (comp.TrackingWeapon != null && comp.TrackingWeapon.System.DesignatorWeapon && comp.TrackingWeapon != w && comp.TrackingWeapon.Target.HasTarget) {
 
@@ -557,11 +559,11 @@ namespace CoreSystems
                         }
                         else
                         {
-                            Ai.AcquireTarget(w, w.BaseComp.Ai.Construct.RootAi.Construct.TargetResetTick == Tick);
+                            Ai.AcquireTarget(w, ai.Construct.RootAi.Construct.TargetResetTick == Tick);
                         }
                     }
 
-                    if (w.Target.HasTarget || !(comp.DetectOtherSignals && w.BaseComp.Ai.DetectionInfo.OtherInRange || w.BaseComp.Ai.DetectionInfo.PriorityInRange)) {
+                    if (w.Target.HasTarget || !(comp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange)) {
 
                         w.AcquiringTarget = false;
                         AcquireTargets.RemoveAtFast(i);

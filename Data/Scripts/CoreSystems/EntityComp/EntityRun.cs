@@ -229,6 +229,9 @@ namespace CoreSystems.Support
                         }
                         Session.FutureEvents.Schedule(weapon.DelayedStart, FunctionalBlock.Enabled, 1);
                     }
+
+                    if (Ai.AiSpawnTick > Ai.Construct.LastRefreshTick)
+                        Ai.GridMap.GroupMap.UpdateAis();
                 }
                 Status = !IsWorking ? Start.Starting : Start.ReInit;
             }

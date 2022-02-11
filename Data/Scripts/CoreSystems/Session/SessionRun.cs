@@ -89,20 +89,16 @@ namespace CoreSystems
 
                 MyCubeBlock cube;
                 if (Tick60 && UiInput.ControlKeyPressed && UiInput.CtrlPressed && GetAimedAtBlock(out cube) && cube.BlockDefinition != null && CoreSystemsDefs.ContainsKey(cube.BlockDefinition.Id.SubtypeName))
-                {
                     ProblemRep.GenerateReport(cube);
-                }
+
                 if (!IsClient && !InventoryUpdate && PartToPullConsumable.Count > 0 && ITask.IsComplete)
                     StartAmmoTask();
 
-                if (GridGroupUpdates.Count > 0)
-                {
-                    GroupUpdates();
-                    Log.Line($"early");
-                }
-
                 if (!CompsToStart.IsEmpty)
                     StartComps();
+
+                if (GridGroupUpdates.Count > 0)
+                    GroupUpdates();
 
                 if ((Tick120 || ReInitTick > 0 && Tick - ReInitTick < 10) && (CompsDelayedReInit.Count > 0 || CompsDelayedInit.Count > 0))
                 {

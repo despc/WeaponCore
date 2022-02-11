@@ -108,6 +108,7 @@ namespace CoreSystems.Support
             internal uint LastDroneTick;
             internal uint LastEffectUpdateTick;
             internal uint TargetResetTick;
+            internal uint LastRefreshTick;
             internal bool DroneAlert;
 
             internal double TotalEffect;
@@ -137,6 +138,7 @@ namespace CoreSystems.Support
 
                 OptimalDps = 0;
                 BlockCount = 0;
+                LastRefreshTick = Ai.Session.Tick;
                 if (Ai.TopEntity != null && Ai.Session.GridToInfoMap.ContainsKey(Ai.TopEntity)) {
                     Ai leadingAi = null;
                     Ai largestAi = null;
