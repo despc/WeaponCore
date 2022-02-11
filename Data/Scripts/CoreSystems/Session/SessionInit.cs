@@ -123,6 +123,7 @@ namespace CoreSystems
             }
         }
 
+        public const string InputLog = "input";
         internal void Init()
         {
             if (Inited) return;
@@ -133,6 +134,7 @@ namespace CoreSystems
             Log.Init("net", this, false);
             Log.Init("report", this, false);
             Log.Init("combat", this, false);
+            Log.Init(InputLog, this, false);
             MpActive = MyAPIGateway.Multiplayer.MultiplayerActive;
             IsServer = MyAPIGateway.Multiplayer.IsServer;
             DedicatedServer = MyAPIGateway.Utilities.IsDedicated;

@@ -144,21 +144,15 @@ namespace CoreSystems.Platform
         {
             public readonly WeaponComponent Comp;
             internal bool ShootToggled;
-            internal DelayedToggle QueuedToggle;
+            internal bool EarlyOff;
             internal bool WaitingShootResponse;
             internal bool FreezeClientShoot;
             internal uint CompletedCycles;
             internal uint LastCycle = uint.MaxValue;
+            internal uint LastRequestTick;
             internal uint RequestShootBurstId;
             internal int WeaponsFired;
             internal ShootModes LastShootMode;
-
-            public enum DelayedToggle
-            {
-                None,
-                On,
-                Off,
-            }
 
             public enum ShootModes
             {
@@ -176,6 +170,7 @@ namespace CoreSystems.Platform
                 ServerRelay,
                 ToggleServerOff,
                 ToggleClientOff,
+                ClientRequestReject,
             }
 
             public ShootManager(WeaponComponent comp)
@@ -190,10 +185,9 @@ namespace CoreSystems.Platform
                 var state = values.State;
                 var set = values.Set;
 
-                if ((set.Overrides.ShootMode == ShootModes.Inactive && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
+                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.Inactive && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
                     return;
 
-                //Log.Line($"success - totalWeapons:{TotalWeapons}");
                 if (Comp.IsBlock && Comp.Session.HandlesInput)
                     Comp.Session.TerminalMon.HandleInputUpdate(Comp);
 
@@ -206,7 +200,7 @@ namespace CoreSystems.Platform
                 if (Comp.Session.MpActive && sendRequest)
                 {
                     WaitingShootResponse = Comp.Session.IsClient; // this will be set false on the client once the server responds to this packet
-
+                    LastRequestTick = Comp.Session.Tick;
                     var code = Comp.Session.IsServer ? playerId == 0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
                     ulong packagedMessage;
                     Session.EncodeShootState(state.ShootSyncStateId, (uint)set.Overrides.ShootMode, CompletedCycles, (uint)code, out packagedMessage);
@@ -250,12 +244,12 @@ namespace CoreSystems.Platform
                         var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         
                         var reloadMinusAmmoCheck = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.Reload.WaitForClient);
-                        var skipReload = client && reloading && !skipReady && !FreezeClientShoot && !WaitingShootResponse && !reloadMinusAmmoCheck;
+                        var skipReload = client && reloading && !skipReady && !FreezeClientShoot && !WaitingShootResponse && !reloadMinusAmmoCheck && Comp.Session.Tick - LastRequestTick > 30;
 
                         var canShoot = !w.PartState.Overheated && (!reloading || skipReload);
                         
                         if (canShoot && skipReload)
-                            Log.Line($"ReadyToShoot succeeded on client but with CurrentAmmo > 0");
+                            Log.Line($"ReadyToShoot succeeded on client but with CurrentAmmo > 0", Session.InputLog);
 
                         var weaponReady = canShoot && !w.IsShooting;
 
@@ -283,7 +277,7 @@ namespace CoreSystems.Platform
                 for (int i = 0; i < Comp.TotalWeapons; i++)
                 {
                     var w = Comp.Collection[i];
-                    if (Comp.Session.MpActive) Log.Line($"[clear] ammo: {w.ProtoWeaponAmmo.CurrentAmmo} - CompletedCycles:{CompletedCycles} - WeaponsFired:{WeaponsFired}");
+                    if (Comp.Session.MpActive) Log.Line($"[clear] ammo: {w.ProtoWeaponAmmo.CurrentAmmo} - CompletedCycles:{CompletedCycles} - WeaponsFired:{WeaponsFired}", Session.InputLog);
 
                     w.ShootCount = 0;
                     w.ShootDelay = 0;
@@ -326,11 +320,12 @@ namespace CoreSystems.Platform
                 var state = Comp.Data.Repo.Values.State;
                 var wasToggled = ShootToggled;
 
-                //Log.Line($"sendRequest:{sendRequest} - wasToggled:{wasToggled} - modeChange:{modeChange} - weaponsToFire:{weaponsToFire}({WeaponsFired} < {TotalWeapons}) - newMousePress:{newMousePress} - newMouseRelease:{newMouseRelease} ");
                 if (sendRequest)
                 {
-                    if (QueuedToggle != DelayedToggle.None)
-                        ShootToggled = QueuedToggle == DelayedToggle.On;
+                    if (EarlyOff) {
+                        Log.Line($"early off: wasSet:{ShootToggled}", Session.InputLog);
+                        ShootToggled = false;
+                    }
                     else if (set.Overrides.ShootMode == ShootModes.KeyToggle || set.Overrides.ShootMode == ShootModes.MouseControl)
                         ShootToggled = !ShootToggled;
                     else
@@ -353,11 +348,11 @@ namespace CoreSystems.Platform
                         {
                             ClearShootState();
                             if (Comp.Session.MpActive)
-                                Log.Line($"server for clear target");
+                                Log.Line($"server for clear target", Session.InputLog);
                         }
                     }
 
-                    QueuedToggle = DelayedToggle.None;
+                    EarlyOff = false;
                 }
 
                 var pendingRequest = Comp.IsDisabled || wasToggled || RequestShootBurstId != state.ShootSyncStateId || Comp.IsBlock && !Comp.Cube.IsWorking;
@@ -371,23 +366,17 @@ namespace CoreSystems.Platform
                 var set = Comp.Data.Repo.Values.Set;
                 var sMode = set.Overrides.ShootMode;
 
-                LastShootMode = sMode;
-
                 if (WaitingShootResponse || FreezeClientShoot)
                 {
                     if (set.Overrides.ShootMode == ShootModes.KeyToggle || set.Overrides.ShootMode == ShootModes.MouseControl)
                     {
-
-                        if (QueuedToggle == DelayedToggle.None)
-                        {
-                            QueuedToggle = ShootToggled ? DelayedToggle.On : DelayedToggle.Off;
-                        }
-
-                        QueuedToggle = QueuedToggle == DelayedToggle.Off ? DelayedToggle.On : DelayedToggle.Off;
+                        EarlyOff = !EarlyOff && ShootToggled;
                     }
-                    Log.Line($"QueueShot:{QueuedToggle} - WaitingShootResponse:{WaitingShootResponse} - FreezeClientShoot:{FreezeClientShoot}");
+                    Log.Line($"QueueShot:{EarlyOff} - WaitingShootResponse:{WaitingShootResponse} - FreezeClientShoot:{FreezeClientShoot}", Session.InputLog);
                     return true;
                 }
+
+                LastShootMode = sMode;
 
                 return false;
             }
@@ -399,12 +388,12 @@ namespace CoreSystems.Platform
             {
                 if (interval > CompletedCycles)
                 {
-                    Log.Line($"client had a higher interval than server: client: {interval} > server:{CompletedCycles}");
+                    Log.Line($"client had a higher interval than server: client: {interval} > server:{CompletedCycles}", Session.InputLog);
                     //LastCycle = interval;
                 }
                 else if (interval < CompletedCycles)
                 {
-                    Log.Line($"client had a lower interval than server: client: {interval} < server:{CompletedCycles}");
+                    Log.Line($"client had a lower interval than server: client: {interval} < server:{CompletedCycles}", Session.InputLog);
 
                 }
                 //else LastCycle = CompletedCycles;
@@ -417,16 +406,26 @@ namespace CoreSystems.Platform
                 ClearShootState();
             }
 
+            internal void ServerRejectResponse(ulong clientId)
+            {
+                Log.Line($"failed to burst on server, sending reject message", Session.InputLog);
+
+                var values = Comp.Data.Repo.Values;
+                ulong packagedMessage;
+                Session.EncodeShootState(values.State.ShootSyncStateId, (uint)values.Set.Overrides.ShootMode, CompletedCycles, (uint)ShootCodes.ClientRequestReject, out packagedMessage);
+                Comp.Session.SendBurstReject(Comp, packagedMessage, PacketType.ShootSync, clientId);
+            }
+
             internal void ClientToggleResponse(uint interval)
             {
                 if (interval > CompletedCycles)
                 {
-                    Log.Line($"server had a higher interval than client: server: {interval} > client:{CompletedCycles}");
+                    Log.Line($"server had a higher interval than client: server: {interval} > client:{CompletedCycles}", Session.InputLog);
                     //LastCycle = interval;
                 }
                 else if (interval < CompletedCycles)
                 {
-                    Log.Line($"server had a lower interval than server: server: {interval} < client:{CompletedCycles}");
+                    Log.Line($"server had a lower interval than server: server: {interval} < client:{CompletedCycles}", Session.InputLog);
                 }
                 FreezeClientShoot = false;
 

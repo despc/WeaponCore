@@ -559,6 +559,7 @@ namespace CoreSystems
                             {
                                 if (!ai.Construct.RootAi.Construct.ControllingPlayers.Remove(playerId))
                                     Log.Line($"could not remove player: {playerId} from root construct");
+                                ai.Construct.UpdatePlayerLockState(playerId);
 
                                 CoreComponent comp;
                                 if (ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
@@ -600,6 +601,7 @@ namespace CoreSystems
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                             {
                                 ai.Construct.RootAi.Construct.ControllingPlayers[playerId] = pController;
+                                ai.Construct.UpdatePlayerLockState(playerId);
 
                                 CoreComponent comp;
                                 if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)

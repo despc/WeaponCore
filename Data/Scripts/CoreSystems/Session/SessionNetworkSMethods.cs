@@ -475,16 +475,16 @@ namespace CoreSystems
 
                 if (wComp.ShootManager.RequestShootBurstId == stateId)
                 {
-                    Log.Line($"failed to burst on server");
+                    wComp.ShootManager.ServerRejectResponse(packet.SenderId);
                 }
             }
             else if (wComp != null && wComp.ShootManager.RequestShootBurstId != stateId)
             {
-                Log.Line($"server bursting request mismatch");
+                Log.Line($"server bursting request mismatch", InputLog);
             }
             else if (!SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {
-                Log.Line($"server bursting playerId not found");
+                Log.Line($"server bursting playerId not found", InputLog);
             }
 
             data.Report.PacketValid = true;

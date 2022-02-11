@@ -486,7 +486,14 @@ namespace CoreSystems
             var wComp = comp as Weapon.WeaponComponent;
             if (wComp != null)
             {
-                if (code == Weapon.ShootManager.ShootCodes.ToggleClientOff)
+                if (code == Weapon.ShootManager.ShootCodes.ClientRequestReject)
+                {
+                    Log.Line($"client received reject message reset", InputLog);
+                    wComp.ShootManager.WaitingShootResponse = false;
+                    wComp.ShootManager.FreezeClientShoot = false;
+                    wComp.ShootManager.EarlyOff = false;
+                }
+                else if (code == Weapon.ShootManager.ShootCodes.ToggleClientOff)
                 {
                     wComp.ShootManager.ClientToggleResponse(interval);
                 }
@@ -499,15 +506,15 @@ namespace CoreSystems
                 {
                     //Log.Line($"client received server response: interval:{interval} - QueuedToggle:{wComp.ShootManager.QueuedToggle}");
                     wComp.ShootManager.WaitingShootResponse = false;
-                    if (wComp.ShootManager.QueuedToggle != Weapon.ShootManager.DelayedToggle.None && wComp.ShootManager.QueuedToggle == Weapon.ShootManager.DelayedToggle.Off)
+                    if (wComp.ShootManager.EarlyOff && wComp.ShootManager.ShootToggled)
                     {
                         wComp.ShootManager.ProcessInput(PlayerId, true);
-                        Log.Line($"forcing QueuedToggle off");
+                        Log.Line($"forcing QueuedToggle off", InputLog);
                     }
                 }
                 else
                 {
-                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.ShootManager.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.ShootManager.WaitingShootResponse}");
+                    Log.Line($"failed to burst on client - stateId:{stateId}({wComp.ShootManager.RequestShootBurstId}) - mode:{mode} - code:{code} - WaitingBurstResponse:{wComp.ShootManager.WaitingShootResponse}", InputLog);
                 }
             }
 
