@@ -106,10 +106,10 @@ namespace CoreSystems.Support
             var ang2 = angPos - angRad;
 
             if (ang1 < -cone.ConeAngle)
-                return false; 
+                return false;
 
             if (ang2 > cone.ConeAngle)
-                return false; 
+                return false;
 
             return true;
         }
@@ -258,7 +258,7 @@ namespace CoreSystems.Support
 
             if (Math.Abs(desiredAzimuth) < 1E-6 && localTargetVector.Z > 0) //check for straight back case
                 desiredAzimuth = Math.PI;
-            
+
             double desiredElevation;
             if (Vector3D.IsZero(flattenedTargetVector)) //check for straight up case
                 desiredElevation = MathHelper.PiOver2 * Math.Sign(localTargetVector.Y);
@@ -285,7 +285,7 @@ namespace CoreSystems.Support
             // check for backAround constraint
             double azToTraverse;
             if (weapon.MaxAzToleranceRadians < Math.PI && weapon.MinAzToleranceRadians > -Math.PI) {
-                
+
                 var azAngle = weapon.Azimuth + desiredAzimuth;
                 if (azAngle > Math.PI) {
                     azAngle -= MathHelperD.TwoPi;
@@ -295,7 +295,7 @@ namespace CoreSystems.Support
                 }
                 azToTraverse = azAngle - weapon.Azimuth;
             }
-            else 
+            else
                 azToTraverse = desiredAzimuth;
 
             // Clamp step within limits.
@@ -371,6 +371,53 @@ namespace CoreSystems.Support
 
 
             return !locked;
+        }
+
+        internal static bool RotorTurretLookAt(ControlSys controlPart, ref Vector3D desiredDirection, double targetDistSqr)
+        {
+            if (controlPart == null)
+                return false;
+
+            var root = controlPart.BaseRotor;
+            var secondary = controlPart.TrackingRotor;
+
+            if (root == null || secondary == null)
+                return false;
+
+            //var epsilon = targetDistSqr <= 640000 ? 1E-03d : targetDistSqr <= 3240000 ? 1E-04d : 1E-05d;
+
+            var currentDirection = controlPart.TrackingScope.Info.Direction;
+            var axis = Vector3D.Cross(desiredDirection, currentDirection);
+
+            Vector3D up = root.PositionComp.WorldMatrixRef.Up;
+            bool upZero = Vector3D.IsZero(up);
+            Vector3D desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
+            Vector3D currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
+            double rootAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
+
+            rootAngle *= Math.Sign(Vector3D.Dot(axis, up));
+            var desiredAngle = root.Angle + rootAngle;
+            if (desiredAngle < root.LowerLimitRad && desiredAngle + MathHelper.TwoPi > root.UpperLimitRad)
+            {
+                Log.Line($"Angle outside base rotor limits");
+                return false;
+            }
+
+            up = secondary.PositionComp.WorldMatrixRef.Up;
+            upZero = Vector3D.IsZero(up);
+            desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
+            currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
+            double secondaryAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
+
+            secondaryAngle *= Math.Sign(Vector3D.Dot(axis, up));
+            desiredAngle = secondary.Angle + secondaryAngle;
+            if (desiredAngle < secondary.LowerLimitRad && desiredAngle + MathHelper.TwoPi > secondary.UpperLimitRad)
+            {
+                Log.Line($"Angle outside secondary rotor limits");
+                return false;
+            }
+
+            return true;
         }
 
         /*

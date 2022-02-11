@@ -149,6 +149,7 @@ namespace CoreSystems
             CompileWeaponStructures();
             CompileUpgradeStructures();
             CompileSupportStructures();
+            CompileControlStructures();
 
             AssignPowerPriorities();
 
@@ -706,6 +707,19 @@ namespace CoreSystems
 
             _subTypeMaps.Clear();
             _subTypeIdUpgradeDefs.Clear();
+        }
+
+        private void CompileControlStructures()
+        {
+            foreach (var def in AllDefinitions)
+            {
+                if (def is MyTurretControlBlockDefinition)
+                {
+                    var c = new ControlStructure(this, def.Id.SubtypeId);
+                    PartPlatforms[def.Id] = c;
+                }
+            }
+
         }
     }
 }

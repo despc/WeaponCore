@@ -29,7 +29,7 @@ namespace CoreSystems.Control
             action.Name = new StringBuilder(Localization.GetText("ActionWCShootMode"));
             action.Action = CustomActions.TerminActionCycleShootMode;
             action.Writer = CustomActions.ShootModeWriter;
-            action.Enabled = TerminalHelpers.Istrue;
+            action.Enabled = TerminalHelpers.IsTrue;
             action.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);
@@ -43,7 +43,7 @@ namespace CoreSystems.Control
             action.Name = new StringBuilder(Localization.GetText("ActionWCMouseToggle"));
             action.Action = CustomActions.TerminActionCycleMouseControl;
             action.Writer = CustomActions.MouseToggleWriter;
-            action.Enabled = TerminalHelpers.Istrue;
+            action.Enabled = TerminalHelpers.IsTrue;
             action.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);
@@ -127,7 +127,7 @@ namespace CoreSystems.Control
             action0.Name = new StringBuilder(Localization.GetText("ActionNextCameraChannel"));
             action0.Action = CustomActions.TerminalActionCameraIncrease;
             action0.Writer = CustomActions.CameraWriter;
-            action0.Enabled = TerminalHelpers.Istrue;
+            action0.Enabled = TerminalHelpers.IsTrue;
             action0.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action0);
@@ -138,7 +138,7 @@ namespace CoreSystems.Control
             action1.Name = new StringBuilder(Localization.GetText("ActionPreviousCameraChannel"));
             action1.Action = CustomActions.TerminalActionCameraDecrease;
             action1.Writer = CustomActions.CameraWriter;
-            action1.Enabled = TerminalHelpers.Istrue;
+            action1.Enabled = TerminalHelpers.IsTrue;
             action1.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action1);
@@ -447,7 +447,7 @@ namespace CoreSystems.Control
             action.Name = new StringBuilder(Localization.GetText("ActionMask"));
             action.Action = CustomActions.TerminActionCycleDecoy;
             action.Writer = CustomActions.DecoyWriter;
-            action.Enabled = TerminalHelpers.Istrue;
+            action.Enabled = TerminalHelpers.IsTrue;
             action.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action);
@@ -552,5 +552,254 @@ namespace CoreSystems.Control
             MyAPIGateway.TerminalControls.AddAction<T>(action1);
             session.CustomActions.Add(action1);
         }
+
+        // Control Block Actions
+
+        public static void CreateAiEnabledControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("WCAiEnabled");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionWCAiEnabled"));
+            action.Action = CustomActions.TerminalActionToggleAiEnabledControl;
+            action.Writer = CustomActions.AiEnabledWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateSubSystemsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("SubSystems");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionSubSystems"));
+            action.Action = CustomActions.TerminActionCycleSubSystemControl;
+            action.Writer = CustomActions.SubSystemWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateControlModesControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("ControlModes");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionControlModes"));
+            action.Action = CustomActions.TerminalActionControlModeControl;
+            action.Writer = CustomActions.ControlStateWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateNeutralsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Neutrals");
+            action.Icon = @"Textures\GUI\Icons\Actions\NeutralToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionNeutrals"));
+            action.Action = CustomActions.TerminalActionToggleNeutralsControl;
+            action.Writer = CustomActions.NeutralWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateProjectilesControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Projectiles");
+            action.Icon = @"Textures\GUI\Icons\Actions\MissileToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionProjectiles"));
+            action.Action = CustomActions.TerminalActionToggleProjectilesControl;
+            action.Writer = CustomActions.ProjectilesWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateBiologicalsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Biologicals");
+            action.Icon = @"Textures\GUI\Icons\Actions\CharacterToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionBiologicals"));
+            action.Action = CustomActions.TerminalActionToggleBiologicalsControl;
+            action.Writer = CustomActions.BiologicalsWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateMeteorsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Meteors");
+            action.Icon = @"Textures\GUI\Icons\Actions\MeteorToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionMeteors"));
+            action.Action = CustomActions.TerminalActionToggleMeteorsControl;
+            action.Writer = CustomActions.MeteorsWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateGridsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Grids");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionGrids"));
+            action.Action = CustomActions.TerminalActionToggleGridsControl;
+            action.Writer = CustomActions.GridsWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateFriendlyControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Friendly");
+            action.Icon = @"Textures\GUI\Icons\Actions\NeutralToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionFriendly"));
+            action.Action = CustomActions.TerminalActionToggleFriendlyControl;
+            action.Writer = CustomActions.FriendlyWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateUnownedControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("Unowned");
+            action.Icon = @"Textures\GUI\Icons\Actions\NeutralToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionUnowned"));
+            action.Action = CustomActions.TerminalActionToggleUnownedControl;
+            action.Writer = CustomActions.UnownedWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateFocusTargetsControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("FocusTargets");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionFocusTargets"));
+            action.Action = CustomActions.TerminalActionToggleFocusTargetsControl;
+            action.Writer = CustomActions.FocusTargetsWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateFocusSubSystemControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("FocusSubSystem");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionFocusSubSystem"));
+            action.Action = CustomActions.TerminalActionToggleFocusSubSystemControl;
+            action.Writer = CustomActions.FocusSubSystemWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        public static void CreateMaxSizeControl(Session session)
+        {
+            var action0 = MyAPIGateway.TerminalControls.CreateAction<T>("MaxSize Increase");
+            action0.Icon = @"Textures\GUI\Icons\Actions\Increase.dds";
+            action0.Name = new StringBuilder(Localization.GetText("ActionMaxSizeIncrease"));
+            action0.Action = CustomActions.TerminalActionMaxSizeIncreaseControl;
+            action0.Writer = CustomActions.MaxSizeWriterControl;
+            action0.Enabled = TerminalHelpers.IsTrue;
+            action0.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action0);
+            session.CustomActions.Add(action0);
+
+            var action1 = MyAPIGateway.TerminalControls.CreateAction<T>("MaxSize Decrease");
+            action1.Icon = @"Textures\GUI\Icons\Actions\Decrease.dds";
+            action1.Name = new StringBuilder(Localization.GetText("ActionMaxSizeDecrease"));
+            action1.Action = CustomActions.TerminalActionMaxSizeDecreaseControl;
+            action1.Writer = CustomActions.MaxSizeWriterControl;
+            action1.Enabled = TerminalHelpers.IsTrue;
+            action1.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action1);
+            session.CustomActions.Add(action1);
+        }
+
+        public static void CreateMinSizeControl(Session session)
+        {
+            var action0 = MyAPIGateway.TerminalControls.CreateAction<T>("MinSize Increase");
+            action0.Icon = @"Textures\GUI\Icons\Actions\Increase.dds";
+            action0.Name = new StringBuilder(Localization.GetText("ActionMinSizeIncrease"));
+            action0.Action = CustomActions.TerminalActionMinSizeIncreaseControl;
+            action0.Writer = CustomActions.MinSizeWriterControl;
+            action0.Enabled = TerminalHelpers.IsTrue;
+            action0.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action0);
+            session.CustomActions.Add(action0);
+
+            var action1 = MyAPIGateway.TerminalControls.CreateAction<T>("MinSize Decrease");
+            action1.Icon = @"Textures\GUI\Icons\Actions\Decrease.dds";
+            action1.Name = new StringBuilder(Localization.GetText("ActionMinSizeDecrease"));
+            action1.Action = CustomActions.TerminalActionMinSizeDecreaseControl;
+            action1.Writer = CustomActions.MinSizeWriterControl;
+            action1.Enabled = TerminalHelpers.IsTrue;
+            action1.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action1);
+            session.CustomActions.Add(action1);
+        }
+
+        public static void CreateMovementStateControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>("TrackingMode");
+            action.Icon = @"Textures\GUI\Icons\Actions\MovingObjectToggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionTrackingMode"));
+            action.Action = CustomActions.TerminalActionMovementModeControl;
+            action.Writer = CustomActions.MovementModeWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
+        internal static void CreateRepelModeControl(Session session)
+        {
+            var action = MyAPIGateway.TerminalControls.CreateAction<T>($"WC_RepelMode");
+            action.Icon = @"Textures\GUI\Icons\Actions\Toggle.dds";
+            action.Name = new StringBuilder(Localization.GetText("ActionWC_RepelMode"));
+            action.Action = CustomActions.TerminalActionToggleRepelModeControl;
+            action.Writer = CustomActions.RepelWriterControl;
+            action.Enabled = TerminalHelpers.IsTrue;
+            action.ValidForGroups = true;
+
+            MyAPIGateway.TerminalControls.AddAction<T>(action);
+            session.CustomActions.Add(action);
+        }
+
     }
 }

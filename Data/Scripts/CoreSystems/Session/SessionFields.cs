@@ -31,6 +31,7 @@ using VRageMath;
 using WeaponCore.Data.Scripts.CoreSystems.Ui;
 using static CoreSystems.Support.Ai;
 using static CoreSystems.Settings.CoreSettings.ServerSettings;
+using SpaceEngineers.Game.ModAPI;
 
 namespace CoreSystems
 {
@@ -56,6 +57,7 @@ namespace CoreSystems
         internal volatile bool FixedGunControls;
         internal volatile bool ArmorControls;
         internal volatile bool UpgradeControls;
+        internal volatile bool TurretControllerControls;
         internal volatile bool SorterControls;
         internal volatile bool BaseControlsActions;
         internal volatile uint LastDeform;
@@ -71,6 +73,7 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<TargetInfo> TargetInfoPool = new MyConcurrentPool<TargetInfo>(256, info => info.Clean());
         internal readonly MyConcurrentPool<WeaponAmmoMoveRequest> InventoryMoveRequestPool = new MyConcurrentPool<WeaponAmmoMoveRequest>(128, invMove => invMove.Clean());
         internal readonly MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>> ConcurrentListPool = new MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>>(100, cList => cList.ClearImmediate());
+        internal readonly MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>> ConcurrentRotorListPool = new MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>>(100, cList => cList.ClearImmediate());
         internal readonly MyConcurrentPool<GridMap> GridMapPool = new MyConcurrentPool<GridMap>(128, fatMap => fatMap.Clean());
         internal readonly MyConcurrentPool<PartCounter> PartCountPool = new MyConcurrentPool<PartCounter>(64, count => count.Current = 0);
         internal readonly MyConcurrentPool<List<IMySlimBlock>> SlimPool = new MyConcurrentPool<List<IMySlimBlock>>(128, slim => slim.Clear());
@@ -82,10 +85,12 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<WeaponCompPacket> PacketWeaponCompPool = new MyConcurrentPool<WeaponCompPacket>(64, packet => packet.CleanUp());
         internal readonly MyConcurrentPool<UpgradeCompPacket> PacketUpgradeCompPool = new MyConcurrentPool<UpgradeCompPacket>(64, packet => packet.CleanUp());
         internal readonly MyConcurrentPool<SupportCompPacket> PacketSupportCompPool = new MyConcurrentPool<SupportCompPacket>(64, packet => packet.CleanUp());
+        internal readonly MyConcurrentPool<ControlCompPacket> PacketControlCompPool = new MyConcurrentPool<ControlCompPacket>(64, packet => packet.CleanUp());
 
         internal readonly MyConcurrentPool<WeaponStatePacket> PacketWeaponStatePool = new MyConcurrentPool<WeaponStatePacket>(64, packet => packet.CleanUp());
         internal readonly MyConcurrentPool<UpgradeStatePacket> PacketUpgradeStatePool = new MyConcurrentPool<UpgradeStatePacket>(64, packet => packet.CleanUp());
         internal readonly MyConcurrentPool<SupportStatePacket> PacketSupportStatePool = new MyConcurrentPool<SupportStatePacket>(64, packet => packet.CleanUp());
+        internal readonly MyConcurrentPool<ControlStatePacket> PacketControlStatePool = new MyConcurrentPool<ControlStatePacket>(64, packet => packet.CleanUp());
         internal readonly MyConcurrentPool<EwarValues> EwarDataPool = new MyConcurrentPool<EwarValues>(64);
 
         internal readonly MyConcurrentPool<WeaponReloadPacket> PacketReloadPool = new MyConcurrentPool<WeaponReloadPacket>(64, packet => packet.CleanUp());

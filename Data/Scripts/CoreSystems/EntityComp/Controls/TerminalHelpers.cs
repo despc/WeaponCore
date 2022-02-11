@@ -6,6 +6,7 @@ using CoreSystems.Platform;
 using CoreSystems.Support;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
+using SpaceEngineers.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
 
@@ -16,12 +17,12 @@ namespace CoreSystems.Control
         internal static void AddUiControls<T>(Session session) where T : IMyTerminalBlock
         {
             //AddComboboxNoAction<T>(session, "Shoot Mode", Localization.GetText("TerminalShootModeTitle"), Localization.GetText("TerminalShootModeTooltip"), BlockUi.GetShootModes, BlockUi.RequestShootModes, BlockUi.ListShootModesNoBurst, Istrue);
-            AddComboboxNoAction<T>(session, "Shoot Mode", Localization.GetText("TerminalShootModeTitle"), Localization.GetText("TerminalShootModeTooltip"), BlockUi.GetShootModes, BlockUi.RequestShootModes, BlockUi.ListShootModes, Istrue);
+            AddComboboxNoAction<T>(session, "Shoot Mode", Localization.GetText("TerminalShootModeTitle"), Localization.GetText("TerminalShootModeTooltip"), BlockUi.GetShootModes, BlockUi.RequestShootModes, BlockUi.ListShootModes, IsTrue);
 
             AddWeaponBurstCountSliderRange<T>(session, "Burst Count", Localization.GetText("TerminalBurstShotsTitle"), Localization.GetText("TerminalBurstShotsTooltip"), BlockUi.GetBurstCount, BlockUi.RequestSetBurstCount, CanBurst, BlockUi.GetMinBurstCount, BlockUi.GetMaxBurstCount, true);
             AddWeaponBurstDelaySliderRange<T>(session, "Burst Delay", Localization.GetText("TerminalBurstDelayTitle"), Localization.GetText("TerminalBurstDelayTooltip"), BlockUi.GetBurstDelay, BlockUi.RequestSetBurstDelay, CanDelay, BlockUi.GetMinBurstDelay, BlockUi.GetMaxBurstDelay, true);
-            AddWeaponSequenceIdSliderRange<T>(session, "Sequence Id", Localization.GetText("TerminalSequenceIdTitle"), Localization.GetText("TerminalSequenceIdTooltip"), BlockUi.GetSequenceId, BlockUi.RequestSetSequenceId, Istrue, BlockUi.GetMinSequenceId, BlockUi.GetMaxSequenceId, true);
-            AddWeaponGroupIdIdSliderRange<T>(session, "Weapon Group Id", Localization.GetText("TerminalWeaponGroupIdTitle"), Localization.GetText("TerminalWeaponGroupIdTooltip"), BlockUi.GetWeaponGroupId, BlockUi.RequestSetWeaponGroupId, Istrue, BlockUi.GetMinWeaponGroupId, BlockUi.GetMaxWeaponGroupId, true);
+            AddWeaponSequenceIdSliderRange<T>(session, "Sequence Id", Localization.GetText("TerminalSequenceIdTitle"), Localization.GetText("TerminalSequenceIdTooltip"), BlockUi.GetSequenceId, BlockUi.RequestSetSequenceId, IsTrue, BlockUi.GetMinSequenceId, BlockUi.GetMaxSequenceId, true);
+            AddWeaponGroupIdIdSliderRange<T>(session, "Weapon Group Id", Localization.GetText("TerminalWeaponGroupIdTitle"), Localization.GetText("TerminalWeaponGroupIdTooltip"), BlockUi.GetWeaponGroupId, BlockUi.RequestSetWeaponGroupId, IsTrue, BlockUi.GetMinWeaponGroupId, BlockUi.GetMaxWeaponGroupId, true);
 
 
             AddSliderRof<T>(session, "Weapon ROF", Localization.GetText("TerminalWeaponROFTitle"), Localization.GetText("TerminalWeaponROFTooltip"), BlockUi.GetRof, BlockUi.RequestSetRof, UiRofSlider);
@@ -79,15 +80,58 @@ namespace CoreSystems.Control
             Separator<T>(session, "WC_sep4", HasTracking);
         }
 
+        internal static void AddTurretControlBlockControls<T>(Session session) where T : IMyTerminalBlock
+        {
+            AddOnOffSwitchNoAction<T>(session, "WCAiEnabled", Localization.GetText("TerminalAiEnabledTitle"), Localization.GetText("TerminalAiEnabledTooltip"), BlockUi.GetAiEnabledControl, BlockUi.RequestSetAiEnabledControl, true, IsTrue);
+
+            Separator<T>(session, "WC_sep2", IsTrue);
+
+            AddWeaponRangeSliderNoAction<T>(session, "Weapon Range", Localization.GetText("TerminalWeaponRangeTitle"), Localization.GetText("TerminalWeaponRangeTooltip"), BlockUi.GetRangeControl, BlockUi.RequestSetRangeControl, IsTrue, BlockUi.GetMinRangeControl, BlockUi.GetMaxRangeControl, false, false);
+
+            AddOnOffSwitchNoAction<T>(session, "ReportTarget", Localization.GetText("TerminalReportTargetTitle"), Localization.GetText("TerminalReportTargetTooltip"), BlockUi.GetReportTargetControl, BlockUi.RequestSetReportTargetControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Neutrals", Localization.GetText("TerminalNeutralsTitle"), Localization.GetText("TerminalNeutralsTooltip"), BlockUi.GetNeutralsControl, BlockUi.RequestSetNeutralsControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Unowned", Localization.GetText("TerminalUnownedTitle"), Localization.GetText("TerminalUnownedTooltip"), BlockUi.GetUnownedControl, BlockUi.RequestSetUnownedControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Biologicals", Localization.GetText("TerminalBiologicalsTitle"), Localization.GetText("TerminalBiologicalsTooltip"), BlockUi.GetBiologicalsControl, BlockUi.RequestSetBiologicalsControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Projectiles", Localization.GetText("TerminalProjectilesTitle"), Localization.GetText("TerminalProjectilesTooltip"), BlockUi.GetProjectilesControl, BlockUi.RequestSetProjectilesControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Meteors", Localization.GetText("TerminalMeteorsTitle"), Localization.GetText("TerminalMeteorsTooltip"), BlockUi.GetMeteorsControl, BlockUi.RequestSetMeteorsControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Grids", Localization.GetText("TerminalGridsTitle"), Localization.GetText("TerminalGridsTooltip"), BlockUi.GetGridsControl, BlockUi.RequestSetGridsControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "FocusFire", Localization.GetText("TerminalFocusFireTitle"), Localization.GetText("TerminalFocusFireTooltip"), BlockUi.GetFocusFireControl, BlockUi.RequestSetFocusFireControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "SubSystems", Localization.GetText("TerminalSubSystemsTitle"), Localization.GetText("TerminalSubSystemsTooltip"), BlockUi.GetSubSystemsControl, BlockUi.RequestSetSubSystemsControl, true, IsTrue);
+
+            AddOnOffSwitchNoAction<T>(session, "Repel", Localization.GetText("TerminalRepelTitle"), Localization.GetText("TerminalRepelTooltip"), BlockUi.GetRepelControl, BlockUi.RequestSetRepelControl, true, IsTrue);
+
+            Separator<T>(session, "WC_sep3", IsTrue);
+
+            AddComboboxNoAction<T>(session, "PickSubSystem", Localization.GetText("TerminalPickSubSystemTitle"), Localization.GetText("TerminalPickSubSystemTooltip"), BlockUi.GetSubSystemControl, BlockUi.RequestSubSystemControl, BlockUi.ListSubSystems, IsTrue);
+
+            AddComboboxNoAction<T>(session, "TrackingMode", Localization.GetText("TerminalTrackingModeTitle"), Localization.GetText("TerminalTrackingModeTooltip"), BlockUi.GetMovementModeControl, BlockUi.RequestMovementModeControl, BlockUi.ListMovementModes, IsTrue);
+
+            //AddComboboxNoAction<T>(session, "ControlModes", Localization.GetText("TerminalControlModesTitle"), Localization.GetText("TerminalControlModesTooltip"), BlockUi.GetControlModeControl, BlockUi.RequestControlModeControl, BlockUi.ListControlModes, IsTrue);
+
+            //AddWeaponCameraSliderRange<T>(session, "Camera Channel", Localization.GetText("TerminalCameraChannelTitle"), Localization.GetText("TerminalCameraChannelTooltip"), BlockUi.GetWeaponCamera, BlockUi.RequestSetBlockCamera, HasTracking, BlockUi.GetMinCameraChannel, BlockUi.GetMaxCameraChannel, true);
+
+            //AddLeadGroupSliderRange<T>(session, "Target Group", Localization.GetText("TerminalTargetGroupTitle"), Localization.GetText("TerminalTargetGroupTooltip"), BlockUi.GetLeadGroup, BlockUi.RequestSetLeadGroup, TargetLead, BlockUi.GetMinLeadGroup, BlockUi.GetMaxLeadGroup, true);
+
+            Separator<T>(session, "WC_sep4", IsTrue);
+        }
+
         internal static void AddDecoyControls<T>(Session session) where T : IMyTerminalBlock
         {
-            Separator<T>(session, "WC_decoySep1", Istrue);
-            AddComboboxNoAction<T>(session, "PickSubSystem", Localization.GetText("TerminalDecoyPickSubSystemTitle"), Localization.GetText("TerminalDecoyPickSubSystemTooltip"), BlockUi.GetDecoySubSystem, BlockUi.RequestDecoySubSystem, BlockUi.ListDecoySubSystems, Istrue);
+            Separator<T>(session, "WC_decoySep1", IsTrue);
+            AddComboboxNoAction<T>(session, "PickSubSystem", Localization.GetText("TerminalDecoyPickSubSystemTitle"), Localization.GetText("TerminalDecoyPickSubSystemTooltip"), BlockUi.GetDecoySubSystem, BlockUi.RequestDecoySubSystem, BlockUi.ListDecoySubSystems, IsTrue);
         }
 
         internal static void AddCameraControls<T>(Session session) where T : IMyTerminalBlock
         {
-            Separator<T>(session,  "WC_cameraSep1", Istrue);
+            Separator<T>(session,  "WC_cameraSep1", IsTrue);
             AddBlockCameraSliderRange<T>(session, "WC_PickCameraChannel", Localization.GetText("TerminalCameraCameraChannelTitle"), Localization.GetText("TerminalCameraCameraChannelTooltip"), BlockUi.GetBlockCamera, BlockUi.RequestBlockCamera, BlockUi.ShowCamera, BlockUi.GetMinCameraChannel, BlockUi.GetMaxCameraChannel, true);
         }
 
@@ -106,7 +150,7 @@ namespace CoreSystems.Control
             AddOnOffSwitchNoAction<T>(session, "Show Enhanced Area", "Area Influence", "Show On/Off", BlockUi.GetShowArea, BlockUi.RequestSetShowArea, true, SupportIsReady);
         }
 
-        internal static bool Istrue(IMyTerminalBlock block)
+        internal static bool IsTrue(IMyTerminalBlock block)
         {
             return true;
         }
@@ -164,7 +208,7 @@ namespace CoreSystems.Control
         {
 
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.IsBlock && (comp.HasTurret || comp.TrackingWeapon.System.HasGuidedAmmo) && comp.TrackingWeapon.System.TrackGrids;
+            return block is IMyTurretControlBlock || comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.IsBlock && (comp.HasTurret || comp.TrackingWeapon.System.HasGuidedAmmo) && comp.TrackingWeapon.System.TrackGrids;
         }
 
         internal static bool TrackProjectiles(IMyTerminalBlock block)
@@ -318,7 +362,7 @@ namespace CoreSystems.Control
         internal static bool NotWcOrIsTurret(IMyTerminalBlock block)
         {
             CoreComponent comp;
-            return !block.Components.TryGet(out comp) || comp.HasTurret;
+            return !block.Components.TryGet(out comp) || comp is ControlSys.ControlComponent || comp.HasTurret;
         }
 
         internal static void SliderBlockCameraWriterRange(IMyTerminalBlock block, StringBuilder builder)
@@ -412,7 +456,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -435,7 +479,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -456,7 +500,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -477,7 +521,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -498,7 +542,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -519,7 +563,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -562,7 +606,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -584,9 +628,9 @@ namespace CoreSystems.Control
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
             c.OnText = MyStringId.GetOrCompute(onText);
             c.OffText = MyStringId.GetOrCompute(offText);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
-            c.Getter = Istrue;
+            c.Getter = IsTrue;
             c.Setter = setter;
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);
@@ -600,7 +644,7 @@ namespace CoreSystems.Control
         {
             var c = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, T>(name);
 
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGettter;
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);
@@ -614,7 +658,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -635,7 +679,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
@@ -660,7 +704,7 @@ namespace CoreSystems.Control
             c.Getter = getter;
             c.Setter = setter;
             c.Visible = visibleGetter;
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
 
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);
@@ -679,7 +723,7 @@ namespace CoreSystems.Control
             c.Getter = getter;
             c.Setter = setter;
             c.Visible = visibleGetter;
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
 
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);
@@ -697,7 +741,7 @@ namespace CoreSystems.Control
             c.Getter = getter;
             c.Setter = setter;
             c.Visible = visibleGetter;
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
             
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);
@@ -715,7 +759,7 @@ namespace CoreSystems.Control
             c.Setter = setter;
 
             c.Visible = visibleGetter;
-            c.Enabled = Istrue;
+            c.Enabled = IsTrue;
 
             MyAPIGateway.TerminalControls.AddControl<T>(c);
             session.CustomControls.Add(c);

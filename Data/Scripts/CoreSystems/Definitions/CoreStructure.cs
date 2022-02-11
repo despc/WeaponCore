@@ -43,6 +43,7 @@ namespace CoreSystems.Support
             Weapon,
             Upgrade,
             Support,
+            Control,
         }
     }
 
@@ -306,4 +307,19 @@ namespace CoreSystems.Support
             EntityType = EnittyTypes.Block;
         }
     }
+
+    internal class ControlStructure : CoreStructure
+    {
+        internal ControlStructure(Session session, MyStringHash idHash)
+        {
+            Session = session;
+            StructureType = StructureTypes.Control;
+            EntityType = EnittyTypes.Block;
+            PartHashes = new MyStringHash[1] { idHash };
+            var coreSystem = new ControlSystem(session);
+            PartSystems = new Dictionary<MyStringHash, CoreSystem>(MyStringHash.Comparer);
+            PartSystems.Add(idHash, coreSystem);
+        }
+    }
+
 }

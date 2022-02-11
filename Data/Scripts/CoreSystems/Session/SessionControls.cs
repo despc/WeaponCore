@@ -8,6 +8,8 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using SpaceEngineers.Game.ModAPI;
+using VRage.Game.Entity;
+using VRage.Utils;
 using static CoreSystems.Support.CoreComponent.TriggerActions;
 using static CoreSystems.Support.WeaponDefinition.AnimationDef.PartAnimationSetDef;
 namespace CoreSystems
@@ -52,6 +54,10 @@ namespace CoreSystems
                 {
                     CreateTerminalUi<IMySmallGatlingGun>(session);
                 }
+                else if (controlObject == typeof(IMyTurretControlBlock))
+                {
+                    CreateTerminalUi<IMyTurretControlBlock>(session);
+                }
             }
             session.ControlQueue.Clear();
             session.EarlyInitOver = true;
@@ -74,6 +80,9 @@ namespace CoreSystems
             if (typeof(T) == typeof(IMySmallGatlingGun) && session.ControlTypeActivated.Contains(typeof(IMySmallGatlingGun)))
                 return true;
 
+            if (typeof(T) == typeof(IMyTurretControlBlock) && session.ControlTypeActivated.Contains(typeof(IMyTurretControlBlock)))
+                return true;
+
             session.ControlTypeActivated.Add(typeof(T));
             return false;
         }
@@ -86,15 +95,15 @@ namespace CoreSystems
                 {
                     return;
                 }
+                AlterActions<T>(session);
+                AlterControls<T>(session);
 
                 if (typeof(T) == typeof(IMyTurretControlBlock))
                 {
-                    // call method containing all controls and actions for this type here
+                    CreateTurretControllerActions<T>(session);
+                    TerminalHelpers.AddTurretControlBlockControls<T>(session);
                     return;
                 }
-
-                AlterActions<T>(session);
-                AlterControls<T>(session);
 
                 TerminalHelpers.CreateGenericControls<T>(session);
                 TerminalHelpers.AddUiControls<T>(session);
@@ -154,6 +163,26 @@ namespace CoreSystems
             CreateCustomActions<T>.CreateRepelMode(session);
             CreateCustomActions<T>.CreateWeaponCameraChannels(session);
             CreateCustomActions<T>.CreateLeadGroups(session);
+        }
+
+        internal static void CreateTurretControllerActions<T>(Session session) where T : IMyTerminalBlock
+        {
+            CreateCustomActions<T>.CreateAiEnabledControl(session);
+            CreateCustomActions<T>.CreateNeutralsControl(session);
+            CreateCustomActions<T>.CreateFriendlyControl(session);
+            CreateCustomActions<T>.CreateUnownedControl(session);
+            CreateCustomActions<T>.CreateMaxSizeControl(session);
+            CreateCustomActions<T>.CreateMinSizeControl(session);
+            CreateCustomActions<T>.CreateMovementStateControl(session);
+            //CreateCustomActions<T>.CreateControlModesControl(session);
+            CreateCustomActions<T>.CreateSubSystemsControl(session);
+            CreateCustomActions<T>.CreateProjectilesControl(session);
+            CreateCustomActions<T>.CreateBiologicalsControl(session);
+            CreateCustomActions<T>.CreateMeteorsControl(session);
+            CreateCustomActions<T>.CreateGridsControl(session);
+            CreateCustomActions<T>.CreateFocusTargetsControl(session);
+            CreateCustomActions<T>.CreateFocusSubSystemControl(session);
+            CreateCustomActions<T>.CreateRepelModeControl(session);
         }
 
         internal static void CreateCustomActionSetArmorEnhancer<T>(Session session) where T: IMyTerminalBlock
@@ -362,6 +391,15 @@ namespace CoreSystems
                 "SelectedImageList",
                 "RemoveSelectedTextures",
                 "PreserveAspectRatio",
+
+                "Open Toolbar",
+                "RotorAzimuth",
+                "RotorElevation",
+                "CameraList",
+                "MultiplierAz",
+                "MultiplierEl",
+                "AngleDeviation",
+
             };
 
             for (int i = validType ? 12 : 0; i < controls.Count; i++) {
@@ -388,6 +426,16 @@ namespace CoreSystems
                         ((IMyTerminalControlOnOffSwitch) c).Setter += OnOffSetter;
                         session.AlteredControls.Add(c);
                         break;
+
+                    case "RotorAzimuth":
+                        ((IMyTerminalControlCombobox)c).Setter += AzRotorSetter;
+                        session.AlteredControls.Add(c);
+                        break;
+
+                    case "RotorElevation":
+                        ((IMyTerminalControlCombobox)c).Setter += ElRotorSetter;
+                        session.AlteredControls.Add(c);
+                        break;
                 }
             }
         }
@@ -397,6 +445,30 @@ namespace CoreSystems
             var comp = block?.Components?.Get<CoreComponent>();
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
             OnOffAnimations(comp, on);
+        }
+
+        private static void AzRotorSetter(IMyTerminalBlock block, long id)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var state = comp.Data.Repo.Values.State.Control;
+            MyEntity ent;
+            if (id != 0 && MyEntities.TryGetEntityById(id, out ent))
+                state.AzRotor = ent as IMyMotorStator;
+            else state.AzRotor = null;
+        }
+
+        private static void ElRotorSetter(IMyTerminalBlock block, long id)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+
+            var state = comp.Data.Repo.Values.State.Control;
+            MyEntity ent;
+            if (id != 0 && MyEntities.TryGetEntityById(id, out ent))
+                state.ElRotor = ent as IMyMotorStator;
+            else state.ElRotor = null;
         }
 
         private static void OnOffAnimations(CoreComponent comp, bool on)
