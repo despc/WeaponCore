@@ -138,7 +138,6 @@ namespace CoreSystems.Support
         internal bool ModOverride;
         internal uint TargetsUpdatedTick;
         internal uint VelocityUpdateTick;
-        internal uint TargetResetTick;
         internal uint NewProjectileTick;
         internal uint LiveProjectileTick;
         internal uint ProjectileTicker;

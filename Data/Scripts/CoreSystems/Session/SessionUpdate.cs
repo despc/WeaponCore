@@ -409,7 +409,7 @@ namespace CoreSystems
 
                         var seek = wComp.FakeMode && w.Target.TargetState != TargetStates.IsFake || aConst.RequiresTarget & !w.Target.HasTarget && !noAmmo && (wComp.DetectOtherSignals && ai.DetectionInfo.OtherInRange || ai.DetectionInfo.PriorityInRange) && (!wComp.UserControlled && !enforcement.DisableAi || w.PartState.Action == TriggerClick);
                         
-                        if (!IsClient && (seek || aConst.RequiresTarget && ai.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
+                        if (!IsClient && (seek || aConst.RequiresTarget && rootConstruct.TargetResetTick == Tick && !wComp.UserControlled && !enforcement.DisableAi) && !w.AcquiringTarget && wValues.State.Control != ControlMode.Camera)
                         {
                             w.AcquiringTarget = true;
                             AcquireTargets.Add(w);
@@ -546,7 +546,7 @@ namespace CoreSystems
                 var seekProjectile = w.ProjectilesNear || w.System.TrackProjectile && w.Comp.Data.Repo.Values.Set.Overrides.Projectiles && w.BaseComp.Ai.CheckProjectiles;
                 var checkTime = w.Target.TargetChanged || acquire || seekProjectile || w.FastTargetResetTick == Tick;
 
-                if (checkTime || w.BaseComp.Ai.TargetResetTick == Tick && w.Target.HasTarget) {
+                if (checkTime || w.BaseComp.Ai.Construct.RootAi.Construct.TargetResetTick == Tick && w.Target.HasTarget) {
 
                     if (seekProjectile || comp.Data.Repo.Values.State.TrackingReticle || (comp.DetectOtherSignals && w.BaseComp.Ai.DetectionInfo.OtherInRange || w.BaseComp.Ai.DetectionInfo.PriorityInRange) && w.BaseComp.Ai.DetectionInfo.ValidSignalExists(w))
                     {
@@ -557,7 +557,7 @@ namespace CoreSystems
                         }
                         else
                         {
-                            Ai.AcquireTarget(w, w.BaseComp.Ai.TargetResetTick == Tick);
+                            Ai.AcquireTarget(w, w.BaseComp.Ai.Construct.RootAi.Construct.TargetResetTick == Tick);
                         }
                     }
 

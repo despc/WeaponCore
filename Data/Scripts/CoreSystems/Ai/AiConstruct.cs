@@ -107,6 +107,7 @@ namespace CoreSystems.Support
             internal int DroneCount;
             internal uint LastDroneTick;
             internal uint LastEffectUpdateTick;
+            internal uint TargetResetTick;
             internal bool DroneAlert;
 
             internal double TotalEffect;
@@ -307,7 +308,6 @@ namespace CoreSystems.Support
                 }
             }
 
-
             internal static void BuildAiListAndCounters(Ai cAi)
             {
                 cAi.Construct.RefreshedAis.Clear();
@@ -439,7 +439,7 @@ namespace CoreSystems.Support
                 if (!sameSubs)
                     Log.Line($"subs not same");
 
-                return sameSet && sameRoot;
+                return sameSet && sameRoot && sameSubs;
             }
 
             public static int ConstructPlayerCount(Ai ai)
@@ -536,7 +536,7 @@ namespace CoreSystems.Support
             if (fd.Target != target.EntityId)
             {
                 fd.Target = target.EntityId;
-                ai.TargetResetTick = session.Tick + 1;
+                ai.Construct.RootAi.Construct.TargetResetTick = session.Tick + 1;
             }
             ServerIsFocused(ai);
 
@@ -559,7 +559,7 @@ namespace CoreSystems.Support
 
             var nextMode = (int)fd.Locked + 1 < modeCount ? fd.Locked + 1 : 0;
             fd.Locked = nextMode;
-            ai.TargetResetTick = session.Tick + 1;
+            ai.Construct.RootAi.Construct.TargetResetTick = session.Tick + 1;
             ServerIsFocused(ai);
 
             ai.Construct.UpdateConstruct(Ai.Constructs.UpdateType.Focus, ChangeDetected(ai));
