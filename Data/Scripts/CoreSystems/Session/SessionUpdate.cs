@@ -53,14 +53,8 @@ namespace CoreSystems
                 if (ai.AiType == Ai.AiTypes.Grid && !ai.HasPower || enforcement.ServerSleepSupport && IsServer && ai.AwakeComps == 0 && ai.WeaponsTracking == 0 && ai.SleepingComps > 0 && !ai.CheckProjectiles && ai.AiSleep && !ai.DbUpdated) 
                     continue;
 
-                if (!Ai.Constructs.ConstructSynced(ai))
-                    Log.Line($"{ai.TopEntity.EntityId} not synced");
-
                 var construct = ai.Construct;
                 var focus = construct.Focus;
-
-                if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.LastControllerTick == Tick)
-                    construct.UpdatePlayerStates();
 
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
@@ -225,8 +219,7 @@ namespace CoreSystems
                     var wValues = wComp.Data.Repo.Values;
 
                     var focusTargets = wValues.Set.Overrides.FocusTargets;
-                    //if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
-                    if (IsServer && wValues.State.PlayerId > 0 && !Ai.Constructs.MatchPlayerId(ai, wValues.State.PlayerId))
+                    if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
 
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)

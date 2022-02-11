@@ -1001,7 +1001,6 @@ namespace CoreSystems
 
             for (int i = 0; i < Ais.Count; i++)
                 Ais[i].Construct.UpdatePlayerStates();
-
         }
 
 

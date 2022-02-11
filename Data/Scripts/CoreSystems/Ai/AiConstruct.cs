@@ -273,10 +273,20 @@ namespace CoreSystems.Support
                 }
             }
 
-            internal static void UpdatePlayerLockState(Ai rootAi, long playerId)
+
+            internal void UpdatePlayerStates()
+            {
+                foreach (var p in Ai.GridMap.PlayerControllers)
+                {
+                    RootAi.Construct.ControllingPlayers[p.Key] = p.Value;
+                    UpdatePlayerLockState(p.Key);
+                }
+            }
+
+            internal void UpdatePlayerLockState(long playerId)
             {
                 PlayerMap playerMap;
-                if (!rootAi.Session.Players.TryGetValue(playerId, out playerMap))
+                if (!Ai.Session.Players.TryGetValue(playerId, out playerMap))
                     Log.Line($"failed to get PlayerMap");
                 else if (playerMap.Player.Character != null && playerMap.Player.Character.Components.TryGet(out playerMap.TargetFocus) && playerMap.Player.Character.Components.TryGet(out playerMap.TargetLock))
                 {
@@ -287,27 +297,6 @@ namespace CoreSystems.Support
                 }
                 else
                     Log.Line($"failed to get and set player focus and lock");
-            }
-
-            internal void UpdatePlayerStates()
-            {
-                var rootConstruct = RootAi.Construct;
-                foreach (var sub in RootAi.SubGridCache)
-                {
-                    Ai subAi;
-                    if (RootAi.Session.EntityAIs.TryGetValue(sub, out subAi))
-                        subAi.Construct.ControllingPlayers.Clear();
-
-                    GridMap gridMap;
-                    if (RootAi.Session.GridToInfoMap.TryGetValue(sub, out gridMap))
-                    {
-                        foreach (var m in gridMap.PlayerControllers)
-                        {
-                            rootConstruct.ControllingPlayers.Add(m.Key, m.Value);
-                            UpdatePlayerLockState(RootAi, m.Key);
-                        }
-                    }
-                }
             }
 
             internal static void BuildAiListAndCounters(Ai cAi)

@@ -389,8 +389,6 @@ namespace CoreSystems.Platform
 
             internal void ResetPlayerControl()
             {
-                Ai.GridMap.GroupMap.UpdateAis();
-                Log.Line($"release: match:{Ai.Constructs.MatchPlayerId(Ai, Data.Repo.Values.State.PlayerId)}({Ai.Construct.ControllingPlayers.ContainsKey(Data.Repo.Values.State.PlayerId)})[{Ai.Construct.RootAi.Construct.ControllingPlayers.ContainsKey(Data.Repo.Values.State.PlayerId)}] - sync:{Ai.Constructs.ConstructSynced(Ai)} - pCount:{Ai.Constructs.ConstructPlayerCount(Ai)}({Ai.Constructs.ConstructPlayerCount(Ai.Construct.RootAi)})");
                 Data.Repo.Values.State.PlayerId = -1;
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
