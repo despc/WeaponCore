@@ -397,11 +397,7 @@ namespace CoreSystems.Support
 
             rootAngle *= Math.Sign(Vector3D.Dot(axis, up));
             var desiredAngle = root.Angle + rootAngle;
-            if (desiredAngle < root.LowerLimitRad && desiredAngle + MathHelper.TwoPi > root.UpperLimitRad)
-            {
-                Log.Line($"Angle outside base rotor limits");
-                return false;
-            }
+            var rootOutsideLimits = desiredAngle < root.LowerLimitRad && desiredAngle + MathHelper.TwoPi > root.UpperLimitRad;
 
             up = secondary.PositionComp.WorldMatrixRef.Up;
             upZero = Vector3D.IsZero(up);
@@ -411,9 +407,10 @@ namespace CoreSystems.Support
 
             secondaryAngle *= Math.Sign(Vector3D.Dot(axis, up));
             desiredAngle = secondary.Angle + secondaryAngle;
-            if (desiredAngle < secondary.LowerLimitRad && desiredAngle + MathHelper.TwoPi > secondary.UpperLimitRad)
+            var secondaryOutsideLimits = desiredAngle < secondary.LowerLimitRad && desiredAngle + MathHelper.TwoPi > secondary.UpperLimitRad;
+            if (rootOutsideLimits && secondaryOutsideLimits)
             {
-                Log.Line($"Angle outside secondary rotor limits");
+                Log.Line($"Angle outside rotor limits");
                 return false;
             }
 

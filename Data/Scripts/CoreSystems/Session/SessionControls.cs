@@ -426,16 +426,6 @@ namespace CoreSystems
                         ((IMyTerminalControlOnOffSwitch) c).Setter += OnOffSetter;
                         session.AlteredControls.Add(c);
                         break;
-
-                    case "RotorAzimuth":
-                        ((IMyTerminalControlCombobox)c).Setter += AzRotorSetter;
-                        session.AlteredControls.Add(c);
-                        break;
-
-                    case "RotorElevation":
-                        ((IMyTerminalControlCombobox)c).Setter += ElRotorSetter;
-                        session.AlteredControls.Add(c);
-                        break;
                 }
             }
         }
@@ -445,30 +435,6 @@ namespace CoreSystems
             var comp = block?.Components?.Get<CoreComponent>();
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
             OnOffAnimations(comp, on);
-        }
-
-        private static void AzRotorSetter(IMyTerminalBlock block, long id)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
-
-            var state = comp.Data.Repo.Values.State.Control;
-            MyEntity ent;
-            if (id != 0 && MyEntities.TryGetEntityById(id, out ent))
-                state.AzRotor = ent as IMyMotorStator;
-            else state.AzRotor = null;
-        }
-
-        private static void ElRotorSetter(IMyTerminalBlock block, long id)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
-
-            var state = comp.Data.Repo.Values.State.Control;
-            MyEntity ent;
-            if (id != 0 && MyEntities.TryGetEntityById(id, out ent))
-                state.ElRotor = ent as IMyMotorStator;
-            else state.ElRotor = null;
         }
 
         private static void OnOffAnimations(CoreComponent comp, bool on)

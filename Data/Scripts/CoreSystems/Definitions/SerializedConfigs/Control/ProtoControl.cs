@@ -127,16 +127,12 @@ namespace CoreSystems
         [ProtoMember(1)] public float Heat; // don't save
         [ProtoMember(2)] public bool Overheated; //don't save
         [ProtoMember(3), DefaultValue(TriggerActions.TriggerOff)] public TriggerActions Action = TriggerActions.TriggerOff; // save
-        [ProtoMember(4)] public IMyMotorStator AzRotor;
-        [ProtoMember(5)] public IMyMotorStator ElRotor;
 
         public void Sync(ProtoControlPartState sync)
         {
             Heat = sync.Heat;
             Overheated = sync.Overheated;
             Action = sync.Action;
-            AzRotor = sync.AzRotor;
-            ElRotor = sync.ElRotor;
         }
 
         public void WeaponMode(ControlSys.ControlComponent comp, TriggerActions action, bool resetTerminalAction = true, bool syncCompState = true)

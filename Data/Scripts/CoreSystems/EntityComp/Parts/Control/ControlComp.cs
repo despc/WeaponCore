@@ -15,10 +15,6 @@ namespace CoreSystems.Platform
             internal readonly ControlCompData Data;
             internal readonly ControlStructure Structure;
 
-            internal IMyMotorStator AzRotor;
-            internal IMyMotorStator ElRotor;
-
-            internal bool AiEnabled;
             internal bool RotorsDirty;
             internal bool RotorsMoving;
             internal Target.TargetStates OldState = Target.TargetStates.WasFake;
