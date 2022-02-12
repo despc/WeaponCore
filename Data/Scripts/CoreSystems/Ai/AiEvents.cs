@@ -126,7 +126,6 @@ namespace CoreSystems.Support
 
                 var weaponType = (cube is MyConveyorSorter || cube is IMyUserControllableGun);
                 var isWeaponBase = weaponType && cube.BlockDefinition != null && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cube.BlockDefinition.Id) || Session.PartPlatforms.ContainsKey(cube.BlockDefinition.Id));
-                StatorMap statorMap;
                 if (!isWeaponBase && (cube is MyConveyor || cube is IMyConveyorTube || cube is MyConveyorSorter || cube is MyCargoContainer || cube is MyCockpit || cube is IMyAssembler || cube is IMyShipConnector) && cube.CubeGrid.IsSameConstructAs(GridEntity)) { 
                     
                     MyInventory inventory;
@@ -146,10 +145,12 @@ namespace CoreSystems.Support
                             Session.InventoryMonitors[inventory] = monitors + 1;
                     }
                 }
-                else if (stator != null && stator.TopGrid == TopEntity && Session.StatorMaps.TryGetValue(stator, out statorMap))
+                else if (stator != null && stator.TopGrid == TopEntity)
                 {
-                    statorMap.TopAi = this;
-                    TopStator.Add(stator, statorMap);
+                    var map = Session.StatorMapPool.Count > 0 ? Session.StatorMapPool.Pop() : new StatorMap();
+                    map.Stator = stator;
+                    map.TopAi = this;
+                    TopStator.Add(stator, map);
                 }
                 else if (battery != null) {
                     if (Batteries.Add(battery)) SourceCount++;
@@ -182,26 +183,29 @@ namespace CoreSystems.Support
                 var isWeaponBase = weaponType && cubeDef != null && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cubeDef.Id) || Session.PartPlatforms.ContainsKey(cubeDef.Id));
                 var battery = cube as MyBatteryBlock;
                 var stator = cube as IMyMotorStator;
-                StatorMap statorMap;
-
+                StatorMap map;
                 MyInventory inventory;
-                if (!isWeaponBase && cube.HasInventory && cube.TryGetInventory(out inventory)) {
+
+                if (stator != null && TopStator.TryGetValue(stator, out map))
+                {
+                    map.Clean();
+                    Session.StatorMapPool.Push(map);
+                    TopStator.Remove(stator);
+                }
+                else if (battery != null)
+                {
+
+                    if (Batteries.Remove(battery))
+                        SourceCount--;
+
+                    UpdatePowerSources = true;
+                }
+                else if (!isWeaponBase && cube.HasInventory && cube.TryGetInventory(out inventory)) {
 
                     if (!InventoryRemove(cube, inventory))
                         Log.Line($"FatBlock inventory remove failed: {cube.BlockDefinition?.Id.SubtypeName} - gridMatch:{cube.CubeGrid == TopEntity} - aiMarked:{MarkedForClose} - {cube.CubeGrid.DebugName} - {TopEntity?.DebugName}");
                 }
-                else if (stator != null && TopStator.TryGetValue(stator, out statorMap))
-                {
-                    statorMap.TopAi = null;
-                    TopStator.Remove(stator);
-                }
-                else if (battery != null) {
-                    
-                    if (Batteries.Remove(battery)) 
-                        SourceCount--;
-                    
-                    UpdatePowerSources = true;
-                }
+
             }
             catch (Exception ex) { Log.Line($"Exception in FatBlockRemoved last: {ex} - Marked: {MarkedForClose} - Closed:{Closed}", null, true); }
         }

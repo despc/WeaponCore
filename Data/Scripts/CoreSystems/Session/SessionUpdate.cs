@@ -139,7 +139,7 @@ namespace CoreSystems
                         }
 
                         var baseMap = controlPart.BaseMap;
-                        if (Tick30 && (baseMap == null || baseMap != null && baseMap != az && baseMap != el))
+                        if (baseMap == null || baseMap != null && baseMap != az && baseMap != el)
                         {
                             Log.Line($"Setting base: elNull:{el == null} - azNull:{az == null} - azStatorNull{az?.Stator == null} - elStatorNull{el?.Stator == null}");
                             controlPart.BaseMap = el == null ? az : az == null ? el : az.Stator.TopGrid == el.Stator.CubeGrid ? az : el;
@@ -173,25 +173,24 @@ namespace CoreSystems
 
                         if (Tick120)
                         {
-                            foreach (var map in turretMap)
+                            for (int j = 0; j < turretMap.Count; j++)
                             {
-                                if (map.Stator.TopGrid == null)
+                                var map = turretMap[j];
+                                if (map.Stator.TopGrid == null || map.RotorMap.PrimaryWeapon != null)
                                     continue;
 
-                                if (map.TopAi != null && map.RotorMap.PrimaryWeapon == null)
-                                    for (int k = 0; k < map.TopAi.WeaponComps.Count; k++)
+                                for (int k = 0; k < map.TopAi.WeaponComps.Count; k++)
+                                {
+                                    var wComp = map.TopAi.WeaponComps[i];
+                                    if (wComp.IsFunctional)
                                     {
-                                        var wComp = map.TopAi.WeaponComps[i];
-                                        if (wComp.IsFunctional)
-                                        {
-                                            map.RotorMap.PrimaryWeapon = wComp.TrackingWeapon;
-                                            map.RotorMap.Scope = wComp.TrackingWeapon.GetScope;
-                                            Log.Line($"Set primary weapon and scope");
-                                            break;
-                                        }
-
+                                        map.RotorMap.PrimaryWeapon = wComp.TrackingWeapon;
+                                        map.RotorMap.Scope = wComp.TrackingWeapon.GetScope;
+                                        Log.Line($"Set primary weapon and scope");
+                                        break;
                                     }
 
+                                }
                             }
                         }
 
@@ -214,18 +213,18 @@ namespace CoreSystems
                                 controlPart.TrackingScope = null;
                             }
 
-                            foreach (var rotor in turretMap)
+                            for (int j = 0; j < turretMap.Count; j++)
                             {
-                                var controlledAi = rotor.TopAi;
-                                if (controlledAi == null || controlledAi.WeaponComps.Count == 0)
+                                var map = turretMap[j];
+                                if (map.TopAi.WeaponComps.Count == 0)
                                     continue;
 
-                                for (int k = 0; k < controlledAi.WeaponComps.Count; k++)
+                                for (int k = 0; k < map.TopAi.WeaponComps.Count; k++)
                                 {
-                                    var wComp = controlledAi.WeaponComps[i];
+                                    var wComp = map.TopAi.WeaponComps[i];
                                     if (wComp.IsFunctional && wComp.IsWorking && !wComp.IsDisabled)
                                     {
-                                        controlPart.TrackingMap = rotor;
+                                        controlPart.TrackingMap = map;
                                         controlPart.TrackingWeapon = wComp.TrackingWeapon;
                                         controlPart.TrackingScope = wComp.TrackingWeapon.GetScope;
                                         controlPart.TrackingWeapon.MasterComp = cComp;
@@ -271,7 +270,7 @@ namespace CoreSystems
                         }
 
                         Vector3D desiredDirection;
-                        double targetDistSqr = 0;
+                        var targetDistSqr = 0d;
 
                         if (target.TargetState == TargetStates.IsEntity)
                         {
@@ -309,13 +308,13 @@ namespace CoreSystems
                         var deviationRads = MathHelper.ToRadians(controller.AngleDeviation);
 
                         //Root control
-                        Vector3D up = root.Stator.PositionComp.WorldMatrixRef.Up;
-                        bool upZero = Vector3D.IsZero(up);
-                        Vector3D desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
-                        Vector3D currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
-                        double rootAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
+                        var up = root.Stator.PositionComp.WorldMatrixRef.Up;
+                        var upZero = Vector3D.IsZero(up);
+                        var desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
+                        var currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
+                        var rootAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
 
-                        bool rootOutsideLimits = false;
+                        var rootOutsideLimits = false;
                         if (MyUtils.IsZero(rootAngle, (float)epsilon))
                         {
                             if (IsServer)
@@ -334,14 +333,14 @@ namespace CoreSystems
                                 root.Stator.TargetVelocityRad = rootOutsideLimits ? 0 : controller.VelocityMultiplierAzimuthRpm * (float)rootAngle;
                         }
 
-                        foreach (var statorMap in turretMap)
+                        for (int j = 0; j < turretMap.Count; j++)
                         {
-                            //var map = turretMap[statorMap];
-                            if (statorMap.TopAi == null || statorMap.RotorMap.Scope == null)
+                            var map = turretMap[j];
+                            if (map.RotorMap.Scope == null)
                                 continue;
 
-                            currentDirection = statorMap.RotorMap.Scope.Info.Direction;
-                            up = statorMap.Stator.PositionComp.WorldMatrixRef.Up;
+                            currentDirection = map.RotorMap.Scope.Info.Direction;
+                            up = map.Stator.PositionComp.WorldMatrixRef.Up;
                             upZero = Vector3D.IsZero(up);
                             desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
                             currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
@@ -351,24 +350,24 @@ namespace CoreSystems
                             {
                                 if (Tick60) Log.Line($"secondary isZero {MyUtils.IsZero(subAngle, (float)epsilon)} >2pi {Math.Abs(rootAngle) > MathHelper.PiOver2}");
                                 if (IsServer)
-                                    statorMap.Stator.TargetVelocityRad = 0;
+                                    map.Stator.TargetVelocityRad = 0;
                             }
                             else
                             {
                                 subAngle *= Math.Sign(Vector3D.Dot(axis, up));
-                                var desiredAngle = statorMap.Stator.Angle + subAngle;
-                                var subOutsideLimits = desiredAngle < statorMap.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi > statorMap.Stator.UpperLimitRad;
+                                var desiredAngle = map.Stator.Angle + subAngle;
+                                var subOutsideLimits = desiredAngle < map.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi > map.Stator.UpperLimitRad;
 
-                                if ((desiredAngle < statorMap.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi < statorMap.Stator.UpperLimitRad) || (desiredAngle > statorMap.Stator.UpperLimitRad && desiredAngle - MathHelper.TwoPi > statorMap.Stator.LowerLimitRad))
+                                if ((desiredAngle < map.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi < map.Stator.UpperLimitRad) || (desiredAngle > map.Stator.UpperLimitRad && desiredAngle - MathHelper.TwoPi > map.Stator.LowerLimitRad))
                                     subAngle = -Math.Sign(subAngle) * (MathHelper.TwoPi - Math.Abs(subAngle));
 
                                 if (IsServer)
-                                    statorMap.Stator.TargetVelocityRad = subOutsideLimits ? 0 : controller.VelocityMultiplierElevationRpm * (float)subAngle;
+                                    map.Stator.TargetVelocityRad = subOutsideLimits ? 0 : controller.VelocityMultiplierElevationRpm * (float)subAngle;
                             }
 
                             if (rootAngle * rootAngle + subAngle * subAngle < deviationRads * deviationRads)
                             {
-                                statorMap.TopAi.RotorTurretAimed = true;
+                                map.TopAi.RotorTurretAimed = true;
                             }
                         }
                     }

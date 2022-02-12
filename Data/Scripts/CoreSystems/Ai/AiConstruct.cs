@@ -78,7 +78,7 @@ namespace CoreSystems.Support
                 var battery = cube as MyBatteryBlock;
                 var stator = cube as IMyMotorStator;
 
-                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery) || stator != null && TopStator.ContainsKey(stator))
+                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery) || stator != null)
                 {
                     FatBlockRemoved(cube);
                 }

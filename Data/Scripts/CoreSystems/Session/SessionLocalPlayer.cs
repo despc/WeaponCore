@@ -124,7 +124,6 @@ namespace CoreSystems
 
         private void GunnerAcquire(MyCubeBlock cube)
         {
-            Log.Line($"gunner acquire, blacklisting");
             GunnerBlackList = true;
             ActiveControlBlock = cube;
             var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
@@ -137,7 +136,6 @@ namespace CoreSystems
 
         private void GunnerRelease(MyCubeBlock cube)
         {
-            Log.Line($"gunner release, unblacklisting");
             GunnerBlackList = false;
             ActiveControlBlock = null;
             var controlStringLeft = MyAPIGateway.Input.GetControl(MyMouseButtonsEnum.Left).GetGameControlEnum().String;
