@@ -161,12 +161,6 @@ namespace CoreSystems
 
                     DsUtil.Start("ai");
 
-                    if (GridGroupUpdates.Count > 0)
-                    {
-                        GroupUpdates();
-                        Log.Line($"late");
-                    }
-
                     if (AimingAi.Count > 0) 
                         AimAi();
 

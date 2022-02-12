@@ -963,7 +963,7 @@ namespace CoreSystems
     {
         public readonly ConcurrentDictionary<MyCubeGrid, Ai> Construct = new ConcurrentDictionary<MyCubeGrid, Ai>();
         public readonly List<Ai> Ais = new List<Ai>();
-        public volatile bool Dirty;
+        public bool Dirty;
         public Session Session;
         public GridLinkTypeEnum Type;
         public IMyGridGroupData GroupData;
@@ -978,7 +978,11 @@ namespace CoreSystems
             {
                 gridMap.GroupMap = this;
                 Construct.TryAdd(grid, null);
-                Session.GridGroupUpdates.Add(this);
+                if (!Dirty)
+                {
+                    Session.GridGroupUpdates.Add(this);
+                    Dirty = true;
+                }
             }
             else 
                 Log.Line($"OnGridAdded could not find map");
@@ -995,7 +999,11 @@ namespace CoreSystems
             {
                 gridMap.GroupMap = this;
                 Construct.Remove(grid);
-                Session.GridGroupUpdates.Add(this);
+                if (!Dirty)
+                {
+                    Session.GridGroupUpdates.Add(this);
+                    Dirty = true;
+                }
             }
             else
                 Log.Line($"OnGridAdded could not find map");
@@ -1004,6 +1012,9 @@ namespace CoreSystems
 
         public void UpdateAis()
         {
+            if (Session == null)
+                return;
+
             Ais.Clear();
             foreach (var g in Construct) {
                 Ai ai;
@@ -1028,6 +1039,7 @@ namespace CoreSystems
             }
 
             Ai.Constructs.BuildAiListAndCounters(Ais);
+            Dirty = false;
         }
 
 
@@ -1035,7 +1047,7 @@ namespace CoreSystems
         {
             LastChangeTick = 0;
             Session = null;
-            Dirty = true;
+            Dirty = false;
             Construct.Clear();
             Ais.Clear();
         }

@@ -890,8 +890,8 @@ namespace CoreSystems
 
         private void GroupUpdates()
         {
-            foreach (var ggu in GridGroupUpdates)
-                ggu.UpdateAis();
+            for (int i = 0; i < GridGroupUpdates.Count; i++)
+                GridGroupUpdates[i].UpdateAis();
 
             GridGroupUpdates.Clear();
         }

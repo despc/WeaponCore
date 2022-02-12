@@ -142,7 +142,6 @@ namespace CoreSystems
 
             var map = GridGroupMapPool.Get();
             map.Session = this;
-            map.Dirty = false;
             map.Type = groupData.LinkType;
             map.GroupData = groupData;
             //groupData.OnReleased += map.OnReleased;
@@ -160,7 +159,6 @@ namespace CoreSystems
             if (GridGroupMap.TryGetValue(groupData, out map))
             {
                 map.GroupData = null;
-                map.Dirty = true;
 
                 //groupData.OnReleased -= map.OnReleased;
                 groupData.OnGridAdded -= map.OnGridAdded;
