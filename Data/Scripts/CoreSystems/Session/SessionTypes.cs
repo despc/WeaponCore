@@ -1014,15 +1014,20 @@ namespace CoreSystems
             for (int i = 0; i < Ais.Count; i++)
                 Ais[i].SubGridChanges();
 
-            for (int i = 0; i < Ais.Count; i++) 
-                Ais[i].Construct.Refresh();
-
             for (int i = 0; i < Ais.Count; i++)
-                Ais[i].Construct.UpdatePlayerStates();
+            {
+                var ai = Ais[i];
 
-            for (int i = 0; i < Ais.Count; i++)
-                Ais[i].Construct.UpdateStators();
+                ai.Construct.Refresh();
 
+                if (ai.GridMap.PlayerControllers.Count > 0)
+                    ai.Construct.UpdatePlayerStates();
+
+                if (ai.TopStator.Count > 0)
+                    ai.Construct.UpdateStators();
+            }
+
+            Ai.Constructs.BuildAiListAndCounters(Ais);
         }
 
 

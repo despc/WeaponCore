@@ -38,6 +38,14 @@ namespace CoreSystems.Support
                 if (!GridMap.GroupMap.Construct.ContainsKey(sub))
                     UnRegisterSubGrid(sub);
             }
+
+            foreach (var map in Construct.LocalStatorMaps) {
+                map.Value.Clear();
+                Session.StatorMapListPool.Push(map.Value);
+            }
+            
+            Construct.LocalStatorMaps.Clear();
+            Construct.ControllingPlayers.Clear();
         }
 
         public void RegisterSubGrid(MyCubeGrid grid)
@@ -193,18 +201,8 @@ namespace CoreSystems.Support
                             maxLockRange = Ai.Construct.MaxLockRange;
                     }
 
-                    Ai.Construct.ControllingPlayers.Clear();
-
-                    foreach (var map in Ai.Construct.LocalStatorMaps) {
-                        map.Value.Clear();
-                        RootAi.Session.StatorMapListPool.Push(map.Value);
-                    }
-                    Ai.Construct.LocalStatorMaps.Clear();
-
                     RootAi.Session.EntityToMasterAi[Ai.TopEntity] = RootAi;
                     RootAi.Construct.MaxLockRange = maxLockRange;
-                    BuildAiListAndCounters(Ai);
-
                     return;
                 }
 
@@ -321,6 +319,22 @@ namespace CoreSystems.Support
                 }
                 else
                     Log.Line($"failed to get and set player focus and lock");
+            }
+
+            internal static void BuildAiListAndCounters(List<Ai> ais)
+            {
+                for (int i = 0; i < ais.Count; i++)
+                {
+
+                    var checkAi = ais[i];
+                    checkAi.Construct.Counter.Clear();
+
+                    for (int x = 0; x < ais.Count; x++)
+                    {
+                        foreach (var wc in ais[x].PartCounting)
+                            checkAi.Construct.AddWeaponCount(wc.Key, wc.Value.Current);
+                    }
+                }
             }
 
             internal static void BuildAiListAndCounters(Ai cAi)
