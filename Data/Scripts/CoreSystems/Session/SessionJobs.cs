@@ -15,6 +15,7 @@ using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
+using static CoreSystems.Platform.ControlSys;
 using static CoreSystems.Support.WeaponDefinition.TargetingDef.BlockTypes;
 namespace CoreSystems
 {
@@ -22,6 +23,7 @@ namespace CoreSystems
     {
         public readonly Dictionary<long, Ai.PlayerController> PlayerControllers = new Dictionary<long, Ai.PlayerController>();
         public ConcurrentCachingList<MyCubeBlock> MyCubeBocks;
+        public ConcurrentCachingList<IMyMotorStator> Rotors;
         public MyGridTargeting Targeting;
         public GridGroupMap GroupMap;
         public volatile bool Trash;
@@ -38,6 +40,7 @@ namespace CoreSystems
             Targeting = null;
             GroupMap = null;
             MyCubeBocks = null;
+            Rotors = null;
             LastSortTick = 0;
             MostBlocks = 0;
             PowerCheckTick = 0;

@@ -86,6 +86,9 @@ namespace CoreSystems.Support
                         { "TerminalShootModeTitle", "Shoot Mode" },
                         { "TerminalShootModeTooltip", "Set the weapon's mode, fire once, burst fire, mouse click, key toggle mode" },
 
+                        { "TerminalAiEnabledTitle", "Enable AI" },
+                        { "TerminalAiEnabledTooltip", "Automatically aim and fire at targets" },
+
 
                         { "TerminalTargetGroupTitle", "Target Lead Group" },
                         { "TerminalTargetGroupTooltip", "Assign this weapon to target lead group" },
@@ -129,6 +132,9 @@ namespace CoreSystems.Support
                         { "ActionWC_Decrease_CameraChannel", "Previous Camera Channel" },
                         { "ActionWC_Increase_LeadGroup", "Next Lead Group" },
                         { "ActionWC_Decrease_LeadGroup", "Previous Lead Group" },
+
+                        { "ActionWCAiEnabled", "Enable AI On/Off" },
+
                         { "ActionMask", "Select Mask Type" },
                         { "SystemStatusFault", "[Fault]" },
                         { "SystemStatusOffline", "[Offline]" },

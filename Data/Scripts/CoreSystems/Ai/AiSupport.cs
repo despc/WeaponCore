@@ -101,7 +101,7 @@ namespace CoreSystems.Support
                             }
 
                             PhantomComps.RemoveAtFast(idx);
-                            if (idx < SupportComps.Count)
+                            if (idx < PhantomComps.Count)
                                 PhantomIdx[PhantomComps[idx]] = idx;
                             PhantomIdx.Remove(wComp);
                         }
@@ -164,6 +164,33 @@ namespace CoreSystems.Support
                         if (idx < SupportComps.Count)
                             SupportIdx[SupportComps[idx]] = idx;
                         SupportIdx.Remove(sComp);
+                    }
+                    break;
+                case CoreComponent.CompType.Control:
+
+                    var cComp = (ControlSys.ControlComponent)comp;
+                    if (add)
+                    {
+                        if (ControlIdx.ContainsKey(cComp))
+                        {
+                            Log.Line($"CompAddFailed:<{cComp.CoreEntity.EntityId}> - comp({cComp.CoreEntity.DebugName}[{cComp.SubtypeName}]) already existed in {TopEntity.DebugName}");
+                            return;
+                        }
+                        ControlIdx.Add(cComp, ControlComps.Count);
+                        ControlComps.Add(cComp);
+                    }
+                    else
+                    {
+                        if (!ControlIdx.TryGetValue(cComp, out idx))
+                        {
+                            Log.Line($"CompRemoveFailed: <{cComp.CoreEntity.EntityId}> - {WeaponComps.Count}[{ControlIdx.Count}]({CompBase.Count}) - {ControlComps.Contains(cComp)}[{ControlComps.Count}] - {Session.EntityAIs[cComp.TopEntity].CompBase.ContainsKey(cComp.CoreEntity)} - {Session.EntityAIs[cComp.TopEntity].CompBase.Count} ");
+                            return;
+                        }
+
+                        ControlComps.RemoveAtFast(idx);
+                        if (idx < ControlComps.Count)
+                            ControlIdx[ControlComps[idx]] = idx;
+                        ControlIdx.Remove(cComp);
                     }
                     break;
             }
@@ -393,10 +420,12 @@ namespace CoreSystems.Support
             WeaponComps.Clear();
             UpgradeComps.Clear();
             SupportComps.Clear();
+            ControlComps.Clear();
             PhantomComps.Clear();
             WeaponIdx.Clear();
             WeaponTrackIdx.Clear();
             SupportIdx.Clear();
+            ControlIdx.Clear();
             UpgradeIdx.Clear();
             PhantomIdx.Clear();
             CompBase.Clear();

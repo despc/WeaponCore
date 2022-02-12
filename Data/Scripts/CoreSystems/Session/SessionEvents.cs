@@ -11,6 +11,7 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using SpaceEngineers.Game.ModAPI;
 using VRage.Collections;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -52,7 +53,8 @@ namespace CoreSystems
                 var rifle = entity as IMyAutomaticRifleGun;
                 var decoy = cube as IMyDecoy;
                 var camera = cube as MyCameraBlock;
-                if (sorter != null || turret != null || controllableGun != null || rifle != null)
+                var turretController = cube as IMyTurretControlBlock;
+                if (sorter != null || turret != null || controllableGun != null || rifle != null || turretController != null)
                 {
                     lock (InitObj)
                     {
@@ -60,7 +62,7 @@ namespace CoreSystems
                             DelayedHandWeaponsSpawn.Enqueue(rifle);
                             return;
                         }
-                        var cubeType = cube != null && (ReplaceVanilla && VanillaIds.ContainsKey(cube.BlockDefinition.Id) || PartPlatforms.ContainsKey(cube.BlockDefinition.Id));
+                        var cubeType = cube != null && (ReplaceVanilla && VanillaIds.ContainsKey(cube.BlockDefinition.Id) || PartPlatforms.ContainsKey(cube.BlockDefinition.Id)) || turretController != null;
                         var validType = cubeType;
                         if (!validType)
                         {
@@ -93,6 +95,11 @@ namespace CoreSystems
                             MyAPIGateway.Utilities.InvokeOnGameThread(() => CreateTerminalUi<IMySmallGatlingGun>(this));
                             FixedGunControls = true;
                             if (!EarlyInitOver) ControlQueue.Enqueue(typeof(IMySmallGatlingGun));
+                        }
+                        else if (!TurretControllerControls && turretController != null) {
+                            MyAPIGateway.Utilities.InvokeOnGameThread(() => CreateTerminalUi<IMyTurretControlBlock>(this));
+                            TurretControllerControls = true;
+                            if (!EarlyInitOver) ControlQueue.Enqueue(typeof(IMyTurretControlBlock));
                         }
 
                     }
@@ -272,19 +279,29 @@ namespace CoreSystems
                     if (GridToInfoMap.TryGetValue(grid, out gridMap))
                     {
                         var allFat = ConcurrentListPool.Get();
+                        var rotors = ConcurrentRotorListPool.Get();
 
                         var gridFat = grid.GetFatBlocks();
                         for (int i = 0; i < gridFat.Count; i++)
                         {
                             var term = gridFat[i] as IMyTerminalBlock;
-                            if (term != null)
-                                allFat.Add(gridFat[i]);
+                            if (term == null) continue;
+
+                            allFat.Add(gridFat[i]);
+
+                            var rotor = term as IMyMotorStator;
+                            if (rotor != null)
+                                rotors.Add(rotor);
+
                         }
                         allFat.ApplyAdditions();
+                        rotors.ApplyAdditions();
+
                         if (grid.Components.TryGet(out gridMap.Targeting))
                             gridMap.Targeting.AllowScanning = false;
 
                         gridMap.MyCubeBocks = allFat;
+                        gridMap.Rotors = rotors;
 
                         grid.OnFatBlockAdded += ToGridMap;
                         grid.OnFatBlockRemoved += FromGridMap;
@@ -314,6 +331,7 @@ namespace CoreSystems
                 if (gridMap.MyCubeBocks != null)
                 {
                     ConcurrentListPool.Return(gridMap.MyCubeBocks);
+                    ConcurrentRotorListPool.Return(gridMap.Rotors);
                     grid.OnFatBlockAdded -= ToGridMap;
                     grid.OnFatBlockRemoved -= FromGridMap;
                 }
@@ -338,6 +356,14 @@ namespace CoreSystems
                 if (term != null && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Add(myCubeBlock);
+                    var rotor = term as IMyMotorStator;
+                    if (rotor != null)
+                    {
+                        gridMap.Rotors.Add(rotor);
+                        if (gridMap.Control != null)
+                            gridMap.Control.RotorsDirty = true;
+                    }
+
                     using (_dityGridLock.Acquire())
                     {
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
@@ -359,6 +385,14 @@ namespace CoreSystems
                 if (term != null && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Remove(myCubeBlock);
+                    var rotor = term as IMyMotorStator;
+                    if (rotor != null)
+                    {
+                        gridMap.Rotors.Remove(rotor);
+                        if (gridMap.Control != null)
+                            gridMap.Control.RotorsDirty = true;
+                    }
+
                     using (_dityGridLock.Acquire())
                     {
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);

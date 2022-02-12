@@ -113,6 +113,7 @@ namespace CoreSystems.Platform
         internal WeaponSystem.AmmoType ActiveAmmoDef;
         internal int[] AmmoShufflePattern = {0};
         internal ParallelRayCallBack RayCallBack;
+        internal ControlSys.ControlComponent MasterComp;
 
 
         internal IHitInfo LastHitInfo;
@@ -198,6 +199,7 @@ namespace CoreSystems.Platform
         internal bool CheckInventorySystem = true;
         internal bool PlayingHardPointSound;
         internal bool VanillaTracking;
+        internal bool RotorTurretTracking;
         internal bool ShotReady
         {
             get
