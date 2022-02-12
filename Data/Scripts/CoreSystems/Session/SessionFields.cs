@@ -73,7 +73,7 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<TargetInfo> TargetInfoPool = new MyConcurrentPool<TargetInfo>(256, info => info.Clean());
         internal readonly MyConcurrentPool<WeaponAmmoMoveRequest> InventoryMoveRequestPool = new MyConcurrentPool<WeaponAmmoMoveRequest>(128, invMove => invMove.Clean());
         internal readonly MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>> ConcurrentListPool = new MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>>(100, cList => cList.ClearImmediate());
-        internal readonly MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>> ConcurrentRotorListPool = new MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>>(100, cList => cList.ClearImmediate());
+        //internal readonly MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>> ConcurrentRotorListPool = new MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>>(100, cList => cList.ClearImmediate());
         internal readonly MyConcurrentPool<GridMap> GridMapPool = new MyConcurrentPool<GridMap>(128, fatMap => fatMap.Clean());
         internal readonly MyConcurrentPool<PartCounter> PartCountPool = new MyConcurrentPool<PartCounter>(64, count => count.Current = 0);
         internal readonly MyConcurrentPool<List<IMySlimBlock>> SlimPool = new MyConcurrentPool<List<IMySlimBlock>>(128, slim => slim.Clear());
@@ -100,11 +100,13 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>> PhysicalItemListPool = new MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>>(256, list => list.Clear());
         internal readonly MyConcurrentPool<MyConcurrentList<BetterInventoryItem>> BetterItemsListPool = new MyConcurrentPool<MyConcurrentList<BetterInventoryItem>>(256, list => list.Clear());
         internal readonly MyConcurrentPool<GridGroupMap> GridGroupMapPool = new MyConcurrentPool<GridGroupMap>(64, gridGroupMap => gridGroupMap.Clean());
+        internal readonly Stack<StatorMap> StatorMapPool = new Stack<StatorMap>(32);
 
         internal readonly Stack<Ai> AiPool = new Stack<Ai>(128);
         internal readonly Stack<MyEntity3DSoundEmitter> Emitters = new Stack<MyEntity3DSoundEmitter>(256);
         internal readonly Stack<VoxelCache> VoxelCachePool = new Stack<VoxelCache>(256);
         internal readonly Stack<ProtoWeaponProSync> ProtoWeaponProSyncPool = new Stack<ProtoWeaponProSync>(256);
+        internal readonly Stack<List<StatorMap>> StatorMapListPool = new Stack<List<StatorMap>> (64);
 
         internal readonly HashSet<MyCubeGrid> DirtyGridInfos = new HashSet<MyCubeGrid>();
 
@@ -170,7 +172,7 @@ namespace CoreSystems
         internal readonly Dictionary<WeaponDefinition, Dictionary<string, string>> WeaponValuesMap = new Dictionary<WeaponDefinition, Dictionary<string, string>>();
         internal readonly Dictionary<ulong, Projectile> MonitoredProjectiles = new Dictionary<ulong, Projectile>();
         internal readonly Dictionary<int, Dictionary<long, ProtoWeaponProSync>> WeaponProSyncs = new Dictionary<int, Dictionary<long, ProtoWeaponProSync>>();
-
+        internal readonly Dictionary<IMyMotorStator, StatorMap> StatorMaps = new Dictionary<IMyMotorStator, StatorMap>();
         internal readonly HashSet<MyDefinitionId> DefIdsComparer = new HashSet<MyDefinitionId>(MyDefinitionId.Comparer);
         internal readonly HashSet<string> VanillaSubpartNames = new HashSet<string>();
         internal readonly HashSet<MyDefinitionBase> AllArmorBaseDefinitions = new HashSet<MyDefinitionBase>();

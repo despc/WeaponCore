@@ -378,8 +378,8 @@ namespace CoreSystems.Support
             if (controlPart == null)
                 return false;
 
-            var root = controlPart.BaseRotor;
-            var secondary = controlPart.TrackingRotor;
+            var root = controlPart.BaseMap;
+            var secondary = controlPart.TrackingMap;
 
             if (root == null || secondary == null)
                 return false;
@@ -389,25 +389,25 @@ namespace CoreSystems.Support
             var currentDirection = controlPart.TrackingScope.Info.Direction;
             var axis = Vector3D.Cross(desiredDirection, currentDirection);
 
-            Vector3D up = root.PositionComp.WorldMatrixRef.Up;
+            Vector3D up = root.Stator.PositionComp.WorldMatrixRef.Up;
             bool upZero = Vector3D.IsZero(up);
             Vector3D desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
             Vector3D currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
             double rootAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
 
             rootAngle *= Math.Sign(Vector3D.Dot(axis, up));
-            var desiredAngle = root.Angle + rootAngle;
-            var rootOutsideLimits = desiredAngle < root.LowerLimitRad && desiredAngle + MathHelper.TwoPi > root.UpperLimitRad;
+            var desiredAngle = root.Stator.Angle + rootAngle;
+            var rootOutsideLimits = desiredAngle < root.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi > root.Stator.UpperLimitRad;
 
-            up = secondary.PositionComp.WorldMatrixRef.Up;
+            up = secondary.Stator.PositionComp.WorldMatrixRef.Up;
             upZero = Vector3D.IsZero(up);
             desiredFlat = upZero || Vector3D.IsZero(desiredDirection) ? Vector3D.Zero : desiredDirection - desiredDirection.Dot(up) * up;
             currentFlat = upZero || Vector3D.IsZero(currentDirection) ? Vector3D.Zero : currentDirection - currentDirection.Dot(up) * up;
             double secondaryAngle = Vector3D.IsZero(desiredFlat) || Vector3D.IsZero(currentFlat) ? 0 : Math.Acos(MathHelper.Clamp(desiredFlat.Dot(currentFlat) / Math.Sqrt(desiredFlat.LengthSquared() * currentFlat.LengthSquared()), -1, 1));
 
             secondaryAngle *= Math.Sign(Vector3D.Dot(axis, up));
-            desiredAngle = secondary.Angle + secondaryAngle;
-            var secondaryOutsideLimits = desiredAngle < secondary.LowerLimitRad && desiredAngle + MathHelper.TwoPi > secondary.UpperLimitRad;
+            desiredAngle = secondary.Stator.Angle + secondaryAngle;
+            var secondaryOutsideLimits = desiredAngle < secondary.Stator.LowerLimitRad && desiredAngle + MathHelper.TwoPi > secondary.Stator.UpperLimitRad;
             if (rootOutsideLimits && secondaryOutsideLimits)
             {
                 Log.Line($"Angle outside rotor limits");

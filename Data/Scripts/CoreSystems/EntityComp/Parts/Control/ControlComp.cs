@@ -91,13 +91,13 @@ namespace CoreSystems.Platform
             {
                 RotorsMoving = false;
                 var part = Platform.Control;
-                if (part.BaseRotor == null) return;
+                if (part.BaseMap == null) return;
 
-                part.BaseRotor.TargetVelocityRad = 0;
+                part.BaseMap.Stator.TargetVelocityRad = 0;
 
-                foreach (var rotor in part.TurretMap.Keys)
-                    if (rotor != null)
-                        rotor.TargetVelocityRad = 0;
+                foreach (var statorMap in part.TurretMap.Keys)
+                    if (statorMap != null)
+                        statorMap.Stator.TargetVelocityRad = 0;
 
             }
 

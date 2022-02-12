@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Policy;
 using CoreSystems.Platform;
 using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.ModAPI;
@@ -50,7 +51,7 @@ namespace CoreSystems.Support
             foreach (var cube in grid.GetFatBlocks()) {
 
                 var battery = cube as MyBatteryBlock;
-                if (battery != null || cube.HasInventory)
+                if (battery != null || cube.HasInventory || cube is IMyMotorStator)
                 {
                     FatBlockAdded(cube);
                 }
@@ -66,7 +67,7 @@ namespace CoreSystems.Support
             foreach (var cube in grid.GetFatBlocks()) {
                 
                 var battery = cube as MyBatteryBlock;
-                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery))
+                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery) || cube is IMyMotorStator)
                 {
                     FatBlockRemoved(cube);
                 }
@@ -98,6 +99,7 @@ namespace CoreSystems.Support
             internal readonly Dictionary<long, PlayerController> ControllingPlayers = new Dictionary<long, PlayerController>();
             internal readonly HashSet<MyEntity> PreviousTargets = new HashSet<MyEntity>();
             internal readonly RunningAverage DamageAverage = new RunningAverage(10);
+            internal readonly Dictionary<MyCubeGrid, List<StatorMap>> LocalStatorMaps = new Dictionary<MyCubeGrid, List<StatorMap>>();
             internal readonly Ai Ai;
             internal float OptimalDps;
             internal int BlockCount;
@@ -188,8 +190,13 @@ namespace CoreSystems.Support
                             maxLockRange = Ai.Construct.MaxLockRange;
                     }
 
-                    if (RootAi != Ai)
-                        Ai.Construct.ControllingPlayers.Clear();
+                    Ai.Construct.ControllingPlayers.Clear();
+
+                    foreach (var map in Ai.Construct.LocalStatorMaps) {
+                        map.Value.Clear();
+                        RootAi.Session.StatorMapListPool.Push(map.Value);
+                    }
+                    Ai.Construct.LocalStatorMaps.Clear();
 
                     RootAi.Session.EntityToMasterAi[Ai.TopEntity] = RootAi;
                     RootAi.Construct.MaxLockRange = maxLockRange;
@@ -280,6 +287,20 @@ namespace CoreSystems.Support
                 {
                     RootAi.Construct.ControllingPlayers[p.Key] = p.Value;
                     UpdatePlayerLockState(p.Key);
+                }
+            }
+
+            internal void UpdateStators()
+            {
+                foreach (var p in Ai.TopStator)
+                {
+                    var grid = (MyCubeGrid) p.Key.CubeGrid;
+                    if (!RootAi.Construct.LocalStatorMaps.ContainsKey(grid))
+                    {
+                        var list = RootAi.Session.StatorMapListPool.Count > 0 ? RootAi.Session.StatorMapListPool.Pop() : new List<StatorMap>();
+                        RootAi.Construct.LocalStatorMaps.Add(grid, list);
+                    }
+                    RootAi.Construct.LocalStatorMaps[grid].Add(p.Value);
                 }
             }
 

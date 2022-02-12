@@ -18,9 +18,9 @@ namespace CoreSystems.Platform
         internal readonly ControlSystem System;
         internal readonly MyStringHash PartHash;
 
-        internal Dictionary<IMyMotorStator, RotorMap> TurretMap = new Dictionary<IMyMotorStator, RotorMap>();
-        internal IMyMotorStator BaseRotor;
-        internal IMyMotorStator TrackingRotor;
+        internal Dictionary<StatorMap, RotorMap> TurretMap = new Dictionary<StatorMap, RotorMap>();
+        internal StatorMap BaseMap;
+        internal StatorMap TrackingMap;
         internal Weapon TrackingWeapon;
         internal Dummy TrackingScope;
 
@@ -44,7 +44,7 @@ namespace CoreSystems.Platform
                 BaseComp.Ai.DelayedEventRegistration(true);
         }
 
-        internal class RotorMap
+        public class RotorMap
         {
             internal Ai Ai;
             internal Weapon PrimaryWeapon;

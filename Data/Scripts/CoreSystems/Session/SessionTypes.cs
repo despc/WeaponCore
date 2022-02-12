@@ -932,6 +932,24 @@ namespace CoreSystems
         }
     }
 
+    public class StatorMap
+    {
+        public readonly ControlSys.RotorMap RotorMap = new ControlSys.RotorMap();
+        public IMyMotorStator Stator;
+        public ControlSys.ControlComponent Comp;
+        public Ai TopAi;
+
+        public void Clean()
+        {
+            Stator = null;
+            Comp = null;
+            TopAi = null;
+            RotorMap.Ai = null;
+            RotorMap.PrimaryWeapon = null;
+            RotorMap.Scope = null;
+        }
+    }
+
     public class PlayerMap
     {
         public readonly MyTargetFocusComponentDefinition TargetFocusDef = new MyTargetFocusComponentDefinition();
@@ -1001,6 +1019,10 @@ namespace CoreSystems
 
             for (int i = 0; i < Ais.Count; i++)
                 Ais[i].Construct.UpdatePlayerStates();
+
+            for (int i = 0; i < Ais.Count; i++)
+                Ais[i].Construct.UpdateStators();
+
         }
 
 

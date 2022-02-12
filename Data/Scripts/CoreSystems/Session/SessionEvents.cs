@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using CoreSystems.Platform;
@@ -279,7 +280,6 @@ namespace CoreSystems
                     if (GridToInfoMap.TryGetValue(grid, out gridMap))
                     {
                         var allFat = ConcurrentListPool.Get();
-                        var rotors = ConcurrentRotorListPool.Get();
 
                         var gridFat = grid.GetFatBlocks();
                         for (int i = 0; i < gridFat.Count; i++)
@@ -290,18 +290,20 @@ namespace CoreSystems
                             allFat.Add(gridFat[i]);
 
                             var rotor = term as IMyMotorStator;
-                            if (rotor != null)
-                                rotors.Add(rotor);
 
+                            if (rotor != null)
+                            {
+                                var map = StatorMapPool.Count > 0 ? StatorMapPool.Pop() : new StatorMap();
+                                map.Stator = rotor;
+                                StatorMaps.Add(rotor, map);
+                            }
                         }
                         allFat.ApplyAdditions();
-                        rotors.ApplyAdditions();
 
                         if (grid.Components.TryGet(out gridMap.Targeting))
                             gridMap.Targeting.AllowScanning = false;
 
                         gridMap.MyCubeBocks = allFat;
-                        gridMap.Rotors = rotors;
 
                         grid.OnFatBlockAdded += ToGridMap;
                         grid.OnFatBlockRemoved += FromGridMap;
@@ -331,7 +333,6 @@ namespace CoreSystems
                 if (gridMap.MyCubeBocks != null)
                 {
                     ConcurrentListPool.Return(gridMap.MyCubeBocks);
-                    ConcurrentRotorListPool.Return(gridMap.Rotors);
                     grid.OnFatBlockAdded -= ToGridMap;
                     grid.OnFatBlockRemoved -= FromGridMap;
                 }
@@ -356,14 +357,6 @@ namespace CoreSystems
                 if (term != null && GridToInfoMap.TryGetValue(myCubeBlock.CubeGrid, out gridMap))
                 {
                     gridMap.MyCubeBocks.Add(myCubeBlock);
-                    var rotor = term as IMyMotorStator;
-                    if (rotor != null)
-                    {
-                        gridMap.Rotors.Add(rotor);
-                        if (gridMap.Control != null)
-                            gridMap.Control.RotorsDirty = true;
-                    }
-
                     using (_dityGridLock.Acquire())
                     {
                         DirtyGridInfos.Add(myCubeBlock.CubeGrid);
@@ -388,9 +381,19 @@ namespace CoreSystems
                     var rotor = term as IMyMotorStator;
                     if (rotor != null)
                     {
+                        StatorMap statorMap;
+                        if (StatorMaps.TryGetValue(rotor, out statorMap))
+                        {
+                            statorMap.Clean();
+                            StatorMapPool.Push(statorMap);
+                        }
+                        else
+                            Log.Line($"FromGridMap failed statormap");
+                        /*
                         gridMap.Rotors.Remove(rotor);
                         if (gridMap.Control != null)
                             gridMap.Control.RotorsDirty = true;
+                        */
                     }
 
                     using (_dityGridLock.Acquire())
