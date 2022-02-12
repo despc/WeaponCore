@@ -51,7 +51,8 @@ namespace CoreSystems.Support
             foreach (var cube in grid.GetFatBlocks()) {
 
                 var battery = cube as MyBatteryBlock;
-                if (battery != null || cube.HasInventory || cube is IMyMotorStator)
+                var stator = cube as IMyMotorStator;
+                if (battery != null || cube.HasInventory || stator != null && stator.TopGrid == TopEntity)
                 {
                     FatBlockAdded(cube);
                 }
@@ -67,7 +68,9 @@ namespace CoreSystems.Support
             foreach (var cube in grid.GetFatBlocks()) {
                 
                 var battery = cube as MyBatteryBlock;
-                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery) || cube is IMyMotorStator)
+                var stator = cube as IMyMotorStator;
+
+                if (InventoryMonitor.ContainsKey(cube) || battery != null && Batteries.Contains(battery) || stator != null && TopStator.ContainsKey(stator))
                 {
                     FatBlockRemoved(cube);
                 }

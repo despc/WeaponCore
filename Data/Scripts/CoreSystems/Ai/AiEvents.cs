@@ -190,7 +190,7 @@ namespace CoreSystems.Support
                     if (!InventoryRemove(cube, inventory))
                         Log.Line($"FatBlock inventory remove failed: {cube.BlockDefinition?.Id.SubtypeName} - gridMatch:{cube.CubeGrid == TopEntity} - aiMarked:{MarkedForClose} - {cube.CubeGrid.DebugName} - {TopEntity?.DebugName}");
                 }
-                else if (stator != null && stator.TopGrid == TopEntity && Session.StatorMaps.TryGetValue(stator, out statorMap))
+                else if (stator != null && TopStator.TryGetValue(stator, out statorMap))
                 {
                     statorMap.TopAi = null;
                     TopStator.Remove(stator);
