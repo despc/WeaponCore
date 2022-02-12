@@ -307,15 +307,19 @@ namespace CoreSystems
             GridMap gridMap;
             if (GridToInfoMap.TryRemove(grid, out gridMap))
             {
-                ConcurrentListPool.Return(gridMap.MyCubeBocks);
-
                 gridMap.Trash = true;
-                GridMapPool.Return(gridMap);
-                
-                grid.OnFatBlockAdded -= ToGridMap;
-                grid.OnFatBlockRemoved -= FromGridMap;
                 grid.OnClose -= RemoveGridFromMap;
                 grid.AddedToScene -= AddGridToMap;
+
+                if (gridMap.MyCubeBocks != null)
+                {
+                    ConcurrentListPool.Return(gridMap.MyCubeBocks);
+                    grid.OnFatBlockAdded -= ToGridMap;
+                    grid.OnFatBlockRemoved -= FromGridMap;
+                }
+
+                GridMapPool.Return(gridMap);
+
                 using (_dityGridLock.Acquire())
                 {
                     DirtyGridInfos.Add(grid);

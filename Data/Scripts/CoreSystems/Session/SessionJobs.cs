@@ -24,7 +24,6 @@ namespace CoreSystems
         public ConcurrentCachingList<MyCubeBlock> MyCubeBocks;
         public MyGridTargeting Targeting;
         public GridGroupMap GroupMap;
-        public Ai Ai;
         public volatile bool Trash;
         public uint PowerCheckTick;
         public uint LastControllerTick;
@@ -38,8 +37,7 @@ namespace CoreSystems
             PlayerControllers.Clear();
             Targeting = null;
             GroupMap = null;
-            Ai = null;
-            MyCubeBocks.ClearImmediate();
+            MyCubeBocks = null;
             LastSortTick = 0;
             MostBlocks = 0;
             PowerCheckTick = 0;
