@@ -37,6 +37,7 @@ namespace CoreSystems.Support
 
         internal readonly Dictionary<Upgrade.UpgradeComponent, int> UpgradeIdx = new Dictionary<Upgrade.UpgradeComponent, int>(32);
         internal readonly Dictionary<SupportSys.SupportComponent, int> SupportIdx = new Dictionary<SupportSys.SupportComponent, int>(32);
+        internal readonly Dictionary<ControlSys.ControlComponent, int> ControlIdx = new Dictionary<ControlSys.ControlComponent, int>(32);
         internal readonly Dictionary<Weapon.WeaponComponent, int> PhantomIdx = new Dictionary<Weapon.WeaponComponent, int>(32);
 
         internal readonly Dictionary<Vector3I, IMySlimBlock> AddedBlockPositions = new Dictionary<Vector3I, IMySlimBlock>(Vector3I.Comparer);
@@ -57,6 +58,7 @@ namespace CoreSystems.Support
         internal readonly List<Weapon.WeaponComponent> WeaponComps = new List<Weapon.WeaponComponent>(32);
         internal readonly List<Upgrade.UpgradeComponent> UpgradeComps = new List<Upgrade.UpgradeComponent>(32);
         internal readonly List<SupportSys.SupportComponent> SupportComps = new List<SupportSys.SupportComponent>(32);
+        internal readonly List<ControlSys.ControlComponent> ControlComps = new List<ControlSys.ControlComponent>(32);
         internal readonly List<Weapon.WeaponComponent> PhantomComps = new List<Weapon.WeaponComponent>(32);
         internal readonly List<Projectile> DeadProjectiles = new List<Projectile>();
         internal readonly List<Ai> TargetAisTmp = new List<Ai>();
@@ -136,6 +138,7 @@ namespace CoreSystems.Support
         internal bool IsGrid;
         internal bool SmartHandheld;
         internal bool ModOverride;
+        internal bool RotorTurretAimed;
         internal uint TargetsUpdatedTick;
         internal uint VelocityUpdateTick;
         internal uint NewProjectileTick;

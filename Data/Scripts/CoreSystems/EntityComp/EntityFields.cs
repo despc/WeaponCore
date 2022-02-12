@@ -7,6 +7,7 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using SpaceEngineers.Game.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -131,13 +132,15 @@ namespace CoreSystems.Support
             Upgrade,
             Phantom,
             Rifle,
+            Control,
         }
 
         internal enum CompType
         {
             Weapon,
             Support,
-            Upgrade
+            Upgrade,
+            Control
         }
 
         public enum TriggerActions
@@ -191,6 +194,10 @@ namespace CoreSystems.Support
                         TypeSpecific = CompTypeSpecific.SorterWeapon;
                         Type = CompType.Weapon;
                     }
+                }
+                else if (CoreEntity is IMyTurretControlBlock) {
+                    TypeSpecific = CompTypeSpecific.Control;
+                    Type = CompType.Control;
                 }
                 else {
                     TypeSpecific = CompTypeSpecific.VanillaFixed;

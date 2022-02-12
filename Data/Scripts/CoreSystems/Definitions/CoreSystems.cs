@@ -88,6 +88,14 @@ namespace CoreSystems.Support
         }
     }
 
+    internal class ControlSystem : CoreSystem
+    {
+        public ControlSystem(Session session)
+        {
+            Session = session;
+        }
+    }
+
     internal class WeaponSystem : CoreSystem
     {
         internal class AmmoType

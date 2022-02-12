@@ -40,6 +40,9 @@ namespace CoreSystems
                     case CoreComponent.CompType.Support:
                         BaseComp.CoreEntity.Storage[BaseComp.Session.CompDataGuid] = Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary((ProtoSupportRepo)ProtoRepoBase));
                         break;
+                    case CoreComponent.CompType.Control:
+                        BaseComp.CoreEntity.Storage[BaseComp.Session.CompDataGuid] = Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary((ProtoControlRepo)ProtoRepoBase));
+                        break;
                 }
             }
         }
@@ -62,6 +65,9 @@ namespace CoreSystems
                     break;
                 case CoreComponent.CompType.Weapon:
                     ((Weapon.WeaponComponent)BaseComp).Data.Change(change);
+                    break;
+                case CoreComponent.CompType.Control:
+                    ((ControlSys.ControlComponent)BaseComp).Data.Change(change);
                     break;
             }
         }

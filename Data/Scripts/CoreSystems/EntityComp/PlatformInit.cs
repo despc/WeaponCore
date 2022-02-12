@@ -23,6 +23,7 @@ namespace CoreSystems.Platform
         internal readonly List<SupportSys> Support = new List<SupportSys>();
         internal readonly List<Upgrades> Upgrades = new List<Upgrades>();
         internal readonly List<Weapon> Phantoms = new List<Weapon>();
+        internal ControlSys Control;
         internal CoreStructure Structure;
         internal CoreComponent Comp;
         internal PlatformState State;
@@ -159,6 +160,10 @@ namespace CoreSystems.Platform
                     if (UpgradeParts() == PlatformState.Invalid)
                         return State;
                     break;
+                case CoreStructure.StructureTypes.Control:
+                    if (ControlParts() == PlatformState.Invalid)
+                        return State;
+                    break;
             }
 
             _orderToCreate.Clear();
@@ -277,6 +282,20 @@ namespace CoreSystems.Platform
                 if (Structure.PartSystems.TryGetValue(Structure.PartHashes[i], out coreSystem))
                 {
                     Support.Add(new SupportSys((SupportSystem)coreSystem, (SupportSys.SupportComponent)Comp, i));
+                }
+                else return PlatformCrash(Comp, true, true, $"Your block subTypeId ({Comp.SubtypeName}) missing part, cannot mix weapons/upgrades/armorSupport/phantoms, I am crashing now Dave.");
+            }
+            return State;
+        }
+
+        private PlatformState ControlParts()
+        {
+            foreach (var i in _orderToCreate)
+            {
+                CoreSystem coreSystem;
+                if (Structure.PartSystems.TryGetValue(Structure.PartHashes[i], out coreSystem))
+                {
+                    Control = new ControlSys((ControlSystem)coreSystem, (ControlSys.ControlComponent)Comp, i);
                 }
                 else return PlatformCrash(Comp, true, true, $"Your block subTypeId ({Comp.SubtypeName}) missing part, cannot mix weapons/upgrades/armorSupport/phantoms, I am crashing now Dave.");
             }

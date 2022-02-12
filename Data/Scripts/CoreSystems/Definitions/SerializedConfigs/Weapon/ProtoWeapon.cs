@@ -277,6 +277,15 @@ namespace CoreSystems
             }
         }
 
+        public void Sync(ControlSys.ControlComponent comp, ProtoWeaponSettings sync)
+        {
+            ReportTarget = sync.ReportTarget;
+            Range = sync.Range;
+            ControlSys.ControlComponent.SetRange(comp);
+
+            Overrides.Sync(sync.Overrides);
+        }
+
     }
 
     [ProtoContract]
@@ -480,6 +489,7 @@ namespace CoreSystems
         [ProtoMember(28), DefaultValue(Weapon.ShootManager.ShootModes.Inactive)] public Weapon.ShootManager.ShootModes ShootMode = Weapon.ShootManager.ShootModes.Inactive;
         [ProtoMember(29)] public int CameraChannel;
         [ProtoMember(30)] public int WeaponGroupId;
+        [ProtoMember(31)] public bool AiEnabled;
 
 
         public void Sync(ProtoWeaponOverrides syncFrom)

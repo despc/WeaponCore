@@ -56,6 +56,8 @@ namespace CoreSystems
         EwaredBlocks,
         ClientReady,
         ProjectileSyncs,
+        ControlComp,
+        ControlState,
     }
 
     #region packets
@@ -94,6 +96,8 @@ namespace CoreSystems
     [ProtoInclude(36, typeof(PaintedTargetPacket))]
     [ProtoInclude(37, typeof(ProjectileSyncPacket))]
     [ProtoInclude(38, typeof(ULongUpdatePacket))]
+    [ProtoInclude(39, typeof(ControlCompPacket))]
+    [ProtoInclude(40, typeof(ControlStatePacket))]
 
     public class Packet
     {
@@ -348,6 +352,30 @@ namespace CoreSystems
     public class SupportStatePacket : Packet
     {
         [ProtoMember(1)] internal ProtoSupportState Data;
+
+        public override void CleanUp()
+        {
+            base.CleanUp();
+            Data = null;
+        }
+    }
+
+    [ProtoContract]
+    public class ControlCompPacket : Packet
+    {
+        [ProtoMember(1)] internal ProtoControlComp Data;
+
+        public override void CleanUp()
+        {
+            base.CleanUp();
+            Data = null;
+        }
+    }
+
+    [ProtoContract]
+    public class ControlStatePacket : Packet
+    {
+        [ProtoMember(1)] internal ProtoControlState Data;
 
         public override void CleanUp()
         {

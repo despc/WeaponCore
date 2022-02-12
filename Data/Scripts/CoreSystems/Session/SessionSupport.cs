@@ -369,7 +369,7 @@ namespace CoreSystems
 
                             foreach (var gridAi in EntityAIs.Values) {
 
-                                if (gridAi.Targets.ContainsKey((MyEntity)character) && gridAi.CompBase.Count > 0 && (gridAi.WeaponComps.Count >0 || gridAi.UpgradeComps.Count > 0 || gridAi.SupportComps.Count > 0)) {
+                                if (gridAi.Targets.ContainsKey((MyEntity)character) && gridAi.CompBase.Count > 0 && (gridAi.WeaponComps.Count > 0 || gridAi.UpgradeComps.Count > 0 || gridAi.SupportComps.Count > 0 || gridAi.ControlComps.Count > 0)) {
                                     
                                     var access = false;
                                     foreach (var comp in gridAi.CompBase) {

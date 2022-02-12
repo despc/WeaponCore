@@ -43,7 +43,9 @@ namespace CoreSystems.Platform
             bool canTrack;
             bool isTracking;
 
-            if (weapon == trackingWeapon)
+            if (weapon.RotorTurretTracking)
+                canTrack = validEstimate && MathFuncs.RotorTurretLookAt(weapon.MasterComp?.Platform.Control, ref targetDir, rangeToTarget);
+            else if (weapon == trackingWeapon)
                 canTrack = validEstimate && MathFuncs.WeaponLookAt(weapon, ref targetDir, rangeToTarget, false, true, out isTracking);
             else
                 canTrack = validEstimate && MathFuncs.IsDotProductWithinTolerance(ref weapon.MyPivotFwd, ref targetDir, weapon.AimingTolerance);
@@ -211,7 +213,9 @@ namespace CoreSystems.Platform
             if (validEstimate && rangeToTarget <= maxRangeSqr && rangeToTarget >= minRangeSqr)
             {
                 var targetDir = targetPos - weapon.MyPivotPos;
-                if (weapon == trackingWeapon)
+                if (weapon.RotorTurretTracking)
+                    canTrack = MathFuncs.RotorTurretLookAt(weapon.MasterComp?.Platform.Control, ref targetDir, rangeToTarget);
+                else if (weapon == trackingWeapon)
                 {
                     double checkAzimuth;
                     double checkElevation;

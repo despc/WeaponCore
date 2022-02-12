@@ -122,6 +122,10 @@ namespace CoreSystems
                             comp = new Weapon.WeaponComponent(this, entity, id.Value);
                             CompsToStart.Add(comp);
                             break;
+                        case CoreStructure.StructureTypes.Control:
+                            comp = new ControlSys.ControlComponent(this, entity, id.Value);
+                            CompsToStart.Add(comp);
+                            break;
                     }
 
                     CompsToStart.ApplyAdditions();

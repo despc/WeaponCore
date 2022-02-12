@@ -85,7 +85,7 @@ namespace CoreSystems.Support
 
                     StorageSetup();
 
-                    if (TypeSpecific != CompTypeSpecific.Phantom) {
+                    if (TypeSpecific != CompTypeSpecific.Phantom && TypeSpecific != CompTypeSpecific.Control) {
                         InventoryInit();
 
                         if (IsBlock)
@@ -217,17 +217,20 @@ namespace CoreSystems.Support
 
                 if (IsBlock)
                 {
-                    MyOrientedBoundingBoxD obb;
-                    SUtils.GetBlockOrientedBoundingBox(Cube, out obb);
-                    foreach (var weapon in Platform.Weapons)
+                    if (Platform.Weapons.Count > 0)
                     {
-                        var scopeInfo = weapon.GetScope.Info;
-                        if (!obb.Contains(ref scopeInfo.Position))
+                        MyOrientedBoundingBoxD obb;
+                        SUtils.GetBlockOrientedBoundingBox(Cube, out obb);
+                        foreach (var weapon in Platform.Weapons)
                         {
-                            var rayBack = new RayD(scopeInfo.Position, -scopeInfo.Direction);
-                            weapon.ScopeDistToCheckPos = obb.Intersects(ref rayBack) ?? 0;
+                            var scopeInfo = weapon.GetScope.Info;
+                            if (!obb.Contains(ref scopeInfo.Position))
+                            {
+                                var rayBack = new RayD(scopeInfo.Position, -scopeInfo.Direction);
+                                weapon.ScopeDistToCheckPos = obb.Intersects(ref rayBack) ?? 0;
+                            }
+                            Session.FutureEvents.Schedule(weapon.DelayedStart, FunctionalBlock.Enabled, 1);
                         }
-                        Session.FutureEvents.Schedule(weapon.DelayedStart, FunctionalBlock.Enabled, 1);
                     }
 
                     if (Ai.AiSpawnTick > Ai.Construct.LastRefreshTick)

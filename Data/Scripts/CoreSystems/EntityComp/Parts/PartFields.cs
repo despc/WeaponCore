@@ -35,7 +35,7 @@ namespace CoreSystems.Platform
             CoreSystem = system;
             StayCharged = system.StayCharged;
             BaseComp = comp;
-            PartCreatedTick = CoreSystem.Session.Tick;
+            PartCreatedTick = comp.Session.Tick;
             PartId = partId;
             IsPrime = partId == comp.Platform.Structure.PrimaryPart;
             Acquire = new PartAcquire(this);
