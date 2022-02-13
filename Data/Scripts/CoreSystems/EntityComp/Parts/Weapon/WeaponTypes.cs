@@ -424,20 +424,21 @@ namespace CoreSystems.Platform
             {
                 if (interval > CompletedCycles)
                 {
-                    Log.Line($"server had a higher interval than client: server: {interval} > client:{CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
+                    Log.Line($"server interval {interval} > client: {CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
                 }
                 else if (interval < CompletedCycles)
                 {
-                    Log.Line($"server had a lower interval than server: server: {interval} < client:{CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
+                    Log.Line($"server interval {interval} < client:{CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
                 }
                 FreezeClientShoot = false;
 
-                if (CompletedCycles >= interval)
+                if (interval <= CompletedCycles)
                 {
                     ClearShootState();
                 }
                 else
                 {
+                    Log.Line($"ClientToggleResponse makeup attempt: Current: {CompletedCycles} - target:{interval}");
                     LastCycle = interval;
                 }
 
@@ -449,6 +450,7 @@ namespace CoreSystems.Platform
                 WaitingShootResponse = false;
                 FreezeClientShoot = false;
                 EarlyOff = false;
+                ClearShootState();
             }
 
             private static object RewriteShootSyncToServerResponse(object o)
