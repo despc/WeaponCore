@@ -375,7 +375,7 @@ namespace CoreSystems
         internal static void RequestShootModes(IMyTerminalBlock block, long newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !ShootModeChangeReady(comp)) return;
 
             Weapon.WeaponComponent.RequestSetValue(comp, "ShootMode", (int)newValue, comp.Session.PlayerId);
         }
@@ -543,12 +543,12 @@ namespace CoreSystems
         internal static void RequestSetBurstCount(IMyTerminalBlock block, float newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !ShootModeChangeReady(comp)) return;
 
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstCount && comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId)
+            if (roundedInt != values.Set.Overrides.BurstCount)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstCount", roundedInt, comp.Session.PlayerId);
             }
@@ -564,12 +564,12 @@ namespace CoreSystems
         internal static void RequestSetBurstDelay(IMyTerminalBlock block, float newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !ShootModeChangeReady(comp)) return;
 
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
 
-            if (roundedInt != values.Set.Overrides.BurstDelay && comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId)
+            if (roundedInt != values.Set.Overrides.BurstDelay)
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "BurstDelay", roundedInt, comp.Session.PlayerId);
             }
@@ -585,7 +585,7 @@ namespace CoreSystems
         internal static void RequestSetSequenceId(IMyTerminalBlock block, float newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !ShootModeChangeReady(comp)) return;
 
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
@@ -606,7 +606,7 @@ namespace CoreSystems
         internal static void RequestSetWeaponGroupId(IMyTerminalBlock block, float newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !ShootModeChangeReady(comp)) return;
 
             var roundedInt = (int)Math.Round(newValue);
             var values = comp.Data.Repo.Values;
@@ -615,6 +615,14 @@ namespace CoreSystems
             {
                 Weapon.WeaponComponent.RequestSetValue(comp, "WeaponGroupId", roundedInt, comp.Session.PlayerId);
             }
+        }
+
+        internal static bool ShootModeChangeReady(Weapon.WeaponComponent comp)
+        {
+            var values = comp.Data.Repo.Values;
+            var stateMatch = comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId;
+            var ready =  !comp.ShootManager.WaitingShootResponse && !comp.ShootManager.FreezeClientShoot && !comp.ShootManager.ShootToggled && stateMatch;
+            return ready;
         }
 
         internal static float GetArmedTimeRemaining(IMyTerminalBlock block)

@@ -149,7 +149,7 @@ namespace CoreSystems.Platform
             internal bool FreezeClientShoot;
             internal uint CompletedCycles;
             internal uint LastCycle = uint.MaxValue;
-            internal uint LastRequestTick;
+            internal uint LastShootTick;
             internal uint RequestShootBurstId;
             internal int WeaponsFired;
             internal ShootModes LastShootMode;
@@ -179,41 +179,10 @@ namespace CoreSystems.Platform
             }
 
             #region Main
-            internal void RequestShootSync(long playerId) // this shoot method mixes client initiation with server delayed server confirmation in order to maintain sync while avoiding authoritative delays in the common case. 
-            {
-                var values = Comp.Data.Repo.Values;
-                var state = values.State;
-                var set = values.Set;
-
-                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.AiControl && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
-                    return;
-
-                if (Comp.IsBlock && Comp.Session.HandlesInput)
-                    Comp.Session.TerminalMon.HandleInputUpdate(Comp);
-
-                RequestShootBurstId = state.ShootSyncStateId + 1;
-
-                state.PlayerId = playerId;
-
-                var sendRequest = !Comp.Session.IsClient || playerId == Comp.Session.PlayerId; // this method is used both by initiators and by receives. 
-
-                if (Comp.Session.MpActive && sendRequest)
-                {
-                    WaitingShootResponse = Comp.Session.IsClient; // this will be set false on the client once the server responds to this packet
-                    LastRequestTick = Comp.Session.Tick;
-                    var code = Comp.Session.IsServer ? playerId == 0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
-                    ulong packagedMessage;
-                    Session.EncodeShootState(state.ShootSyncStateId, (uint)set.Overrides.ShootMode, CompletedCycles, (uint)code, out packagedMessage);
-
-                    if (playerId > 0) // if this is the server responding to a request, rewrite the packet sent to the origin client with a special response code.
-                        Comp.Session.SendBurstRequest(Comp, packagedMessage, PacketType.ShootSync, RewriteShootSyncToServerResponse, playerId);
-                    else
-                        Comp.Session.SendBurstRequest(Comp, packagedMessage, PacketType.ShootSync, null, playerId);
-                }
-            }
 
             internal void UpdateShootSync(Weapon w)
             {
+
                 if (--w.ShootCount == 0 && ++WeaponsFired >= Comp.TotalWeapons)
                 {
                     w.ShootDelay = w.Comp.Data.Comp.Data.Repo.Values.Set.Overrides.BurstDelay;
@@ -227,6 +196,8 @@ namespace CoreSystems.Platform
                         ReadyToShoot(true);
                     }
                 }
+
+                LastShootTick = Comp.Session.Tick;
             }
 
             internal bool ReadyToShoot(bool skipReady = false)
@@ -244,7 +215,7 @@ namespace CoreSystems.Platform
                         var reloading = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.ProtoWeaponAmmo.CurrentAmmo == 0 || w.Reload.WaitForClient);
                         
                         var reloadMinusAmmoCheck = aConst.Reloadable && w.ClientMakeUpShots == 0 && (w.Loading || w.Reload.WaitForClient);
-                        var skipReload = client && reloading && !skipReady && !FreezeClientShoot && !WaitingShootResponse && !reloadMinusAmmoCheck && Comp.Session.Tick - LastRequestTick > 30;
+                        var skipReload = client && reloading && !skipReady && !FreezeClientShoot && !WaitingShootResponse && !reloadMinusAmmoCheck && Comp.Session.Tick - LastShootTick > 30;
 
                         var canShoot = !w.PartState.Overheated && (!reloading || skipReload);
                         
@@ -309,6 +280,39 @@ namespace CoreSystems.Platform
             #endregion
 
             #region InputManager
+
+            internal void RequestShootSync(long playerId) // this shoot method mixes client initiation with server delayed server confirmation in order to maintain sync while avoiding authoritative delays in the common case. 
+            {
+                var values = Comp.Data.Repo.Values;
+                var state = values.State;
+                var set = values.Set;
+
+                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.AiControl && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
+                    return;
+
+                if (Comp.IsBlock && Comp.Session.HandlesInput)
+                    Comp.Session.TerminalMon.HandleInputUpdate(Comp);
+
+                RequestShootBurstId = state.ShootSyncStateId + 1;
+
+                state.PlayerId = playerId;
+
+                var sendRequest = !Comp.Session.IsClient || playerId == Comp.Session.PlayerId; // this method is used both by initiators and by receives. 
+
+                if (Comp.Session.MpActive && sendRequest)
+                {
+                    WaitingShootResponse = Comp.Session.IsClient; // this will be set false on the client once the server responds to this packet
+                    var code = Comp.Session.IsServer ? playerId == 0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
+                    ulong packagedMessage;
+                    Session.EncodeShootState(state.ShootSyncStateId, (uint)set.Overrides.ShootMode, CompletedCycles, (uint)code, out packagedMessage);
+
+                    if (playerId > 0) // if this is the server responding to a request, rewrite the packet sent to the origin client with a special response code.
+                        Comp.Session.SendBurstRequest(Comp, packagedMessage, PacketType.ShootSync, RewriteShootSyncToServerResponse, playerId);
+                    else
+                        Comp.Session.SendBurstRequest(Comp, packagedMessage, PacketType.ShootSync, null, playerId);
+                }
+            }
+
 
             internal bool ProcessInput(long playerId, bool skipUpdateInputState = false)
             {
@@ -420,12 +424,11 @@ namespace CoreSystems.Platform
             {
                 if (interval > CompletedCycles)
                 {
-                    Log.Line($"server had a higher interval than client: server: {interval} > client:{CompletedCycles}", Session.InputLog);
-                    //LastCycle = interval;
+                    Log.Line($"server had a higher interval than client: server: {interval} > client:{CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
                 }
                 else if (interval < CompletedCycles)
                 {
-                    Log.Line($"server had a lower interval than server: server: {interval} < client:{CompletedCycles}", Session.InputLog);
+                    Log.Line($"server had a lower interval than server: server: {interval} < client:{CompletedCycles} - frozen:{FreezeClientShoot} - wait:{WaitingShootResponse}", Session.InputLog);
                 }
                 FreezeClientShoot = false;
 
@@ -438,6 +441,14 @@ namespace CoreSystems.Platform
                     LastCycle = interval;
                 }
 
+            }
+
+            internal void ServerReject()
+            {
+                Log.Line($"client received reject message reset", Session.InputLog);
+                WaitingShootResponse = false;
+                FreezeClientShoot = false;
+                EarlyOff = false;
             }
 
             private static object RewriteShootSyncToServerResponse(object o)

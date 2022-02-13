@@ -586,8 +586,8 @@ namespace CoreSystems
                                         if (MpActive)
                                             SendComp(wComp);
                                     }
-
-                                    GunnerRelease(cube);
+                                    if (HandlesInput)
+                                        GunnerRelease(cube);
                                 }
                             }
                         }
@@ -630,7 +630,8 @@ namespace CoreSystems
                                             SendComp(wComp);
                                     }
 
-                                    GunnerAcquire(cube);
+                                    if (HandlesInput)
+                                        GunnerAcquire(cube);
 
                                 }
                             }

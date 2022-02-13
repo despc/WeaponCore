@@ -177,7 +177,7 @@ namespace CoreSystems.Support
                     if (stator.TopGrid == TopEntity)
                     {
                         statorMap.TopAi = this;
-                        TopStators.Add(stator, statorMap);
+                        TopStators[stator] = statorMap;
                     }
                 }
             }

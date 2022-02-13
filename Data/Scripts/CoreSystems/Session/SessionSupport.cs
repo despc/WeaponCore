@@ -652,13 +652,13 @@ namespace CoreSystems
 
                     PlayerId = Session.Player.IdentityId;
 
+                    PlayerMouseStates[PlayerId] = UiInput.ClientInputState;
+
                     List<IMyPlayer> players = new List<IMyPlayer>();
                     MyAPIGateway.Multiplayer.Players.GetPlayers(players);
 
                     for (int i = 0; i < players.Count; i++)
                         PlayerConnected(players[i].IdentityId);
-
-                    PlayerMouseStates[PlayerId] = UiInput.ClientInputState;
 
                     if (IsClient)
                         SendUpdateRequest(-1, PacketType.RequestMouseStates);
@@ -1261,6 +1261,7 @@ namespace CoreSystems
         
         internal void UpdateEnforcement()
         {
+
             foreach (var platform in PartPlatforms)
             {
                 var core = platform.Value;

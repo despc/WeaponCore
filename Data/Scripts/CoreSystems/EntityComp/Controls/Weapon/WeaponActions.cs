@@ -96,7 +96,7 @@ namespace CoreSystems.Control
         internal static void TerminActionCycleShootMode(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !BlockUi.ShootModeChangeReady(comp))
                 return;
 
             var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;
@@ -109,7 +109,7 @@ namespace CoreSystems.Control
         internal static void TerminActionCycleMouseControl(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready || !BlockUi.ShootModeChangeReady(comp))
                 return;
 
             var numValue = (int)comp.Data.Repo.Values.Set.Overrides.ShootMode;

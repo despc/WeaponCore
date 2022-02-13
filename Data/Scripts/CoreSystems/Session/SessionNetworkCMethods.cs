@@ -488,10 +488,7 @@ namespace CoreSystems
             {
                 if (code == Weapon.ShootManager.ShootCodes.ClientRequestReject)
                 {
-                    Log.Line($"client received reject message reset", InputLog);
-                    wComp.ShootManager.WaitingShootResponse = false;
-                    wComp.ShootManager.FreezeClientShoot = false;
-                    wComp.ShootManager.EarlyOff = false;
+                    wComp.ShootManager.ServerReject();
                 }
                 else if (code == Weapon.ShootManager.ShootCodes.ToggleClientOff)
                 {
@@ -499,17 +496,15 @@ namespace CoreSystems
                 }
                 else if (wComp.ShootManager.RequestShootBurstId == stateId)
                 {
-                    //Log.Line($"client shoot state match");
                     wComp.ShootManager.RequestShootSync(0);
                 }
                 else if (code == Weapon.ShootManager.ShootCodes.ServerResponse)
                 {
-                    //Log.Line($"client received server response: interval:{interval} - QueuedToggle:{wComp.ShootManager.QueuedToggle}");
                     wComp.ShootManager.WaitingShootResponse = false;
                     if (wComp.ShootManager.EarlyOff && wComp.ShootManager.ShootToggled)
                     {
+                        Log.Line($"forcing QueuedToggle off -  frozen:{wComp.ShootManager.FreezeClientShoot} - waiting:{wComp.ShootManager.WaitingShootResponse}", InputLog);
                         wComp.ShootManager.ProcessInput(PlayerId, true);
-                        Log.Line($"forcing QueuedToggle off", InputLog);
                     }
                 }
                 else
