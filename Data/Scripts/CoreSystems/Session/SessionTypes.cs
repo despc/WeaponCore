@@ -1034,7 +1034,7 @@ namespace CoreSystems
                 if (ai.GridMap.PlayerControllers.Count > 0)
                     ai.Construct.UpdatePlayerStates();
 
-                if (ai.TopStator.Count > 0)
+                if (ai.TopStators.Count > 0)
                     ai.Construct.UpdateStators();
             }
 

@@ -4,7 +4,6 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
-using SpaceEngineers.Game.Entities.Blocks;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -393,7 +392,7 @@ namespace CoreSystems.Platform
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
                 if (Data.Repo.Values.Set.Overrides.ShootMode == ShootManager.ShootModes.MouseControl)
-                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.Inactive;
+                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiControl;
 
                 Data.Repo.Values.State.TrackingReticle = false;
                 
@@ -559,7 +558,7 @@ namespace CoreSystems.Platform
                 {
                     comp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 }
-                else if (o.ShootMode != ShootManager.ShootModes.Inactive)
+                else if (o.ShootMode != ShootManager.ShootModes.AiControl)
                 {
                     comp.Data.Repo.Values.State.PlayerId = playerId;
                 }
@@ -568,7 +567,7 @@ namespace CoreSystems.Platform
                     ClearTargets(comp);
             }
 
-            private static void ClearTargets(Weapon.WeaponComponent comp)
+            private static void ClearTargets(WeaponComponent comp)
             {
                 for (int i = 0; i < comp.Collection.Count; i++)
                 {

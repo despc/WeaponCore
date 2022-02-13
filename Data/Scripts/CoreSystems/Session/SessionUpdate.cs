@@ -528,7 +528,7 @@ namespace CoreSystems
 
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
-                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.Inactive;
+                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.AiControl;
                     var shotModeActive = wComp.ShootManager.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (HandlesInput) {

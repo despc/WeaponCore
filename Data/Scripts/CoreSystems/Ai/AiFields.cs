@@ -46,7 +46,7 @@ namespace CoreSystems.Support
         internal readonly Dictionary<MyStringHash, PartCounter> PartCounting = new Dictionary<MyStringHash, PartCounter>(MyStringHash.Comparer);
         internal readonly Dictionary<MyEntity, TargetInfo> Targets = new Dictionary<MyEntity, TargetInfo>(32);
         internal readonly Dictionary<long, PlayerControllerEntity> PlayerControl = new Dictionary<long, PlayerControllerEntity>();
-        internal readonly Dictionary<IMyMotorStator, StatorMap> TopStator = new Dictionary<IMyMotorStator, StatorMap>();
+        internal readonly Dictionary<IMyMotorStator, StatorMap> TopStators = new Dictionary<IMyMotorStator, StatorMap>();
 
         internal readonly ConcurrentDictionary<MyEntity, MyInventory> InventoryMonitor = new ConcurrentDictionary<MyEntity, MyInventory>();
         internal readonly ConcurrentDictionary<MyEntity, uint> NoTargetLos = new ConcurrentDictionary<MyEntity, uint>();

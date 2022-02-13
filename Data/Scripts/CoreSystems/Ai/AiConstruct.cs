@@ -60,7 +60,8 @@ namespace CoreSystems.Support
 
                 var battery = cube as MyBatteryBlock;
                 var stator = cube as IMyMotorStator;
-                if (battery != null || cube.HasInventory || stator != null && stator.TopGrid == TopEntity)
+
+                if (battery != null || cube.HasInventory || stator != null)
                 {
                     FatBlockAdded(cube);
                 }
@@ -293,7 +294,7 @@ namespace CoreSystems.Support
 
             internal void UpdateStators()
             {
-                foreach (var p in Ai.TopStator)
+                foreach (var p in Ai.TopStators)
                 {
                     var grid = (MyCubeGrid) p.Key.CubeGrid;
                     if (!RootAi.Construct.LocalStatorMaps.ContainsKey(grid))

@@ -156,7 +156,7 @@ namespace CoreSystems.Platform
 
             public enum ShootModes
             {
-                Inactive,
+                AiControl,
                 MouseControl,
                 KeyToggle,
                 KeyFire,
@@ -185,7 +185,7 @@ namespace CoreSystems.Platform
                 var state = values.State;
                 var set = values.Set;
 
-                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.Inactive && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
+                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.AiControl && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
                     return;
 
                 if (Comp.IsBlock && Comp.Session.HandlesInput)

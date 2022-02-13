@@ -561,7 +561,7 @@ namespace CoreSystems.Control
             var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            var message = (comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.Inactive || comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.MouseControl) ? comp.Data.Repo.Values.Set.Overrides.ShootMode.ToString() : "Other"; 
+            var message = (comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.AiControl || comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.MouseControl) ? comp.Data.Repo.Values.Set.Overrides.ShootMode.ToString() : "Other"; 
 
             sb.Append(message);
         }

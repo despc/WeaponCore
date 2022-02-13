@@ -122,10 +122,11 @@ namespace CoreSystems.Support
             try
             {
                 var battery = cube as MyBatteryBlock;
-                var stator = cube as IMyMotorStator;
 
                 var weaponType = (cube is MyConveyorSorter || cube is IMyUserControllableGun);
                 var isWeaponBase = weaponType && cube.BlockDefinition != null && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cube.BlockDefinition.Id) || Session.PartPlatforms.ContainsKey(cube.BlockDefinition.Id));
+                var stator = cube as IMyMotorStator;
+
                 if (!isWeaponBase && (cube is MyConveyor || cube is IMyConveyorTube || cube is MyConveyorSorter || cube is MyCargoContainer || cube is MyCockpit || cube is IMyAssembler || cube is IMyShipConnector) && cube.CubeGrid.IsSameConstructAs(GridEntity)) { 
                     
                     MyInventory inventory;
@@ -145,13 +146,6 @@ namespace CoreSystems.Support
                             Session.InventoryMonitors[inventory] = monitors + 1;
                     }
                 }
-                else if (stator != null && stator.TopGrid == TopEntity)
-                {
-                    var map = Session.StatorMapPool.Count > 0 ? Session.StatorMapPool.Pop() : new StatorMap();
-                    map.Stator = stator;
-                    map.TopAi = this;
-                    TopStator.Add(stator, map);
-                }
                 else if (battery != null) {
                     if (Batteries.Add(battery)) SourceCount++;
                     UpdatePowerSources = true;
@@ -170,6 +164,22 @@ namespace CoreSystems.Support
                         }
                     }
                 }
+                else if (stator != null)
+                {
+                    StatorMap statorMap;
+                    if (!Session.StatorMaps.TryGetValue(stator, out statorMap))
+                    {
+                        statorMap = Session.StatorMapPool.Count > 0 ? Session.StatorMapPool.Pop() : new StatorMap();
+                        statorMap.Stator = stator;
+                        Session.StatorMaps[stator] = statorMap;
+                    }
+
+                    if (stator.TopGrid == TopEntity)
+                    {
+                        statorMap.TopAi = this;
+                        TopStators.Add(stator, statorMap);
+                    }
+                }
             }
             catch (Exception ex) { Log.Line($"Exception in Controller FatBlockAdded: {ex} - {cube?.BlockDefinition == null} - RootAiNull: {Construct.RootAi == null}", null, true); }
         }
@@ -178,19 +188,25 @@ namespace CoreSystems.Support
         {
             try
             {
+                var stator = cube as IMyMotorStator;
+                if (stator != null)
+                {
+                    TopStators.Remove(stator);
+                    return;
+                }
+
+
                 var weaponType = (cube is MyConveyorSorter || cube is IMyUserControllableGun);
                 var cubeDef = cube.BlockDefinition;
                 var isWeaponBase = weaponType && cubeDef != null && (Session.ReplaceVanilla && Session.VanillaIds.ContainsKey(cubeDef.Id) || Session.PartPlatforms.ContainsKey(cubeDef.Id));
                 var battery = cube as MyBatteryBlock;
-                var stator = cube as IMyMotorStator;
-                StatorMap map;
                 MyInventory inventory;
 
-                if (stator != null && TopStator.TryGetValue(stator, out map))
-                {
-                    map.Clean();
-                    Session.StatorMapPool.Push(map);
-                    TopStator.Remove(stator);
+
+                if (!isWeaponBase && cube.HasInventory && cube.TryGetInventory(out inventory)) {
+
+                    if (!InventoryRemove(cube, inventory))
+                        Log.Line($"FatBlock inventory remove failed: {cube.BlockDefinition?.Id.SubtypeName} - gridMatch:{cube.CubeGrid == TopEntity} - aiMarked:{MarkedForClose} - {cube.CubeGrid.DebugName} - {TopEntity?.DebugName}");
                 }
                 else if (battery != null)
                 {
@@ -199,11 +215,6 @@ namespace CoreSystems.Support
                         SourceCount--;
 
                     UpdatePowerSources = true;
-                }
-                else if (!isWeaponBase && cube.HasInventory && cube.TryGetInventory(out inventory)) {
-
-                    if (!InventoryRemove(cube, inventory))
-                        Log.Line($"FatBlock inventory remove failed: {cube.BlockDefinition?.Id.SubtypeName} - gridMatch:{cube.CubeGrid == TopEntity} - aiMarked:{MarkedForClose} - {cube.CubeGrid.DebugName} - {TopEntity?.DebugName}");
                 }
 
             }
