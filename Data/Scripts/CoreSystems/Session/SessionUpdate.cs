@@ -112,13 +112,6 @@ namespace CoreSystems
                             continue;
                         }
 
-                        if (!cComp.Data.Repo.Values.Set.Overrides.AiEnabled)
-                        {
-                            if (cComp.RotorsMoving)
-                                cComp.StopRotors();
-                            continue;
-                        }
-
                         var controller = cComp.CoreEntity as IMyTurretControlBlock;
 
                         var azRaw = (IMyMotorStator)controller.AzimuthRotor;
@@ -147,6 +140,13 @@ namespace CoreSystems
                         {
                             Log.Line($"Setting base: elNull:{el == null} - azNull:{az == null} - azStatorNull{az?.Stator == null} - elStatorNull{el?.Stator == null}");
                             controlPart.BaseMap = el == null ? az : az == null ? el : az.Stator.TopGrid == el.Stator.CubeGrid ? az : el;
+                        }
+
+                        if (!cComp.Data.Repo.Values.Set.Overrides.AiEnabled)
+                        {
+                            if (cComp.RotorsMoving)
+                                cComp.StopRotors();
+                            continue;
                         }
 
                         var root = controlPart.BaseMap;
@@ -334,7 +334,7 @@ namespace CoreSystems
                                 rootAngle = -Math.Sign(rootAngle) * (MathHelper.TwoPi - Math.Abs(rootAngle));
 
                             if (IsServer)
-                                root.Stator.TargetVelocityRad = rootOutsideLimits ? 0 : controller.VelocityMultiplierAzimuthRpm * (float)rootAngle;
+                                root.Stator.TargetVelocityRad = rootOutsideLimits ? 0 : Math.Abs(controller.VelocityMultiplierAzimuthRpm) * (float)rootAngle;
                         }
 
                         for (int j = 0; j < turretMap.Count; j++)
@@ -366,7 +366,7 @@ namespace CoreSystems
                                     subAngle = -Math.Sign(subAngle) * (MathHelper.TwoPi - Math.Abs(subAngle));
 
                                 if (IsServer)
-                                    map.Stator.TargetVelocityRad = subOutsideLimits ? 0 : controller.VelocityMultiplierElevationRpm * (float)subAngle;
+                                    map.Stator.TargetVelocityRad = subOutsideLimits ? 0 : Math.Abs(controller.VelocityMultiplierElevationRpm) * (float)subAngle;
                             }
 
                             if (rootAngle * rootAngle + subAngle * subAngle < deviationRads * deviationRads)

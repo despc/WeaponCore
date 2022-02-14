@@ -520,6 +520,7 @@ namespace CoreSystems
             SequenceId = syncFrom.SequenceId;
             ShootMode = syncFrom.ShootMode;
             WeaponGroupId = syncFrom.WeaponGroupId;
+            AiEnabled = syncFrom.AiEnabled;
         }
     }
 }

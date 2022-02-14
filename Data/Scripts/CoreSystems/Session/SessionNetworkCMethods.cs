@@ -209,6 +209,38 @@ namespace CoreSystems
             return true;
         }
 
+        private bool ClientControlComp(PacketObj data)
+        {
+            var packet = data.Packet;
+            var compDataPacket = (ControlCompPacket)packet;
+            var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
+            var comp = ent?.Components.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
+
+            if (!comp.Data.Repo.Values.Sync(comp, compDataPacket.Data))
+                Log.Line($"ClientSupportComp: version fail - senderId:{packet.SenderId} - version:{comp.Data.Repo.Values.Revision}({compDataPacket.Data.Revision})");
+
+            data.Report.PacketValid = true;
+
+            return true;
+        }
+
+        private bool ClientControlState(PacketObj data)
+        {
+            var packet = data.Packet;
+            var compStatePacket = (ControlStatePacket)packet;
+            var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId);
+            var comp = ent?.Components.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg($"CompId: {packet.EntityId}", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
+
+            if (!comp.Data.Repo.Values.State.Sync(comp, compStatePacket.Data, ProtoControlState.Caller.Direct))
+                Log.Line($"ClientSupportState: version fail - senderId:{packet.SenderId} - version:{comp.Data.Repo.Values.Revision}({compStatePacket.Data.Revision})");
+
+            data.Report.PacketValid = true;
+
+            return true;
+        }
+
         private bool ClientWeaponReloadUpdate(PacketObj data)
         {
             var packet = data.Packet;

@@ -72,12 +72,18 @@ namespace CoreSystems
                     }
                 case PacketType.RequestSetRange:
                     {
-                        BlockUi.RequestSetRange(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
+                        if (comp is Weapon.WeaponComponent)
+                            BlockUi.RequestSetRange(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
+                        else
+                            BlockUi.RequestSetRangeControl(comp.CoreEntity as IMyTerminalBlock, ((FloatUpdatePacket)packet).Data);
                         break;
                     }
                 case PacketType.RequestSetReportTarget:
                     {
-                        BlockUi.RequestSetReportTarget(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
+                        if (comp is Weapon.WeaponComponent)
+                            BlockUi.RequestSetReportTarget(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
+                        else
+                            BlockUi.RequestSetReportTargetControl(comp.CoreEntity as IMyTerminalBlock, ((BoolUpdatePacket)packet).Data);
                         break;
                     }
                 case PacketType.RequestSetOverload:
@@ -234,10 +240,14 @@ namespace CoreSystems
             var packet = data.Packet;
             var overRidesPacket = (OverRidesPacket)packet;
             var ent = MyEntities.GetEntityByIdOrDefault(packet.EntityId, null, true);
-            var comp = ent?.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
+            var comp = ent?.Components.Get<CoreComponent>();
             if (comp?.Ai == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return Error(data, Msg("BaseComp", comp != null), Msg("Ai", comp?.Ai != null), Msg("Ai", comp?.Platform.State == CorePlatform.PlatformState.Ready));
 
-            Weapon.WeaponComponent.RequestSetValue(comp, overRidesPacket.Setting, overRidesPacket.Value, SteamToPlayer[overRidesPacket.SenderId]);
+            var wComp = comp as Weapon.WeaponComponent;
+            if (wComp != null) Weapon.WeaponComponent.RequestSetValue(wComp, overRidesPacket.Setting, overRidesPacket.Value, SteamToPlayer[overRidesPacket.SenderId]);
+            var cComp = comp as ControlSys.ControlComponent;
+            if (cComp != null) ControlSys.ControlComponent.RequestSetValue(cComp, overRidesPacket.Setting, overRidesPacket.Value, SteamToPlayer[overRidesPacket.SenderId]);
+
             data.Report.PacketValid = true;
 
             return true;

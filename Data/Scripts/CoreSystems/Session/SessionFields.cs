@@ -430,7 +430,6 @@ namespace CoreSystems
         internal bool AntiSmartActive;
         internal bool DirtyGrid;
         internal bool AuthorConnected;
-        internal bool TurretControllerEnabled;
         internal readonly HashSet<ulong> BlackListedPlayers = new HashSet<ulong>()
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.

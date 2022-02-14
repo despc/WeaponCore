@@ -160,6 +160,16 @@ namespace CoreSystems
                         ClientSupportState(packetObj);
                         break;
                     }
+                    case PacketType.ControlComp:
+                    {
+                        ClientControlComp(packetObj);
+                        break;
+                    }
+                    case PacketType.ControlState:
+                    {
+                        ClientControlState(packetObj);
+                        break;
+                    }
                     case PacketType.WeaponReload:
                     {
                         ClientWeaponReloadUpdate(packetObj);
@@ -501,6 +511,16 @@ namespace CoreSystems
                     case PacketType.SupportState:
                     {
                         PacketSupportStatePool.Return((SupportStatePacket)pInfo.Packet);
+                        break;
+                    }
+                    case PacketType.ControlComp:
+                    {
+                            PacketControlCompPool.Return((ControlCompPacket)pInfo.Packet);
+                        break;
+                    }
+                    case PacketType.ControlState:
+                    {
+                        PacketControlStatePool.Return((ControlStatePacket)pInfo.Packet);
                         break;
                     }
                 }
