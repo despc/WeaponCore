@@ -922,7 +922,6 @@ namespace CoreSystems.Projectiles
 
                 case DroneStatus.Return:
                     var returnTarget = new Vector3D(parentCubePos + parentCubeOrientation.Forward * orbitSphere.Radius);
-                    DsDebugDraw.DrawLine(new LineD(returnTarget, parentCubePos), Color.Red, 0.5f);
                     droneNavTarget = Vector3D.Normalize(returnTarget - Position);
                     DeaccelRate = 30;
                     if (Vector3D.Distance(Position, returnTarget) <= droneSize) DroneStat = DroneStatus.Dock;
