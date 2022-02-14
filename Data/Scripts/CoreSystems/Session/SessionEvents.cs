@@ -564,7 +564,7 @@ namespace CoreSystems
                             var playerId = enterController.ControllerInfo.ControllingIdentityId;
                             gridMap.LastControllerTick = Tick + 1;
                             gridMap.GroupMap.LastControllerTick = Tick + 1;
-                            gridMap.PlayerControllers.Remove(playerId);
+                            var removed = gridMap.PlayerControllers.Remove(playerId);
 
                             Ai ai;
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
@@ -597,10 +597,11 @@ namespace CoreSystems
                     if (cube != null)
                     {
 
-                        var playerId = enterController.ControllerInfo.ControllingIdentityId;
-
                         if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
                         {
+
+                            var playerId = enterController.ControllerInfo.ControllingIdentityId;
+
                             gridMap.LastControllerTick = Tick + 1;
                             gridMap.GroupMap.LastControllerTick = Tick + 1;
                             var pController = new PlayerController { ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick };

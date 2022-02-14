@@ -300,6 +300,7 @@ namespace CoreSystems.Support
 
                 var rootConstruct = rootAi.Construct;
                 var s = rootAi.Session;
+                rootConstruct.ControllingPlayers.Clear();
                 foreach (var sub in rootAi.SubGridCache)
                 {
                     GridMap gridMap;

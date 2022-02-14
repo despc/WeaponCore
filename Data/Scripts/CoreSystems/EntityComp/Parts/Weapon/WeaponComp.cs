@@ -389,11 +389,15 @@ namespace CoreSystems.Platform
 
             internal void ResetPlayerControl()
             {
-                Data.Repo.Values.State.PlayerId = -1;
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
                 if (Data.Repo.Values.Set.Overrides.ShootMode == ShootManager.ShootModes.MouseControl)
+                {
+                    if (ShootManager.ShootToggled)
+                        ShootManager.RequestShootSync(Data.Repo.Values.State.PlayerId);
                     Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiShoot;
+                }
+                Data.Repo.Values.State.PlayerId = -1;
 
                 Data.Repo.Values.State.TrackingReticle = false;
                 
