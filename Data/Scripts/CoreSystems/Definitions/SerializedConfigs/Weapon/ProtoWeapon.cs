@@ -21,7 +21,7 @@ namespace CoreSystems
             Values.State.TrackingReticle = false;
             Values.State.ShootSyncStateId = 0;
             Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
-            Values.Set.Overrides.ShootMode = Weapon.ShootManager.ShootModes.AiControl;
+            Values.Set.Overrides.ShootMode = Weapon.ShootManager.ShootModes.AiShoot;
             if (Values.State.Control == ProtoWeaponState.ControlMode.Ui)
                 Values.State.Control = ProtoWeaponState.ControlMode.None;
 
@@ -486,7 +486,7 @@ namespace CoreSystems
         [ProtoMember(25)] public int SequenceId;
         [ProtoMember(26)] public int ArmedTimer;
         [ProtoMember(27)] public int LeadGroup;
-        [ProtoMember(28), DefaultValue(Weapon.ShootManager.ShootModes.AiControl)] public Weapon.ShootManager.ShootModes ShootMode = Weapon.ShootManager.ShootModes.AiControl;
+        [ProtoMember(28), DefaultValue(Weapon.ShootManager.ShootModes.AiShoot)] public Weapon.ShootManager.ShootModes ShootMode = Weapon.ShootManager.ShootModes.AiShoot;
         [ProtoMember(29)] public int CameraChannel;
         [ProtoMember(30)] public int WeaponGroupId;
         [ProtoMember(31)] public bool AiEnabled;

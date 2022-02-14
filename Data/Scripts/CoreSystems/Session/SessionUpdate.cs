@@ -62,6 +62,9 @@ namespace CoreSystems
                 var construct = ai.Construct;
                 var focus = construct.Focus;
 
+                if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.GroupMap.LastControllerTick == Tick)
+                    Ai.Constructs.UpdatePlayerStates(ai.GridMap.GroupMap);
+
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
                 {
                     ai.BlockChangeArea.Min *= ai.GridEntity.GridSize;
@@ -70,6 +73,7 @@ namespace CoreSystems
 
                 var rootAi = construct.RootAi;
                 var rootConstruct = rootAi.Construct;
+
 
                 if (Tick60 && Tick != rootConstruct.LastEffectUpdateTick && rootConstruct.TotalEffect > rootConstruct.PreviousTotalEffect)
                     rootConstruct.UpdateEffect(Tick);
@@ -528,7 +532,7 @@ namespace CoreSystems
 
                     var cMode = wValues.Set.Overrides.Control;
                     var sMode = wValues.Set.Overrides.ShootMode;
-                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.AiControl;
+                    var shootModeDefault = sMode != Weapon.ShootManager.ShootModes.AiShoot;
                     var shotModeActive = wComp.ShootManager.RequestShootBurstId != wValues.State.ShootSyncStateId;
 
                     if (HandlesInput) {

@@ -11,21 +11,16 @@ namespace CoreSystems.Control
     public static partial class CustomActions
     {
         #region Call Actions
-        internal static void TerminalActionShootClick(IMyTerminalBlock blk)
-        {
-            var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
-
-            comp.RequestShootUpdate(TriggerClick, comp.Session.MpServer ? comp.Session.PlayerId : -1);
-        }
-
         internal static void TerminActionToggleShoot(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
                 return;
 
-            comp.RequestShootUpdate(TriggerOn, comp.Session.MpServer ? comp.Session.PlayerId : -1);
+            var mode = comp.Data.Repo.Values.State.TerminalAction;
+            var newMode = mode != TriggerOn ? TriggerOn : TriggerOff;
+
+            comp.RequestShootUpdate(newMode, comp.Session.MpServer ? comp.Session.PlayerId : -1);
         }
 
         internal static void TerminalActionShootOn(IMyTerminalBlock blk)
@@ -561,7 +556,7 @@ namespace CoreSystems.Control
             var comp = blk.Components.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
-            var message = (comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.AiControl || comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.MouseControl) ? comp.Data.Repo.Values.Set.Overrides.ShootMode.ToString() : "Other"; 
+            var message = (comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.AiShoot || comp.Data.Repo.Values.Set.Overrides.ShootMode == Weapon.ShootManager.ShootModes.MouseControl) ? comp.Data.Repo.Values.Set.Overrides.ShootMode.ToString() : "Other"; 
 
             sb.Append(message);
         }

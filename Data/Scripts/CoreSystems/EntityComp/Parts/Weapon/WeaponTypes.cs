@@ -156,7 +156,7 @@ namespace CoreSystems.Platform
 
             public enum ShootModes
             {
-                AiControl,
+                AiShoot,
                 MouseControl,
                 KeyToggle,
                 KeyFire,
@@ -179,6 +179,25 @@ namespace CoreSystems.Platform
             }
 
             #region Main
+
+            internal void RestoreWeaponShot()
+            {
+                for (int i = 0; i < Comp.Collection.Count; i++)
+                {
+                    var w = Comp.Collection[i];
+                    if (w.ActiveAmmoDef.AmmoDef.Const.MustCharge)
+                    {
+                        Log.Line($"RestoreWeaponShot, recharge");
+                        w.ProtoWeaponAmmo.CurrentCharge = w.MaxCharge;
+                        w.EstimatedCharge = w.MaxCharge;
+                    }
+                    else
+                    {
+                        w.ProtoWeaponAmmo.CurrentAmmo += (int)CompletedCycles;
+                        Log.Line($"RestoreWeaponShot, return ammo:{CompletedCycles}");
+                    }
+                }
+            }
 
             internal void UpdateShootSync(Weapon w)
             {
@@ -287,7 +306,7 @@ namespace CoreSystems.Platform
                 var state = values.State;
                 var set = values.Set;
 
-                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.AiControl && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
+                if ((!Comp.Session.DedicatedServer && set.Overrides.ShootMode == ShootModes.AiShoot && (!ShootToggled || LastShootMode == set.Overrides.ShootMode)) || !ProcessInput(playerId) || !ReadyToShoot())
                     return;
 
                 if (Comp.IsBlock && Comp.Session.HandlesInput)
@@ -438,7 +457,7 @@ namespace CoreSystems.Platform
                 }
                 else
                 {
-                    Log.Line($"ClientToggleResponse makeup attempt: Current: {CompletedCycles} - target:{interval}");
+                    Log.Line($"ClientToggleResponse makeup attempt: Current: {CompletedCycles} - target:{interval}", Session.InputLog);
                     LastCycle = interval;
                 }
 
@@ -447,6 +466,9 @@ namespace CoreSystems.Platform
             internal void ServerReject()
             {
                 Log.Line($"client received reject message reset", Session.InputLog);
+                if (CompletedCycles > 0)
+                    RestoreWeaponShot();
+
                 WaitingShootResponse = false;
                 FreezeClientShoot = false;
                 EarlyOff = false;

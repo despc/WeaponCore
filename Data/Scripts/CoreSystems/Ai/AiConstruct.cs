@@ -153,7 +153,7 @@ namespace CoreSystems.Support
                 OptimalDps = 0;
                 BlockCount = 0;
                 LastRefreshTick = Ai.Session.Tick;
-                if (Ai.TopEntity != null && Ai.Session.GridToInfoMap.ContainsKey(Ai.TopEntity)) {
+                if (Ai.TopEntity != null) {
                     Ai leadingAi = null;
                     Ai largestAi = null;
                     int leadingBlocks = 0;
@@ -166,7 +166,6 @@ namespace CoreSystems.Support
                             if (leadingAi == null)
                                 leadingAi = subAi;
                             else  {
-
                                 if (leadingAi.TopEntity.EntityId > grid.EntityId)
                                     leadingAi = subAi;
                             }
@@ -202,24 +201,30 @@ namespace CoreSystems.Support
                             maxLockRange = Ai.Construct.MaxLockRange;
                     }
 
-                    RootAi.Session.EntityToMasterAi[Ai.TopEntity] = RootAi;
                     RootAi.Construct.MaxLockRange = maxLockRange;
-                    return;
                 }
-
-                Log.Line($"2 - does this ever get hit?");
-                
-                if (Ai.TopEntity != null && Ai.AiType != AiTypes.Grid)
+                else
                 {
-                    RootAi = Ai;
-                    LargestAi = Ai;
-                    Ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
+                    Log.Line($"2 - does this ever get hit?");
 
-                    return;
+                    if (Ai.TopEntity != null && Ai.AiType != AiTypes.Grid)
+                    {
+                        RootAi = Ai;
+                        LargestAi = Ai;
+                        Ai.Session.EntityToMasterAi[RootAi.TopEntity] = RootAi;
+
+                    }
+                    else
+                    {
+                        RootAi = null;
+                        LargestAi = null;
+                    }
                 }
 
-                RootAi = null;
-                LargestAi = null;
+                if (RootAi != null) {
+                    foreach (var sub in Ai.SubGridCache)
+                        RootAi.Session.EntityToMasterAi[sub] = RootAi;
+                }
             }
 
             internal void UpdateEffect(uint tick)
@@ -283,33 +288,39 @@ namespace CoreSystems.Support
             }
 
 
-            internal void UpdatePlayerStates()
+            internal static void UpdatePlayerStates(GridGroupMap map)
             {
-                foreach (var p in Ai.GridMap.PlayerControllers)
+                if (map.Ais.Count == 0)
                 {
-                    RootAi.Construct.ControllingPlayers[p.Key] = p.Value;
-                    UpdatePlayerLockState(p.Key);
+                    Log.Line($"UpdatePlayerStates gridgroup had no AIs");
+                    return;
                 }
-            }
 
-            internal void UpdateStators()
-            {
-                foreach (var p in Ai.TopStators)
+                var rootAi = map.Ais[0].Construct.RootAi;
+
+                var rootConstruct = rootAi.Construct;
+                var s = rootAi.Session;
+                foreach (var sub in rootAi.SubGridCache)
                 {
-                    var grid = (MyCubeGrid) p.Key.CubeGrid;
-                    if (!RootAi.Construct.LocalStatorMaps.ContainsKey(grid))
+                    GridMap gridMap;
+                    if (s.GridToInfoMap.TryGetValue(sub, out gridMap))
                     {
-                        var list = RootAi.Session.StatorMapListPool.Count > 0 ? RootAi.Session.StatorMapListPool.Pop() : new List<StatorMap>();
-                        RootAi.Construct.LocalStatorMaps.Add(grid, list);
+
+                        foreach (var c in gridMap.PlayerControllers)
+                        {
+                            rootConstruct.ControllingPlayers[c.Key] = c.Value;
+                            UpdatePlayerLockState(rootAi, c.Key);
+                        }
                     }
-                    RootAi.Construct.LocalStatorMaps[grid].Add(p.Value);
+                    else 
+                        Log.Line($"UpdatePlayerStates could not find grid map");
                 }
             }
 
-            internal void UpdatePlayerLockState(long playerId)
+            internal static void UpdatePlayerLockState(Ai ai, long playerId)
             {
                 PlayerMap playerMap;
-                if (!Ai.Session.Players.TryGetValue(playerId, out playerMap))
+                if (!ai.Session.Players.TryGetValue(playerId, out playerMap))
                     Log.Line($"failed to get PlayerMap");
                 else if (playerMap.Player.Character != null && playerMap.Player.Character.Components.TryGet(out playerMap.TargetFocus) && playerMap.Player.Character.Components.TryGet(out playerMap.TargetLock))
                 {
@@ -322,8 +333,26 @@ namespace CoreSystems.Support
                     Log.Line($"failed to get and set player focus and lock");
             }
 
-            internal static void BuildAiListAndCounters(List<Ai> ais)
+
+            internal void UpdateStators()
             {
+                foreach (var p in Ai.TopStators)
+                {
+                    var grid = (MyCubeGrid)p.Key.CubeGrid;
+                    if (!RootAi.Construct.LocalStatorMaps.ContainsKey(grid))
+                    {
+                        var list = RootAi.Session.StatorMapListPool.Count > 0 ? RootAi.Session.StatorMapListPool.Pop() : new List<StatorMap>();
+                        RootAi.Construct.LocalStatorMaps.Add(grid, list);
+                    }
+                    RootAi.Construct.LocalStatorMaps[grid].Add(p.Value);
+                }
+            }
+
+
+            internal static void BuildAiListAndCounters(GridGroupMap map)
+            {
+                var ais = map.Ais;
+
                 for (int i = 0; i < ais.Count; i++)
                 {
 

@@ -55,7 +55,7 @@ namespace CoreSystems
                 var decoy = cube as IMyDecoy;
                 var camera = cube as MyCameraBlock;
                 var turretController = cube as IMyTurretControlBlock;
-                if (sorter != null || turret != null || controllableGun != null || rifle != null || turretController != null)
+                if (sorter != null || turret != null || controllableGun != null || rifle != null || turretController != null && TurretControllerEnabled)
                 {
                     lock (InitObj)
                     {
@@ -140,8 +140,7 @@ namespace CoreSystems
             if (groupData.LinkType != GridLinkTypeEnum.Mechanical)
                 return;
 
-            var map = GridGroupMapPool.Get();
-            map.Session = this;
+            var map = GridGroupMapPool.Count > 0 ? GridGroupMapPool.Pop() : new GridGroupMap(this);
             map.Type = groupData.LinkType;
             map.GroupData = groupData;
             //groupData.OnReleased += map.OnReleased;
@@ -158,14 +157,13 @@ namespace CoreSystems
             GridGroupMap map;
             if (GridGroupMap.TryGetValue(groupData, out map))
             {
-                map.GroupData = null;
-
                 //groupData.OnReleased -= map.OnReleased;
                 groupData.OnGridAdded -= map.OnGridAdded;
                 groupData.OnGridRemoved -= map.OnGridRemoved;
+                
                 GridGroupMap.Remove(groupData);
-
-                GridGroupMapPool.Return(map);
+                map.Clean();
+                GridGroupMapPool.Push(map);
             }
             else 
                 Log.Line($"GridGroupsOnOnGridGroupDestroyed could not find map");
@@ -565,15 +563,12 @@ namespace CoreSystems
                         {
                             var playerId = enterController.ControllerInfo.ControllingIdentityId;
                             gridMap.LastControllerTick = Tick + 1;
+                            gridMap.GroupMap.LastControllerTick = Tick + 1;
                             gridMap.PlayerControllers.Remove(playerId);
 
                             Ai ai;
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                             {
-                                if (!ai.Construct.RootAi.Construct.ControllingPlayers.Remove(playerId))
-                                    Log.Line($"could not remove player: {playerId} from root construct");
-                                ai.Construct.UpdatePlayerLockState(playerId);
-
                                 CoreComponent comp;
                                 if (ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
                                 {
@@ -607,15 +602,13 @@ namespace CoreSystems
                         if (GridToInfoMap.TryGetValue(cube.CubeGrid, out gridMap))
                         {
                             gridMap.LastControllerTick = Tick + 1;
+                            gridMap.GroupMap.LastControllerTick = Tick + 1;
                             var pController = new PlayerController { ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick };
                             gridMap.PlayerControllers[playerId] = pController;
 
                             Ai ai;
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
                             {
-                                ai.Construct.RootAi.Construct.ControllingPlayers[playerId] = pController;
-                                ai.Construct.UpdatePlayerLockState(playerId);
-
                                 CoreComponent comp;
                                 if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
                                 {

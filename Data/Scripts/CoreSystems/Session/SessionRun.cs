@@ -350,6 +350,9 @@ namespace CoreSystems
                 if (SuppressWc)
                     return;
 
+                IsServer = MyAPIGateway.Multiplayer.IsServer;
+                DedicatedServer = MyAPIGateway.Utilities.IsDedicated;
+                TurretControllerEnabled = !DedicatedServer && IsServer;
                 AllDefinitions = Static.GetAllDefinitions();
 
                 SoundDefinitions = Static.GetSoundDefinitions();

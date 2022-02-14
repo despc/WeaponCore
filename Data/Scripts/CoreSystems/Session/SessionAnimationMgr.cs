@@ -1011,7 +1011,7 @@ namespace CoreSystems
                 var particleEvent = Av.ParticlesToProcess[i];
                 var playedFull = Tick - particleEvent.PlayTick > particleEvent.MaxPlayTime;
                 var obb = particleEvent.MyDummy.Entity.PositionComp.WorldAABB;
-                var playable = Vector3D.DistanceSquared(CameraPos, obb.Center) <= particleEvent.Distance && Camera.IsInFrustum(ref obb);
+                var playable = Vector3D.DistanceSquared(CameraPos, obb.Center) <= particleEvent.Distance;
                 if (particleEvent.PlayTick <= Tick && !playedFull && !particleEvent.Stop && playable)
                 {
                     var dummyInfo = particleEvent.MyDummy.Info;

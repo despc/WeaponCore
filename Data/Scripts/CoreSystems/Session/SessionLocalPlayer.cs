@@ -7,6 +7,7 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using SpaceEngineers.Game.ModAPI;
 using VRage;
 using VRage.Collections;
 using VRage.Game.Entity;
@@ -208,7 +209,7 @@ namespace CoreSystems
                         {
 
                             var block = fatBlocks[j];
-                            if (block.IsFunctional && PartPlatforms.ContainsKey(block.BlockDefinition.Id))
+                            if (block.IsFunctional && PartPlatforms.ContainsKey(block.BlockDefinition.Id) && (TurretControllerEnabled || !(block is IMyTurretControlBlock)))
                             {
 
                                 Ai gridAi;
@@ -242,7 +243,6 @@ namespace CoreSystems
 
                 if (badBlock.InScene)
                 {
-
                     var lookSphere = new BoundingSphereD(badBlock.PositionComp.WorldAABB.Center, 30f);
                     if (Camera.IsInFrustum(ref lookSphere))
                     {

@@ -963,11 +963,17 @@ namespace CoreSystems
     {
         public readonly ConcurrentDictionary<MyCubeGrid, Ai> Construct = new ConcurrentDictionary<MyCubeGrid, Ai>();
         public readonly List<Ai> Ais = new List<Ai>();
+        public readonly Session Session;
         public bool Dirty;
-        public Session Session;
         public GridLinkTypeEnum Type;
         public IMyGridGroupData GroupData;
         public uint LastChangeTick;
+        public uint LastControllerTick;
+
+        public GridGroupMap(Session s)
+        {
+            Session = s;
+        }
 
         public void OnGridAdded(IMyGridGroupData newGroup, IMyCubeGrid myCubeGrid, IMyGridGroupData oldGroup)
         {
@@ -1012,9 +1018,6 @@ namespace CoreSystems
 
         public void UpdateAis()
         {
-            if (Session == null)
-                return;
-
             Ais.Clear();
             foreach (var g in Construct) {
                 Ai ai;
@@ -1022,31 +1025,36 @@ namespace CoreSystems
                     Ais.Add(ai);
             }
 
-            for (int i = 0; i < Ais.Count; i++)
-                Ais[i].SubGridChanges();
-
-            for (int i = 0; i < Ais.Count; i++)
+            var aiCount = Ais.Count;
+            if (aiCount > 0)
             {
-                var ai = Ais[i];
+                for (int i = 0; i < aiCount; i++)
+                    Ais[i].SubGridChanges();
 
-                ai.Construct.Refresh();
+                for (int i = 0; i < aiCount; i++)
+                {
+                    var ai = Ais[i];
 
-                if (ai.GridMap.PlayerControllers.Count > 0)
-                    ai.Construct.UpdatePlayerStates();
+                    ai.Construct.Refresh();
 
-                if (ai.TopStators.Count > 0)
-                    ai.Construct.UpdateStators();
+                    if (ai.TopStators.Count > 0)
+                        ai.Construct.UpdateStators();
+                }
+
+                Ai.Constructs.UpdatePlayerStates(this);
+                Ai.Constructs.BuildAiListAndCounters(this);
             }
 
-            Ai.Constructs.BuildAiListAndCounters(Ais);
+
             Dirty = false;
         }
 
 
         public void Clean()
         {
+            GroupData = null;
             LastChangeTick = 0;
-            Session = null;
+            LastControllerTick = 0;
             Dirty = false;
             Construct.Clear();
             Ais.Clear();

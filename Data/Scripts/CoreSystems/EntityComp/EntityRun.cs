@@ -233,7 +233,7 @@ namespace CoreSystems.Support
                         }
                     }
 
-                    if (Ai.AiSpawnTick > Ai.Construct.LastRefreshTick)
+                    if (Ai.AiSpawnTick > Ai.Construct.LastRefreshTick || Ai.Construct.LastRefreshTick == 0)
                         Ai.GridMap.GroupMap.UpdateAis();
                 }
                 Status = !IsWorking ? Start.Starting : Start.ReInit;

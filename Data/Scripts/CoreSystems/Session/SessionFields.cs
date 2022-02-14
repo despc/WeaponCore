@@ -99,7 +99,7 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<BetterInventoryItem> BetterInventoryItems = new MyConcurrentPool<BetterInventoryItem>(256);
         internal readonly MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>> PhysicalItemListPool = new MyConcurrentPool<MyConcurrentList<MyPhysicalInventoryItem>>(256, list => list.Clear());
         internal readonly MyConcurrentPool<MyConcurrentList<BetterInventoryItem>> BetterItemsListPool = new MyConcurrentPool<MyConcurrentList<BetterInventoryItem>>(256, list => list.Clear());
-        internal readonly MyConcurrentPool<GridGroupMap> GridGroupMapPool = new MyConcurrentPool<GridGroupMap>(64, gridGroupMap => gridGroupMap.Clean());
+        internal readonly Stack<GridGroupMap> GridGroupMapPool = new Stack<GridGroupMap>(64);
         internal readonly Stack<StatorMap> StatorMapPool = new Stack<StatorMap>(32);
 
         internal readonly Stack<Ai> AiPool = new Stack<Ai>(128);
@@ -430,6 +430,7 @@ namespace CoreSystems
         internal bool AntiSmartActive;
         internal bool DirtyGrid;
         internal bool AuthorConnected;
+        internal bool TurretControllerEnabled;
         internal readonly HashSet<ulong> BlackListedPlayers = new HashSet<ulong>()
         {
             76561198339035377, // king_of_draconia for harassing modders and users of mods.

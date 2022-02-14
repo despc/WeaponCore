@@ -313,6 +313,7 @@ namespace CoreSystems.Platform
             {
                 if (IsDisabled) return;
 
+
                 if (IsBlock && Session.HandlesInput)
                     Session.TerminalMon.HandleInputUpdate(this);
 
@@ -392,7 +393,7 @@ namespace CoreSystems.Platform
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
                 if (Data.Repo.Values.Set.Overrides.ShootMode == ShootManager.ShootModes.MouseControl)
-                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiControl;
+                    Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiShoot;
 
                 Data.Repo.Values.State.TrackingReticle = false;
                 
@@ -558,7 +559,7 @@ namespace CoreSystems.Platform
                 {
                     comp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 }
-                else if (o.ShootMode != ShootManager.ShootModes.AiControl)
+                else if (o.ShootMode != ShootManager.ShootModes.AiShoot)
                 {
                     comp.Data.Repo.Values.State.PlayerId = playerId;
                 }

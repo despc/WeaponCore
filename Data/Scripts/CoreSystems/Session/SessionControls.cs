@@ -126,9 +126,6 @@ namespace CoreSystems
         internal static void CreateDefaultActions<T>(Session session) where T : IMyTerminalBlock
         {
             CreateCustomActionSet<T>(session);
-            CreateCustomActions<T>.CreateShoot(session);
-            CreateCustomActions<T>.CreateShootOn(session);
-            CreateCustomActions<T>.CreateShootOff(session);
         }
 
         internal static void CreateCustomDecoyActions<T>(Session session) where T : IMyTerminalBlock
@@ -142,27 +139,33 @@ namespace CoreSystems
         }
         internal static void CreateCustomActionSet<T>(Session session) where T : IMyTerminalBlock
         {
+            CreateCustomActions<T>.CreateShootToggle(session);
+            CreateCustomActions<T>.CreateShootOn(session);
+            CreateCustomActions<T>.CreateShootOff(session);
+
+            CreateCustomActions<T>.CreateShootTrigger(session);
+
             CreateCustomActions<T>.CreateShootMode(session);
             CreateCustomActions<T>.CreateMouseToggle(session);
-            CreateCustomActions<T>.CreateShootTrigger(session);
+            CreateCustomActions<T>.CreateSubSystems(session);
+            CreateCustomActions<T>.CreateControlModes(session);
+            CreateCustomActions<T>.CreateMovementState(session);
             CreateCustomActions<T>.CreateCycleAmmo(session);
+            CreateCustomActions<T>.CreateFocusTargets(session);
+            CreateCustomActions<T>.CreateFocusSubSystem(session);
+
+            CreateCustomActions<T>.CreateGrids(session);
             CreateCustomActions<T>.CreateNeutrals(session);
             CreateCustomActions<T>.CreateFriendly(session);
             CreateCustomActions<T>.CreateUnowned(session);
-            CreateCustomActions<T>.CreateMaxSize(session);
-            CreateCustomActions<T>.CreateMinSize(session);
-            CreateCustomActions<T>.CreateMovementState(session);
-            CreateCustomActions<T>.CreateControlModes(session);
-            CreateCustomActions<T>.CreateSubSystems(session);
             CreateCustomActions<T>.CreateProjectiles(session);
             CreateCustomActions<T>.CreateBiologicals(session);
             CreateCustomActions<T>.CreateMeteors(session);
-            CreateCustomActions<T>.CreateGrids(session);
-            CreateCustomActions<T>.CreateFocusTargets(session);
-            CreateCustomActions<T>.CreateFocusSubSystem(session);
-            CreateCustomActions<T>.CreateRepelMode(session);
             CreateCustomActions<T>.CreateWeaponCameraChannels(session);
             CreateCustomActions<T>.CreateLeadGroups(session);
+            CreateCustomActions<T>.CreateRepelMode(session);
+            CreateCustomActions<T>.CreateMaxSize(session);
+            CreateCustomActions<T>.CreateMinSize(session);
         }
 
         internal static void CreateTurretControllerActions<T>(Session session) where T : IMyTerminalBlock
@@ -171,8 +174,7 @@ namespace CoreSystems
             CreateCustomActions<T>.CreateNeutralsControl(session);
             CreateCustomActions<T>.CreateFriendlyControl(session);
             CreateCustomActions<T>.CreateUnownedControl(session);
-            CreateCustomActions<T>.CreateMaxSizeControl(session);
-            CreateCustomActions<T>.CreateMinSizeControl(session);
+
             CreateCustomActions<T>.CreateMovementStateControl(session);
             //CreateCustomActions<T>.CreateControlModesControl(session);
             CreateCustomActions<T>.CreateSubSystemsControl(session);
@@ -182,6 +184,8 @@ namespace CoreSystems
             CreateCustomActions<T>.CreateGridsControl(session);
             CreateCustomActions<T>.CreateFocusTargetsControl(session);
             CreateCustomActions<T>.CreateFocusSubSystemControl(session);
+            CreateCustomActions<T>.CreateMaxSizeControl(session);
+            CreateCustomActions<T>.CreateMinSizeControl(session);
             CreateCustomActions<T>.CreateRepelModeControl(session);
         }
 
@@ -220,6 +224,9 @@ namespace CoreSystems
         }
 
         private const string ShootModeStr = "Shoot";
+        private const string LegacyStr = " (Legacy)";
+
+        private const string ShootOnceModeStr = "ShootOnce";
 
         internal static void AlterActions<T>(Session session)
         {
@@ -229,7 +236,7 @@ namespace CoreSystems
 
                 var a = actions[i];
 
-                if (!a.Id.Contains("OnOff") && !a.Id.Contains("Shoot") && !a.Id.Contains("WC_") && !a.Id.Contains("Control"))
+                if (a.Id.Equals(ShootOnceModeStr) || !a.Id.Contains(ShootModeStr) && !a.Id.Contains("OnOff") && !a.Id.Contains("WC_") && !a.Id.Contains("Control"))
                 {
                     a.Enabled = TerminalHelpers.NotWcBlock;
                     session.AlteredActions.Add(a);
@@ -239,6 +246,7 @@ namespace CoreSystems
                     a.Enabled = TerminalHelpers.NotWcOrIsTurret;
                     session.AlteredActions.Add(a);
                 }
+                /*
                 else if (a.Id.Equals("ShootOnce")) {
 
                     var oldAction = a.Action;
@@ -259,6 +267,7 @@ namespace CoreSystems
                     a.Name.Append(ShootModeStr);
                     session.AlteredActions.Add(a);
                 }
+                */
                 else if (a.Id.Equals("Shoot")) {
 
                     var oldAction = a.Action;
@@ -270,7 +279,7 @@ namespace CoreSystems
                                 oldAction(blk);
                             return;
                         }
-                        comp.RequestShootUpdate(TriggerOn, comp.Session.MpServer ? comp.Session.PlayerId : -1);
+                        comp.RequestShootUpdate(comp.Data.Repo.Values.State.TerminalAction == TriggerOn ? TriggerOff : TriggerOn, comp.Session.MpServer ? comp.Session.PlayerId : -1);
                     };
 
                     var oldWriter = a.Writer;
@@ -286,6 +295,10 @@ namespace CoreSystems
                         else
                             sb.Append("Off");
                     };
+                    if (!a.Name.ToString().Contains(LegacyStr))
+                    {
+                        a.Name.Append(LegacyStr);
+                    }
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot_On")) {
@@ -316,6 +329,10 @@ namespace CoreSystems
                         else
                             sb.Append("Off");
                     };
+                    if (!a.Name.ToString().Contains(LegacyStr))
+                    {
+                        a.Name.Append(LegacyStr);
+                    }
                     session.AlteredActions.Add(a);
                 }
                 else if (a.Id.Equals("Shoot_Off")) {
@@ -345,20 +362,19 @@ namespace CoreSystems
                         else
                             sb.Append("Off");
                     };
+                    if (!a.Name.ToString().Contains(LegacyStr))
+                    {
+                        a.Name.Append(LegacyStr);
+                    }
                     session.AlteredActions.Add(a);
                 }
             }
         }
 
-        internal static void AlterControls<T>(Session session) where T : IMyTerminalBlock //  https://github.com/THDigi/ElectronicsPanel/blob/master/Data/Scripts/ElectronicsPanel/ElectronicsPanelMod.cs#L244
+        private static HashSet<string> _visibleControls = new HashSet<string> 
         {
-            var validType = typeof(T) == typeof(IMyUserControllableGun);
-            List<IMyTerminalControl> controls;
-            MyAPIGateway.TerminalControls.GetControls<T>(out controls);
-
-            HashSet<string> visibleControls = new HashSet<string> {
                 "OnOff",
-                "Shoot",
+                //"Shoot",
                 "ShowInTerminal",
                 "ShowInInventory",
                 "ShowInToolbarConfig",
@@ -402,21 +418,23 @@ namespace CoreSystems
 
             };
 
+        internal static void AlterControls<T>(Session session) where T : IMyTerminalBlock //  https://github.com/THDigi/ElectronicsPanel/blob/master/Data/Scripts/ElectronicsPanel/ElectronicsPanelMod.cs#L244
+        {
+            var validType = typeof(T) == typeof(IMyUserControllableGun);
+            List<IMyTerminalControl> controls;
+            MyAPIGateway.TerminalControls.GetControls<T>(out controls);
+
             for (int i = validType ? 12 : 0; i < controls.Count; i++) {
 
                 var c = controls[i];
                 if (session.AlteredControls.Contains(c)) continue;
-                if (!visibleControls.Contains(c.Id)) {
+                if (!_visibleControls.Contains(c.Id)) {
                     c.Visible = TerminalHelpers.NotWcBlock;
                     session.AlteredControls.Add(c);
                     continue;
                 }
 
                 switch (c.Id) {
-                    case "Shoot":
-                        c.Visible = TerminalHelpers.NotWcBlock;
-                        session.AlteredControls.Add(c);
-                        break;
                     case "Control":
                         c.Visible = TerminalHelpers.NotWcOrIsTurret;
                         session.AlteredControls.Add(c);
@@ -540,6 +558,8 @@ namespace CoreSystems
                 c.Visible = null;
             }
             session.AlteredControls.Clear();
+            _visibleControls.Clear();
+            _visibleControls = null;
         }
 
         private static void EmptyAction(IMyTerminalBlock obj)

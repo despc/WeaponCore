@@ -81,7 +81,7 @@ namespace CoreSystems.Platform
             }
         }
 
-
+        private const string AnyStr = "Any";
         internal void PlayParticleEvent(EventTriggers eventTrigger, bool active, double distance, HashSet<string> muzzles)
         {
             if (ParticleEvents.ContainsKey(eventTrigger))
@@ -92,25 +92,17 @@ namespace CoreSystems.Platform
 
                     if (active && particle.Restart && particle.Triggered) continue;
 
-                    var obb = particle.MyDummy.Entity.PositionComp.WorldAABB;
-                    //var inView = BaseComp.Session.Camera.IsInFrustum(ref obb);
 
-                    var canPlay = true;
                     if (muzzles != null)
                     {
                         for (int j = 0; j < particle.MuzzleNames.Length; j++)
                         {
-                            if (particle.MuzzleNames[j] == "Any" || muzzles.Contains(particle.MuzzleNames[j]))
+                            if (particle.MuzzleNames[j] == AnyStr || muzzles.Contains(particle.MuzzleNames[j]))
                             {
-                                canPlay = true;
                                 break;
                             }
                         }
                     }
-                    else
-                        canPlay = true;
-
-                    if (!canPlay) return;
 
                     if (active && !particle.Playing && distance <= particle.Distance)
                     {

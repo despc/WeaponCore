@@ -313,7 +313,7 @@ namespace CoreSystems
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;
 
             var value = newValue ? CoreComponent.TriggerActions.TriggerOn : CoreComponent.TriggerActions.TriggerOff;
-
+            
             comp.RequestShootUpdate(value, comp.Session.MpServer ? comp.Session.PlayerId : -1);
         }
 
@@ -621,7 +621,10 @@ namespace CoreSystems
         {
             var values = comp.Data.Repo.Values;
             var stateMatch = comp.ShootManager.RequestShootBurstId == values.State.ShootSyncStateId;
-            var ready =  !comp.ShootManager.WaitingShootResponse && !comp.ShootManager.FreezeClientShoot && !comp.ShootManager.ShootToggled && stateMatch;
+            var ready =  !comp.ShootManager.WaitingShootResponse && !comp.ShootManager.FreezeClientShoot && (!comp.ShootManager.ShootToggled && stateMatch || stateMatch);
+
+            if (!ready)
+                Log.Line($"ShootModeChangeReady failed: wait:{comp.ShootManager.WaitingShootResponse} - freeze:{comp.ShootManager.FreezeClientShoot} - toggled:{comp.ShootManager.ShootToggled} - statematch:{stateMatch}", Session.InputLog);
             return ready;
         }
 
