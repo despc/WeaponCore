@@ -18,13 +18,11 @@ namespace CoreSystems.Platform
         internal readonly ControlSystem System;
         internal readonly MyStringHash PartHash;
 
-        internal Dictionary<StatorMap, RotorMap> TurretMap = new Dictionary<StatorMap, RotorMap>();
         internal StatorMap BaseMap;
         internal StatorMap TrackingMap;
         internal Weapon TrackingWeapon;
         internal Dummy TrackingScope;
 
-        internal int ActiveSubRotors;
         internal bool BaseHasTop;
         internal bool NoValidWeapons;
 
