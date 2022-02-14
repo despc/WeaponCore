@@ -103,7 +103,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
                 if (_3RdPersonDraw == ThirdPersonModes.DotTarget)
                 {
-                    MyTransparentGeometry.AddBillboardOriented(_whiteDot, Color.Red, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
+                    MyTransparentGeometry.AddBillboardOriented(_whiteDot, _reticleColor, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
                 }
             }
             else if (!enableActivator)
