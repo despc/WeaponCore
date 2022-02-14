@@ -21,6 +21,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal uint ReticleOnSelfTick;
         internal uint MasterUpdateTick;
         internal uint LastTrackTick;
+        internal uint LastSelectableTick;
+        internal MyEntity LastSelectedEntity;
         internal int ReticleAgeOnSelf;
         internal readonly char FocusChar = "_"[0];
         internal Hud.Hud.TextureMap FocusTextureMap;
@@ -42,6 +44,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private readonly MyStringId _reticle = MyStringId.GetOrCompute("TargetReticle");
         private readonly MyStringId _targetCircle = MyStringId.GetOrCompute("DS_ActiveTarget");
         private readonly MyStringId _laserLine = MyStringId.GetOrCompute("LeadingLine");
+        private readonly MyStringId _whiteDot = MyStringId.GetOrCompute("AnamorphicFlare");
 
         private readonly Vector2 _targetDrawPosition = new Vector2(0, 0.25f);
         private readonly List<IHitInfo> _hitInfo = new List<IHitInfo>();
@@ -52,7 +55,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private readonly Dictionary<MyEntity, MyTuple<float, TargetControl>> _masterTargets = new Dictionary<MyEntity, MyTuple<float, TargetControl>>(64);
         private readonly Session _session;
         private Vector2 _pointerPosition = new Vector2(0, 0.0f);
-        private Vector2 _3RdPersonPos = new Vector2(0, 0.0f);
+        private Vector2 _3RdPersonPos = new Vector2(0, 0.5f);
         private Color _reticleColor = Color.White;
         private readonly HudInfo _alertHudInfo = new HudInfo(MyStringId.GetOrCompute("WC_HUD_DroneAlert"), new Vector2(0.55f, 0.66f), 0.33f);
 

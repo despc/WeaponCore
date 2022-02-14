@@ -23,7 +23,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (!s.InGridAiBlock && !s.UpdateLocalAiAndCockpit()) return;
             if (ActivateMarks()) DrawActiveMarks();
             if (ActivateDroneNotice()) DrawDroneNotice();
-            if (ActivateSelector()) DrawSelector();
+            ActivateSelector();
             if (s.CheckTarget(s.TrackingAi) && GetTargetState(s))
             {
 
@@ -34,7 +34,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             }
         }
 
-        private void DrawSelector()
+        private void DrawSelector(bool enableActivator)
         {
             var s = _session;
 
@@ -82,8 +82,31 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (s.Tick - _lastDrawTick > 1 && _delay++ < 10) return;
             _delay = 0;
             _lastDrawTick = s.Tick;
+            if (enableActivator)
+                MyTransparentGeometry.AddBillboardOriented(_reticle, _reticleColor, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale, BlendTypeEnum.PostPP);
 
-            MyTransparentGeometry.AddBillboardOriented(_reticle, _reticleColor, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale, BlendTypeEnum.PostPP);
+
+            Vector3D targetCenter;
+            if (GetSelectableEntity(out targetCenter))
+            {
+                var screenPos = s.Camera.WorldToScreen(ref targetCenter);
+
+                if (Vector3D.Transform(targetCenter, s.Camera.ViewMatrix).Z < 0)
+                {
+                    var dotpos = new Vector2D(MathHelper.Clamp(screenPos.X, -0.98, 0.98), MathHelper.Clamp(screenPos.Y, -0.98, 0.98));
+                    var screenScale = 0.1 * s.ScaleFov;
+                    dotpos.X *= (float)(screenScale * _session.AspectRatio);
+                    dotpos.Y *= (float)screenScale;
+                    screenPos = Vector3D.Transform(new Vector3D(dotpos.X, dotpos.Y, -0.1), s.CameraMatrix);
+                    MyTransparentGeometry.AddBillboardOriented(_targetCircle, _reticleColor, screenPos, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)screenScale * 0.075f, BlendTypeEnum.PostPP);
+                }
+
+            }
+            else if (!enableActivator)
+            {
+                    MyTransparentGeometry.AddBillboardOriented(_whiteDot, Color.Red, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
+            }
+
             DrawReticle = true;
         }
 

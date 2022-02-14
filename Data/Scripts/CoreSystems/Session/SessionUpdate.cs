@@ -524,8 +524,11 @@ namespace CoreSystems
                     var wValues = wComp.Data.Repo.Values;
 
                     var focusTargets = wValues.Set.Overrides.FocusTargets;
+
                     if (IsServer && wValues.State.PlayerId > 0 && !rootConstruct.ControllingPlayers.ContainsKey(wValues.State.PlayerId))
                         wComp.ResetPlayerControl();
+                    else if (IsClient && ai.GridMap.LastControllerTick ==  Tick && wComp.ShootManager.ShootToggled && wComp.Data.Repo.Values.State.PlayerId > 0)
+                        wComp.ShootManager.RequestShootSync(PlayerId);
 
                     if (wComp.Platform.State != CorePlatform.PlatformState.Ready || wComp.IsDisabled || wComp.IsAsleep || !wComp.IsWorking || wComp.CoreEntity.MarkedForClose || wComp.LazyUpdate && !ai.DbUpdated && Tick > wComp.NextLazyUpdateStart)
                         continue;

@@ -572,17 +572,21 @@ namespace CoreSystems
                                 CoreComponent comp;
                                 if (ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
                                 {
+
+                                    var wComp = (Weapon.WeaponComponent)comp;
                                     if (IsServer)
                                     {
-                                        var wComp = (Weapon.WeaponComponent)comp;
                                         wComp.Data.Repo.Values.State.PlayerId = -1;
                                         wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
 
                                         if (MpActive)
                                             SendComp(wComp);
                                     }
+
                                     if (HandlesInput)
+                                    {
                                         GunnerRelease(cube);
+                                    }
                                 }
                             }
                         }

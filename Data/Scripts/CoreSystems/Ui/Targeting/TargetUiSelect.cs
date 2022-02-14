@@ -13,13 +13,14 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 {
     internal partial class TargetUi
     {
-        internal bool ActivateSelector()
+        internal void ActivateSelector()
         {
-            if (!_session.TrackingAi.IsGrid || _session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return false;
+            if (!_session.TrackingAi.IsGrid || _session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return;
             if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control)) _3RdPersonDraw = !_3RdPersonDraw;
 
             var enableActivator = _3RdPersonDraw || _session.UiInput.CtrlPressed || _session.UiInput.FirstPersonView && _session.UiInput.AltPressed || _session.UiInput.CameraBlockView;
-            return enableActivator;
+            if (enableActivator | !_session.UiInput.FirstPersonView && !_session.UiInput.CameraBlockView)
+                DrawSelector(enableActivator);
         }
 
         internal bool ActivateDroneNotice()
@@ -183,11 +184,35 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (!manualSelect)
             {
                 var activeColor = closestEnt != null && !_masterTargets.ContainsKey(closestEnt) || foundOther ? Color.DeepSkyBlue : Color.Red;
-                _reticleColor = closestEnt != null && !(closestEnt is MyVoxelBase) ? activeColor : Color.White;
+
+                var voxel = closestEnt as MyVoxelBase;
+                _reticleColor = closestEnt != null && voxel == null ? activeColor : Color.White;
+                if (voxel == null)
+                {
+                    LastSelectableTick = _session.Tick;
+                    LastSelectedEntity = closestEnt;
+                }
 
                 if (!foundTarget)
                     fakeTarget.Update(end, s.Tick);
             }
+        }
+
+        internal bool GetSelectableEntity(out Vector3D position)
+        {
+
+            if (_session.Tick - LastSelectableTick < 60)
+            {
+                if (LastSelectedEntity != null && !LastSelectedEntity.MarkedForClose && _session.CameraFrustrum.Contains(LastSelectedEntity.PositionComp.WorldVolume) != ContainmentType.Disjoint)
+                {
+
+                    position = LastSelectedEntity.PositionComp.WorldAABB.Center;
+                    return true;
+                }
+            }
+
+            position = Vector3D.Zero;
+            return false;
         }
 
         internal void SelectNext()
@@ -269,18 +294,32 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private bool RayCheckTargets(Vector3D origin, Vector3D dir, out MyEntity closestEnt, out Vector3D hitPos, out bool foundOther, bool checkOthers = false)
         {
             var ai = _session.TrackingAi;
-            var closestDist = double.MaxValue;
+            var closestDist1 = double.MaxValue;
+            var closestDist2 = double.MaxValue;
+
             closestEnt = null;
+            MyEntity backUpEnt = null;
             foreach (var info in _masterTargets.Keys)
             {
                 var hit = info as MyCubeGrid;
                 if (hit == null) continue;
                 var ray = new RayD(origin, dir);
-                var dist = ray.Intersects(info.PositionComp.WorldVolume);
-                if (dist < closestDist)
+
+                var entVolume = info.PositionComp.WorldVolume;
+                var dist1 = ray.Intersects(entVolume);
+                if (dist1 < closestDist1)
                 {
-                    closestDist = dist.Value;
+                    closestDist1 = dist1.Value;
                     closestEnt = hit;
+                }
+
+                var inflated = info.PositionComp.WorldVolume;
+                inflated.Radius *= 3;
+                var dist2 = ray.Intersects(inflated);
+                if (dist2 < closestDist2)
+                {
+                    closestDist2 = dist2.Value;
+                    backUpEnt = hit;
                 }
             }
 
@@ -293,19 +332,35 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     if (otherEnt is MyCubeGrid)
                     {
                         var ray = new RayD(origin, dir);
-                        var dist = ray.Intersects(otherEnt.PositionComp.WorldVolume);
-                        if (dist < closestDist)
+                        var entVolume = otherEnt.PositionComp.WorldVolume;
+                        var dist1 = ray.Intersects(entVolume);
+                        if (dist1 < closestDist1)
                         {
-                            closestDist = dist.Value;
+                            closestDist1 = dist1.Value;
                             closestEnt = otherEnt;
+                            foundOther = true;
+                        }
+
+                        var inflated = entVolume;
+                        inflated.Radius *= 3;
+                        var dist2 = ray.Intersects(inflated);
+                        if (dist2 < closestDist2)
+                        {
+                            closestDist1 = dist2.Value;
+                            backUpEnt = otherEnt;
                             foundOther = true;
                         }
                     }
                 }
             }
 
-            if (closestDist < double.MaxValue)
-                hitPos = origin + (dir * closestDist);
+            if (closestEnt == null)
+                closestEnt = backUpEnt;
+
+            if (closestDist1 < double.MaxValue)
+                hitPos = origin + (dir * closestDist1);
+            else if (closestDist2 < double.MaxValue)
+                hitPos = origin + (dir * closestDist2);
             else hitPos = Vector3D.Zero;
 
             return closestEnt != null;
