@@ -599,7 +599,7 @@ namespace CoreSystems.Projectiles
                     {
                         orbitSphereClose = closestObstacle.PositionComp.WorldVolume;
                         orbitSphereClose.Radius = closestObstacle.PositionComp.WorldVolume.Radius + MaxSpeed * 0.3f;
-                        DroneStat = DroneStatus.Escape;
+                        if (DroneStat != DroneStatus.Escape)DroneStat = DroneStatus.Escape;
                         break;
                     }
 
@@ -683,6 +683,11 @@ namespace CoreSystems.Projectiles
                     }
                     else if (DroneStat == DroneStatus.Escape) DroneStat = DroneStatus.Transit;
 
+                    if (DroneStat != DroneStatus.Transit && orbitSphereFar.Contains(Position) == ContainmentType.Disjoint)
+                    {
+                        DroneStat = DroneStatus.Transit;
+                        break;
+                    }
 
                     if (DroneStat != DroneStatus.Transit)
                     {
@@ -697,11 +702,11 @@ namespace CoreSystems.Projectiles
                                 DroneStat = DroneStatus.Orbit;
                             }
                         }
-                        else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && (DroneStat == DroneStatus.Transit || DroneStat == DroneStatus.Orbit))
-                        {
-                            DroneStat = DroneStatus.Approach;
-                        }
                     }
+                    else if (orbitSphereFar.Contains(Position) != ContainmentType.Disjoint && (DroneStat == DroneStatus.Transit || DroneStat == DroneStatus.Orbit))
+                    {
+                        DroneStat = DroneStatus.Approach;
+                    }          
                     
                     parentPos = Info.Target.CoreEntity.PositionComp.WorldAABB.Center;
                     if (parentPos != Vector3D.Zero && DroneStat != DroneStatus.Return)
@@ -771,9 +776,24 @@ namespace CoreSystems.Projectiles
                     if (DroneStat == DroneStatus.Escape) DsDebugDraw.DrawLine(debugLine, Color.Red, 0.5f);
                     if (DroneStat == DroneStatus.Orbit) DsDebugDraw.DrawLine(debugLine, Color.Green, 0.5f);
                 }
+                switch(DroneMsn)
+                {
+                    case DroneMission.Attack:
+                        DsDebugDraw.DrawSphere(new BoundingSphereD(Position, 10), Color.Red);
+
+                        break;
+
+                    case DroneMission.Defend:
+                        DsDebugDraw.DrawSphere(new BoundingSphereD(Position, 10), Color.Blue);
+
+                        break;
+                    case DroneMission.Rtb:
+                        DsDebugDraw.DrawSphere(new BoundingSphereD(Position, 10), Color.Green);
+                        break;
+                }
                 */
 
-                if (tracking)
+                if (tracking && DroneMsn!=DroneMission.Rtb)
                 {
                     var validEntity = Info.Target.TargetState == Target.TargetStates.IsEntity && !Info.Target.TargetEntity.MarkedForClose;
                     var timeSlot = (Info.Age + SmartSlot) % 30 == 0;
@@ -794,6 +814,10 @@ namespace CoreSystems.Projectiles
                     else if (!SmartRoam())
                         return;
 
+                    ComputeSmartVelocity(ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, ref targetSphere, ref parentPos, out newVel);
+                }
+                else if (DroneMsn==DroneMission.Rtb)
+                {
                     ComputeSmartVelocity(ref orbitSphere, ref orbitSphereClose, ref orbitSphereFar, ref targetSphere, ref parentPos, out newVel);
                 }
             }
