@@ -55,7 +55,7 @@ namespace CoreSystems
                 var decoy = cube as IMyDecoy;
                 var camera = cube as MyCameraBlock;
                 var turretController = cube as IMyTurretControlBlock;
-                if (sorter != null || turret != null || controllableGun != null || rifle != null || turretController != null && TurretControllerEnabled)
+                if (sorter != null || turret != null || controllableGun != null || rifle != null || turretController != null)
                 {
                     lock (InitObj)
                     {

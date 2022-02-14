@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CoreSystems.Platform;
 using CoreSystems.Support;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.ModAPI;
@@ -27,6 +28,13 @@ namespace CoreSystems
             ControlSys.ControlComponent.RequestSetValue(comp, "AiEnabled", value, comp.Session.PlayerId);
         }
 
+        internal static float GetRangeControl(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 100;
+            return comp.Data.Repo.Values.Set.Range;
+        }
+
         internal static void RequestSetRangeControl(IMyTerminalBlock block, float newValue)
         {
             var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
@@ -37,7 +45,6 @@ namespace CoreSystems
 
                 if (comp.Session.IsServer)
                 {
-
                     comp.Data.Repo.Values.Set.Range = newValue;
                     ControlSys.ControlComponent.SetRange(comp);
                     if (comp.Session.MpActive)
@@ -47,6 +54,61 @@ namespace CoreSystems
                     comp.Session.SendSetCompFloatRequest(comp, newValue, PacketType.RequestSetRange);
             }
 
+        }
+
+        internal static float GetMinRangeControl(IMyTerminalBlock block)
+        {
+            return 0;
+        }
+
+        internal static float GetMaxRangeControl(IMyTerminalBlock block)
+        {
+            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
+            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready)
+                return 0;
+
+            var w = comp.Platform.Control.TrackingWeapon;
+            if (w == null)
+                return 0;
+
+            var maxRange = (float)w.GetMaxWeaponRange();
+            return maxRange;
+
+            //var maxTrajectory = 0f;
+            //var baseMap = comp.Platform.Control.BaseMap;
+            //if (baseMap?.Stator?.TopGrid == null)
+            //    return 0;
+
+            //var rootConstruct = comp.Ai.Construct.RootAi.Construct;
+            //var mapList = rootConstruct.LocalStatorMaps[baseMap.Stator.TopGrid as MyCubeGrid];
+
+            //if (mapList.Count == 0)
+            //    return 0;
+
+            //for (int h = 0; h < mapList.Count; h++)
+            //{
+            //    var ai = mapList[h].TopAi;
+            //    if (ai == null || ai.WeaponComps.Count == 0)
+            //    {
+            //        Log.Line($"GetMaxRangeControl() no ai/weapons");
+            //        continue;
+            //    }
+
+            //    for (int i = 0; i < ai.WeaponComps.Count; i++)
+            //    {
+            //        var wComp = ai.WeaponComps[i];
+            //        for (int j = 0; j < wComp.Collection.Count; j++)
+            //        {
+            //            var w = wComp.Collection[j];
+
+            //            var curMax = w.GetMaxWeaponRange();
+            //            Log.Line($"GetMaxRangeControl() curMax {curMax}");
+            //            if (curMax > maxTrajectory)
+            //                maxTrajectory = (float)curMax;
+            //        }
+            //    }
+            //}
+            //return maxTrajectory;
         }
 
         internal static void RequestSetReportTargetControl(IMyTerminalBlock block, bool newValue)
@@ -69,58 +131,6 @@ namespace CoreSystems
             var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
             return comp.Data.Repo.Values.Set.ReportTarget;
-        }
-
-
-        internal static float GetRangeControl(IMyTerminalBlock block) {
-            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 100;
-            return comp.Data.Repo.Values.Set.Range;
-        }
-
-        internal static bool ShowRangeControl(IMyTerminalBlock block)
-        {
-            var comp = block?.Components?.Get<CoreComponent>();
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return false;
-
-            return comp.HasTurret;
-        }
-
-        internal static float GetMinRangeControl(IMyTerminalBlock block)
-        {
-            return 0;
-        }
-
-        internal static float GetMaxRangeControl(IMyTerminalBlock block)
-        {
-            var comp = block?.Components?.Get<CoreComponent>() as ControlSys.ControlComponent;
-            if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return 0;
-
-            var maxTrajectory = 0f;
-            var turretMap = comp.Platform.Control.TurretMap;
-            if (turretMap.Count == 0)
-                return 0;
-
-            foreach (var map in turretMap.Values)
-            {
-                var ai = map.Ai;
-                if (ai == null || ai.WeaponComps.Count == 0)
-                    continue;
-
-                for (int i = 0; i < ai.WeaponComps.Count; i++)
-                {
-                    var wComp = ai.WeaponComps[i];
-                    for (int j = 0; j < wComp.Collection.Count; j++)
-                    {
-                        var w = wComp.Collection[j];
-
-                        var curMax = w.GetMaxWeaponRange();
-                        if (curMax > maxTrajectory)
-                            maxTrajectory = (float)curMax;
-                    }
-                }
-            }
-            return maxTrajectory;
         }
 
         internal static bool GetNeutralsControl(IMyTerminalBlock block)

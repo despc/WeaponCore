@@ -209,7 +209,7 @@ namespace CoreSystems
                         {
 
                             var block = fatBlocks[j];
-                            if (block.IsFunctional && PartPlatforms.ContainsKey(block.BlockDefinition.Id) && (TurretControllerEnabled || !(block is IMyTurretControlBlock)))
+                            if (block.IsFunctional && PartPlatforms.ContainsKey(block.BlockDefinition.Id))
                             {
 
                                 Ai gridAi;
