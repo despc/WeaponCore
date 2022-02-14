@@ -223,9 +223,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
             if (_session.Tick - LastSelectableTick < 60)
             {
-                if (LastSelectedEntity != null && !LastSelectedEntity.MarkedForClose && _session.CameraFrustrum.Contains(LastSelectedEntity.PositionComp.WorldVolume) != ContainmentType.Disjoint)
+                if (LastSelectedEntity != null && LastSelectedEntity.EntityId != _session.TrackingAi?.Construct.Focus.OldTarget && !LastSelectedEntity.MarkedForClose && _session.CameraFrustrum.Contains(LastSelectedEntity.PositionComp.WorldVolume) != ContainmentType.Disjoint)
                 {
-
                     position = LastSelectedEntity.PositionComp.WorldAABB.Center;
                     return true;
                 }

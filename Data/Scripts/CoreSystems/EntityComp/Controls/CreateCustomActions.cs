@@ -128,7 +128,7 @@ namespace CoreSystems.Control
             action0.Name = new StringBuilder(Localization.GetText("ActionNextCameraChannel"));
             action0.Action = CustomActions.TerminalActionCameraIncrease;
             action0.Writer = CustomActions.CameraWriter;
-            action0.Enabled = TerminalHelpers.IsReady;
+            action0.Enabled = TerminalHelpers.IsTrue;
             action0.ValidForGroups = true;
 
             MyAPIGateway.TerminalControls.AddAction<T>(action0);

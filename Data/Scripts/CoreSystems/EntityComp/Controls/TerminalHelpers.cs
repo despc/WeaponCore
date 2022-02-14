@@ -155,12 +155,19 @@ namespace CoreSystems.Control
             return true;
         }
 
+        internal static bool IsCamera(IMyTerminalBlock block)
+        {
+            return block is IMyCameraBlock;
+        }
+
+
         internal static bool ShootBurstWeapon(IMyTerminalBlock block)
         {
             var comp = block.Components.Get<CoreComponent>();
 
             return comp != null && comp.Platform.State == CorePlatform.PlatformState.Ready && comp.Type == CoreComponent.CompType.Weapon;
         }
+
 
         internal static bool WeaponIsReady(IMyTerminalBlock block)
         {
@@ -463,7 +470,7 @@ namespace CoreSystems.Control
 
             c.Title = MyStringId.GetOrCompute(title);
             c.Tooltip = MyStringId.GetOrCompute(tooltip);
-            c.Enabled = IsReady;
+            c.Enabled = IsCamera;
             c.Visible = visibleGetter;
             c.Getter = getter;
             c.Setter = setter;
