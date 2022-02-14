@@ -85,7 +85,15 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         private int _endIdx = -1;
         private bool _cachedPointerPos;
         private bool _cachedTargetPos;
-        private bool _3RdPersonDraw;
+        private ThirdPersonModes _3RdPersonDraw;
+
+        private enum ThirdPersonModes
+        {
+            DotNoTarget,
+            DotTarget,
+            Crosshair,
+            None
+        }
 
         internal TargetUi(Session session)
         {

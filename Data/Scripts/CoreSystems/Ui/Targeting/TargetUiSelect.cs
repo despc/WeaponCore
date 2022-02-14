@@ -16,9 +16,29 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal void ActivateSelector()
         {
             if (!_session.TrackingAi.IsGrid || _session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return;
-            if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control)) _3RdPersonDraw = !_3RdPersonDraw;
+            if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control))
+            {
+                switch (_3RdPersonDraw)
+                {
+                    case ThirdPersonModes.None:
+                        _3RdPersonDraw = ThirdPersonModes.DotNoTarget;
+                        break;
+                    case ThirdPersonModes.DotNoTarget:
+                        _3RdPersonDraw = ThirdPersonModes.DotTarget;
+                        break;
+                    case ThirdPersonModes.DotTarget:
+                        _3RdPersonDraw = ThirdPersonModes.Crosshair;
+                        break;
+                    case ThirdPersonModes.Crosshair:
+                        _3RdPersonDraw = ThirdPersonModes.None;
+                        break;
+                }
+            }
 
-            var enableActivator = _3RdPersonDraw || _session.UiInput.CtrlPressed || _session.UiInput.FirstPersonView && _session.UiInput.AltPressed || _session.UiInput.CameraBlockView;
+            if (_3RdPersonDraw == ThirdPersonModes.None)
+                return;
+
+            var enableActivator = _3RdPersonDraw == ThirdPersonModes.Crosshair || _session.UiInput.FirstPersonView && _session.UiInput.AltPressed || _session.UiInput.CameraBlockView;
             if (enableActivator | !_session.UiInput.FirstPersonView && !_session.UiInput.CameraBlockView)
                 DrawSelector(enableActivator);
         }
