@@ -90,13 +90,17 @@ namespace CoreSystems.Platform
             internal void StopRotors()
             {
                 RotorsMoving = false;
-                var part = Platform.Control;
-                if (part.BaseMap == null) return;
+                var baseMap = Platform.Control.BaseMap;
+                var baseRotor = baseMap?.Stator;
+                if (baseRotor == null) return;
 
-                part.BaseMap.Stator.TargetVelocityRad = 0;
+                baseRotor.TargetVelocityRad = 0;
 
-                foreach (var statorMap in part.TurretMap.Keys)
-                    if (statorMap != null)
+                var rootConstruct = Ai.Construct.RootAi.Construct;
+                var mapList = rootConstruct.LocalStatorMaps[baseRotor.TopGrid as MyCubeGrid];
+
+                foreach (var statorMap in mapList)
+                    if (statorMap?.Stator != null)
                         statorMap.Stator.TargetVelocityRad = 0;
 
             }
@@ -205,8 +209,9 @@ namespace CoreSystems.Platform
 
             internal static void SetRange(ControlComponent comp)
             {
-                //foreach (var w in comp.Platform.Support)
-                    //w.UpdateWeaponRange();
+                var w = comp.Platform.Control.TrackingWeapon;
+                if (w == null) return;
+                w.UpdateWeaponRange();
             }
 
             internal static void SetRof(ControlComponent comp)

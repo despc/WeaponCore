@@ -395,6 +395,7 @@ namespace CoreSystems.Platform
                 {
                     if (ShootManager.ShootToggled)
                         ShootManager.RequestShootSync(Data.Repo.Values.State.PlayerId);
+
                     Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiShoot;
                 }
                 Data.Repo.Values.State.PlayerId = -1;

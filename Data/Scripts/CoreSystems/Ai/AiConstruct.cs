@@ -517,6 +517,17 @@ namespace CoreSystems.Support
                 return playerCount;
             }
 
+            public bool ValidateStatorAssignemnts(IMyMotorStator stator)
+            {
+                foreach (var ai in Ai.GridMap.GroupMap.Ais)
+                {
+                    if (stator.TopGrid == ai.TopEntity)
+                        return true;
+                }
+
+                return false;
+            }
+
             public static bool MatchPlayerId(Ai ai, long playerId)
             {
                 foreach (var sub in ai.SubGridCache)
