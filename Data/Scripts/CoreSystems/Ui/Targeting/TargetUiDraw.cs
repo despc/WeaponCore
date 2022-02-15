@@ -90,10 +90,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             Vector3D targetCenter;
             if (GetSelectableEntity(out targetCenter))
             {
-                var screenPos = s.Camera.WorldToScreen(ref targetCenter);
-
-                if (Vector3D.Transform(targetCenter, s.Camera.ViewMatrix).Z < 0)
+                if (Vector3D.Transform(targetCenter, s.Camera.ViewMatrix).Z < 0 && _reticleColor != Color.White)
                 {
+                    var screenPos = s.Camera.WorldToScreen(ref targetCenter);
                     var dotpos = new Vector2D(MathHelper.Clamp(screenPos.X, -0.98, 0.98), MathHelper.Clamp(screenPos.Y, -0.98, 0.98));
                     var screenScale = 0.1 * s.ScaleFov;
                     dotpos.X *= (float)(screenScale * _session.AspectRatio);
@@ -103,9 +102,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 }
 
                 if (_3RdPersonDraw == ThirdPersonModes.DotTarget)
-                {
                     MyTransparentGeometry.AddBillboardOriented(_whiteDot, _reticleColor, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
-                }
             }
             else if (!enableActivator && _3RdPersonDraw != ThirdPersonModes.None)
             {

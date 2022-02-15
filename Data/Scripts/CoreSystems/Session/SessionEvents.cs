@@ -639,7 +639,7 @@ namespace CoreSystems
 
                                         if (wComp.Data.Repo != null)
                                         {
-                                            wComp.Data.Repo.Values.State.PlayerId = PlayerId;
+                                            wComp.Data.Repo.Values.State.PlayerId = playerId;
                                             wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
 
                                             if (MpActive)

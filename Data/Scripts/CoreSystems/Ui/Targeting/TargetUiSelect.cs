@@ -221,7 +221,20 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
             if (_session.Tick - LastSelectableTick < 60)
             {
-                if (LastSelectedEntity != null && LastSelectedEntity.EntityId != _session.TrackingAi?.Construct.Focus.OldTarget && !LastSelectedEntity.MarkedForClose && _session.CameraFrustrum.Contains(LastSelectedEntity.PositionComp.WorldVolume) != ContainmentType.Disjoint)
+                var skip = false;
+                var ai = _session.TrackingAi;
+
+                MyEntity focusEnt;
+                if (ai != null && LastSelectedEntity != null && ai.Construct.Focus.GetPriorityTarget(ai, out focusEnt))
+                {
+                    var focusGrid = focusEnt as MyCubeGrid;
+                    var lastEntityGrid = LastSelectedEntity as MyCubeGrid;
+
+                    if (LastSelectedEntity.MarkedForClose || focusEnt == LastSelectedEntity || focusGrid != null && lastEntityGrid != null && focusGrid.IsSameConstructAs(lastEntityGrid))
+                        skip = true;
+                }
+
+                if (LastSelectedEntity != null && !skip && _session.CameraFrustrum.Contains(LastSelectedEntity.PositionComp.WorldVolume) != ContainmentType.Disjoint)
                 {
                     position = LastSelectedEntity.PositionComp.WorldAABB.Center;
                     return true;
