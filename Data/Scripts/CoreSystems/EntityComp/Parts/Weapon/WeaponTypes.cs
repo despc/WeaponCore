@@ -465,10 +465,11 @@ namespace CoreSystems.Platform
 
             internal void ServerReject()
             {
-                Log.Line($"client received reject message reset", Session.InputLog);
+                Log.Line($"client received reject message reset - wait:{WaitingShootResponse} - frozen:{FreezeClientShoot} - stateMatch:{RequestShootBurstId == Comp.Data.Repo.Values.State.ShootSyncStateId}", Session.InputLog);
                 if (CompletedCycles > 0)
                     RestoreWeaponShot();
 
+                RequestShootBurstId = Comp.Data.Repo.Values.State.ShootSyncStateId;
                 WaitingShootResponse = false;
                 FreezeClientShoot = false;
                 EarlyOff = false;

@@ -552,10 +552,10 @@ namespace CoreSystems
             try
             {
                 GridMap gridMap;
-                var exit = exitController as MyEntity;
-                if (exit != null && enterController?.ControllerInfo != null)
+                var exitEntity = exitController as MyEntity;
+                if (exitEntity != null && enterController?.ControllerInfo != null)
                 {
-                    var cube = exit as MyCubeBlock;
+                    var cube = exitEntity as MyCubeBlock;
 
                     if (cube != null)
                     {
@@ -563,8 +563,12 @@ namespace CoreSystems
                         {
                             var playerId = enterController.ControllerInfo.ControllingIdentityId;
                             gridMap.LastControllerTick = Tick + 1;
-                            gridMap.GroupMap.LastControllerTick = Tick + 1;
                             var removed = gridMap.PlayerControllers.Remove(playerId);
+
+                            if (gridMap.GroupMap != null)
+                                gridMap.GroupMap.LastControllerTick = Tick + 1;
+                            else 
+                                Log.Line($"OnPlayerController exit gridmap null");
 
                             Ai ai;
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
@@ -573,14 +577,21 @@ namespace CoreSystems
                                 if (ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
                                 {
 
-                                    var wComp = (Weapon.WeaponComponent)comp;
                                     if (IsServer)
                                     {
-                                        wComp.Data.Repo.Values.State.PlayerId = -1;
-                                        wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
+                                        var wComp = (Weapon.WeaponComponent)comp;
 
-                                        if (MpActive)
-                                            SendComp(wComp);
+                                        if (wComp.Data.Repo != null)
+                                        {
+
+                                            wComp.Data.Repo.Values.State.PlayerId = -1;
+                                            wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
+
+                                            if (MpActive)
+                                                SendComp(wComp);
+                                        }
+                                        else
+                                            Log.Line($"OnPlayerController exit Repo null");
                                     }
 
                                     if (HandlesInput)
@@ -593,10 +604,10 @@ namespace CoreSystems
                     }
                 }
 
-                var enter = enterController as MyEntity;
-                if (enter != null && enterController.ControllerInfo != null)
+                var enterEntity = enterController as MyEntity;
+                if (enterEntity != null && enterController.ControllerInfo != null)
                 {
-                    var cube = enter as MyCubeBlock;
+                    var cube = enterEntity as MyCubeBlock;
 
                     if (cube != null)
                     {
@@ -607,9 +618,13 @@ namespace CoreSystems
                             var playerId = enterController.ControllerInfo.ControllingIdentityId;
 
                             gridMap.LastControllerTick = Tick + 1;
-                            gridMap.GroupMap.LastControllerTick = Tick + 1;
                             var pController = new PlayerController { ControllBlock = cube, Id = playerId, EntityId = cube.EntityId, ChangeTick = Tick };
                             gridMap.PlayerControllers[playerId] = pController;
+
+                            if (gridMap.GroupMap != null)
+                                gridMap.GroupMap.LastControllerTick = Tick + 1;
+                            else
+                                Log.Line($"OnPlayerController enter gridmap null");
 
                             Ai ai;
                             if (EntityAIs.TryGetValue(cube.CubeGrid, out ai))
@@ -617,26 +632,29 @@ namespace CoreSystems
                                 CoreComponent comp;
                                 if (IsServer && ai.CompBase.TryGetValue(cube, out comp) && comp is Weapon.WeaponComponent)
                                 {
+
                                     if (IsServer)
                                     {
                                         var wComp = (Weapon.WeaponComponent)comp;
-                                        wComp.Data.Repo.Values.State.PlayerId = PlayerId;
-                                        wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
 
+                                        if (wComp.Data.Repo != null)
+                                        {
+                                            wComp.Data.Repo.Values.State.PlayerId = PlayerId;
+                                            wComp.Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.Camera;
 
-                                        if (MpActive)
-                                            SendComp(wComp);
+                                            if (MpActive)
+                                                SendComp(wComp);
+                                        }
+                                        else
+                                            Log.Line($"OnPlayerController enter Repo null");
+
                                     }
 
                                     if (HandlesInput)
                                         GunnerAcquire(cube);
-
                                 }
                             }
                         }
-
-
-
                     }
                 }
             }

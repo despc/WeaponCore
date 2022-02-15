@@ -62,7 +62,7 @@ namespace CoreSystems
                 var construct = ai.Construct;
                 var focus = construct.Focus;
 
-                if (ai.AiType == Ai.AiTypes.Grid && ai.GridMap.GroupMap.LastControllerTick == Tick)
+                if (ai.AiType == Ai.AiTypes.Grid && (ai.GridMap.GroupMap.LastControllerTick == Tick || ai.GridMap.LastControllerTick == Tick))
                     Ai.Constructs.UpdatePlayerStates(ai.GridMap.GroupMap);
 
                 if (Tick60 && ai.AiType == Ai.AiTypes.Grid && ai.BlockChangeArea != BoundingBox.Invalid)
@@ -571,6 +571,7 @@ namespace CoreSystems
 
                     wComp.PainterMode = fakeTargets != null && cMode == ProtoWeaponOverrides.ControlModes.Painter && fakeTargets.PaintedTarget.EntityId != 0;
                     wComp.FakeMode = wComp.ManualMode || wComp.PainterMode;
+                    
                     wComp.WasControlled = wComp.UserControlled;
                     wComp.UserControlled = wValues.State.Control != ControlMode.None && (cMode != ProtoWeaponOverrides.ControlModes.Auto || wValues.State.Control == ControlMode.Camera || fakeTargets != null && fakeTargets.PaintedTarget.EntityId != 0);
                     

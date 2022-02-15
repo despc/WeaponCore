@@ -103,7 +103,7 @@ namespace CoreSystems
                     {
                         if ((!w.Comp.HasTurret && !w.Comp.OverrideLeads || w.Comp.HasTurret && w.Comp.OverrideLeads) && w.Comp.Data.Repo.Values.Set.Overrides.LeadGroup > 0)
                         {
-                            LeadGroups[w.Comp.Data.Repo.Values.Set.Overrides.LeadGroup - 1].Add(w);
+                            LeadGroups[MathHelper.Clamp(w.Comp.Data.Repo.Values.Set.Overrides.LeadGroup - 1, 0, 3)].Add(w);
                             LeadGroupActive = true;
                         }
                     }

@@ -16,7 +16,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal void ActivateSelector()
         {
             if (!_session.TrackingAi.IsGrid || _session.UiInput.FirstPersonView && !_session.UiInput.AltPressed) return;
-            if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control))
+            if (MyAPIGateway.Input.IsNewKeyReleased(MyKeys.Control) && !_session.UiInput.FirstPersonView && !_session.UiInput.CameraBlockView)
             {
                 switch (_3RdPersonDraw)
                 {
@@ -35,11 +35,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 }
             }
 
-            if (_3RdPersonDraw == ThirdPersonModes.None)
-                return;
 
             var enableActivator = _3RdPersonDraw == ThirdPersonModes.Crosshair || _session.UiInput.FirstPersonView && _session.UiInput.AltPressed || _session.UiInput.CameraBlockView;
-            if (enableActivator | !_session.UiInput.FirstPersonView && !_session.UiInput.CameraBlockView)
+            if (enableActivator || !_session.UiInput.FirstPersonView && !_session.UiInput.CameraBlockView)
                 DrawSelector(enableActivator);
         }
 
@@ -126,11 +124,11 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             var foundTarget = false;
             var rayOnlyHitSelf = false;
             var rayHitSelf = false;
-
-            MyEntity closestEnt = null;
-            _session.Physics.CastRay(AimPosition, end, _hitInfo);
             var markTargetPos = MyAPIGateway.Input.IsNewRightMouseReleased();
             var fakeTarget = !markTargetPos ? ai.Session.PlayerDummyTargets[ai.Session.PlayerId].ManualTarget : ai.Session.PlayerDummyTargets[ai.Session.PlayerId].PaintedTarget;
+            MyEntity closestEnt = null;
+            _session.Physics.CastRay(AimPosition, end, _hitInfo);
+
             for (int i = 0; i < _hitInfo.Count; i++)
             {
 
@@ -325,6 +323,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 var ray = new RayD(origin, dir);
 
                 var entVolume = info.PositionComp.WorldVolume;
+                var entCenter = entVolume.Center;
                 var dist1 = ray.Intersects(entVolume);
                 if (dist1 < closestDist1)
                 {
@@ -332,14 +331,21 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     closestEnt = hit;
                 }
 
-                var inflated = info.PositionComp.WorldVolume;
-                inflated.Radius *= 3;
-                var dist2 = ray.Intersects(inflated);
-                if (dist2 < closestDist2)
+                double dist;
+                Vector3D.DistanceSquared(ref entCenter, ref origin, out dist);
+
+                if (dist > 640000)
                 {
-                    closestDist2 = dist2.Value;
-                    backUpEnt = hit;
+                    var inflated = info.PositionComp.WorldVolume;
+                    inflated.Radius *= 3;
+                    var dist2 = ray.Intersects(inflated);
+                    if (dist2 < closestDist2)
+                    {
+                        closestDist2 = dist2.Value;
+                        backUpEnt = hit;
+                    }
                 }
+
             }
 
             foundOther = false;
@@ -352,6 +358,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     {
                         var ray = new RayD(origin, dir);
                         var entVolume = otherEnt.PositionComp.WorldVolume;
+                        var entCenter = entVolume.Center;
+
                         var dist1 = ray.Intersects(entVolume);
                         if (dist1 < closestDist1)
                         {
@@ -360,14 +368,20 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                             foundOther = true;
                         }
 
-                        var inflated = entVolume;
-                        inflated.Radius *= 3;
-                        var dist2 = ray.Intersects(inflated);
-                        if (dist2 < closestDist2)
+                        double dist;
+                        Vector3D.DistanceSquared(ref entCenter, ref origin, out dist);
+
+                        if (dist > 640000)
                         {
-                            closestDist1 = dist2.Value;
-                            backUpEnt = otherEnt;
-                            foundOther = true;
+                            var inflated = entVolume;
+                            inflated.Radius *= 3;
+                            var dist2 = ray.Intersects(inflated);
+                            if (dist2 < closestDist2)
+                            {
+                                closestDist1 = dist2.Value;
+                                backUpEnt = otherEnt;
+                                foundOther = true;
+                            }
                         }
                     }
                 }

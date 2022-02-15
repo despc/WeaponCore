@@ -23,6 +23,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             if (!s.InGridAiBlock && !s.UpdateLocalAiAndCockpit()) return;
             if (ActivateMarks()) DrawActiveMarks();
             if (ActivateDroneNotice()) DrawDroneNotice();
+            
             ActivateSelector();
             if (s.CheckTarget(s.TrackingAi) && GetTargetState(s))
             {
@@ -106,7 +107,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     MyTransparentGeometry.AddBillboardOriented(_whiteDot, _reticleColor, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
                 }
             }
-            else if (!enableActivator)
+            else if (!enableActivator && _3RdPersonDraw != ThirdPersonModes.None)
             {
                 MyTransparentGeometry.AddBillboardOriented(_whiteDot, Color.DeepSkyBlue, offetPosition, s.CameraMatrix.Left, s.CameraMatrix.Up, (float)PointerAdjScale * 0.25f, BlendTypeEnum.PostPP);
             }
