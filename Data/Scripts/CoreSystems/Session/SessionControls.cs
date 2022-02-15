@@ -415,6 +415,10 @@ namespace CoreSystems
                 "MultiplierAz",
                 "MultiplierEl",
                 "AngleDeviation",
+                "ToolList",
+                "AddSelectedTool",
+                "SelectedToolsList",
+                "RemoveSelectedTool",
 
             };
 
