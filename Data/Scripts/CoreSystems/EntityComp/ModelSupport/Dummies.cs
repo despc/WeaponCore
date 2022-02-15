@@ -18,8 +18,6 @@ namespace CoreSystems.Support
                 if (_entity?.Model == null) {
                     if (_part.CoreSystem.Session.LocalVersion) Log.Line("reset parts");
                     _part.BaseComp.Platform?.ResetParts();
-                    if (_entity?.Model == null && _part.BaseComp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom)
-                        Log.Line("Dummy Entity/Model null");
                 }
 
                 return _entity;
@@ -103,9 +101,6 @@ namespace CoreSystems.Support
             get
             {
                 if (_part == null || _part.BaseComp.TypeSpecific != CoreComponent.CompTypeSpecific.Phantom) {
-
-                    if (_entity != null && _entity.Model == null && Entity.Model == null)
-                        Log.Line("DummyInfo reset and still has invalid enity/model");
 
                     if (!(_cachedModel == _entity?.Model && _cachedSubpartModel == _cachedSubpart?.Model)) UpdateModel();
 

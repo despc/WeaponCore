@@ -156,8 +156,8 @@ namespace CoreSystems
 
             if (entityChanged)
             {
-                if (lastControlledEnt is MyCockpit || lastControlledEnt is MyRemoteControl)
-                    PlayerControlAcquired(lastControlledEnt);
+                //if (lastControlledEnt is MyCockpit || lastControlledEnt is MyRemoteControl)
+                //    PlayerControlAcquired(lastControlledEnt);
 
                 if (ControlledEntity is MyCockpit || ControlledEntity is MyRemoteControl)
                     PlayerControlNotify(ControlledEntity);

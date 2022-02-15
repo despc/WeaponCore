@@ -119,6 +119,8 @@ namespace CoreSystems
 
                         var az = azRaw != null ? StatorMaps[azRaw] : null;
                         var el = elRaw != null ? StatorMaps[elRaw] : null;
+                        if (az == null)
+                            continue;
 
                         if (controller.IsUnderControl)
                         {
@@ -138,7 +140,7 @@ namespace CoreSystems
                         var baseMap = controlPart.BaseMap;
                         if (baseMap == null || baseMap != null && baseMap != az && baseMap != el)
                         {
-                            Log.Line($"Setting base: elNull:{el == null} - azNull:{az == null} - azStatorNull{az?.Stator == null} - elStatorNull{el?.Stator == null}");
+                            Log.Line($"Setting base: elNull:{el == null} - azNull:{az == null} - azStatorNull:{az?.Stator == null} - elStatorNull{el?.Stator == null}");
                             controlPart.BaseMap = el == null ? az : az == null ? el : az.Stator.TopGrid == el.Stator.CubeGrid ? az : el;
                         }
 
