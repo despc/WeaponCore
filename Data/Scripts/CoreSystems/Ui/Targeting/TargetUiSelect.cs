@@ -124,7 +124,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             var foundTarget = false;
             var rayOnlyHitSelf = false;
             var rayHitSelf = false;
-            var fakeTarget = ai.Session.PlayerDummyTargets[ai.Session.PlayerId].ManualTarget;
+            var manualTarget = ai.Session.PlayerDummyTargets[ai.Session.PlayerId].ManualTarget;
+            var paintTarget = ai.Session.PlayerDummyTargets[ai.Session.PlayerId].PaintedTarget;
+            var mark = s.UiInput.MouseButtonRightReleased;
             MyEntity closestEnt = null;
             _session.Physics.CastRay(AimPosition, end, _hitInfo);
 
@@ -154,6 +156,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
                     if (firstStage)
                     {
+                        LastConfrimedEntity = null;
                         if (t1 == closestEnt.EntityId)
                             LastConfrimedEntity = closestEnt;
 
@@ -164,9 +167,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                     {
                         if (hitGrid == _firstStageEnt) {
 
-                            if (s.UiInput.MouseButtonRightReleased && LastConfrimedEntity == closestEnt && (t1 == closestEnt.EntityId)) {
-                                ai.Session.PlayerDummyTargets[ai.Session.PlayerId].PaintedTarget.Update(hit.Position, s.Tick, closestEnt);
-                                LastConfrimedEntity = null;
+                            if (mark && LastConfrimedEntity == closestEnt && (t1 == closestEnt.EntityId)) {
+                                paintTarget.Update(hit.Position, s.Tick, closestEnt);
                             }
 
                             s.SetTarget(hitGrid, ai, _masterTargets);
@@ -179,15 +181,14 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 }
 
                 foundTarget = true;
-                fakeTarget.Update(hit.Position, s.Tick, closestEnt);
+                manualTarget.Update(hit.Position, s.Tick, closestEnt);
                 break;
             }
-
             if (rayHitSelf)
             {
                 ReticleOnSelfTick = s.Tick;
                 ReticleAgeOnSelf++;
-                if (rayOnlyHitSelf) fakeTarget.Update(end, s.Tick);
+                if (rayOnlyHitSelf && !mark) manualTarget.Update(end, s.Tick);
             }
             else ReticleAgeOnSelf = 0;
 
@@ -210,7 +211,7 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
 
                     return;
                 }
-                fakeTarget.Update(hitPos, s.Tick, closestEnt);
+                manualTarget.Update(hitPos, s.Tick, closestEnt);
             }
 
             if (!manualSelect)
@@ -226,7 +227,12 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                 }
 
                 if (!foundTarget)
-                    fakeTarget.Update(end, s.Tick);
+                {
+                    if (mark)
+                        paintTarget.Update(end, s.Tick);
+                    else
+                        manualTarget.Update(end, s.Tick);
+                }
             }
         }
 
