@@ -19,6 +19,9 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui
         internal bool MouseButtonLeftNewPressed;
         internal bool MouseButtonLeftReleased;
         internal bool MouseButtonMenuWasPressed;
+
+        internal bool MouseButtonRightNewPressed;
+        internal bool MouseButtonRightReleased;
         internal bool MouseButtonRightWasPressed;
         internal bool WasInMenu;
         internal bool WheelForward;
@@ -76,9 +79,11 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui
                 MouseButtonPressed = MyAPIGateway.Input.IsAnyMousePressed();
                 MouseButtonLeftNewPressed = MyAPIGateway.Input.IsNewLeftMousePressed();
                 MouseButtonLeftReleased = MyAPIGateway.Input.IsNewLeftMouseReleased();
-
                 MouseButtonLeftWasPressed = ClientInputState.MouseButtonLeft;
                 MouseButtonMenuWasPressed = ClientInputState.MouseButtonMenu;
+
+                MouseButtonRightNewPressed = MyAPIGateway.Input.IsNewRightMousePressed();
+                MouseButtonRightReleased = MyAPIGateway.Input.IsNewRightMouseReleased();
                 MouseButtonRightWasPressed = ClientInputState.MouseButtonRight;
 
                 WasInMenu = ClientInputState.InMenu;

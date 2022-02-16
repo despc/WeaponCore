@@ -23,6 +23,8 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
         internal uint LastTrackTick;
         internal uint LastSelectableTick;
         internal MyEntity LastSelectedEntity;
+        internal MyEntity LastConfrimedEntity;
+
         internal int ReticleAgeOnSelf;
         internal readonly char FocusChar = "_"[0];
         internal Hud.Hud.TextureMap FocusTextureMap;

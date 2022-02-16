@@ -124,10 +124,11 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             var foundTarget = false;
             var rayOnlyHitSelf = false;
             var rayHitSelf = false;
-            var markTargetPos = MyAPIGateway.Input.IsNewRightMouseReleased();
-            var fakeTarget = !markTargetPos ? ai.Session.PlayerDummyTargets[ai.Session.PlayerId].ManualTarget : ai.Session.PlayerDummyTargets[ai.Session.PlayerId].PaintedTarget;
+            var fakeTarget = ai.Session.PlayerDummyTargets[ai.Session.PlayerId].ManualTarget;
             MyEntity closestEnt = null;
             _session.Physics.CastRay(AimPosition, end, _hitInfo);
+
+            var t1 = ai.Construct.Focus.PrevTarget;
 
             for (int i = 0; i < _hitInfo.Count; i++)
             {
@@ -152,11 +153,24 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
                         continue;
 
                     if (firstStage)
+                    {
+                        if (t1 == closestEnt.EntityId)
+                            LastConfrimedEntity = closestEnt;
+
                         _firstStageEnt = hitGrid;
+
+                    }
                     else
                     {
-                        if (hitGrid == _firstStageEnt)
+                        if (hitGrid == _firstStageEnt) {
+
+                            if (s.UiInput.MouseButtonRightReleased && LastConfrimedEntity == closestEnt && (t1 == closestEnt.EntityId)) {
+                                ai.Session.PlayerDummyTargets[ai.Session.PlayerId].PaintedTarget.Update(hit.Position, s.Tick, closestEnt);
+                                LastConfrimedEntity = null;
+                            }
+
                             s.SetTarget(hitGrid, ai, _masterTargets);
+                        }
 
                         _firstStageEnt = null;
                     }
@@ -173,13 +187,13 @@ namespace WeaponCore.Data.Scripts.CoreSystems.Ui.Targeting
             {
                 ReticleOnSelfTick = s.Tick;
                 ReticleAgeOnSelf++;
-                if (rayOnlyHitSelf && !markTargetPos) fakeTarget.Update(end, s.Tick);
+                if (rayOnlyHitSelf) fakeTarget.Update(end, s.Tick);
             }
             else ReticleAgeOnSelf = 0;
 
             Vector3D hitPos;
             bool foundOther = false;
-            if (!foundTarget && !markTargetPos && RayCheckTargets(AimPosition, AimDirection, out closestEnt, out hitPos, out foundOther, !manualSelect))
+            if (!foundTarget && RayCheckTargets(AimPosition, AimDirection, out closestEnt, out hitPos, out foundOther, !manualSelect))
             {
                 foundTarget = true;
                 if (manualSelect)

@@ -374,8 +374,8 @@ namespace CoreSystems
                 return;
             }
 
-            if (UiInput.MouseButtonLeftNewPressed || UiInput.MouseButtonLeftReleased && (TargetUi.DrawReticle || UiInput.FirstPersonView))
-                TargetUi.SelectTarget(true, UiInput.MouseButtonLeftNewPressed);
+            if (UiInput.MouseButtonRightNewPressed || UiInput.MouseButtonRightReleased && (TargetUi.DrawReticle || UiInput.FirstPersonView))
+                TargetUi.SelectTarget(true, UiInput.MouseButtonRightNewPressed);
             else if (!UiInput.CameraBlockView)
             {
                 if (UiInput.CurrentWheel != UiInput.PreviousWheel)

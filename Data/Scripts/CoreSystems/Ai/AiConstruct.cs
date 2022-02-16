@@ -577,6 +577,7 @@ namespace CoreSystems.Support
 
     public class Focus
     {
+        public long PrevTarget;
         public long OldTarget;
         public LockModes OldLocked;
 
@@ -588,8 +589,11 @@ namespace CoreSystems.Support
         {
             var fd = ai.Construct.Data.Repo.FocusData;
             var forceUpdate = LastUpdateTick == 0 || ai.Session.Tick - LastUpdateTick > 600;
-            if (forceUpdate || fd.Target != OldTarget || fd.Locked != OldLocked || fd.HasFocus != OldHasFocus || Math.Abs(fd.DistToNearestFocusSqr - OldDistToNearestFocusSqr) > 0) {
-
+            if (forceUpdate || fd.Target != OldTarget || fd.Locked != OldLocked || fd.HasFocus != OldHasFocus || Math.Abs(fd.DistToNearestFocusSqr - OldDistToNearestFocusSqr) > 0)
+            {
+                if (fd.Target > 0)
+                    PrevTarget = fd.Target;
+                
                 OldTarget = fd.Target;
                 OldLocked = fd.Locked;
                 OldHasFocus = fd.HasFocus;
