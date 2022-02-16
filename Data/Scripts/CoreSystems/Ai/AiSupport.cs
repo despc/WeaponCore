@@ -439,6 +439,7 @@ namespace CoreSystems.Support
             TestShields.Clear();
             NewEntities.Clear();
             SubGridsRegistered.Clear();
+            TopStators.Clear();
             SourceCount = 0;
             PartCount = 0;
             AiOwner = 0;

@@ -570,6 +570,7 @@ namespace CoreSystems.Support
                 RefreshedAis.Clear();
                 PreviousTargets.Clear();
                 ControllingPlayers.Clear();
+                LocalStatorMaps.Clear();
             }
         }
     }

@@ -41,7 +41,7 @@ namespace CoreSystems.Control
             comp.RequestShootUpdate(TriggerOff, comp.Session.MpServer ? comp.Session.PlayerId : -1);
         }
 
-        internal static void TerminalActionShootBurst(IMyTerminalBlock blk)
+        internal static void TerminalActionKeyShoot(IMyTerminalBlock blk)
         {
             var comp = blk?.Components?.Get<CoreComponent>() as Weapon.WeaponComponent;
             if (comp == null || comp.Platform.State != CorePlatform.PlatformState.Ready) return;

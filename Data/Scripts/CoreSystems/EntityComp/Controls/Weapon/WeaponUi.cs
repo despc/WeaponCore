@@ -624,7 +624,17 @@ namespace CoreSystems
             var ready =  !comp.ShootManager.WaitingShootResponse && !comp.ShootManager.FreezeClientShoot && (!comp.ShootManager.ShootToggled && stateMatch || stateMatch);
 
             if (!ready)
-                Log.Line($"ShootModeChangeReady failed: wait:{comp.ShootManager.WaitingShootResponse} - freeze:{comp.ShootManager.FreezeClientShoot} - toggled:{comp.ShootManager.ShootToggled} - statematch:{stateMatch}", Session.InputLog);
+            {
+                var ammoState = comp.AmmoStatus();
+                Log.Line($"Shoot failed: wait:{comp.ShootManager.WaitingShootResponse} - freeze:{comp.ShootManager.FreezeClientShoot} - toggled:{comp.ShootManager.ShootToggled} - statematch:{stateMatch} - lockTime:{comp.Session.Tick - comp.ShootManager.LockingTick} - shootTime:{comp.Session.Tick - comp.ShootManager.LastShootTick} - cycles:{comp.ShootManager.CompletedCycles} - ammoState:{ammoState} - EarlyOff:{comp.ShootManager.EarlyOff}", Session.InputLog);
+                var overLockTime = comp.ShootManager.LockingTick > 0 && comp.Session.Tick - comp.ShootManager.LockingTick > 180;
+                var locked = comp.ShootManager.FreezeClientShoot || comp.ShootManager.WaitingShootResponse || !stateMatch && (ammoState == Weapon.WeaponComponent.AmmoStates.Empty || ammoState == Weapon.WeaponComponent.AmmoStates.Makeup);
+
+                if (locked && overLockTime)
+                {
+                    comp.ShootManager.FailSafe();
+                }
+            }
             return ready;
         }
 

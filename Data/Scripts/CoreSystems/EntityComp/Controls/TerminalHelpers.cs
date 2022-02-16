@@ -87,7 +87,7 @@ namespace CoreSystems.Control
 
             Separator<T>(session, "WC_sep2", IsTrue);
 
-            AddWeaponRangeSliderNoAction<T>(session, "Weapon Range", Localization.GetText("TerminalWeaponRangeTitle"), Localization.GetText("TerminalWeaponRangeTooltip"), BlockUi.GetRangeControl, BlockUi.RequestSetRangeControl, IsReady, BlockUi.GetMinRangeControl, BlockUi.GetMaxRangeControl, false, false);
+            AddWeaponCTCRangeSliderNoAction<T>(session, "Weapon Range", Localization.GetText("TerminalWeaponRangeTitle"), Localization.GetText("TerminalWeaponRangeTooltip"), BlockUi.GetRangeControl, BlockUi.RequestSetRangeControl, IsReady, BlockUi.GetMinRangeControl, BlockUi.GetMaxRangeControl, false, false);
 
             AddOnOffSwitchNoAction<T>(session, "ReportTarget", Localization.GetText("TerminalReportTargetTitle"), Localization.GetText("TerminalReportTargetTooltip"), BlockUi.GetReportTargetControl, BlockUi.RequestSetReportTargetControl, true, IsReady);
 
@@ -356,6 +356,11 @@ namespace CoreSystems.Control
         internal static void SliderWriterRange(IMyTerminalBlock block, StringBuilder builder)
         {
             builder.Append(BlockUi.GetRange(block).ToString("N2"));
+        }
+
+        internal static void SliderCTCWriterRange(IMyTerminalBlock block, StringBuilder builder)
+        {
+            builder.Append(BlockUi.GetMaxRangeControl(block).ToString("N2"));
         }
 
         internal static void SliderWriterRof(IMyTerminalBlock block, StringBuilder builder)
@@ -677,6 +682,27 @@ namespace CoreSystems.Control
             c.Getter = getter;
             c.Setter = setter;
             c.Writer = SliderWriterRange;
+
+            if (minGetter != null)
+                c.SetLimits(minGetter, maxGetter);
+
+            MyAPIGateway.TerminalControls.AddControl<T>(c);
+            session.CustomControls.Add(c);
+
+            return c;
+        }
+
+        internal static IMyTerminalControlSlider AddWeaponCTCRangeSliderNoAction<T>(Session session, string name, string title, string tooltip, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Func<IMyTerminalBlock, bool> visibleGetter, Func<IMyTerminalBlock, float> minGetter = null, Func<IMyTerminalBlock, float> maxGetter = null, bool group = false, bool addAction = true) where T : IMyTerminalBlock
+        {
+            var c = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, T>(name);
+
+            c.Title = MyStringId.GetOrCompute(title);
+            c.Tooltip = MyStringId.GetOrCompute(tooltip);
+            c.Enabled = IsTrue;
+            c.Visible = visibleGetter;
+            c.Getter = getter;
+            c.Setter = setter;
+            c.Writer = SliderCTCWriterRange;
 
             if (minGetter != null)
                 c.SetLimits(minGetter, maxGetter);

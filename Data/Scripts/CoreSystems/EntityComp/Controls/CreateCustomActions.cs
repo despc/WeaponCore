@@ -55,7 +55,7 @@ namespace CoreSystems.Control
             var action = MyAPIGateway.TerminalControls.CreateAction<T>("ActionFire");
             action.Icon = @"Textures\GUI\Icons\Actions\SwitchOn.dds";
             action.Name = new StringBuilder(Localization.GetText("ActionFire"));
-            action.Action = CustomActions.TerminalActionShootBurst;
+            action.Action = CustomActions.TerminalActionKeyShoot;
             action.Writer = TerminalHelpers.EmptyStringBuilder;
             action.Enabled = TerminalHelpers.ShootBurstWeapon;
             action.ValidForGroups = true;

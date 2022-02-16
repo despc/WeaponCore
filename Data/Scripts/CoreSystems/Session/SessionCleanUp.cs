@@ -1,5 +1,7 @@
-﻿using CoreSystems.Support;
+﻿using System.Collections.Generic;
+using CoreSystems.Support;
 using Sandbox.Game.Entities;
+using VRage.Game.ModAPI;
 
 namespace CoreSystems
 {
@@ -29,12 +31,10 @@ namespace CoreSystems
             PurgedAll = true;
             FutureEvents.Purge((int)Tick);
 
-            foreach (var p in PlayerControllerMonitor) {
-                var controller = p.Controller;
-                controller.ControlledEntityChanged -= OnPlayerController;
-            }
+            var purgeGroupList = new List<IMyGridGroupData>(GridGroupMap.Keys);
+            foreach (var data in purgeGroupList)
+                GridGroupsOnOnGridGroupDestroyed(data);
 
-            PlayerControllerMonitor.Clear();
             foreach (var comp in CompsToStart)
                 if (comp?.Platform != null)
                     CloseComps(comp.CoreEntity);
@@ -148,11 +148,30 @@ namespace CoreSystems
             DeferedUpBlockTypeCleanUp(true);
             BlockTypeCleanUp.Clear();
 
+
+            GridGroupMap.Clear();
+            GridGroupMapPool.Clear();
+
+            foreach (var p in PlayerControllerMonitor) {
+                var controller = p.Controller;
+                controller.ControlledEntityChanged -= OnPlayerController;
+            }
+
             foreach (var map in GridToInfoMap.Keys)
                 RemoveGridFromMap(map);
 
             GridToInfoMap.Clear();
             GridMapPool.Clean();
+
+            foreach (var sm in StatorMaps)
+                sm.Value.Clean();
+            StatorMaps.Clear();
+
+            foreach (var sm in StatorMapPool)
+                sm.Clean();
+            StatorMapPool.Clear();
+
+            StatorMapListPool.Clear();
             
             DirtyGridsTmp.Clear();
 

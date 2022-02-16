@@ -73,7 +73,6 @@ namespace CoreSystems
         internal readonly MyConcurrentPool<TargetInfo> TargetInfoPool = new MyConcurrentPool<TargetInfo>(256, info => info.Clean());
         internal readonly MyConcurrentPool<WeaponAmmoMoveRequest> InventoryMoveRequestPool = new MyConcurrentPool<WeaponAmmoMoveRequest>(128, invMove => invMove.Clean());
         internal readonly MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>> ConcurrentListPool = new MyConcurrentPool<ConcurrentCachingList<MyCubeBlock>>(100, cList => cList.ClearImmediate());
-        //internal readonly MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>> ConcurrentRotorListPool = new MyConcurrentPool<ConcurrentCachingList<IMyMotorStator>>(100, cList => cList.ClearImmediate());
         internal readonly MyConcurrentPool<GridMap> GridMapPool = new MyConcurrentPool<GridMap>(128, fatMap => fatMap.Clean());
         internal readonly MyConcurrentPool<PartCounter> PartCountPool = new MyConcurrentPool<PartCounter>(64, count => count.Current = 0);
         internal readonly MyConcurrentPool<List<IMySlimBlock>> SlimPool = new MyConcurrentPool<List<IMySlimBlock>>(128, slim => slim.Clear());

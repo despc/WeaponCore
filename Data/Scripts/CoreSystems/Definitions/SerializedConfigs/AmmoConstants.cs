@@ -955,6 +955,10 @@ namespace CoreSystems.Support
         private void GetModifiableValues(AmmoDef ammoDef, out float baseDamage, out float health, out float gravityMultiplier, out float maxTrajectory, out bool energyBaseDmg, out bool energyAreaDmg, out bool energyDetDmg, out bool energyShieldDmg, out double shieldModifier, out float fallOffDistance, out float fallOffMinMult, out float mass, out float shieldBypassRaw)
         {
             baseDamage = AmmoModsFound && _modifierMap[BaseDmgStr].HasData() ? _modifierMap[BaseDmgStr].GetAsFloat : ammoDef.BaseDamage;
+
+            if (baseDamage < 0.000001)
+                baseDamage = 0.000001f;
+
             health = AmmoModsFound && _modifierMap[HealthStr].HasData() ? _modifierMap[HealthStr].GetAsFloat : ammoDef.Health;
             gravityMultiplier = AmmoModsFound && _modifierMap[GravityStr].HasData() ? _modifierMap[GravityStr].GetAsFloat : ammoDef.Trajectory.GravityMultiplier;
             maxTrajectory = AmmoModsFound && _modifierMap[MaxTrajStr].HasData() ? _modifierMap[MaxTrajStr].GetAsFloat : ammoDef.Trajectory.MaxTrajectory;

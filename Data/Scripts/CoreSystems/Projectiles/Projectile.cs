@@ -1309,7 +1309,7 @@ namespace CoreSystems.Projectiles
                 Vector3D.Normalize(ref newVel, out Info.Direction);
             }
             else
-                newVel = Velocity += (Info.Direction * aConst.DeltaVelocityPerTick);
+                newVel = Velocity + AccelVelocity;
             VelocityLengthSqr = newVel.LengthSquared();
 
             if (VelocityLengthSqr > MaxSpeedSqr) newVel = Info.Direction * MaxSpeed;

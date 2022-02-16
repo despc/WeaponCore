@@ -324,6 +324,7 @@ namespace CoreSystems
                     grid.OnFatBlockRemoved -= FromGridMap;
                 }
 
+                gridMap.GroupMap = null;
                 GridMapPool.Return(gridMap);
 
                 using (_dityGridLock.Acquire())
@@ -406,7 +407,7 @@ namespace CoreSystems
         }
         public void OnCloseAll()
         {
-            //Log.Line($"test1");
+            Log.Line($"test1");
             MyAPIGateway.GridGroups.OnGridGroupDestroyed -= GridGroupsOnOnGridGroupDestroyed;
             MyAPIGateway.GridGroups.OnGridGroupCreated -= GridGroupsOnOnGridGroupCreated;
         }

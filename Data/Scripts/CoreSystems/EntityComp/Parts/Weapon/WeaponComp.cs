@@ -387,13 +387,13 @@ namespace CoreSystems.Platform
                     Ai.AwakeComps++;
             }
 
-            internal void ResetPlayerControl()
+            internal void ResetPlayerControl(bool toggleShootOff = false)
             {
                 Data.Repo.Values.State.Control = ProtoWeaponState.ControlMode.None;
                 Data.Repo.Values.Set.Overrides.Control = ProtoWeaponOverrides.ControlModes.Auto;
                 if (Data.Repo.Values.Set.Overrides.ShootMode == ShootManager.ShootModes.MouseControl)
                 {
-                    if (ShootManager.ShootToggled)
+                    if (toggleShootOff && ShootManager.ShootToggled)
                         ShootManager.RequestShootSync(Data.Repo.Values.State.PlayerId);
 
                     Data.Repo.Values.Set.Overrides.ShootMode = ShootManager.ShootModes.AiShoot;
@@ -611,6 +611,29 @@ namespace CoreSystems.Platform
                         Session.SendWeaponReload(w);
                     }
                 }
+            }
+
+            public enum AmmoStates
+            {
+                Empty,
+                Makeup,
+                Ammo,
+                Mixed,
+
+            }
+            internal AmmoStates AmmoStatus()
+            {
+                var ammo = 0;
+                var makeUp = 0;
+                for (int i = 0; i < Collection.Count; i++)
+                {
+                    var w = Collection[i];
+                    ammo += w.ProtoWeaponAmmo.CurrentCharge > 0 ? 1 : w.ProtoWeaponAmmo.CurrentAmmo;
+                    makeUp += w.ClientMakeUpShots;
+                }
+
+                var status = ammo > 0 && makeUp > 0 ? AmmoStates.Mixed : ammo > 0 ? AmmoStates.Ammo : makeUp > 0 ? AmmoStates.Makeup : AmmoStates.Empty;
+                return status;
             }
 
 

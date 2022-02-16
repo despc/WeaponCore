@@ -490,7 +490,9 @@ namespace CoreSystems
             }
             else if (wComp != null && wComp.ShootManager.RequestShootBurstId != stateId)
             {
-                Log.Line($"server bursting request mismatch", InputLog);
+                Log.Line($"server bursting request mismatch: server:{wComp.ShootManager.RequestShootBurstId} - client:{stateId} - serverCycles:{wComp.ShootManager.CompletedCycles} - clientCycles:{interval}", InputLog);
+                wComp.ShootManager.ServerRejectResponse(packet.SenderId);
+
             }
             else if (!SteamToPlayer.TryGetValue(packet.SenderId, out playerId))
             {

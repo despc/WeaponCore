@@ -535,7 +535,7 @@ namespace CoreSystems
                     wComp.ShootManager.WaitingShootResponse = false;
                     if (wComp.ShootManager.EarlyOff && wComp.ShootManager.ShootToggled)
                     {
-                        Log.Line($"forcing QueuedToggle off -  frozen:{wComp.ShootManager.FreezeClientShoot} - waiting:{wComp.ShootManager.WaitingShootResponse}", InputLog);
+                        Log.Line($"forcing QueuedToggle off -  frozen:{wComp.ShootManager.FreezeClientShoot}", InputLog);
                         wComp.ShootManager.ProcessInput(PlayerId, true);
                     }
                 }

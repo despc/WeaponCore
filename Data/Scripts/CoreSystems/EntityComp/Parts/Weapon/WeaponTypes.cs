@@ -150,6 +150,7 @@ namespace CoreSystems.Platform
             internal uint CompletedCycles;
             internal uint LastCycle = uint.MaxValue;
             internal uint LastShootTick;
+            internal uint LockingTick;
             internal uint RequestShootBurstId;
             internal int WeaponsFired;
             internal ShootModes LastShootMode;
@@ -187,14 +188,14 @@ namespace CoreSystems.Platform
                     var w = Comp.Collection[i];
                     if (w.ActiveAmmoDef.AmmoDef.Const.MustCharge)
                     {
-                        Log.Line($"RestoreWeaponShot, recharge");
+                        Log.Line($"RestoreWeaponShot, recharge", Session.InputLog);
                         w.ProtoWeaponAmmo.CurrentCharge = w.MaxCharge;
                         w.EstimatedCharge = w.MaxCharge;
                     }
                     else
                     {
                         w.ProtoWeaponAmmo.CurrentAmmo += (int)CompletedCycles;
-                        Log.Line($"RestoreWeaponShot, return ammo:{CompletedCycles}");
+                        Log.Line($"RestoreWeaponShot, return ammo:{CompletedCycles}", Session.InputLog);
                     }
                 }
             }
@@ -296,6 +297,14 @@ namespace CoreSystems.Platform
                 ShootToggled = false;
             }
 
+            internal void FailSafe()
+            {
+                Log.Line($"ShootMode failsafe triggered: Toggled:{ShootToggled} - LastCycle:{LastCycle} - CompletedCycles:{CompletedCycles} - WeaponsFired:{WeaponsFired} - wait:{WaitingShootResponse} - freeze:{FreezeClientShoot} - reqState:{RequestShootBurstId} - state:{Comp.Data.Repo.Values.State.ShootSyncStateId}");
+                WaitingShootResponse = false;
+                FreezeClientShoot = false;
+                ClearShootState();
+            }
+
             #endregion
 
             #region InputManager
@@ -321,6 +330,8 @@ namespace CoreSystems.Platform
                 if (Comp.Session.MpActive && sendRequest)
                 {
                     WaitingShootResponse = Comp.Session.IsClient; // this will be set false on the client once the server responds to this packet
+                    LockingTick = Comp.Session.Tick;
+
                     var code = Comp.Session.IsServer ? playerId == 0 ? ShootCodes.ServerRequest : ShootCodes.ServerRelay : ShootCodes.ClientRequest;
                     ulong packagedMessage;
                     Session.EncodeShootState(state.ShootSyncStateId, (uint)set.Overrides.ShootMode, CompletedCycles, (uint)code, out packagedMessage);
@@ -362,6 +373,8 @@ namespace CoreSystems.Platform
                         if (Comp.Session.MpActive)
                         {
                             FreezeClientShoot = Comp.Session.IsClient; //if the initiators is a client pause future cycles until the server returns which cycle state to terminate on.
+                            LockingTick = Comp.Session.Tick;
+
                             ulong packagedMessage;
                             Session.EncodeShootState(state.ShootSyncStateId, 0, CompletedCycles, (uint)ShootCodes.ToggleServerOff, out packagedMessage);
                             Comp.Session.SendBurstRequest(Comp, packagedMessage, PacketType.ShootSync, RewriteShootSyncToServerResponse, playerId);
