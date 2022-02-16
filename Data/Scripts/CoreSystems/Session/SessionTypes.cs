@@ -855,6 +855,7 @@ namespace CoreSystems
                 Asleep.Clear();
                 Collector.Clear();
                 ToRemove.Clear();
+                Session = null;
             }
 
         }

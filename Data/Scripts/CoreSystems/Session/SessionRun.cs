@@ -403,7 +403,7 @@ namespace CoreSystems
                 MyAPIGateway.TerminalControls.CustomControlGetter -= CustomControlHandler;
 
                 MyEntities.OnEntityCreate -= OnEntityCreate;
-                
+                MyEntities.OnCloseAll -= OnCloseAll;
 
 
                 MyAPIGateway.Gui.GuiControlCreated -= MenuOpened;

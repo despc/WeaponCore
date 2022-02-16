@@ -184,6 +184,7 @@ namespace CoreSystems
             foreach (var wMap in WeaponValuesMap)
                 wMap.Value?.Clear();
             
+            WeaponValuesMap.Clear();
             foreach (var aMap in AmmoValuesMap)
                 aMap.Value?.Clear();
 
@@ -232,9 +233,28 @@ namespace CoreSystems
             using (_dityGridLock.Acquire())
                 DirtyGridInfos.Clear();
 
+            foreach (var s in SoundsToClean)
+                s.EmitterPool?.Clear();
+            SoundsToClean.Clear();
+
+            foreach (var c in CameraChannelMappings) {
+                CameraOnClose(c.Key);
+                CameraOnMarkForClose(c.Key);
+            }
+            CameraChannelMappings.Clear();
+
             DsUtil.Purge();
             DsUtil2.Purge();
+            ProblemRep.Clean();
+            ProblemRep.Session = null;
 
+            FragmentsNeedingEntities.Clear();
+            PhysicalItemListPool.Clean();
+            BetterItemsListPool.Clean();
+            BetterInventoryItems.Clean();
+            PowerGroups.Clear();
+            KeyMap.Clear();
+            LosDebugList.Clear();
             _gridsNearCamera.Clear();
             PartPlatforms.Clear();
             DelayedAiClean.ClearImmediate();

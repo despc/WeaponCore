@@ -407,8 +407,14 @@ namespace CoreSystems
         }
         public void OnCloseAll()
         {
+            var list = new List<IMyGridGroupData>(GridGroupMap.Keys);
+            foreach (var value in list)
+                GridGroupsOnOnGridGroupDestroyed(value);
+           
             MyAPIGateway.GridGroups.OnGridGroupDestroyed -= GridGroupsOnOnGridGroupDestroyed;
             MyAPIGateway.GridGroups.OnGridGroupCreated -= GridGroupsOnOnGridGroupCreated;
+
+            GridGroupMap.Clear();
         }
 
 
