@@ -21,13 +21,11 @@ namespace CoreSystems.Support
     public partial class Ai
     {
         internal volatile bool AiInit;
-        internal volatile bool PowerDirty = true;
         internal volatile uint AiSpawnTick;
         internal volatile uint AiCloseTick;
         internal volatile uint AiMarkedTick;
         internal volatile uint LastAiDataSave;
         internal readonly AiDetectionInfo DetectionInfo = new AiDetectionInfo();
-        internal readonly MyShipController FakeShipController = new MyShipController();
         internal readonly Constructs Construct;
         internal readonly FastResourceLock DbLock = new FastResourceLock();
 
@@ -101,7 +99,6 @@ namespace CoreSystems.Support
         internal MyPlanet MyPlanet;
         internal Vector3D PlanetClosestPoint;
         internal Vector3D ClosestPlanetCenter;
-        internal Vector3D NaturalGravity;
         internal BoundingSphereD NearByEntitySphere;
         internal BoundingSphereD TopEntityVolume;
         internal BoundingSphereD ScanVolume;

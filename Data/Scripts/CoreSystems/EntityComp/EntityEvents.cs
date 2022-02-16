@@ -36,8 +36,6 @@ namespace CoreSystems.Support
                     IsWorkingChanged(Cube);
                 }
 
-                CoreEntity.OnMarkForClose += OnMarkForClose;
-
                 if (CoreInventory == null)
                 {
                     if (TypeSpecific != CompTypeSpecific.Phantom && TypeSpecific != CompTypeSpecific.Control && !IsBomb)
@@ -83,8 +81,6 @@ namespace CoreSystems.Support
 
                         Cube.IsWorkingChanged -= IsWorkingChanged;
                     }
-
-                    CoreEntity.OnMarkForClose -= OnMarkForClose;
 
                     if (CoreInventory == null) Log.Line("BlockInventory is null");
                     else
@@ -139,11 +135,6 @@ namespace CoreSystems.Support
         private static void OnMarkForClose(MyEntity myEntity)
         {
             
-            var comp = myEntity.Components.Get<CoreComponent>();
-            if (comp?.Ai != null && comp.IsBlock && comp.Slim == comp.Ai.FakeShipController.SlimBlock)
-            {
-                comp.Ai.PowerDirty = true;
-            }
         }
 
         private void IsWorkingChanged(MyCubeBlock myCubeBlock)

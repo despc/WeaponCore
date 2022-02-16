@@ -180,7 +180,6 @@ namespace CoreSystems
                         ai.StaticEntitiesInRange = ai.StaticsInRange.Count > 0;
                         ai.MyStaticInfo();
 
-                        ai.NaturalGravity = ai.FakeShipController.GetNaturalGravity();
                         ai.BlockCount = ai.AiType == Ai.AiTypes.Grid ? ai.GridEntity.BlocksCount : 0;
                         ai.NearByEntities = ai.NearByEntitiesTmp;
 

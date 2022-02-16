@@ -331,7 +331,7 @@ namespace CoreSystems.Support
                 if (HadPower)
                     WeaponShootOff();
             }
-            catch (Exception ex) { Log.Line($"Exception in UpdateGridPower: {ex} - SessionNull{Session == null} - FakeShipControllerNull{FakeShipController == null}  - MyGridNull{TopEntity == null}", null, true); }
+            catch (Exception ex) { Log.Line($"Exception in UpdateGridPower: {ex} - SessionNull{Session == null}  - MyGridNull{TopEntity == null}", null, true); }
         }
 
         private void ForceCloseAiInventories()
@@ -459,6 +459,8 @@ namespace CoreSystems.Support
             ShieldFortified = false;
             Data.Clean();
 
+            GridEntity = null;
+            ImyGridEntity = null;
             MyShield = null;
             MyPlanetTmp = null;
             MyPlanet = null;

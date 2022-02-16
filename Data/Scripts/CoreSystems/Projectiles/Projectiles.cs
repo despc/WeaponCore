@@ -172,7 +172,8 @@ namespace CoreSystems.Projectiles
 
                         if (MyUtils.IsValid(p.Gravity) && !MyUtils.IsZero(ref p.Gravity)) {
                             p.Velocity += (p.Gravity * aConst.GravityMultiplier) * Projectile.StepConst;
-                            Vector3D.Normalize(ref p.Velocity, out info.Direction);
+                            if (!p.IsSmart)
+                                Vector3D.Normalize(ref p.Velocity, out info.Direction);
                         }
                     }
 

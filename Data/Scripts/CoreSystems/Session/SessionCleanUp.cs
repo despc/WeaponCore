@@ -83,6 +83,12 @@ namespace CoreSystems
             }
             AiPool.Clear();
 
+            for (int i = 0; i < DamageBlockCache.Length; i++)
+            {
+                DamageBlockCache[i].Clear();
+                DamageBlockCache[i] = null;
+            }
+
 
             PurgeTerminalSystem(this);
             HudUi.Purge();
@@ -175,28 +181,27 @@ namespace CoreSystems
             
             DirtyGridsTmp.Clear();
 
+            foreach (var wMap in WeaponValuesMap)
+                wMap.Value?.Clear();
+            
             foreach (var aMap in AmmoValuesMap)
-                aMap.Value.Clear();
+                aMap.Value?.Clear();
+
             AmmoValuesMap.Clear();
 
-            foreach (var structure in PartPlatforms.Values)
-            {
-                foreach (var pair in structure.PartSystems)
-                {
+            foreach (var structure in PartPlatforms.Values) {
+                foreach (var pair in structure.PartSystems) {
                     var system = pair.Value as WeaponSystem;
-                    if (system != null)
-                    {
-                        foreach (var ammo in system.AmmoTypes)
-                        {
+                    if (system != null) {
+                        foreach (var ammo in system.AmmoTypes) {
                             ammo.AmmoDef.Const.Purge();
-                            ammo.AmmoDef.Const.PrimeEntityPool?.Clean();
                         }
                     }
-
                 }
-
                 structure.PartSystems.Clear();
             }
+
+            TriggerEntityPool.Clean();
             PartPlatforms.Clear();
 
             foreach (var gridToMap in GridToBlockTypeMap)
@@ -230,10 +235,13 @@ namespace CoreSystems
             DsUtil.Purge();
             DsUtil2.Purge();
 
+            _gridsNearCamera.Clear();
+            PartPlatforms.Clear();
+            DelayedAiClean.ClearImmediate();
             ShootingWeapons.Clear();
             PartToPullConsumable.Clear();
             ConsumableToPullQueue.Clear();
-
+            AimingAi.Clear();
             ChargingParts.Clear();
             Hits.Clear();
             HomingWeapons.Clear();
