@@ -407,7 +407,6 @@ namespace CoreSystems
         }
         public void OnCloseAll()
         {
-            Log.Line($"test1");
             MyAPIGateway.GridGroups.OnGridGroupDestroyed -= GridGroupsOnOnGridGroupDestroyed;
             MyAPIGateway.GridGroups.OnGridGroupCreated -= GridGroupsOnOnGridGroupCreated;
         }

@@ -18,6 +18,8 @@ namespace CoreSystems.Platform
             internal bool RotorsDirty;
             internal bool RotorsMoving;
             internal Target.TargetStates OldState = Target.TargetStates.WasFake;
+            internal uint LastCrashTick;
+
 
             internal ControlComponent(Session session, MyEntity coreEntity, MyDefinitionId id)
             {

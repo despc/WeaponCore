@@ -175,6 +175,10 @@ namespace CoreSystems
             
             DirtyGridsTmp.Clear();
 
+            foreach (var aMap in AmmoValuesMap)
+                aMap.Value.Clear();
+            AmmoValuesMap.Clear();
+
             foreach (var structure in PartPlatforms.Values)
             {
                 foreach (var pair in structure.PartSystems)
@@ -184,6 +188,7 @@ namespace CoreSystems
                     {
                         foreach (var ammo in system.AmmoTypes)
                         {
+                            ammo.AmmoDef.Const.Purge();
                             ammo.AmmoDef.Const.PrimeEntityPool?.Clean();
                         }
                     }

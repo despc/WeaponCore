@@ -119,7 +119,7 @@ namespace CoreSystems
 
                         var az = azRaw != null ? StatorMaps[azRaw] : null;
                         var el = elRaw != null ? StatorMaps[elRaw] : null;
-                        if (az == null)
+                        if (az == null || el == null)
                             continue;
 
                         if (controller.IsUnderControl)
@@ -142,6 +142,8 @@ namespace CoreSystems
                         {
                             Log.Line($"Setting base: elNull:{el == null} - azNull:{az == null} - azStatorNull:{az?.Stator == null} - elStatorNull{el?.Stator == null}");
                             controlPart.BaseMap = el == null ? az : az == null ? el : az.Stator.TopGrid == el.Stator.CubeGrid ? az : el;
+                            if (controlPart.BaseMap == null)
+                                continue;
                         }
 
                         if (!cComp.Data.Repo.Values.Set.Overrides.AiEnabled)
@@ -152,8 +154,6 @@ namespace CoreSystems
                         }
 
                         var root = controlPart.BaseMap;
-                        if (root == null)
-                            continue;
 
                         if (root.Stator.TopGrid == null)
                         {
@@ -168,7 +168,16 @@ namespace CoreSystems
                             controlPart.BaseHasTop = true;
                         }
 
-                        var turretMap = rootConstruct.LocalStatorMaps[(MyCubeGrid)root.Stator.TopGrid];
+                        List<StatorMap> turretMap;
+                        if (!rootConstruct.LocalStatorMaps.TryGetValue((MyCubeGrid) root.Stator.TopGrid, out turretMap))
+                        {
+                            if (Tick - cComp.LastCrashTick > 1200)
+                            {
+                                cComp.LastCrashTick = Tick;
+                                Log.Line($"CTC failed to find stator in LocalStatorMaps");
+                            }
+                            continue;
+                        }
 
                         if (turretMap.Count == 0)
                         {

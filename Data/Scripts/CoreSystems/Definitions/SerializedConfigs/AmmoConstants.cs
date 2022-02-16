@@ -493,6 +493,26 @@ namespace CoreSystems.Support
             if (CollisionSize > 5 && !session.LocalVersion) Log.Line($"{ammo.AmmoDef.AmmoRound} has large largeCollisionSize: {CollisionSize} meters");
         }
 
+        internal void Purge()
+        {
+            if (AmmoPattern != null)
+            {
+                for (int i = 0; i < AmmoPattern.Length; i++)
+                    AmmoPattern[i] = null;
+            }
+
+            if (PatternShuffleArray != null)
+            {
+                for (int i = 0; i < PatternShuffleArray.Count; i++)
+                    PatternShuffleArray.Pop();
+            }
+
+
+            CustomBlockDefinitionBasesToScales?.Clear();
+            PrimeEntityPool?.Clean();
+            _modifierMap.Clear();
+        }
+
         internal void ComputeShieldBypass(float shieldBypassRaw, out float shieldDamageBypassMod)
         {
             if (shieldBypassRaw <= 0)
